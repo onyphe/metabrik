@@ -1,0 +1,8 @@
+print "Running script netmask"
+
+load netmask
+
+set netmask subnet 192.168.0.0/24
+run netmask block
+
+print

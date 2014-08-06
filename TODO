@@ -1,0 +1,49 @@
+Design rules:
+1. Only shell commands can overwrite $_
+2. Must be quick and easy to develop plugins
+2. Must be quick and easy to USE plugins
+
+
+Split Plashy.pm into:
+1. Plashy for plashy stuff (lp, global, ...)
+2. Plashy::Shell for Term::Shell stuff
+
+
+shell fuuctions:
+export VAR value => $ENV{VAR} = value
+unset VAR => undef $ENV{VAR}
+=> completion on ENV variables
+set $? and $! to indicate error and print error string
+
+Name:
+-> Clipy
+-> Plush (Perl Language Universal Shell)
+-> Plash (Perl Awesome|Audit|Attack|All-in-one Shell)
+-> Plashy (Perl Awesome|Audit|Attack|All-in-one Shell (Yeaaahh))
+
+write/save: writes $_ content to a file (set out 'file.txt')
+set global input $_  # default
+set global ouput $_  # default
+=> input and ouput may also be plugins
+
+Proc::Simple:
+=> launch cmd as background jobs (&)
+=> launch system commands as backgroup jobs
+
+show plugins:
+[1] XXX loaded
+[2] XXX not loaded
+
+Plugins API:
+-> default_values() to return a hashref of default values for attributes.
+
+
+Makes use of modules:
+File::Spec (path manipulation)
+ExtUtils::Command (shell builtins)
+Env::PS1
+Text::Balanced
+Proc::SafePipe (http://search.cpan.org/~rosch/Proc-SafePipe-0.01/SafePipe.pm)
+
+Take stuff from pirl:
+http://cpansearch.perl.org/src/RSAVAGE/Shell-Perl-0.0023/lib/Shell/Perl.pm

@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+#
+# $Id$
+#
+use strict;
+use warnings;
+
+BEGIN {
+   use File::HomeDir;
+
+   my $lib = File::HomeDir->my_home."/plashy/lib";
+   $lib =~ s/\\/\//g; # Converts Windows path
+
+   eval("use lib \"$lib\";");
+   if ($@) {
+      die("FATAL: unable to load plashy libs [$@]\n");
+   }
+}
+
+use Plashy;
+
+my $shell = Plashy->new;
+$shell->cmdloop;

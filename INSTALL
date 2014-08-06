@@ -1,0 +1,9 @@
+apt-get install libncurses-dev libreadline-dev
+
+Term::Shell
+File::HomeDir
+Lexical::Persistence
+Term::ReadLine::Gnu
+Bundle::Zoidberg
+
+export PERL_RL=Gnu
