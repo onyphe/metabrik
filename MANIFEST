@@ -1,0 +1,23 @@
+bin/plashy
+examples/dot-plashyrc-sample
+examples/netmask.plashy
+INSTALL
+lib/Plashy.pm
+lib/Plashy/Log.pm
+lib/Plashy/Plugin.pm
+lib/Plashy/Plugin/Agent.pm
+lib/Plashy/Plugin/Global.pm
+lib/Plashy/Plugin/Httpproxy.pm
+lib/Plashy/Plugin/Nbname.pm
+lib/Plashy/Plugin/Netframe.pm
+lib/Plashy/Plugin/Netmask.pm
+lib/Plashy/Plugin/Slurp.pm
+lib/Plashy/Plugin/Ssh.pm
+lib/Plashy/Plugin/Ssh2.pm
+lib/Plashy/Plugin/Template.pm
+lib/Plashy/Plugin/Vfeed.pm
+lib/Plashy/Plugin/Www.pm
+lib/Plashy/Plugin/Wwwutil.pm
+Makefile.PL
+MANIFEST			This list of files
+TODO
