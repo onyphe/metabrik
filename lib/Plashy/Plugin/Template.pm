@@ -1,4 +1,6 @@
 #
+# $Id$
+#
 # Template plugin
 #
 package Plashy::Plugin::Template;

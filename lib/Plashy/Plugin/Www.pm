@@ -1,4 +1,6 @@
 #
+# $Id$
+#
 # Www plugin
 #
 package Plashy::Plugin::Www;

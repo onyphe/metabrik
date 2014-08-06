@@ -1,4 +1,6 @@
 #
+# $Id$
+#
 # Ssh plugin
 #
 package Plashy::Plugin::Ssh;

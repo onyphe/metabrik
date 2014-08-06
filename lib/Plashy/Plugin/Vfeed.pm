@@ -1,4 +1,6 @@
 #
+# $Id$
+#
 # vFeed plugin
 #
 package Plashy::Plugin::Vfeed;

@@ -1,4 +1,6 @@
 #
+# $Id$
+#
 # HTTP::Proxy plugin
 #
 package Plashy::Plugin::Httpproxy;

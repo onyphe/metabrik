@@ -1,4 +1,6 @@
 #
+# $Id$
+#
 # Net::Frame modules plugin
 #
 package Plashy::Plugin::Netframe;

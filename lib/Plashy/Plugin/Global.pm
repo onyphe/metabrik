@@ -1,4 +1,6 @@
 #
+# $Id$
+#
 # Global plugin
 #
 package Plashy::Plugin::Global;

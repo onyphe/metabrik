@@ -1,4 +1,6 @@
 #
+# $Id$
+#
 # Net::Netmask plugin
 #
 package Plashy::Plugin::Netmask;

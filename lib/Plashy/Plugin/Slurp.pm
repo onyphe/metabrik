@@ -1,4 +1,6 @@
 #
+# $Id$
+#
 # Slurp plugin
 #
 package Plashy::Plugin::Slurp;

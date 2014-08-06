@@ -1,4 +1,6 @@
 #
+# $Id$
+#
 # Net::NBName plugin
 #
 package Plashy::Plugin::Nbname;

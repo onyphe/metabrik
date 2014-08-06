@@ -1,4 +1,6 @@
 #
+# $Id$
+#
 # Agent plugin
 #
 package Plashy::Plugin::Agent;
