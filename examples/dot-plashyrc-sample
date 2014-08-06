@@ -12,20 +12,9 @@ load httpproxy
 load ssh2
 set ssh2 debug 1
 set ssh2 host localhost
-set ssh2 username pkpf420
-set ssh2 publickey /home/pkpf420/.ssh/id_rsa.pub
-set ssh2 privatekey /home/pkpf420/.ssh/id_rsa
-
-load logpandore
-set logpandore debug 1
-
-load serenade
-set serenade debug 1
-set serenade host nplogftp01
-set serenade username pkpf420
-set serenade publickey /home/pkpf420/.ssh/id_rsa.pub
-set serenade privatekey /home/pkpf420/.ssh/id_rsa
-#set serenade ip 191.128.84.73
+set ssh2 username gomor
+set ssh2 publickey /home/gomor/.ssh/id_rsa.pub
+set ssh2 privatekey /home/gomor/.ssh/id_rsa
 
 load vfeed
 set vfeed db /home/pkpf420/plashydev/data/vfeed.db

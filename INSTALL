@@ -1,9 +1,11 @@
-apt-get install libncurses-dev libreadline-dev
+apt-get install libncurses-dev libreadline-dev cpanminus libssl-dev libssh2-1-dev
 
-Term::Shell
-File::HomeDir
-Lexical::Persistence
-Term::ReadLine::Gnu
-Bundle::Zoidberg
+cpanm Term::Shell
+cpanm File::HomeDir
+cpanm Lexical::Persistence
+cpanm Term::ReadLine::Gnu
+cpanm Bundle::Zoidberg
+cpanm Net::SSLeay
+cpanm Net::SSH2
 
 export PERL_RL=Gnu
