@@ -36,6 +36,7 @@ show plugins:
 
 Plugins API:
 -> default_values() to return a hashref of default values for attributes.
+-> require_modules() to eval() required modules for plugins.
 
 
 Makes use of modules:

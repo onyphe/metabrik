@@ -18,6 +18,19 @@ BEGIN {
 }
 
 use Plashy;
+use Plashy::Log;
+use Plashy::Shell;
 
-my $shell = Plashy->new;
+my $log = Plashy::Log->new(
+   level => 1,
+);
+
+my $plashy = Plashy->new(
+   log => $log,
+);
+
+$Plashy::Shell::plashy = $plashy;
+
+my $shell = Plashy::Shell->new;
+
 $shell->cmdloop;

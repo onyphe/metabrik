@@ -16,7 +16,7 @@ our @AS = qw(
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Template::Some::Module;
+#use Template::Some::Module;
 
 sub help {
    print "set template variable1 <value>\n";
