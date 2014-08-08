@@ -1,7 +1,12 @@
-"Welcome to Plashy - version $Plashy::VERSION"
+"Welcome to Plashy -  Knowledge is in your head, Detail is in the code"
+"Version $Plashy::VERSION"
+
+my $home = $ENV{HOME}
+my $user = $ENV{USER}
 
 set global ctimeout 20
 set global rtimeout 20
+set global commands vi,cat,less,w,nc
 
 load www
 
@@ -12,9 +17,9 @@ load httpproxy
 load ssh2
 set ssh2 debug 1
 set ssh2 host localhost
-set ssh2 username gomor
-set ssh2 publickey /home/gomor/.ssh/id_rsa.pub
-set ssh2 privatekey /home/gomor/.ssh/id_rsa
+set ssh2 username $user
+set ssh2 publickey $user."/.ssh/id_rsa.pub"
+set ssh2 privatekey $user."/.ssh/id_rsa"
 
 load vfeed
-set vfeed db /home/pkpf420/plashydev/data/vfeed.db
+set vfeed db $home."/plashy/data/vfeed.db"

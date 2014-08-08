@@ -10,7 +10,6 @@ use warnings;
 use base qw(Plashy::Plugin);
 
 our @AS = qw(
-   plashy
    input
    output
    db
@@ -22,10 +21,7 @@ our @AS = qw(
    loaded
    ctimeout
    rtimeout
-   ssh2_host
-   ssh2_username
-   ssh2_publickey
-   ssh2_privatekey
+   commands
 );
 
 __PACKAGE__->cgBuildIndices;
@@ -56,6 +52,7 @@ sub init {
 sub help {
    print "set global input <input>\n";
    print "set global output <output>\n";
+   print "set global commands <commands>\n";
    print "set global db <db>\n";
    print "set global file <file>\n";
    print "set global uri <uri>\n";
@@ -63,10 +60,6 @@ sub help {
    print "set global log <log>\n";
    print "set global ctimeout <seconds>\n";
    print "set global rtimeout <seconds>\n";
-   print "set global ssh2_host <ip|hostname>\n";
-   print "set global ssh2_username <username>\n";
-   print "set global ssh2_publickey <file>\n";
-   print "set global ssh2_privatekey <file>\n";
    print "\n";
    print "run global load <plugin>\n";
 }

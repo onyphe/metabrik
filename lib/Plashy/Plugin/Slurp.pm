@@ -9,17 +9,19 @@ use warnings;
 
 use base qw(Plashy::Plugin);
 
-#our @AS = qw(
-#);
-
+our @AS = qw(
+   file
+);
 __PACKAGE__->cgBuildIndices;
-#__PACKAGE__->cgBuildAccessorsScalar(\@AS);
+__PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 use File::Slurp;
 use JSON::XS;
 use XML::Simple;
 
 sub help {
+   print "set slurp file <file>\n";
+   print "\n";
    print "run slurp text\n";
    print "run slurp json\n";
    print "run slurp xml\n";
@@ -28,21 +30,32 @@ sub help {
 sub text {
    my $self = shift;
 
-   if (! defined($self->global->file)) {
-      die("you must set global file variable");
+   if (! defined($self->file)) {
+      die("set slurp file <file>\n");
    }
 
-   return read_file($self->global->file);
+   my $text = read_file($self->file)
+      or die("nothing to read from file [".$self->file."]\n");
+
+   return $text;
 }
 
 sub json {
    my $self = shift;
+
+   if (! defined($self->file)) {
+      die("set slurp file <file>\n");
+   }
 
    return decode_json($self->text);
 }
 
 sub xml {
    my $self = shift;
+
+   if (! defined($self->file)) {
+      die("set slurp file <file>\n");
+   }
 
    my $xs = XML::Simple->new;
 

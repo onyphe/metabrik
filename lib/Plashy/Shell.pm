@@ -61,7 +61,6 @@ sub init {
          my $plashy = $args{plashy};
          my $global = Plashy::Plugin::Global->new(
             log => $log,
-            plashy => $plashy,
          );
          $global->init;
          #$global->input(\*STDIN);
@@ -85,7 +84,7 @@ sub init {
       while (defined(my $line = <$in>)) {
          next if ($line =~ /^\s*#/);  # Skip comments
          chomp($line);
-         $self->cmd($line);
+         $self->cmd($self->ps_lookup_vars($line));
       }
       close($in);
    }
@@ -106,6 +105,35 @@ sub prompt_str {
    return $self->ps1;
 }
 
+sub ps_lookup_vars {
+   my $self = shift;
+   my ($line) = @_;
+
+   my $log = $plashy->log;
+   my $lp = $self->lp;
+
+   if ($line =~ /^\s*(?:run|set)\s+/) {
+      my @t = split(/\s+/, $line);
+      for my $a (@t) {
+         if ($a =~ /^\$(\S+)/) {
+            my $res;
+            eval {
+               $res = $lp->do($a);
+            };
+            if ($@) {
+               $log->error("unable to lookup variable [$a]");
+               last;
+            }
+            else {
+               $line =~ s/\$${1}/$res/;
+            }
+         }
+      }
+   }
+
+   return $line;
+}
+
 sub cmdloop {
    my $self = shift;
 
@@ -113,11 +141,11 @@ sub cmdloop {
    $self->preloop;
 
    my $buf = '';
-   while (defined (my $line = $self->readline($self->prompt_str))) {
-      $buf .= $line;
+   while (defined(my $line = $self->readline($self->prompt_str))) {
+      $buf .= $self->ps_lookup_vars($line);
 
       if ($line =~ /[;{]\s*$/) {
-         $self->ps_update_prompt('> ');
+         $self->ps_update_prompt('.. ');
          next;
       }
 
@@ -250,10 +278,6 @@ sub run_system {
    return;
 }
 
-sub run_w {
-   return shift->run_sh('w');
-}
-
 sub run_l {
    my $self = shift;
 
@@ -290,17 +314,13 @@ sub _run_li {
    return 1;
 }
 
-sub run_vi {
-   return shift->run_system($ENV{EDITOR}, @_);
-}
-
 sub run_history {
    my $self = shift;
    my ($c) = @_;
 
    my @history = $self->term->GetHistory;
    if (defined($c)) {
-      return $self->cmd($history[$c]);
+      return $self->cmd($self->ps_lookup_vars($history[$c]));
    }
    else {
       my $c = 0;
@@ -529,9 +549,34 @@ sub run_pl {
    return 1;
 }
 
-# Default to execute Perl commands
 sub catch_run {
-   return shift->run_pl(@_);
+   my $self = shift;
+   my (@args) = @_;
+
+   my $log = $plashy->log;
+   my $lp = $self->lp;
+
+   # Get content of commands
+   my $commands;
+   eval {
+      $commands = $lp->call(sub { return $global->commands });
+   };
+   if ($@) {
+      $log->error($@);
+      return;
+   }
+
+   if (defined($commands)) {
+      my @commands = split(',', $commands);
+      for my $command (@commands) {
+         if ($args[0] eq $command) {
+            return $self->run_system(@args);
+         }
+      }
+   }
+
+   # Default to execute Perl commands
+   return $self->run_pl(@args);
 }
 
 sub _ioa_dirsfiles {
@@ -733,17 +778,22 @@ sub run_run {
    eval {
       $lp->call(sub {
          my %args = @_;
+
          my $method = $args{method};
          my $plugin = $args{plugin};
          my @args = @{$args{args}};
+
          my $run = $global->loaded->{$plugin};
          if (! defined($run)) {
             die("plugin [$plugin] not loaded\n");
          }
+
          $run->init; # Will init() only if not already done
+
          if (! $run->can("$method")) {
             die("no method [$method] defined for plugin [$plugin]\n");
          }
+
          $_ = $run->$method(@args);
       }, plugin => $plugin, method => $method, args => \@args);
    };
@@ -775,7 +825,7 @@ sub run_script {
    while (defined(my $line = <$in>)) {
       next if ($line =~ /^\s*#/);  # Skip comments
       chomp($line);
-      $self->cmd($line);
+      $self->cmd($self->ps_lookup_vars($line));
    }
    close($in);
 
