@@ -620,6 +620,40 @@ sub _ioa_dirsfiles {
    return \@dirs, \@files;
 }
 
+sub comp_run {
+   my $self = shift;
+   my ($word, $line, $start) = @_;
+
+   #print "[DEBUG] word[$word] line[$line] start[$start]\n";
+
+   my $log = $plashy->log;
+
+   my $available;
+   eval {
+      $available = $self->lp->call(sub { return $global->available });
+   };
+   if ($@) {
+      $log->warning("can't fetch available plugins");
+      return ();
+   }
+
+   my @comp = ();
+   for my $a (keys %$available) {
+      #print "[$a] [$word]\n";
+      push @comp, $a if $a =~ /^$word/;
+   }
+
+   return @comp;
+}
+
+sub comp_set {
+   return shift->comp_run(@_);
+}
+
+sub comp_load {
+   return shift->comp_run(@_);
+}
+
 # Default to check for global completion value
 sub catch_comp {
    my $self = shift;
@@ -629,7 +663,7 @@ sub catch_comp {
 
    my $dir = '.';
    if (defined($line)) {
-      my $home = $self->{plashy}->{home};
+      my $home = $self->path_home;
       $line =~ s/^~/$home/;
       if ($line =~ /^(.*)\/.*$/) {
          $dir = $1 || '/';
@@ -687,11 +721,13 @@ sub run_show {
 
    eval {
       $lp->call(sub {
+         my $available = $global->available;
          my $loaded = $global->loaded;
          my $count = 0;
-         print "Loaded plugin(s):\n";
-         for my $k (sort { $a cmp $b } keys %$loaded) {
-            print "   $k\n";
+         print "Plugin(s):\n";
+         for my $k (sort { $a cmp $b } keys %$available) {
+            print "   $k";
+            print (exists $loaded->{$k} ? " [LOADED]\n" : "\n");
             $count++;
          }
          print "Total: $count\n";

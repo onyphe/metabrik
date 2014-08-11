@@ -6,7 +6,7 @@ my $user = $ENV{USER}
 
 set global ctimeout 20
 set global rtimeout 20
-set global commands vi,cat,less,w,nc
+set global commands vi,cat,less,w,nc,grep,find,cpanm
 
 load www
 
@@ -23,3 +23,8 @@ set ssh2 privatekey $user."/.ssh/id_rsa"
 
 load vfeed
 set vfeed db $home."/plashy/data/vfeed.db"
+
+# Use your own private plugins
+use lib "$ENV{HOME}/path/to/lib"
+
+load myplugin

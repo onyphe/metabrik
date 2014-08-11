@@ -32,9 +32,8 @@ sub nslookup {
 
    my $url = 'http://networking.ringofsaturn.com/Tools/nslookup.php?domain=%s&server=%s&querytype=A';
 
-   my $mech = WWW::Mechanize->new(
-      agent_alias => 'Windows Mozilla',
-   );
+   my $mech = WWW::Mechanize->new;
+   $mech->agent_alias('Windows Mozilla');
 
    $mech->get(sprintf($url, $host, $ns || '8.8.8.8'));
    # XXX: give access to plugins
@@ -45,6 +44,10 @@ sub nslookup {
    my ($lookup) = $html =~ /.*<PRE>(.*?)<\/PRE>/s;
    if (! $1) {
       $lookup = $html;
+   }
+
+   if (! defined($lookup)) {
+      die("no return from lookup");
    }
 
    my $res = _clean_html($lookup);
@@ -61,9 +64,8 @@ sub whois {
 
    my $urlWhois = 'http://viewdns.info/whois/?domain=%s';
 
-   my $mech = WWW::Mechanize->new(
-      agent_alias => 'Windows Mozilla',
-   );
+   my $mech = WWW::Mechanize->new;
+   $mech->agent_alias('Windows Mozilla');
 
    my $res;
    if ($who =~ /^\d+\.\d+\.\d+\.\d+$/) {
@@ -73,6 +75,10 @@ sub whois {
       my $html = $mech->content;
 
       my ($inetnum, $role, $person, $route) = $html =~ /.*<pre>(inetnum:.*?)<\/pre>.*?<pre>(role:.*?)<\/pre>.*?<pre>(person:.*?)<\/pre>.*?<pre>(route:.*?)<\/pre>.*?/s;
+
+      if (! defined($inetnum)) {
+         die("no return from lookup");
+      }
 
       print _clean_html($inetnum)."\n\n";
       print _clean_html($role)."\n\n";
@@ -88,6 +94,10 @@ sub whois {
       #my ($data) = $html =~ /^.*<br>==============<br><br>(Domain Name:.*?)<br><br><\/td><\/tr><tr><\/tr>/s;
       my ($data) = $html =~ /^.*(WHOIS Information for .*?)<br><br><\/td><\/tr><tr><\/tr>/s;
 
+      if (! defined($data)) {
+         die("no return from lookup");
+      }
+
       $res = _clean_html($data);
       print "$res\n";
    }
@@ -100,9 +110,8 @@ sub myip {
 
    my $url = 'http://ip.nu';
 
-   my $mech = WWW::Mechanize->new(
-      agent_alias => 'Windows Mozilla',
-   );
+   my $mech = WWW::Mechanize->new;
+   $mech->agent_alias('Windows Mozilla');
 
    $mech->get($url);
    #print "[*] Code: ".$mech->status."\n";

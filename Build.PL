@@ -17,6 +17,7 @@ my $builder = Module::Build->new(
       'Data::Dump' => 0,
       'Data::Dumper' => 0,
       'File::HomeDir' => 0,
+      'File::Find' => 0,
       'File::Slurp' => 0,
       'HTTP::Proxy' => 0,
       'IO::All' => 0,

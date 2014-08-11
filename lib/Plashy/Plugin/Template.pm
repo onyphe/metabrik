@@ -26,6 +26,16 @@ sub help {
    print "run template method2 <argument1> <argument2>\n";
 }
 
+sub init {
+   my $self = shift->SUPER::init(
+      @_,
+   ) or return 1; # Init already done
+
+   # Do your init here
+
+   return $self;
+}
+
 sub method1 {
    my $self = shift;
    my ($argument1, $argument2) = @_;

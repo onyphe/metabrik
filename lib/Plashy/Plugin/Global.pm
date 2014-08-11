@@ -18,7 +18,9 @@ our @AS = qw(
    target
    log
    set
+   available
    loaded
+   not_loaded
    ctimeout
    rtimeout
    commands
@@ -27,12 +29,17 @@ our @AS = qw(
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
+use File::Find;
+
 sub new {
    my $self = shift->SUPER::new(
       set => {},
       loaded => {},
+      available => {},
       @_,
    );
+
+   $self->update_available_plugins;
 
    return $self;
 }
@@ -71,7 +78,7 @@ sub load {
    # XXX: use Module::Loaded (core) or Module::Load/Unload or Module::Reload?
 
    if (! defined($plugin)) {
-      die("You must provide a Plugin argument\n");
+      die("set global load <plugin>\n");
    }
 
    my $module = $plugin;
@@ -79,12 +86,12 @@ sub load {
    $module =~ s/^/Plashy::Plugin::/;
 
    if (exists($self->loaded->{$plugin})) {
-      die("Plugin $plugin already loaded\n");
+      die("Plugin [$plugin] already loaded\n");
    }
 
    eval("use $module");
    if ($@) {
-      die("Unable to load plugin [$plugin]: $@\n");
+      die("unable to load Plugin [$plugin]: $@\n");
    }
 
    my $new = $module->new(
@@ -97,6 +104,28 @@ sub load {
    $self->loaded($loaded);
 
    return $self;
+}
+
+my @available = ();
+
+sub _find_plugins {
+   if ($File::Find::dir =~ /Plashy\/Plugin$/ && /.pm$/) {
+      (my $plugin = lc($_)) =~ s/.pm$//;
+      push @available, $plugin;
+   }
+}
+
+sub update_available_plugins {
+   my $self = shift;
+
+   {
+      no warnings 'File::Find';
+      find(\&_find_plugins, @INC);
+   };
+
+   my %h = map { $_ => 1 } @available;
+
+   return $self->available(\%h);
 }
 
 1;
