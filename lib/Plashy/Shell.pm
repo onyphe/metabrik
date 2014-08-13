@@ -47,12 +47,12 @@ sub init {
    my $log = $plashy->log;
 
    my $lp = Lexical::Persistence->new;
-   $lp->do('use strict');
-   $lp->do('use warnings');
-   $lp->do('use Data::Dumper');
-   $lp->do('use Plashy::Plugin::Global');
-
    $self->lp($lp);
+
+   $self->ps_lp_do('use strict') or $log->fatal("use strict");
+   $self->ps_lp_do('use warnings') or $log->fatal("use warnings");
+   $self->ps_lp_do('use Data::Dumper') or $log->fatal("use Data::Dumper");
+   $self->ps_lp_do('use Plashy::Plugin::Global') or $log->fatal("use Plashy::Plugin::Global");
 
    eval {
       $lp->call(sub {
@@ -71,9 +71,9 @@ sub init {
       $log->fatal("can't initialize global plugin: $@");
    }
 
-   $self->ps_set_home;
+   $self->ps_set_path_home;
    $self->ps_set_signals;
-   $self->ps_update_cwd;
+   $self->ps_update_path_cwd;
    $self->ps_update_prompt;
 
    my $rc = $self->plashyrc($self->path_home."/.plashyrc");
@@ -96,6 +96,18 @@ sub init {
       }
    }
 
+   #{
+      #no strict 'refs';
+      #use Data::Dumper;
+      #print Dumper(\%{"Plashy::Shell::"})."\n";
+      #my $commands = $self->ps_get_commands;
+      #for my $command (@$commands) {
+         #print "** adding command [$command]\n";
+         #${"Plashy::Shell::"}{"run_$command"} = 1;
+      #}
+      #print Dumper(\%{"Plashy::Shell::"})."\n";
+   #};
+
    return $self;
 }
 
@@ -116,16 +128,12 @@ sub ps_lookup_vars {
       my @t = split(/\s+/, $line);
       for my $a (@t) {
          if ($a =~ /^\$(\S+)/) {
-            my $res;
-            eval {
-               $res = $lp->do($a);
-            };
-            if ($@) {
-               $log->error("unable to lookup variable [$a]");
-               last;
+            if (my $res = $self->ps_lp_do($a)) {
+               $line =~ s/\$${1}/$res/;
             }
             else {
-               $line =~ s/\$${1}/$res/;
+               $log->error("unable to lookup variable [$a]");
+               last;
             }
          }
       }
@@ -159,7 +167,7 @@ sub cmdloop {
    return $self->postloop;
 }
 
-sub ps_update_cwd {
+sub ps_update_path_cwd {
    my $self = shift;
 
    my $cwd = peu_convert_path(getcwd());
@@ -168,7 +176,7 @@ sub ps_update_cwd {
    return 1;
 }
 
-sub ps_set_home {
+sub ps_set_path_home {
    my $self = shift;
 
    my $home = peu_convert_path(home());
@@ -203,10 +211,38 @@ sub ps_update_prompt {
    return 1;
 }
 
+my $jobs = {};
+
 sub ps_set_signals {
    my $self = shift;
 
-   $SIG{INT} = sub { $self->stoploop; $self->cmdloop };
+   my @signals = grep { substr($_, 0, 1) ne '_' } keys %SIG;
+
+   $SIG{TSTP} = sub {
+      print "DEBUG SIGTSTP: ".$jobs->{current}->pid."\n";
+      if (defined($jobs->{current})) {
+         $jobs->{current}->kill("SIGTSTP");
+         $jobs->{current}->kill("SIGINT");
+         return 1;
+      }
+   };
+
+   $SIG{CONT} = sub {
+      print "DEBUG SIGCONT: ".$jobs->{current}->pid."\n";
+      if (defined($jobs->{current})) {
+         $jobs->{current}->kill("SIGCONT");
+         return 1;
+      }
+   };
+
+   $SIG{INT} = sub {
+      print "DEBUG SIGINT: ".$jobs->{current}->pid."\n";
+      if (defined($jobs->{current})) {
+         $jobs->{current}->kill("SIGINT");
+         undef $jobs->{current};
+         return 1;
+      }
+   };
 
    return 1;
 }
@@ -232,8 +268,6 @@ sub run_sh {
    return 1;
 }
 
-my $jobs = {};
-
 sub run_system {
    my $self = shift;
    my ($cmd, @args) = @_;
@@ -249,15 +283,6 @@ sub run_system {
          $log->fatal("can't load Proc::Simple module: $@");
          return;
       }
-
-      $SIG{STOP} = sub {
-         print "DEBUG SIGSTOP\n";
-         $jobs->{current}->kill("SIGSTOP");
-      };
-      $SIG{CONT} = sub {
-         print "DEBUG SIGCONT\n";
-         $jobs->{current}->kill("SIGCONT");
-      };
 
       my $bg = (defined($args[-1]) && $args[-1] eq '&') || 0;
       if ($bg) {
@@ -524,6 +549,27 @@ sub comp_doc {
    return keys %comp;
 }
 
+sub ps_lp_do {
+   my $self = shift;
+   my ($code) = @_;
+
+   my $log = $plashy->log;
+   my $lp = $self->lp;
+
+   my $res;
+   eval {
+      $res = Data::Dump::dump($lp->do($code));
+   };
+   if ($@) {
+      $log->error($@);
+      return;
+   }
+
+   print "$res\n";
+
+   return $res;
+}
+
 sub run_pl {
    my $self = shift;
    my (@args) = @_;
@@ -535,43 +581,39 @@ sub run_pl {
    #print "[DEBUG] [$line]\n";
    $line =~ s/^pl\s+//;
 
-   eval {
-      Data::Dump::dump($lp->do($line));
-   };
-   if ($@) {
-      $log->error($@);
-      return;
-   }
-   else {
-      print "\n";
-   }
-
-   return 1;
+   return $self->ps_lp_do($line);
 }
 
-sub catch_run {
+sub ps_get_commands {
    my $self = shift;
-   my (@args) = @_;
 
    my $log = $plashy->log;
    my $lp = $self->lp;
 
-   # Get content of commands
    my $commands;
    eval {
       $commands = $lp->call(sub { return $global->commands });
    };
    if ($@) {
       $log->error($@);
-      return;
+      return [];
    }
 
    if (defined($commands)) {
-      my @commands = split(',', $commands);
-      for my $command (@commands) {
-         if ($args[0] eq $command) {
-            return $self->run_system(@args);
-         }
+      return [ split(',', $commands) ];
+   }
+
+   return [];
+}
+
+sub catch_run {
+   my $self = shift;
+   my (@args) = @_;
+
+   my $commands = $self->ps_get_commands;
+   for my $command (@$commands) {
+      if ($args[0] eq $command) {
+         return $self->run_system(@args);
       }
    }
 

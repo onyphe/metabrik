@@ -20,6 +20,19 @@ Split Plashy.pm into:
 1. Plashy for plashy stuff (lp, global, ...)
 2. Plashy::Shell for Term::Shell stuff
 
+staticperl, standalone Perl with libc:
+http://search.cpan.org/~mlehmann/App-Staticperl-1.43/
+
+How to launch a process in foreground and move it to background:
+IPC::Run
+IPC::Run IPC::ChildSafe Proc::Simple Proc::Reliable Proc::Fork
+IO::Pipe
+IPC::Run::Proc
+IPC::Exe
+Proc::SafeExec
+Forks::Super
+Spawn::Safe
+
 shell functions:
 export VAR value => $ENV{VAR} = value
 unset VAR => undef $ENV{VAR}
@@ -28,6 +41,7 @@ set $? and $! to indicate error and print error string
 
 Name:
 -> Plashy (Perl Awesome|Audit|Attack|All-in-one Shell (Yeaaahh))
+-> y: Why the Y? Yeaaaah
 
 write/save: writes $_ content to a file (set out 'file.txt')
 set global input $_  # default
@@ -53,6 +67,10 @@ ExtUtils::Command (shell builtins)
 Env::PS1
 Text::Balanced
 Proc::SafePipe (http://search.cpan.org/~rosch/Proc-SafePipe-0.01/SafePipe.pm)
+File::Tools
+=> ls, cd, cat, df, ...
+Term::ShellKit::Commands
+=> reload, load, show methods/functions of a module
 
 Take stuff from pirl:
 pirl: http://cpansearch.perl.org/src/RSAVAGE/Shell-Perl-0.0023/lib/Shell/Perl.pm
@@ -62,3 +80,18 @@ Plugin CVE_NVD:
 > http://nvd.nist.gov/download.cfm
 > http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2014.xml
 => Put in a SQLite DB and allows search.
+
+
+
+
+Gather available methods/functions:
+use Plashy::Plugin::Global;
+
+--8<--
+my $pkg = "Plashy::Plugin::Global";
+no strict 'refs';
+my @r = keys %{ $pkg . "::" };
+use Data::Dumper;
+print Dumper(\@r);
+--8<--
+

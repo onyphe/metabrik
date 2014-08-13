@@ -10,6 +10,7 @@ use warnings;
 use base qw(Plashy::Plugin);
 
 our @AS = qw(
+   echo
    input
    output
    db
