@@ -23,7 +23,16 @@ sub new {
       @_,
    );
 
+   my $href = $self->default_values;
+   for my $k (keys %$href) {
+      $self->$k($href->{$k});
+   }
+
    return $self;
+}
+
+sub default_values {
+   return {};
 }
 
 sub init {
@@ -43,6 +52,12 @@ sub require_variables {
    my (@vars) = @_;
 
    die("you must set variable(s): ".join(', ', @vars)."\n");
+}
+
+sub self {
+   my $self = shift;
+
+   return $self;
 }
 
 sub DESTROY {

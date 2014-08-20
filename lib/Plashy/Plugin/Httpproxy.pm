@@ -21,16 +21,6 @@ use HTTP::Proxy;
 use HTTP::Proxy::HeaderFilter::simple;
 use LWP::Protocol::connect;
 
-sub new {
-   my $self = shift->SUPER::new(
-      port => 3128,
-      truncate_response => 512,
-      @_,
-   );
-
-   return $self;
-}
-
 sub help {
    print "set httpproxy port <port> (default: 3128)\n";
    print "set httpproxy truncate_response <characters> (default: 0, do not truncate)\n";
@@ -38,6 +28,13 @@ sub help {
    print "\n";
    print "run httpproxy requests - simply display browser requests\n";
    print "run httpproxy requests_responses - simply display browser requests and server responses\n";
+}
+
+sub default_values {
+   return {
+      port => 3128,
+      truncate_response => 512,
+   };
 }
 
 # XXX: see http://cpansearch.perl.org/src/MIKEM/Net-SSLeay-1.65/examples/https-proxy-snif.pl

@@ -17,19 +17,16 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 use Net::Server;
 
-sub new {
-   my $self = shift->SUPER::new(
-      port => 20111,
-      @_,
-   );
-
-   return $self;
-}
-
 sub help {
    print "set agent port <number>\n";
    print "\n";
    print "run agent listen\n";
+}
+
+sub default_values {
+   return {
+      port => 20111,
+   };
 }
 
 sub listen {

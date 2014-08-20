@@ -21,6 +21,8 @@ use Plashy;
 use Plashy::Log;
 use Plashy::Shell;
 
+my $script = shift;
+
 my $log = Plashy::Log->new(
    level => 1,
 );
@@ -33,4 +35,9 @@ $Plashy::Shell::plashy = $plashy;
 
 my $shell = Plashy::Shell->new;
 
-$shell->cmdloop;
+if (defined($script)) {
+   $shell->cmd("script $script");
+}
+else {
+   $shell->cmdloop;
+}

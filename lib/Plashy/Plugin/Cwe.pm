@@ -52,6 +52,10 @@ sub load {
 
    my $file = $self->file;
 
+   if (! -f $file) {
+      die("run cwe update\n");
+   }
+
    my $slurp = Plashy::Plugin::Slurp->new(
       file => $file,
    );

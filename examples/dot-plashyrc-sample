@@ -1,9 +1,10 @@
-"Welcome to Plashy -  Knowledge is in your head, Detail is in the code"
-"Version $Plashy::VERSION"
+print "--[ Welcome to Plashy - Knowledge is in your head, Detail is in the code ]--\n"
+print "--[ Version $Plashy::VERSION ]--\n"
 
 my $home = $ENV{HOME}
 my $user = $ENV{USER}
 
+set global datadir $home."/plashy/data"
 set global ctimeout 20
 set global rtimeout 20
 set global commands vi,cat,less,w,nc,grep,find,cpanm

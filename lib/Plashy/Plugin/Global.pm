@@ -25,6 +25,9 @@ our @AS = qw(
    ctimeout
    rtimeout
    commands
+   datadir
+   plashy
+   shell
 );
 
 __PACKAGE__->cgBuildIndices;
@@ -34,9 +37,11 @@ use File::Find;
 
 sub new {
    my $self = shift->SUPER::new(
+      echo => 0,
       set => {},
       loaded => {},
       available => {},
+      datadir => '/tmp',
       @_,
    );
 

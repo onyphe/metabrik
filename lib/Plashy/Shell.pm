@@ -26,6 +26,7 @@ use Data::Dump;
 use Data::Dumper;
 use IO::All;
 use Module::Reload;
+use IPC::Run;
 
 use Plashy::Ext::Utils;
 use Plashy::Plugin::Global;
@@ -49,23 +50,31 @@ sub init {
    my $lp = Lexical::Persistence->new;
    $self->lp($lp);
 
-   $self->ps_lp_do('use strict') or $log->fatal("use strict");
-   $self->ps_lp_do('use warnings') or $log->fatal("use warnings");
-   $self->ps_lp_do('use Data::Dumper') or $log->fatal("use Data::Dumper");
-   $self->ps_lp_do('use Plashy::Plugin::Global') or $log->fatal("use Plashy::Plugin::Global");
-
    eval {
       $lp->call(sub {
          my %args = @_;
-         my $log = $args{log};
-         my $plashy = $args{plashy};
+
+         my $__lp_log = $args{log};
+         my $__lp_plashy = $args{plashy};
+         my $__lp_shell = $args{shell};
+
+         use strict;
+         use warnings;
+         use Data::Dumper;
+         use Plashy::Plugin::Global;
+
+         # Only ONE special "global" variable: $global
          my $global = Plashy::Plugin::Global->new(
-            log => $log,
+            log => $__lp_log,
+            plashy => $__lp_plashy,
+            shell => $__lp_shell,
          );
+
          $global->init;
+
          #$global->input(\*STDIN);
          #$global->output(\*STDOUT);
-      }, log => $log, plashy => $plashy);
+      }, log => $log, plashy => $plashy, shell => $self);
    };
    if ($@) {
       $log->fatal("can't initialize global plugin: $@");
@@ -84,7 +93,7 @@ sub init {
       while (defined(my $line = <$in>)) {
          next if ($line =~ /^\s*#/);  # Skip comments
          chomp($line);
-         $self->cmd($self->ps_lookup_vars($line));
+         $self->cmd($self->ps_lookup_vars_in_line($line));
       }
       close($in);
    }
@@ -117,7 +126,27 @@ sub prompt_str {
    return $self->ps1;
 }
 
-sub ps_lookup_vars {
+sub ps_lookup_var {
+   my $self = shift;
+   my ($var) = @_;
+
+   my $log = $plashy->log;
+   my $lp = $self->lp;
+
+   if ($var =~ /^\$(\S+)/) {
+      if (my $res = $self->ps_lp_do($var)) {
+         $var =~ s/\$${1}/$res/;
+      }
+      else {
+         $log->error("unable to lookup variable [$var]");
+         last;
+      }
+   }
+
+   return $var;
+}
+
+sub ps_lookup_vars_in_line {
    my $self = shift;
    my ($line) = @_;
 
@@ -150,7 +179,7 @@ sub cmdloop {
 
    my $buf = '';
    while (defined(my $line = $self->readline($self->prompt_str))) {
-      $buf .= $self->ps_lookup_vars($line);
+      $buf .= $self->ps_lookup_vars_in_line($line);
 
       if ($line =~ /[;{]\s*$/) {
          $self->ps_update_prompt('.. ');
@@ -247,16 +276,15 @@ sub ps_set_signals {
    return 1;
 }
 
-#
-# Classic shell stuff
-#
-sub run_sh {
+# For commands that do not need a terminal
+sub run_command {
    my $self = shift;
-   my ($cmd, @args) = @_;
+   my (@args) = @_;
 
    my $lp = $self->lp;
 
-   my $out = `$cmd @args`;
+   my $out = '';
+   my $r = IPC::Run::run(\@args, \undef, \$out);
 
    $lp->call(sub {
       my %h = @_;
@@ -268,14 +296,15 @@ sub run_sh {
    return 1;
 }
 
+# For commands that need a terminal
 sub run_system {
    my $self = shift;
-   my ($cmd, @args) = @_;
+   my (@args) = @_;
 
    my $log = $plashy->log;
 
    if ($^O =~ /win32/i) {
-      return $_ = system($cmd, @args);
+      return system(@args);
    }
    else {
       eval("use Proc::Simple");
@@ -290,14 +319,14 @@ sub run_system {
       }
 
       my $proc = Proc::Simple->new;
-      $proc->start($cmd, @args);
+      $proc->start(@args);
       $jobs->{current} = $proc;
       if (! $bg) {
          my $status = $proc->wait; # Blocking until process exists
-         return $_ = $status;
+         return $status;
       }
 
-      return $_ = $proc;
+      return $proc;
    }
 
    return;
@@ -307,10 +336,10 @@ sub run_l {
    my $self = shift;
 
    if ($^O =~ /win32/i) {
-      return $self->run_sh('dir', @_);
+      return $self->run_command('dir', @_);
    }
    else {
-      return $self->run_sh('ls', '-lF', @_);
+      return $self->run_command('ls', '-lF', @_);
    }
 }
 
@@ -345,7 +374,7 @@ sub run_history {
 
    my @history = $self->term->GetHistory;
    if (defined($c)) {
-      return $self->cmd($self->ps_lookup_vars($history[$c]));
+      return $self->cmd($self->ps_lookup_vars_in_line($history[$c]));
    }
    else {
       my $c = 0;
@@ -354,6 +383,31 @@ sub run_history {
          $c++;
       }
    }
+
+   return 1;
+}
+
+# XXX: should be a plugin. run_save should be an alias
+sub run_save {
+   my $self = shift;
+   my ($data, $file) = @_;
+
+   my $log = $plashy->log;
+
+   if (!defined($file)) {
+      $log->error("save: pass \$data and \$file parameters");
+      return;
+   }
+
+   $data = $self->ps_lookup_var($data);
+
+   my $r = open(my $out, '>', $file);
+   if (!defined($r)) {
+      $log->error("save: unable to open file [$file] for writing: $!");
+      return;
+   }
+   print $out $data;
+   close($out);
 
    return 1;
 }
@@ -370,11 +424,11 @@ sub run_cd {
          return;
       }
       chdir($dir);
-      $self->ps_update_cwd;
+      $self->ps_update_path_cwd;
    }
    else {
       chdir($self->path_home);
-      $self->ps_update_cwd;
+      $self->ps_update_path_cwd;
       #$self->path_cwd($self->path_home);
    }
 
@@ -458,66 +512,6 @@ sub run_faq {
    return 1;
 }
 
-# XXX: should be removed
-sub _run_readline {
-   my $self = shift;
-
-   my $lp = $self->{plashy}->{lp};
-
-   my $line;
-   eval {
-      $lp->call(sub {
-         my %args = @_;
-
-         my $line = $args{line};
-
-         my $input = $global->input;
-         #print "DEBUG input[$input]\n";
-
-         my $read = <$input>;
-         #print "DEBUG read[$read]\n";
-         $$line = $read;
-      }, line => \$line);
-   };
-   if ($@) {
-      $self->{plashy}->{log}->error("readline: $@");
-   }
-
-   #print "DEBUG line[$line]\n";
-
-   return $_ = $line;
-}
-
-# XXX: should be removed
-sub _run_readall {
-   my $self = shift;
-
-   my $lp = $self->{plashy}->{lp};
-
-   my $line;
-   eval {
-      $lp->call(sub {
-         my %args = @_;
-
-         my $line = $args{line};
-
-         my $input = $global->input;
-         #print "DEBUG input[$input]\n";
-
-         my @read = <$input>;
-         #print "DEBUG read[$read]\n";
-         $$line = [ @read ];
-      }, line => \$line);
-   };
-   if ($@) {
-      $self->{plashy}->{log}->error("readall: $@");
-   }
-
-   #print "DEBUG line[$line]\n";
-
-   return $_ = $line;
-}
-
 sub comp_doc {
    my $self = shift;
    my ($word, $line, $start) = @_;
@@ -549,6 +543,30 @@ sub comp_doc {
    return keys %comp;
 }
 
+sub ps_lp_global_get {
+   my $self = shift;
+   my ($var) = @_;
+
+   my $log = $plashy->log;
+   my $lp = $self->lp;
+
+   my $value;
+   eval {
+      $value = $lp->call(sub {
+         my %args = @_;
+         my $__lp_var = $args{var};
+         my $__lp_value = $global->$__lp_var;
+         return $__lp_value;
+      }, var => $var);
+   };
+   if ($@) {
+      $log->error($@);
+      return;
+   }
+
+   return $value;
+}
+
 sub ps_lp_do {
    my $self = shift;
    my ($code) = @_;
@@ -556,16 +574,23 @@ sub ps_lp_do {
    my $log = $plashy->log;
    my $lp = $self->lp;
 
+   #my $echo = $lp->call(sub { return $global->echo }) || 0;
+   my $echo = $self->ps_lp_global_get('echo');
+
    my $res;
    eval {
-      $res = Data::Dump::dump($lp->do($code));
+      if ($echo) {
+         $res = Data::Dump::dump($lp->do($code));
+         print "$res\n";
+      }
+      else {
+         $res = $lp->do($code);
+      }
    };
    if ($@) {
       $log->error($@);
       return;
    }
-
-   print "$res\n";
 
    return $res;
 }
@@ -613,7 +638,7 @@ sub catch_run {
    my $commands = $self->ps_get_commands;
    for my $command (@$commands) {
       if ($args[0] eq $command) {
-         return $self->run_system(@args);
+         return $self->run_command(@args);
       }
    }
 
@@ -763,16 +788,16 @@ sub run_show {
 
    eval {
       $lp->call(sub {
-         my $available = $global->available;
-         my $loaded = $global->loaded;
-         my $count = 0;
+         my $__lp_available = $global->available;
+         my $__lp_loaded = $global->loaded;
+         my $__lp_count = 0;
          print "Plugin(s):\n";
-         for my $k (sort { $a cmp $b } keys %$available) {
+         for my $k (sort { $a cmp $b } keys %$__lp_available) {
             print "   $k";
-            print (exists $loaded->{$k} ? " [LOADED]\n" : "\n");
-            $count++;
+            print (exists $__lp_loaded->{$k} ? " [LOADED]\n" : "\n");
+            $__lp_count++;
          }
-         print "Total: $count\n";
+         print "Total: $__lp_count\n";
       });
    };
    if ($@) {
@@ -793,20 +818,21 @@ sub run_set {
    if (! defined($plugin)) {
       eval {
          $lp->call(sub {
-            my $set = $global->set;
-            my $count = 0;
+            my $__lp_set = $global->set;
+            my $__lp_count = 0;
+
             print "Set variable(s):\n";
-            for my $plugin (sort { $a cmp $b } keys %$set) {
-               for my $k (sort { $a cmp $b } keys %{$set->{$plugin}}) {
-                  print "   $plugin $k ".$set->{$plugin}->{$k}."\n";
-                  $count++;
+            for my $plugin (sort { $a cmp $b } keys %$__lp_set) {
+               for my $k (sort { $a cmp $b } keys %{$__lp_set->{$plugin}}) {
+                  print "   $plugin $k ".$__lp_set->{$plugin}->{$k}."\n";
+                  $__lp_count++;
                }
             }
-            print "Total: $count\n";
+            print "Total: $__lp_count\n";
          });
       };
       if ($@) {
-         $log->error("set: $@");
+         $log->error("set1: $@");
          return;
       }
 
@@ -816,30 +842,34 @@ sub run_set {
    eval {
       $lp->call(sub {
          my %args = @_;
-         my $plugin = $args{plugin};
-         if (! exists($global->loaded->{$plugin})) {
-            die("plugin [$plugin] not loaded or does not exist\n");
+
+         my $__lp_plugin = $args{plugin};
+
+         if (! exists($global->loaded->{$__lp_plugin})) {
+            die("plugin [$__lp_plugin] not loaded or does not exist\n");
          }
       }, plugin => $plugin);
    };
    if ($@) {
-      $log->error("set: $@");
+      $log->error("set2: $@");
       return;
    }
 
    eval {
       $lp->call(sub {
          my %args = @_;
-         my $plugin = $args{plugin};
-         my $key = $args{key};
-         my $val = $args{val};
-         #$global->loaded->{$plugin}->init; # No init when just setting an attribute
-         $global->loaded->{$plugin}->$key($val);
-         $global->set->{$plugin}->{$key} = $val;
+
+         my $__lp_plugin = $args{plugin};
+         my $__lp_key = $args{key};
+         my $__lp_val = $args{val};
+
+         #$global->loaded->{$__lp_plugin}->init; # No init when just setting an attribute
+         $global->loaded->{$__lp_plugin}->$__lp_key($__lp_val);
+         $global->set->{$__lp_plugin}->{$__lp_key} = $__lp_val;
       }, plugin => $plugin, key => $k, val => $v);
    };
    if ($@) {
-      $log->error("set: $@");
+      $log->error("set3: $@");
       return;
    }
 
@@ -857,22 +887,22 @@ sub run_run {
       $lp->call(sub {
          my %args = @_;
 
-         my $method = $args{method};
-         my $plugin = $args{plugin};
-         my @args = @{$args{args}};
+         my $__lp_method = $args{method};
+         my $__lp_plugin = $args{plugin};
+         my @__lp_args = @{$args{args}};
 
-         my $run = $global->loaded->{$plugin};
-         if (! defined($run)) {
+         my $__lp_run = $global->loaded->{$__lp_plugin};
+         if (! defined($__lp_run)) {
             die("plugin [$plugin] not loaded\n");
          }
 
-         $run->init; # Will init() only if not already done
+         $__lp_run->init; # Will init() only if not already done
 
-         if (! $run->can("$method")) {
-            die("no method [$method] defined for plugin [$plugin]\n");
+         if (! $__lp_run->can("$__lp_method")) {
+            die("no method [$__lp_method] defined for plugin [$__lp_plugin]\n");
          }
 
-         $_ = $run->$method(@args);
+         $_ = $__lp_run->$__lp_method(@__lp_args);
       }, plugin => $plugin, method => $method, args => \@args);
    };
    if ($@) {
@@ -903,7 +933,7 @@ sub run_script {
    while (defined(my $line = <$in>)) {
       next if ($line =~ /^\s*#/);  # Skip comments
       chomp($line);
-      $self->cmd($self->ps_lookup_vars($line));
+      $self->cmd($self->ps_lookup_vars_in_line($line));
    }
    close($in);
 

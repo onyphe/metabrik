@@ -37,12 +37,6 @@ sub help {
    print "run www getcertificate <url> | []\n";
 }
 
-sub self {
-   my $self = shift;
-
-   return $self->mechanize;
-}
-
 sub get {
    my $self = shift;
    my ($url) = @_;

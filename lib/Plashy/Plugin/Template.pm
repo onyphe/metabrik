@@ -26,6 +26,14 @@ sub help {
    print "run template method2 <argument1> <argument2>\n";
 }
 
+sub default_values {
+   my $self = shift;
+
+   return {
+      variable1 => 'value1',
+   };
+}
+
 sub init {
    my $self = shift->SUPER::init(
       @_,
