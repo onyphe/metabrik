@@ -45,8 +45,6 @@ sub new {
       @_,
    );
 
-   $self->update_available_plugins;
-
    return $self;
 }
 

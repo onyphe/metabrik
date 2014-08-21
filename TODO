@@ -10,6 +10,7 @@ Design rules:
 6. Everything is plugin, like everything is a file in UNIX
 7. Performance is not the goal
 8. Return USEFUL things from plugin commands
+9. Reuse CPAN modules as much as possible
 
 Usage rules:
 1. Three kind of command lines:
@@ -21,7 +22,10 @@ Split Plashy.pm into:
 1. Plashy for plashy stuff (lp, global, ...)
 2. Plashy::Shell for Term::Shell stuff
 
-Rname plugins methods to use run_. Modify Plashy::Plugin to work like Term::Shell to auto discover methods.
+Rename plugins methods to use run_. Modify Plashy::Plugin to work like Term::Shell to auto discover methods.
+
+Wwwutil:
+-> Interrogates Hurricane Electric stuff: http://bgp.he.net/ip/130.193.27.21
 
 staticperl, standalone Perl with libc:
 http://search.cpan.org/~mlehmann/App-Staticperl-1.43/

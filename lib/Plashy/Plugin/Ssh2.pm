@@ -31,6 +31,7 @@ sub help {
    print "run ssh2 connect\n";
    print "run ssh2 cat <file>\n";
    print "run ssh2 cmd <command>\n";
+   print "run ssh2 listfiles <glob>\n";
    print "run ssh2 disconnect\n";
 }
 
@@ -86,7 +87,7 @@ sub disconnect {
    my $ssh2 = $self->ssh2;
 
    if (! defined($ssh2)) {
-      die("you must 'run ssh2 connect' before using 'run ssh2 cmd <command>'\n");
+      die("run ssh2 connect\n");
    }
 
    return $ssh2->disconnect;
@@ -103,11 +104,11 @@ sub cmd {
    my $ssh2 = $self->ssh2;
 
    if (! defined($ssh2)) {
-      die("you must 'run ssh2 connect' before using 'run ssh2 cmd <command>'\n");
+      die("run ssh2 connect\n");
    }
 
    if (! defined($cmd)) {
-      die("you must provide a command as an argument to 'run ssh2 cmd'\n");
+      die("run ssh2 cmd <cmd>\n");
    }
 
    print "DEBUG: cmd[$cmd]\n" if $self->debug;
@@ -119,6 +120,25 @@ sub cmd {
    #print "@lines\n";
 
    return $chan;
+}
+
+sub listfiles {
+   my $self = shift;
+   my ($glob) = @_;
+
+   my $chan = $self->cmd("ls $glob 2> /dev/null");
+
+   my @files = ();
+   my @lines = <$chan>;
+   if (@lines > 0) {
+      for my $l (@lines) {
+         chomp($l);
+         #print "DEBUG file[$l]\n";
+         push @files, $l;
+      }
+   }
+
+   return \@files;
 }
 
 sub test {

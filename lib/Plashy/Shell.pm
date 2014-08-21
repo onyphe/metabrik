@@ -58,9 +58,6 @@ sub init {
          my $__lp_plashy = $args{plashy};
          my $__lp_shell = $args{shell};
 
-         use strict;
-         use warnings;
-         use Data::Dumper;
          use Plashy::Plugin::Global;
 
          # Only ONE special "global" variable: $global
@@ -79,6 +76,10 @@ sub init {
    if ($@) {
       $log->fatal("can't initialize global plugin: $@");
    }
+
+   $self->ps_lp_do("use strict;");
+   $self->ps_lp_do("use warnings;");
+   $self->ps_lp_do("use Data::Dumper;");
 
    $self->ps_set_path_home;
    $self->ps_set_signals;
@@ -103,6 +104,15 @@ sub init {
          $self->term->ReadHistory($history)
             or $log->fatal("can't read history file [$history]: $!");
       }
+   }
+
+   eval {
+      $lp->call(sub {
+         $global->update_available_plugins;
+      });
+   };
+   if ($@) {
+      $log->fatal("can't update_available_plugins() from global plugin: $@");
    }
 
    #{
@@ -248,8 +258,8 @@ sub ps_set_signals {
    my @signals = grep { substr($_, 0, 1) ne '_' } keys %SIG;
 
    $SIG{TSTP} = sub {
-      print "DEBUG SIGTSTP: ".$jobs->{current}->pid."\n";
       if (defined($jobs->{current})) {
+         print "DEBUG SIGTSTP: ".$jobs->{current}->pid."\n";
          $jobs->{current}->kill("SIGTSTP");
          $jobs->{current}->kill("SIGINT");
          return 1;
@@ -257,16 +267,16 @@ sub ps_set_signals {
    };
 
    $SIG{CONT} = sub {
-      print "DEBUG SIGCONT: ".$jobs->{current}->pid."\n";
       if (defined($jobs->{current})) {
+         print "DEBUG SIGCONT: ".$jobs->{current}->pid."\n";
          $jobs->{current}->kill("SIGCONT");
          return 1;
       }
    };
 
    $SIG{INT} = sub {
-      print "DEBUG SIGINT: ".$jobs->{current}->pid."\n";
       if (defined($jobs->{current})) {
+         print "DEBUG SIGINT: ".$jobs->{current}->pid."\n";
          $jobs->{current}->kill("SIGINT");
          undef $jobs->{current};
          return 1;
@@ -274,6 +284,16 @@ sub ps_set_signals {
    };
 
    return 1;
+}
+
+sub run_say {
+   my $self = shift;
+
+   my $line = $self->line;
+   $line =~ s/^say/print/;
+   $line =~ s/$/."\n"/;
+
+   return $self->cmd($line);
 }
 
 # For commands that do not need a terminal
@@ -893,7 +913,7 @@ sub run_run {
 
          my $__lp_run = $global->loaded->{$__lp_plugin};
          if (! defined($__lp_run)) {
-            die("plugin [$plugin] not loaded\n");
+            die("plugin [$__lp_plugin] not loaded\n");
          }
 
          $__lp_run->init; # Will init() only if not already done
