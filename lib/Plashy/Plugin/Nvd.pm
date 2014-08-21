@@ -1,0 +1,360 @@
+#
+# $Id$
+#
+# NVD plugin
+#
+package Plashy::Plugin::Nvd;
+use strict;
+use warnings;
+
+use base qw(Plashy::Plugin);
+
+our @AS = qw(
+   uri_recent
+   uri_modified
+   uri_others
+   xml_recent
+   xml_modified
+   xml_others
+   xml
+);
+__PACKAGE__->cgBuildIndices;
+__PACKAGE__->cgBuildAccessorsScalar(\@AS);
+
+use Plashy::Plugin::Slurp;
+use Plashy::Plugin::Fetch;
+
+sub help {
+   #print "run nvd updaterecent\n";
+   #print "run nvd updatemodified\n";
+   #print "run nvd updateothers\n";
+   print "run nvd update <[recent|modified|others]>\n";
+   print "run nvd load <[recent|modified|others]>\n";
+   print "run nvd search <pattern>\n";
+   print "run nvd searchbycpe <cpe>\n";
+   print "run nvd getxml <cve_id>\n";
+}
+
+sub default_values {
+   my $self = shift;
+
+   my $datadir = $self->global->datadir;
+
+   # http://nvd.nist.gov/download.cfm
+   # nvdcve-2.0-modified.xml includes all recently published and recently updated vulnerabilities
+   # nvdcve-2.0-recent.xml includes all recently published vulnerabilities
+   # nvdcve-2.0-2002.xml includes vulnerabilities prior to and including 2002.
+   return {
+      uri_recent => [ 'http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-recent.xml', ],
+      uri_modified => [ 'http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-modified.xml', ],
+      uri_others => [ qw(
+         http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2002.xml
+         http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2003.xml
+         http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2004.xml
+         http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2005.xml
+         http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2006.xml
+         http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2007.xml
+         http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2008.xml
+         http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2009.xml
+         http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2010.xml
+         http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2011.xml
+         http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2012.xml
+         http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2013.xml
+         http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2014.xml
+      ) ],
+      xml_recent => [ "$datadir/nvdcve-2.0-recent.xml", ],
+      xml_modified => [ "$datadir/nvdcve-2.0-modified.xml", ],
+      xml_others => [
+         "$datadir/nvdcve-2.0-2002.xml",
+         "$datadir/nvdcve-2.0-2003.xml",
+         "$datadir/nvdcve-2.0-2004.xml",
+         "$datadir/nvdcve-2.0-2005.xml",
+         "$datadir/nvdcve-2.0-2006.xml",
+         "$datadir/nvdcve-2.0-2007.xml",
+         "$datadir/nvdcve-2.0-2008.xml",
+         "$datadir/nvdcve-2.0-2009.xml",
+         "$datadir/nvdcve-2.0-2010.xml",
+         "$datadir/nvdcve-2.0-2011.xml",
+         "$datadir/nvdcve-2.0-2012.xml",
+         "$datadir/nvdcve-2.0-2013.xml",
+         "$datadir/nvdcve-2.0-2014.xml",
+      ],
+   };
+}
+
+# XXX: to remove
+sub _updaterecent {
+   my $self = shift;
+
+   my $datadir = $self->global->datadir;
+   my $uri = $self->uri_recent;
+   my $xml = $self->xml_recent;
+
+   my $fetch = Plashy::Plugin::Fetch->new(
+      output => $xml->[0],
+   );
+   $fetch->get($uri->[0]) or die("fetch::get: uri[".$uri->[0]."]\n");
+
+   return 1;
+}
+
+# XXX: to remove
+sub _updatemodified {
+   my $self = shift;
+
+   my $datadir = $self->global->datadir;
+   my $uri = $self->uri_modified;
+   my $xml = $self->xml_modified;
+
+   my $fetch = Plashy::Plugin::Fetch->new(
+      output => $xml->[0],
+   );
+   $fetch->get($uri->[0]) or die("fetch::get: uri[".$uri->[0]."]\n");
+
+   return 1;
+}
+
+# XXX: to remove
+sub _updateothers {
+   my $self = shift;
+
+   my $datadir = $self->global->datadir;
+   my $uri_list = $self->uri_others;
+   my $xml_list = $self->xml_others;
+   my $count = scalar @$uri_list;
+
+   for my $c (0..$count-1) {
+      my $fetch = Plashy::Plugin::Fetch->new(
+         output => $xml_list->[$c],
+      );
+      $fetch->get($uri_list->[$c]) or die("fetch::get: uri[".$uri_list->[$c]."]\n");
+   }
+
+   return 1;
+}
+
+sub update {
+   my $self = shift;
+   my ($type) = @_;
+
+   if (! defined($type)) {
+      die("run nvd update <[recent|modified|others]>\n");
+   }
+
+   if ($type ne 'recent'
+   &&  $type ne 'modified'
+   &&  $type ne 'others') {
+      die("run nvd update <[recent|modified|others]>\n");
+   }
+
+   my $datadir = $self->global->datadir;
+   my $xml_method = "xml_$type";
+   my $xml_files = $self->$xml_method;
+   my $uri_method = "uri_$type";
+   my $uri_list = $self->$uri_method;
+   my $count = scalar @$xml_files;
+
+   for my $c (0..$count-1) {
+      my $fetch = Plashy::Plugin::Fetch->new(
+         output => $uri_list->[$c],
+      );
+      $fetch->get($uri_list->[$c]) or die("fetch::get: uri[".$uri_list->[$c]."]\n");
+   }
+
+   return 1;
+}
+
+sub load {
+   my $self = shift;
+   my ($type, $pattern) = @_;
+
+   if (! defined($type)) {
+      die("run nvd load <[recent|modified|others]> [ <pattern> ]\n");
+   }
+
+   if ($type ne 'recent'
+   &&  $type ne 'modified'
+   &&  $type ne 'others') {
+      die("run nvd load <[recent|modified|others]>\n");
+   }
+
+   my $datadir = $self->global->datadir;
+   my $xml_method = "xml_$type";
+   my $xml_files = $self->$xml_method;
+   my $count = scalar @$xml_files;
+
+   my $old_xml = $self->xml;
+   for my $c (0..$count-1) {
+      my $file = $xml_files->[$c];
+      # If file does not match user pattern, we don't load it
+      if (defined($pattern) && $file !~ /$pattern/) {
+         next;
+      }
+      my $slurp = Plashy::Plugin::Slurp->new(
+         file => $file,
+      );
+      print "DEBUG Slurping file: ".$xml_files->[$c]."\n";
+      my $xml = $slurp->xml or die("load::slurp::xml");
+
+      # Merge XML data
+      if (defined($old_xml)) {
+         print "DEBUG Merging\n";
+         for my $k (keys %{$xml->{entry}}) {
+            # Check if it already exists
+            if (exists $old_xml->{entry}->{$k}) {
+               # It exists. Do we load recent or modified data?
+               # If so, it takes precedence, and we overwrite it.
+               if ($type eq 'recent' || $type eq 'modified') {
+                  $old_xml->{entry}->{$k} = $xml->{entry}->{$k};
+               }
+            }
+            # We add it directly if it does not exist yet.
+            else {
+               $old_xml->{entry}->{$k} = $xml->{entry}->{$k};
+            }
+         }
+      }
+      # There was nothing previously, we write everything.
+      else {
+         $old_xml = $xml;
+      }
+   }
+
+   return $self->xml($old_xml);
+}
+
+sub show {
+   my $self = shift;
+   my ($h) = @_;
+
+   my $buf = "CVE: ".$h->{cve_id}."\n";
+   $buf .= "CWE: ".$h->{cwe_id}."\n";
+   $buf .= "Published datetime: ".$h->{published_datetime}."\n";
+   $buf .= "Last modified datetime: ".$h->{last_modified_datetime}."\n";
+   $buf .= "URL: ".$h->{url}."\n";
+   $buf .= "Summary: ".($h->{summary} || '(undef)')."\n";
+   $buf .= "Vuln product:\n";
+   for my $vuln_product (@{$h->{vuln_product}}) {
+      $buf .= "   $vuln_product\n";
+   }
+
+   return $buf;
+}
+
+sub _to_hash {
+   my $self = shift;
+   my ($h, $cve) = @_;
+
+   my $published_datetime = $h->{'vuln:published-datetime'};
+   my $last_modified_datetime = $h->{'vuln:last-modified-datetime'};
+   my $summary = $h->{'vuln:summary'};
+   my $cwe_id = $h->{'vuln:cwe'}->{id} || '(undef)';
+   $cwe_id =~ s/^CWE-//;
+
+   my $vuln_product = [];
+   if (defined($h->{'vuln:vulnerable-software-list'})
+   &&  defined($h->{'vuln:vulnerable-software-list'}->{'vuln:product'})) {
+      my $e = $h->{'vuln:vulnerable-software-list'}->{'vuln:product'};
+      if (ref($e) eq 'ARRAY') {
+         $vuln_product = $e;
+      }
+      else {
+         $vuln_product = [ $e ];
+      }
+   }
+
+   return {
+      cve_id => $cve,
+      url => 'http://web.nvd.nist.gov/view/vuln/detail?vulnId='.$cve,
+      published_datetime => $published_datetime,
+      last_modified_datetime => $last_modified_datetime,
+      summary => $summary,
+      cwe_id => $cwe_id,
+      vuln_product => $vuln_product,
+   };
+}
+
+sub search {
+   my $self = shift;
+   my ($pattern) = @_;
+
+   my $xml = $self->xml;
+   if (! defined($xml)) {
+      die("run nvd load <..>\n");
+   }
+
+   if (! defined($pattern)) {
+      die("run nvd search <pattern>\n");
+   }
+
+   my $entries = $xml->{entry};
+   if (! defined($entries)) {
+      die("nothing in this xml file");
+   }
+
+   my @entries = ();
+   for my $cve (keys %$entries) {
+      my $this = $self->_to_hash($entries->{$cve}, $cve);
+
+      if ($this->{cve_id} =~ /$pattern/ || $this->{summary} =~ /$pattern/i) {
+         push @entries, $this;
+         print $self->show($this)."\n";
+      }
+   }
+
+   return \@entries;
+}
+
+sub searchbycpe {
+   my $self = shift;
+   my ($cpe) = @_;
+
+   my $xml = $self->xml;
+   if (! defined($xml)) {
+      die("run nvd load <..>\n");
+   }
+
+   if (! defined($cpe)) {
+      die("run nvd searchbycpe <cpe>\n");
+   }
+
+   my $entries = $xml->{entry};
+   if (! defined($entries)) {
+      die("nothing in this xml file");
+   }
+
+   my @entries = ();
+   for my $cve (keys %$entries) {
+      my $this = $self->_to_hash($entries->{$cve}, $cve);
+
+      for my $vuln_product (@{$this->{vuln_product}}) {
+         if ($vuln_product =~ /$cpe/i) {
+            push @entries, $this;
+            print $self->show($this)."\n";
+            last;
+         }
+      }
+   }
+
+   return \@entries;
+}
+
+sub getxml {
+   my $self = shift;
+   my ($cve_id) = @_;
+
+   my $xml = $self->xml;
+   if (! defined($xml)) {
+      die("run nvd load <..>\n");
+   }
+
+   if (defined($xml->{entry})) {
+      return $xml->{entry}->{$cve_id};
+   }
+
+   return;
+}
+
+1;
+
+__END__
