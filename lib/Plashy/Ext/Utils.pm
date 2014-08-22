@@ -7,7 +7,7 @@ use warnings;
 
 use base qw(Exporter);
 
-our @EXPORT = qw(
+our @EXPORT_OK = qw(
    peu_convert_path
 );
 

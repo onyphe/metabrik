@@ -68,7 +68,7 @@ __END__
 
 =head1 NAME
 
-Plashy::Log - logging directly on the console
+Plashy::Log - logging base-class
 
 =head1 SYNOPSIS
 

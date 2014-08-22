@@ -93,7 +93,7 @@ sub load {
       die("Plugin [$plugin] already loaded\n");
    }
 
-   eval("use $module");
+   eval("use $module;");
    if ($@) {
       die("unable to load Plugin [$plugin]: $@\n");
    }

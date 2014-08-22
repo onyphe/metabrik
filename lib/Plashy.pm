@@ -5,28 +5,41 @@ package Plashy;
 use strict;
 use warnings;
 
-our $VERSION = '0.14';
+our $VERSION = '0.20';
 
 use base qw(Class::Gomor::Array);
 
-our @AS = qw(
-   log
-);
 __PACKAGE__->cgBuildIndices;
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
-sub new {
-   my $self = shift->SUPER::new(
-      @_,
-   );
-
-   if (! defined($self->log)) {
-      die("[-] FATAL: you must pass a `log' attribute\n");
-   }
-
-   return $self;
-}
 
 1;
 
 __END__
+
+=head1 NAME
+
+Plashy - PerL Awesome SHell, Yeeeeaaaaaa!
+
+=head1 SYNOPSIS
+
+   use Plashy;
+
+=head1 DESCRIPTION
+
+Nothing to do with this module.
+
+=head2 METHODS
+
+None.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+
+You may distribute this module under the terms of the Artistic license.
+See LICENSE.Artistic file in the source distribution archive.
+
+=head1 AUTHOR
+
+Patrice E<lt>GomoRE<gt> Auffret
+
+=cut

@@ -73,3 +73,54 @@ sub method2 {
 1;
 
 __END__
+
+=head1 NAME
+
+Plashy::Plugin::Template - template to write a new Plashy plugin
+
+=head1 SYNOPSIS
+
+   $ cp lib/Plashy/Plugin/Template.pm ~/myplashy/lib/Plugin/Myplugin.pm
+   $ vi ~/myplashy/lib/Plugin/Myplugin.pm
+
+   # From a module
+
+   use Plashy::Plugin::Find;
+
+   my $path = join(':', @INC);
+   my $plugin = Plashy::Plugin::Find->new;
+   my $found = $plugin->find($path, '/lib/Plashy/Plugin$', '.pm$');
+   for my $file (@$found) {
+      print "$file\n";
+   }
+
+   # From the Shell
+
+   > my $path = join(':', @INC)
+   > set find path $path
+   > run find files /lib/Plashy/Plugin$ .pm$
+
+=head1 DESCRIPTION
+
+Template to write a new Plashy plugin.
+
+=head2 METHODS
+
+=head3 B<help>
+
+=head3 B<default_values>
+
+=head3 B<init>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+
+You may distribute this module under the terms of the Artistic license.
+See LICENSE.Artistic file in the source distribution archive.
+
+=head1 AUTHOR
+
+Patrice E<lt>GomoRE<gt> Auffret
+
+=cut

@@ -13,26 +13,15 @@ BEGIN {
 
    eval("use lib \"$lib\";");
    if ($@) {
-      die("FATAL: unable to load plashy libs [$@]\n");
+      die("[-] FATAL: plashy: unable to load plashy libs [$@]\n");
    }
 }
 
-use Plashy;
-use Plashy::Log;
 use Plashy::Shell;
 
 my $script = shift;
 
-my $log = Plashy::Log->new(
-   level => 1,
-);
-
-my $plashy = Plashy->new(
-   log => $log,
-);
-
-$Plashy::Shell::plashy = $plashy;
-
+$Plashy::Shell::Logger = 'Plashy::Log::Console';
 my $shell = Plashy::Shell->new;
 
 if (defined($script)) {

@@ -27,7 +27,8 @@ use WWW::Mechanize;
 sub help {
    print "set www url <url>\n";
    print "\n";
-   print "run www get <url> | []\n";
+   print "run www get <url>\n";
+   print "run www post <url> <data>\n";
    print "run www self\n";
    print "run www info\n";
    print "run www forms\n";
@@ -49,14 +50,46 @@ sub get {
 
    $self->url($url);
 
+   $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
+
    my $mech = WWW::Mechanize->new;
    $mech->agent_alias('Linux Mozilla');
+   #$mech->ssl_opts(SSL_ca_path => '/etc/ssl/certs');
+   #$mech->ssl_opts(verify_hostname => 0);
+
+   if ($self->debug) {
+      print "DEBUG url[$url]\n";
+   }
 
    $mech->get($url);
 
    $self->mechanize($mech);
 
    return $mech;
+}
+
+sub post {
+   my $self = shift;
+   my ($url, $data) = @_;
+
+   if (! defined($data)) {
+      die("run www post <url> <data>\n");
+   }
+
+   if ($self->debug) {
+      print "DEBUG url[$url]\n";
+      print "DEBUG data[$data]\n";
+   }
+
+   #$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
+
+   my $mech = WWW::Mechanize->new;
+   $mech->agent_alias('Linux Mozilla');
+   #$mech->ssl_opts(verify_hostname => 0);
+
+   $self->mechanize($mech);
+   
+   return $mech->post($url, [ $data ]);
 }
 
 sub info {

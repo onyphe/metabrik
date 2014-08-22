@@ -1,5 +1,10 @@
+use Plashy
+
 print "--[ Welcome to Plashy - Knowledge is in your head, Detail is in the code ]--\n"
 print "--[ Version $Plashy::VERSION ]--\n"
+
+# Change terminal title
+print "\c[];Plashy v$Plashy::VERSION\a\n"
 
 my $home = $ENV{HOME}
 my $user = $ENV{USER}
