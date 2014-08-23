@@ -40,8 +40,12 @@ Usage rules:
 - External command
 
 Vocabulary:
+- The Shell has builtins (load, set, run)
 - A Brick
-- A command in a Brick (not a method)
+- A Brick has commands (not methods)
+- A Brick has attributes (you can set using `set' builtin)
+- A Brick command may have arguments
+=> Rename to use that in all code
 
 Split Plashy into:
 - Plashy::Shell for Term::Shell stuff
