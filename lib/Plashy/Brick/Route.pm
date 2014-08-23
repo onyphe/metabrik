@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Route plugin
+# Route brick
 #
-package Plashy::Plugin::Route;
+package Plashy::Brick::Route;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    dnet

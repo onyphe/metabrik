@@ -1,8 +1,22 @@
+MetaBricky:
+-> takes the best from MetaSploit CLI, Scapy ideas, and UNIX Shells.
+-> Bind them in the darkness.
+
 Plashy - knowledge is in your head, detail is in the code
+Plashy - There is a Brick for that.
 > Brain has knowledge, code has details.
 
-Rename Plugin to Brick
-Rename Plashy::Log to Plashy::Log::Console
+Move everything to a Brick. Even ls, save, ..., cd ...
+
+Name:
+MetaBricks?
+MetaBricko?
+MecaBrick?
+> metabricky/meby
+MetaBricko?
+MetaScapy? MSP/MSY
+Bricko
+Bricko Depo
 
 Design rules:
 1. Only shell commands can overwrite $_
@@ -12,8 +26,12 @@ Design rules:
 5. One or two args at most for a brick command, other stuff in `set' attributes
 6. Everything is a brick, like everything is a file in UNIX
 7. Performance is not the goal
-8. Return USEFUL things from brick commands
+8. Return USEFUL things from brick EVERY commands
 9. Reuse CPAN modules as much as possible
+
+Developer rules:
+- in Context::call or ::do, die() will be catched.
+=> Bricks do not need access to $log.
 
 Usage rules:
 1. Three kind of command lines:
@@ -21,10 +39,16 @@ Usage rules:
 - Plashy shell line
 - External command
 
+Vocabulary:
+- A Brick
+- A command in a Brick (not a method)
+
 Split Plashy into:
 - Plashy::Shell for Term::Shell stuff
 
 Rename bricks methods to use run_. Modify Plashy::Brick to work like Term::Shell to auto discover methods.
+
+use page() and pager_internal() from Term::Shell
 
 Wwwutil:
 -> Interrogates Hurricane Electric stuff: http://bgp.he.net/ip/130.193.27.21

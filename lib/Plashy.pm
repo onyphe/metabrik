@@ -27,7 +27,7 @@ Plashy - PerL Awesome SHell, Yeeeeaaaaaa!
 
 Nothing to do with this module.
 
-=head2 METHODS
+=head2 COMMANDS
 
 None.
 

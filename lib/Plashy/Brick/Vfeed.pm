@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# vFeed plugin
+# vFeed brick
 #
-package Plashy::Plugin::Vfeed;
+package Plashy::Brick::Vfeed;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    db

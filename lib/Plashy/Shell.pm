@@ -25,12 +25,13 @@ use IO::All;
 use Module::Reload;
 use IPC::Run;
 
+use Plashy;
 use Plashy::Context;
 use Plashy::Ext::Utils qw(peu_convert_path);
 
 # Exists because we cannot give an argument to Term::Shell::new()
 # Or I didn't found how to do it.
-our $Logger;
+our $Log;
 
 # Exists to avoid compile-time errors.
 # It is only used by Plashy::Context.
@@ -40,11 +41,16 @@ use vars qw{$AUTOLOAD};
 
 sub AUTOLOAD {
    my $self = shift;
-   print "DEBUG autoload[$AUTOLOAD]\n";
-   print "DEBUG self[$self]\n";
+
+   my $context = $self->context;
+
+   $Log->debug("autoload[$AUTOLOAD]");
+   $Log->debug("self[$self]");
+
    $self->ps_update_prompt('xxx $AUTOLOAD ');
    #$self->ps1('$AUTOLOAD ');
    $self->ps_update_prompt;
+
    return 1;
 }
 
@@ -56,17 +62,15 @@ sub init {
 
    $|++;
 
-   if (! defined($Logger)) {
-      die("[-] FATAL: Plashy::Shell::init: you must give `Logger' variable\n");
+   if (! defined($Log)) {
+      die("[-] FATAL: Plashy::Shell::init: you must create a `Log' object\n");
    }
 
    my $context = Plashy::Context->new(
-      logger => $Logger,
+      log => $Log,
       shell => $self,
    );
    $self->context($context);
-
-   my $log = $context->log;
 
    $self->ps_set_path_home;
    $self->ps_set_signals;
@@ -77,7 +81,7 @@ sub init {
    my $history = $self->plashy_history($self->path_home."/.plashy_history");
 
    if (-f $rc) {
-      open(my $in, '<', $rc) or $log->fatal("can't open rc file [$rc]: $!");
+      open(my $in, '<', $rc) or $Log->fatal("can't open rc file [$rc]: $!");
       while (defined(my $line = <$in>)) {
          next if ($line =~ /^\s*#/);  # Skip comments
          chomp($line);
@@ -86,17 +90,22 @@ sub init {
       close($in);
    }
 
+   # Default: 'us,ue,md,me', see `man 5 termcap' and Term::Cap
+   # See also Term::ReadLine LoadTermCap() and ornaments() subs.
+   $self->term->ornaments('md,me');
+
    if ($self->term->can('ReadHistory')) {
       if (-f $history) {
          $self->term->ReadHistory($history)
-            or $log->fatal("can't read history file [$history]: $!");
+            or $Log->fatal("can't read history file [$history]: $!");
       }
    }
 
-   $context->global_update_available_plugins
-      or $log->fatal("init: global_update_available_plugins");
+   $context->global_update_available_bricks
+      or $Log->fatal("init: global_update_available_bricks");
 
-   my $available = $context->global_get('available');
+   my $available = $context->global_get('available')
+      or $Log->fatal("init: unable to get available bricks");
    for my $a (keys %$available) {
       $self->add_handlers("run_$a");
    }
@@ -164,14 +173,13 @@ sub ps_lookup_var {
    my ($var) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    if ($var =~ /^\$(\S+)/) {
       if (my $res = $context->do($var)) {
          $var =~ s/\$${1}/$res/;
       }
       else {
-         $log->warning("ps_lookup_var: unable to lookup variable [$var]");
+         $Log->warning("ps_lookup_var: unable to lookup variable [$var]");
          last;
       }
    }
@@ -184,7 +192,6 @@ sub ps_lookup_vars_in_line {
    my ($line) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    if ($line =~ /^\s*(?:run|set)\s+/) {
       my @t = split(/\s+/, $line);
@@ -194,7 +201,7 @@ sub ps_lookup_vars_in_line {
                $line =~ s/\$${1}/$res/;
             }
             else {
-               $log->warning("ps_lookup_vars_in_line: unable to lookup variable [$a]");
+               $Log->warning("ps_lookup_vars_in_line: unable to lookup variable [$a]");
                last;
             }
          }
@@ -231,7 +238,7 @@ sub ps_update_prompt {
       my $home = $self->path_home;
       $cwd =~ s/$home/~/;
 
-      my $ps1 = "plashy $cwd> ";
+      my $ps1 = "meby $cwd> ";
       if ($^O =~ /win32/i) {
          $ps1 =~ s/> /\$ /;
       }
@@ -252,14 +259,13 @@ sub ps_get_commands {
    my $self = shift;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    my $commands = $context->global_get('commands');
    if (! defined($commands)) {
       return [];
    }
 
-   return [ split(',', $commands) ];
+   return [ split(':', $commands) ];
 }
 
 my $jobs = {};
@@ -301,14 +307,16 @@ sub ps_set_signals {
 #
 # Term::Shell::run stuff
 #
-sub run_say {
+sub run_version {
    my $self = shift;
 
-   my $line = $self->line;
-   $line =~ s/^say/print/;
-   $line =~ s/$/."\n"/;
+   my $context = $self->context;
 
-   return $self->cmd($line);
+   $context->call(sub {
+      return $_ = $Plashy::VERSION;
+   }) or return;
+
+   return 1;
 }
 
 # For commands that do not need a terminal
@@ -317,7 +325,6 @@ sub run_command {
    my (@args) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    my $out = '';
    IPC::Run::run(\@args, \undef, \$out);
@@ -339,7 +346,6 @@ sub run_system {
    my (@args) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    if ($^O =~ /win32/i) {
       return system(@args);
@@ -348,7 +354,7 @@ sub run_system {
       eval("use Proc::Simple");
       if ($@) {
          chomp($@);
-         $log->fatal("can't load Proc::Simple module: $@");
+         $Log->fatal("can't load Proc::Simple module: $@");
          return;
       }
 
@@ -432,10 +438,9 @@ sub run_save {
    my ($data, $file) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    if (! defined($file)) {
-      $log->error("save: pass \$data and \$file parameters");
+      $Log->error("save: pass \$data and \$file parameters");
       return;
    }
 
@@ -443,7 +448,7 @@ sub run_save {
 
    my $r = open(my $out, '>', $file);
    if (!defined($r)) {
-      $log->error("save: unable to open file [$file] for writing: $!");
+      $Log->error("save: unable to open file [$file] for writing: $!");
       return;
    }
    print $out $data;
@@ -457,11 +462,10 @@ sub run_cd {
    my ($dir, @args) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    if (defined($dir)) {
       if (! -d $dir) {
-         $log->error("cd: $dir: can't cd to this");
+         $Log->error("cd: $dir: can't cd to this");
          return;
       }
       chdir($dir);
@@ -491,10 +495,9 @@ sub run_doc {
    my (@args) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    if (! defined($args[0])) {
-      $log->error("you have to provide a module as an argument");
+      $Log->error("you have to provide a module as an argument");
       return;
    }
 
@@ -508,10 +511,9 @@ sub run_sub {
    my (@args) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    if (! defined($args[0])) {
-      $log->error("you have to provide a function as an argument");
+      $Log->error("you have to provide a function as an argument");
       return;
    }
 
@@ -525,10 +527,9 @@ sub run_src {
    my (@args) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    if (! defined($args[0])) {
-      $log->error("you have to provide a module as an argument");
+      $Log->error("you have to provide a module as an argument");
       return;
    }
 
@@ -542,10 +543,9 @@ sub run_faq {
    my (@args) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    if (! defined($args[0])) {
-      $log->error("you have to provide a question as an argument");
+      $Log->error("you have to provide a question as an argument");
       return;
    }
 
@@ -559,11 +559,15 @@ sub run_pl {
    my (@args) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    my $line = $self->line;
    #print "[DEBUG] [$line]\n";
    $line =~ s/^pl\s+//;
+
+   my $newline = $context->global_get('newline');
+   if ($newline && $line =~ /^\s*print/) {
+      $line .= ';print "\n";';
+   }
 
    return $context->do($line);
 }
@@ -587,11 +591,10 @@ sub run_reload {
    my $self = shift;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    my $reloaded = Module::Reload->check;
    if ($reloaded) {
-      $log->info("some modules were reloaded");
+      $Log->info("some modules were reloaded");
    }
 
    return 1;
@@ -600,22 +603,26 @@ sub run_reload {
 # Just an alias
 sub run_load {
    my $self = shift;
-   my ($plugin) = @_;
+   my ($brick) = @_;
 
-   return $self->cmd("run global load $plugin");
+   my $r = $self->cmd("run global load $brick");
+   if ($r) {
+      $Log->verbose("Brick [$brick] loaded");
+   }
+
+   return $r;
 }
 
 sub run_show {
    my $self = shift;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    $context->call(sub {
       my $__lp_available = $global->available;
       my $__lp_loaded = $global->loaded;
 
-      print "Plugin(s):\n";
+      print "Available bricks:\n";
 
       my @__lp_loaded = ();
       my @__lp_notloaded = ();
@@ -654,21 +661,21 @@ sub run_show {
 
 sub run_set {
    my $self = shift;
-   my ($plugin, $k, $v) = @_;
+   my ($brick, $k, $v) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
-   if (! defined($plugin)) {
+   # set is called, we display everything
+   if (! defined($brick)) {
       my $r = $context->call(sub {
          my $__lp_set = $global->set;
          my $__lp_count = 0;
 
          print "Set variable(s):\n";
 
-         for my $plugin (sort { $a cmp $b } keys %$__lp_set) {
-            for my $k (sort { $a cmp $b } keys %{$__lp_set->{$plugin}}) {
-               print "   $plugin $k ".$__lp_set->{$plugin}->{$k}."\n";
+         for my $brick (sort { $a cmp $b } keys %$__lp_set) {
+            for my $k (sort { $a cmp $b } keys %{$__lp_set->{$brick}}) {
+               print "   $brick $k ".$__lp_set->{$brick}->{$k}."\n";
                $__lp_count++;
             }
          }
@@ -676,7 +683,38 @@ sub run_set {
          print "Total: $__lp_count\n";
       });
       if (! defined($r)) {
-         $log->error("run_set1");
+         return;
+      }
+
+      return 1;
+   }
+   # set is called with a brick, we show its attributes
+   elsif (! defined($k)) {
+      my $available = $context->global_get('available') or return;
+
+      if (! exists($available->{$brick})) {
+         $Log->error("Brick [$brick] does not exist");
+         return;
+      }
+
+      my $r = $context->call(sub {
+         my %args = @_;
+
+         my $__lp_set = $global->set;
+         my $__lp_count = 0;
+
+         my $__lp_brick = $__lp_set->{$args{brick}};
+
+         print "Set variable(s):\n";
+
+         for my $k (sort { $a cmp $b } keys %$__lp_brick) {
+            print "   $args{brick} $k ".$__lp_brick->{$k}."\n";
+            $__lp_count++;
+         }
+
+         print "Total: $__lp_count\n";
+      }, brick => $brick);
+      if (! defined($r)) {
          return;
       }
 
@@ -686,30 +724,30 @@ sub run_set {
    my $r = $context->call(sub {
       my %args = @_;
 
-      my $__lp_plugin = $args{plugin};
+      my $__lp_brick = $args{brick};
 
-      if (! exists($global->loaded->{$__lp_plugin})) {
-         die("plugin [$__lp_plugin] not loaded or does not exist\n");
+      if (! exists($global->loaded->{$__lp_brick})) {
+         die("Brick [$__lp_brick] not loaded or does not exist\n");
       }
-   }, plugin => $plugin);
+   }, brick => $brick);
    if (! defined($r)) {
-      $log->error("run_set2");
+      $Log->error("run_set2");
       return;
    }
 
    $r = $context->call(sub {
       my %args = @_;
 
-      my $__lp_plugin = $args{plugin};
+      my $__lp_brick = $args{brick};
       my $__lp_key = $args{key};
       my $__lp_val = $args{val};
 
-      #$global->loaded->{$__lp_plugin}->init; # No init when just setting an attribute
-      $global->loaded->{$__lp_plugin}->$__lp_key($__lp_val);
-      $global->set->{$__lp_plugin}->{$__lp_key} = $__lp_val;
-   }, plugin => $plugin, key => $k, val => $v);
+      #$global->loaded->{$__lp_brick}->init; # No init when just setting an attribute
+      $global->loaded->{$__lp_brick}->$__lp_key($__lp_val);
+      $global->set->{$__lp_brick}->{$__lp_key} = $__lp_val;
+   }, brick => $brick, key => $k, val => $v);
    if (! defined($r)) {
-      $log->error("run_set3");
+      $Log->error("run_set3");
       return;
    }
 
@@ -718,35 +756,41 @@ sub run_set {
 
 sub run_run {
    my $self = shift;
-   my ($plugin, $method, @args) = @_;
+   my ($brick, $command, @args) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    $context->call(sub {
       my %args = @_;
 
-      my $__lp_method = $args{method};
-      my $__lp_plugin = $args{plugin};
+      my $__lp_brick = $args{brick};
+      my $__lp_command = $args{command};
       my @__lp_args = @{$args{args}};
 
-      my $__lp_run = $global->loaded->{$__lp_plugin};
+      if (! defined($__lp_brick)) {
+         die("no Brick specified\n");
+      }
+      if (! defined($__lp_command)) {
+         die("no Brick command specified\n");
+      }
+
+      my $__lp_run = $global->loaded->{$__lp_brick};
       if (! defined($__lp_run)) {
-         die("plugin [$__lp_plugin] not loaded\n");
+         die("Brick [$__lp_brick] not loaded\n");
       }
 
       $__lp_run->init; # Will init() only if not already done
 
-      if (! $__lp_run->can("$__lp_method")) {
-         die("no method [$__lp_method] defined for plugin [$__lp_plugin]\n");
+      if (! $__lp_run->can("$__lp_command")) {
+         die("no command [$__lp_command] defined for brick [$__lp_brick]\n");
       }
 
-      $_ = $__lp_run->$__lp_method(@__lp_args);
+      $_ = $__lp_run->$__lp_command(@__lp_args);
 
       $global->shell->run_title("$_");
 
       return $_;
-   }, plugin => $plugin, method => $method, args => \@args)
+   }, brick => $brick, command => $command, args => \@args)
       or return;
 
    return 1;
@@ -766,15 +810,14 @@ sub run_script {
    my ($script) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    if (! defined($script)) {
-      $log->error("run: you must provide a script to run");
+      $Log->error("run: you must provide a script to run");
       return;
    }
 
    if (! -f $script) {
-      $log->error("run: script [$script] is not a file");
+      $Log->error("run: script [$script] is not a file");
       return;
    }
 
@@ -788,6 +831,16 @@ sub run_script {
    close($in);
 
    return 1;
+}
+
+sub help_script {
+   <<'END';
+execute plashy commands as contained in the sepcified script
+END
+}
+
+sub smry_script {
+   "execute plashy commands as contained in the sepcified script"
 }
 
 #
@@ -830,7 +883,6 @@ sub _ioa_dirsfiles {
    #print "\nDIR[$dir]\n";
 
    my $context = $self->context;
-   my $log = $context->log;
 
    my @dirs = ();
    eval {
@@ -838,7 +890,7 @@ sub _ioa_dirsfiles {
    };
    if ($@) {
       chomp($@);
-      $log->error("$dir: dirs: $@");
+      $Log->error("$dir: dirs: $@");
       return [], [];
    }
 
@@ -848,7 +900,7 @@ sub _ioa_dirsfiles {
    };
    if ($@) {
       chomp($@);
-      $log->error("$dir: files: $@");
+      $Log->error("$dir: files: $@");
       return [], [];
    }
 
@@ -879,11 +931,10 @@ sub comp_run {
    #print "[DEBUG] word[$word] line[$line] start[$start]\n";
 
    my $context = $self->context;
-   my $log = $context->log;
 
    my $available = $context->global_get('available');
    if (! defined($available)) {
-      $log->warning("can't fetch available plugins");
+      $Log->warning("can't fetch available Bricks");
       return ();
    }
 
@@ -909,7 +960,6 @@ sub comp_doc {
    my ($word, $line, $start) = @_;
 
    my $context = $self->context;
-   my $log = $context->log;
 
    #print "[DEBUG] word[$word] line[$line] start[$start]\n";
 
@@ -921,7 +971,7 @@ sub comp_doc {
       #print "[DEBUG] inc[$inc]\n";
       my $r = opendir(my $dir, $inc);
       if (! defined($r)) {
-         $log->error("comp_doc: opendir: $dir: $!");
+         $Log->error("comp_doc: opendir: $dir: $!");
          next;
       }
 
@@ -987,10 +1037,13 @@ Plashy::Shell - The Plashy Shell
 =head1 SYNOPSIS
 
    use Plashy::Shell;
+   use Plashy::Log::Console;
 
-   $Plashy::Shell::Logger = 'Plashy::Log::Console';
+   $Plashy::Shell::Log = Plashy::Log::Console->new(
+      level => 3,
+   );
+
    my $shell = Plashy::Shell->new;
-
    $shell->cmdloop;
 
 =head1 DESCRIPTION
@@ -999,11 +1052,11 @@ Interactive use of the Plashy Shell.
 
 =head2 GLOBAL VARIABLES
 
-=head3 B<$Plashy::Shell::Logger>
+=head3 B<$Plashy::Shell::Log>
 
-Specify a logger class. Must be a class inherited from L<Plashy::Log>.
+Specify a log object. Must be an object inherited from L<Plashy::Log>.
 
-=head2 METHODS
+=head2 COMMANDS
 
 =head3 B<new>
 

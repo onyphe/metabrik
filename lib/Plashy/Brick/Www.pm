@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Www plugin
+# Www brick
 #
-package Plashy::Plugin::Www;
+package Plashy::Brick::Www;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    url

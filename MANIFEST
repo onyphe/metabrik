@@ -1,25 +1,44 @@
 bin/plashy
+Build.PL
 examples/dot-plashyrc-sample
 examples/netmask.plashy
 INSTALL
 lib/Plashy.pm
+lib/Plashy/Brick.pm
+lib/Plashy/Brick/Aes.pm
+lib/Plashy/Brick/Agent.pm
+lib/Plashy/Brick/Arp.pm
+lib/Plashy/Brick/Auditdns.pm
+lib/Plashy/Brick/Base64.pm
+lib/Plashy/Brick/Cwe.pm
+lib/Plashy/Brick/Fetch.pm
+lib/Plashy/Brick/Find.pm
+lib/Plashy/Brick/Global.pm
+lib/Plashy/Brick/Httpproxy.pm
+lib/Plashy/Brick/Keystore.pm
+lib/Plashy/Brick/Nbname.pm
+lib/Plashy/Brick/Netframe.pm
+lib/Plashy/Brick/Netmask.pm
+lib/Plashy/Brick/Nvd.pm
+lib/Plashy/Brick/Route.pm
+lib/Plashy/Brick/Slurp.pm
+lib/Plashy/Brick/Sqlite.pm
+lib/Plashy/Brick/Ssdp.pm
+lib/Plashy/Brick/Ssh.pm
+lib/Plashy/Brick/Ssh2.pm
+lib/Plashy/Brick/Template.pm
+lib/Plashy/Brick/Vfeed.pm
+lib/Plashy/Brick/Www.pm
+lib/Plashy/Brick/Wwwutil.pm
+lib/Plashy/Brick/Zip.pm
+lib/Plashy/Context.pm
+lib/Plashy/Ext/Utils.pm
 lib/Plashy/Log.pm
-lib/Plashy/Plugin.pm
-lib/Plashy/Plugin/Agent.pm
-lib/Plashy/Plugin/Global.pm
-lib/Plashy/Plugin/Httpproxy.pm
-lib/Plashy/Plugin/Nbname.pm
-lib/Plashy/Plugin/Netframe.pm
-lib/Plashy/Plugin/Netmask.pm
-lib/Plashy/Plugin/Slurp.pm
-lib/Plashy/Plugin/Ssh.pm
-lib/Plashy/Plugin/Ssh2.pm
-lib/Plashy/Plugin/Template.pm
-lib/Plashy/Plugin/Vfeed.pm
-lib/Plashy/Plugin/Www.pm
-lib/Plashy/Plugin/Wwwutil.pm
+lib/Plashy/Log/Console.pm
+lib/Plashy/Shell.pm
 Makefile.PL
 MANIFEST			This list of files
-TODO
-META.yml                                 Module YAML meta-data (added by MakeMaker)
-META.json                                Module JSON meta-data (added by MakeMaker)
+META.json			Module JSON meta-data (added by MakeMaker)
+META.yml			Module YAML meta-data (added by MakeMaker)
+t/01-use.t
+t/02-use-bricks.t

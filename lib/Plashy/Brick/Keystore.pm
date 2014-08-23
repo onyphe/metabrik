@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Keystore plugin
+# Keystore brick
 #
-package Plashy::Plugin::Keystore;
+package Plashy::Brick::Keystore;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    file
@@ -15,8 +15,8 @@ our @AS = qw(
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Plashy::Plugin::Aes;
-use Plashy::Plugin::Slurp;
+use Plashy::Brick::Aes;
+use Plashy::Brick::Slurp;
 
 sub help {
    print "set keystore file <file>\n";
@@ -38,14 +38,14 @@ sub search {
       die("run keystore search <pattern>\n");
    }
 
-   my $slurp = Plashy::Plugin::Slurp->new(
+   my $slurp = Plashy::Brick::Slurp->new(
       global => $self->global,
       file => $self->file,
    );
 
    my $data = $slurp->text or die("can't slurp");
 
-   my $aes = Plashy::Plugin::Aes->new(
+   my $aes = Plashy::Brick::Aes->new(
       global => $self->global,
    );
 

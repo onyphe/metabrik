@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Agent plugin
+# Agent brick
 #
-package Plashy::Plugin::Agent;
+package Plashy::Brick::Agent;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    port
@@ -34,14 +34,14 @@ sub listen {
 
    my $port = $self->port;
 
-   return Plashy::Plugin::Agent::Server->run(
+   return Plashy::Brick::Agent::Server->run(
       port => $port,
       ipv => '*',
       global => $self->global,
    );
 }
 
-package Plashy::Plugin::Agent::Server;
+package Plashy::Brick::Agent::Server;
 use strict;
 use warnings;
 

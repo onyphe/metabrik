@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package Plashy::Plugin;
+package Plashy::Brick;
 use strict;
 use warnings;
 

@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Find plugin
+# Find brick
 #
-package Plashy::Plugin::Find;
+package Plashy::Brick::Find;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    path
@@ -86,20 +86,20 @@ __END__
 
 =head1 NAME
 
-Plashy::Plugin::Find - plugin to find some files using pattern matching
+Plashy::Brick::Find - brick to find some files using pattern matching
 
 =head1 SYNOPSIS
 
    # From a module
 
-   use Plashy::Plugin::Find;
+   use Plashy::Brick::Find;
 
    my $path = join(':', @INC);
 
-   my $plugin = Plashy::Plugin::Find->new;
-   $plugin->path($path);
+   my $brick = Plashy::Brick::Find->new;
+   $brick->path($path);
 
-   my $found = $plugin->find('/lib/Plashy/Plugin$', '.pm$');
+   my $found = $brick->find('/lib/Plashy/Brick$', '.pm$');
    for my $file (@$found) {
       print "$file\n";
    }
@@ -108,17 +108,17 @@ Plashy::Plugin::Find - plugin to find some files using pattern matching
 
    > my $path = join(':', @INC)
    > set find path $path
-   > run find files /lib/Plashy/Plugin$ .pm$
+   > run find files /lib/Plashy/Brick$ .pm$
 
 =head1 DESCRIPTION
 
-Plugin to find some files using pattern matching.
+Brick to find some files using pattern matching.
 
 =head2 ATTRIBUTES
 
 =head3 B<path> (directory1:directory2:..:directoryN)
 
-=head2 METHODS
+=head2 COMMANDS
 
 =head3 B<find> (directory, pattern)
 

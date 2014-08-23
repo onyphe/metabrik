@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Ssh plugin
+# Ssh brick
 #
-package Plashy::Plugin::Ssh;
+package Plashy::Brick::Ssh;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    banner

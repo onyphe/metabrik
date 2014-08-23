@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# HTTP::Proxy plugin
+# HTTP::Proxy brick
 #
-package Plashy::Plugin::Httpproxy;
+package Plashy::Brick::Httpproxy;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    port

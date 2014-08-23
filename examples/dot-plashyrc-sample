@@ -1,10 +1,13 @@
-use Plashy
+version
+my $version = $_
 
 print "--[ Welcome to Plashy - Knowledge is in your head, Detail is in the code ]--\n"
-print "--[ Version $Plashy::VERSION ]--\n"
+print "--[ Version $version ]--\n"
+print "\n"
+print "    There is a Brick for that.\n\n"
 
 # Change terminal title
-print "\c[];Plashy v$Plashy::VERSION\a\n"
+title "Plashy v$version"
 
 my $home = $ENV{HOME}
 my $user = $ENV{USER}
@@ -12,7 +15,7 @@ my $user = $ENV{USER}
 set global datadir $home."/plashy/data"
 set global ctimeout 20
 set global rtimeout 20
-set global commands vi,cat,less,w,nc,grep,find,cpanm
+set global commands vi:cat:less:w:nc:grep:find:cpanm
 
 load www
 
@@ -30,7 +33,7 @@ set ssh2 privatekey $user."/.ssh/id_rsa"
 load vfeed
 set vfeed db $home."/plashy/data/vfeed.db"
 
-# Use your own private plugins
+# Use your own private bricks
 use lib "$ENV{HOME}/path/to/lib"
 
-load myplugin
+load mybrick

@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Wwwutil plugin
+# Wwwutil brick
 #
-package Plashy::Plugin::Wwwutil;
+package Plashy::Brick::Wwwutil;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 #our @AS = qw(
 #);
@@ -36,7 +36,7 @@ sub nslookup {
    $mech->agent_alias('Windows Mozilla');
 
    $mech->get(sprintf($url, $host, $ns || '8.8.8.8'));
-   # XXX: give access to plugins
+   # XXX: give access to bricks
    #$self->{plashy}->{log}->info("HTTP code: ".$mech->status);
 
    my $html = $mech->content;

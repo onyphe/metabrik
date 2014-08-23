@@ -8,7 +8,7 @@ use warnings;
 use base qw(Class::Gomor::Hash);
 
 our @AS = qw(
-   logger
+   log
    shell
    _lp
 );
@@ -24,14 +24,14 @@ sub new {
       @_,
    );
 
-   my $logger = $self->logger;
-   if (! defined($logger)) {
-      die("[-] FATAL: Plashy::Context::new: you have to give a `logger' attribute (ex: Plashy::Log::Console)\n");
+   my $log = $self->log;
+   if (! defined($log)) {
+      die("[-] FATAL: Plashy::Context::new: you have to give a `log' object\n");
    }
 
    my $shell = $self->shell;
    if (! defined($shell)) {
-      die("[-] FATAL: Plashy::Context::new: you have to give a `shell' attribute\n");
+      $log->fatal("Plashy::Context::new: you have to give a `shell' object");
    }
 
    my $lp = Lexical::Persistence->new;
@@ -42,28 +42,16 @@ sub new {
       $lp->call(sub {
          my %args = @_;
 
-         my $__lp_logger = $args{logger};
          my $__lp_shell = $args{shell};
 
-         eval("use $__lp_logger;");
+         eval("use Plashy::Brick::Global;");
          if ($@) {
             chomp($@);
-            die("new: can't use [$__lp_logger]: $@\n");
+            die("new: can't use Plashy::Brick::Global: $@\n");
          }
-         eval("use Plashy::Plugin::Global;");
-         if ($@) {
-            chomp($@);
-            die("new: can't use Plashy::Plugin::Global: $@\n");
-         }
-
-         # XXX: TODO: update of level from outside of Context
-         my $log = $__lp_logger->new(
-            level => 1,
-         );
 
          # Only ONE special "global" variable: $global
-         my $global = Plashy::Plugin::Global->new(
-            log => $log,
+         my $global = Plashy::Brick::Global->new(
             shell => $__lp_shell,
          );
 
@@ -71,11 +59,11 @@ sub new {
 
          #$global->input(\*STDIN);
          #$global->output(\*STDOUT);
-      }, logger => $logger, shell => $shell);
+      }, shell => $shell);
    };
    if ($@) {
       chomp($@);
-      die("[-] FATAL: Plashy::Context::new: can't initialize global plugin: $@\n");
+      $log->fatal("Plashy::Context::new: can't initialize Brick global: $@");
    }
 
    $self->do("use strict;");
@@ -83,17 +71,6 @@ sub new {
    $self->do("use Data::Dumper;");
 
    return $self;
-}
-
-sub log {
-   my $self = shift;
-
-   my $log = $self->call(sub { return $global->log; });
-   if (! defined($log)) {
-      die("[-] FATAL: Plashy::Context::log: can't get access to log object\n");
-   }
-
-   return $log;
 }
 
 sub do {
@@ -117,7 +94,7 @@ sub do {
    };
    if ($@) {
       chomp($@);
-      $log->error("do: $@");
+      $log->error("Context::do: $@");
       return;
    }
 
@@ -128,17 +105,8 @@ sub call {
    my $self = shift;
    my ($subref, %args) = @_;
 
+   my $log = $self->log;
    my $lp = $self->_lp;
-
-   # We can't use sub log() here, otherwise we have a recursive loop
-   my $log;
-   eval {
-      $log = $lp->call(sub { return $global->log });
-   };
-   if ($@) {
-      chomp($@);
-      die("[-] FATAL: Plashy::Context::call: can't get access to log object: $@\n");
-   }
 
    my $res;
    eval {
@@ -146,7 +114,7 @@ sub call {
    };
    if ($@) {
       chomp($@);
-      $log->error("call: $@");
+      $log->error("Context::call: $@");
       return;
    }
 
@@ -171,14 +139,14 @@ sub global_get {
    return $value;
 }
 
-sub global_update_available_plugins {
+sub global_update_available_bricks {
    my $self = shift;
 
    my $log = $self->log;
    my $lp = $self->_lp;
 
-   my $r = $lp->call(sub { $global->update_available_plugins; })
-      or $log->error("global_update_available_plugins");
+   my $r = $lp->call(sub { $global->update_available_bricks; })
+      or return;
 
    return $r;
 }

@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# SSDP plugin
+# SSDP brick
 #
-package Plashy::Plugin::Ssdp;
+package Plashy::Brick::Ssdp;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    device

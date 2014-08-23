@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Slurp plugin
+# Slurp brick
 #
-package Plashy::Plugin::Slurp;
+package Plashy::Brick::Slurp;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    file

@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Zip plugin
+# Zip brick
 #
-package Plashy::Plugin::Zip;
+package Plashy::Brick::Zip;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    input

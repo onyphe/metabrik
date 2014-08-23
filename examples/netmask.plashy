@@ -1,4 +1,4 @@
-print "Running script netmask"
+print "Running script netmask\n"
 
 load netmask
 

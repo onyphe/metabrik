@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Template plugin
+# Template brick
 #
-package Plashy::Plugin::Template;
+package Plashy::Brick::Template;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    variable1
@@ -22,8 +22,8 @@ sub help {
    print "set template variable1 <value>\n";
    print "set template variable2 <value>\n";
    print "\n";
-   print "run template method1 <argument1> <argument2>\n";
-   print "run template method2 <argument1> <argument2>\n";
+   print "run template command1 <argument1> <argument2>\n";
+   print "run template command2 <argument1> <argument2>\n";
 }
 
 sub default_values {
@@ -44,12 +44,12 @@ sub init {
    return $self;
 }
 
-sub method1 {
+sub command1 {
    my $self = shift;
    my ($argument1, $argument2) = @_;
 
    if (! defined($argument2)) {
-      die($self->help);
+      die("run template command1 <argument1> <argument2>\n");
    }
 
    my $do_something = "you should do something";
@@ -57,12 +57,12 @@ sub method1 {
    return $do_something;
 }
 
-sub method2 {
+sub command2 {
    my $self = shift;
    my ($argument1, $argument2) = @_;
 
    if (! defined($argument2)) {
-      die($self->help);
+      die("run template command2 <argument1> <argument2>\n");
    }
 
    my $do_something = "you should do something";
@@ -76,20 +76,20 @@ __END__
 
 =head1 NAME
 
-Plashy::Plugin::Template - template to write a new Plashy plugin
+Plashy::Brick::Template - template to write a new Plashy brick
 
 =head1 SYNOPSIS
 
-   $ cp lib/Plashy/Plugin/Template.pm ~/myplashy/lib/Plugin/Myplugin.pm
-   $ vi ~/myplashy/lib/Plugin/Myplugin.pm
+   $ cp lib/Plashy/Brick/Template.pm ~/myplashy/lib/Brick/Mybrick.pm
+   $ vi ~/myplashy/lib/Brick/Mybrick.pm
 
    # From a module
 
-   use Plashy::Plugin::Find;
+   use Plashy::Brick::Find;
 
    my $path = join(':', @INC);
-   my $plugin = Plashy::Plugin::Find->new;
-   my $found = $plugin->find($path, '/lib/Plashy/Plugin$', '.pm$');
+   my $brick = Plashy::Brick::Find->new;
+   my $found = $brick->find($path, '/lib/Plashy/Brick$', '.pm$');
    for my $file (@$found) {
       print "$file\n";
    }
@@ -98,13 +98,13 @@ Plashy::Plugin::Template - template to write a new Plashy plugin
 
    > my $path = join(':', @INC)
    > set find path $path
-   > run find files /lib/Plashy/Plugin$ .pm$
+   > run find files /lib/Plashy/Brick$ .pm$
 
 =head1 DESCRIPTION
 
-Template to write a new Plashy plugin.
+Template to write a new Plashy brick.
 
-=head2 METHODS
+=head2 COMMANDS
 
 =head3 B<help>
 

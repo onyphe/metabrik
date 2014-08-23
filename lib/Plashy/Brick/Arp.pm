@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Arp plugin
+# Arp brick
 #
-package Plashy::Plugin::Arp;
+package Plashy::Brick::Arp;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    dnet

@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Net::Netmask plugin
+# Net::Netmask brick
 #
-package Plashy::Plugin::Netmask;
+package Plashy::Brick::Netmask;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    subnet

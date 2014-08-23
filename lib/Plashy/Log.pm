@@ -12,6 +12,8 @@ our @AS = qw(
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
+use Term::ANSIColor qw(:constants);
+
 sub new {
    my $self = shift->SUPER::new(
       level => 0,
@@ -30,28 +32,32 @@ sub warning {
 sub error {
    my $self = shift;
    my ($msg) = @_;
-   print("[-] $msg\n");
+   print RED, "[-] ", RESET;
+   print("$msg\n");
 }
 
 sub fatal {
    my $self = shift;
    my ($msg) = @_;
    my ($package) = caller();
-   die("[-] FATAL: $package: $msg\n");
+   print RED, "[-] FATAL: ", RESET;
+   die("$package: $msg\n");
 }
 
 sub info {
    my $self = shift;
    my ($msg) = @_;
    return unless $self->level > 0;
-   print("[+] $msg\n");
+   print GREEN, "[*] ", RESET;
+   print("$msg\n");
 }
 
 sub verbose {
    my $self = shift;
    my ($msg) = @_;
    return unless $self->level > 1;
-   print("[*] $msg\n");
+   print YELLOW, "[+] ", RESET;
+   print("$msg\n");
 }
 
 sub debug {
@@ -59,7 +65,8 @@ sub debug {
    my ($msg) = @_;
    return unless $self->level > 2;
    my ($package) = caller();
-   print("[DEBUG] $package: $msg\n");
+   print BLUE, "[DEBUG] ", RESET;
+   print("$package: $msg\n");
 }
 
 1;
@@ -80,7 +87,7 @@ Plashy::Log - logging base-class
 
 =head1 DESCRIPTION
 
-=head1 METHODS
+=head1 COMMANDS
 
 =over 4
 

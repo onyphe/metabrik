@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# SQLite plugin
+# SQLite brick
 #
-package Plashy::Plugin::Sqlite;
+package Plashy::Brick::Sqlite;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    db

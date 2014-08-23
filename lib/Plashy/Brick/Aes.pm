@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# AES plugin
+# AES brick
 #
-package Plashy::Plugin::Aes;
+package Plashy::Brick::Aes;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 #our @AS = qw(
 #);

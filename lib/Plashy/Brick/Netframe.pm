@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Net::Frame modules plugin
+# Net::Frame modules brick
 #
-package Plashy::Plugin::Netframe;
+package Plashy::Brick::Netframe;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 #our @AS = qw(
 #);
@@ -27,10 +27,10 @@ use Net::Frame::Layer::ICMPv6;
 sub help {
    print "set netframe device <interface>\n";
    print "\n";
-   #print "run template method2 <argument1> <argument2>\n";
+   #print "run template command2 <argument1> <argument2>\n";
 }
 
-sub method1 {
+sub command1 {
    my $self = shift;
    my ($argument1, $argument2) = @_;
 
@@ -43,7 +43,7 @@ sub method1 {
    return $do_something;
 }
 
-sub method2 {
+sub command2 {
    my $self = shift;
    my ($argument1, $argument2) = @_;
 

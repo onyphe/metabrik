@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Fetch plugin
+# Fetch brick
 #
-package Plashy::Plugin::Fetch;
+package Plashy::Brick::Fetch;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    output

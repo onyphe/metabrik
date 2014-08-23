@@ -26,7 +26,7 @@ Plashy::Log::Console - logging directly on the console
 
 =head1 DESCRIPTION
 
-=head1 METHODS
+=head1 COMMANDS
 
 =over 4
 

@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Ssh2 plugin
+# Ssh2 brick
 #
-package Plashy::Plugin::Ssh2;
+package Plashy::Brick::Ssh2;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    host

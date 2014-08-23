@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Net::NBName plugin
+# Net::NBName brick
 #
-package Plashy::Plugin::Nbname;
+package Plashy::Brick::Nbname;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 __PACKAGE__->cgBuildIndices;
 #__PACKAGE__->cgBuildAccessorsScalar(\@AS);

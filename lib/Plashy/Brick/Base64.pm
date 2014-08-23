@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Base64 plugin
+# Base64 brick
 #
-package Plashy::Plugin::Base64;
+package Plashy::Brick::Base64;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 #our @AS = qw(
 #);

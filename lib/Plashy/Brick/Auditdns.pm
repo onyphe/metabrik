@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Audit DNS plugin
+# Audit DNS brick
 #
-package Plashy::Plugin::Auditdns;
+package Plashy::Brick::Auditdns;
 use strict;
 use warnings;
 
-use base qw(Plashy::Plugin);
+use base qw(Plashy::Brick);
 
 our @AS = qw(
    nameserver
