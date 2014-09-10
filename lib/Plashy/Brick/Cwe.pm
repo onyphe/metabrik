@@ -3,11 +3,11 @@
 #
 # CWE brick
 #
-package Plashy::Brick::Cwe;
+package MetaBricky::Brick::Cwe;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 our @AS = qw(
    file
@@ -16,10 +16,10 @@ our @AS = qw(
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Plashy::Brick::Slurp;
-use Plashy::Brick::Sqlite;
-use Plashy::Brick::Fetch;
-use Plashy::Brick::Zip;
+use MetaBricky::Brick::Slurp;
+use MetaBricky::Brick::Sqlite;
+use MetaBricky::Brick::Fetch;
+use MetaBricky::Brick::Zip;
 
 sub help {
    print "run cwe update\n";
@@ -40,14 +40,14 @@ sub update {
 
    my $datadir = $self->global->datadir;
 
-   my $fetch = Plashy::Brick::Fetch->new(
+   my $fetch = MetaBricky::Brick::Fetch->new(
       output => "$datadir/2000.xml.zip",
    );
 
    $fetch->get('http://cwe.mitre.org/data/xml/views/2000.xml.zip')
       or die("fetch::get\n");
 
-   my $zip = Plashy::Brick::Zip->new(
+   my $zip = MetaBricky::Brick::Zip->new(
       global => $self->global,
       input => "$datadir/2000.xml.zip",
       destdir => $datadir,
@@ -67,7 +67,7 @@ sub load {
       die("run cwe update\n");
    }
 
-   my $slurp = Plashy::Brick::Slurp->new(
+   my $slurp = MetaBricky::Brick::Slurp->new(
       file => $file,
    );
 

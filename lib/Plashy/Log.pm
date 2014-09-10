@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package Plashy::Log;
+package MetaBricky::Log;
 use strict;
 use warnings;
 
@@ -75,13 +75,13 @@ __END__
 
 =head1 NAME
 
-Plashy::Log - logging base-class
+MetaBricky::Log - logging base-class
 
 =head1 SYNOPSIS
 
-   use Plashy::Log;
+   use MetaBricky::Log;
 
-   my $log = Plashy::Log->new(
+   my $log = MetaBricky::Log->new(
       level => 1,
    );
 

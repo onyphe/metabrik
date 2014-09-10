@@ -3,11 +3,11 @@
 #
 # Net::Netmask brick
 #
-package Plashy::Brick::Netmask;
+package MetaBricky::Brick::Netmask;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 our @AS = qw(
    subnet

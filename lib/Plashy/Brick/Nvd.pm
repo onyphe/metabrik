@@ -3,11 +3,11 @@
 #
 # NVD brick
 #
-package Plashy::Brick::Nvd;
+package MetaBricky::Brick::Nvd;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 our @AS = qw(
    uri_recent
@@ -21,8 +21,8 @@ our @AS = qw(
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Plashy::Brick::Slurp;
-use Plashy::Brick::Fetch;
+use MetaBricky::Brick::Slurp;
+use MetaBricky::Brick::Fetch;
 
 sub help {
    #print "run nvd updaterecent\n";
@@ -90,7 +90,7 @@ sub _updaterecent {
    my $uri = $self->uri_recent;
    my $xml = $self->xml_recent;
 
-   my $fetch = Plashy::Brick::Fetch->new(
+   my $fetch = MetaBricky::Brick::Fetch->new(
       output => $xml->[0],
    );
    $fetch->get($uri->[0]) or die("fetch::get: uri[".$uri->[0]."]\n");
@@ -106,7 +106,7 @@ sub _updatemodified {
    my $uri = $self->uri_modified;
    my $xml = $self->xml_modified;
 
-   my $fetch = Plashy::Brick::Fetch->new(
+   my $fetch = MetaBricky::Brick::Fetch->new(
       output => $xml->[0],
    );
    $fetch->get($uri->[0]) or die("fetch::get: uri[".$uri->[0]."]\n");
@@ -124,7 +124,7 @@ sub _updateothers {
    my $count = scalar @$uri_list;
 
    for my $c (0..$count-1) {
-      my $fetch = Plashy::Brick::Fetch->new(
+      my $fetch = MetaBricky::Brick::Fetch->new(
          output => $xml_list->[$c],
       );
       $fetch->get($uri_list->[$c]) or die("fetch::get: uri[".$uri_list->[$c]."]\n");
@@ -155,7 +155,7 @@ sub update {
    my $count = scalar @$xml_files;
 
    for my $c (0..$count-1) {
-      my $fetch = Plashy::Brick::Fetch->new(
+      my $fetch = MetaBricky::Brick::Fetch->new(
          output => $uri_list->[$c],
       );
       $fetch->get($uri_list->[$c]) or die("fetch::get: uri[".$uri_list->[$c]."]\n");
@@ -190,7 +190,7 @@ sub load {
       if (defined($pattern) && $file !~ /$pattern/) {
          next;
       }
-      my $slurp = Plashy::Brick::Slurp->new(
+      my $slurp = MetaBricky::Brick::Slurp->new(
          file => $file,
       );
       print "DEBUG Slurping file: ".$xml_files->[$c]."\n";

@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package Plashy::Ext::Utils;
+package MetaBricky::Ext::Utils;
 use strict;
 use warnings;
 

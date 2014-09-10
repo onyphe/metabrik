@@ -3,11 +3,11 @@
 #
 # Wwwutil brick
 #
-package Plashy::Brick::Wwwutil;
+package MetaBricky::Brick::Wwwutil;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 #our @AS = qw(
 #);
@@ -37,7 +37,7 @@ sub nslookup {
 
    $mech->get(sprintf($url, $host, $ns || '8.8.8.8'));
    # XXX: give access to bricks
-   #$self->{plashy}->{log}->info("HTTP code: ".$mech->status);
+   #$self->{MetaBricky}->{log}->info("HTTP code: ".$mech->status);
 
    my $html = $mech->content;
 

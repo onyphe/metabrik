@@ -3,11 +3,11 @@
 #
 # Net::NBName brick
 #
-package Plashy::Brick::Nbname;
+package MetaBricky::Brick::Nbname;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 __PACKAGE__->cgBuildIndices;
 #__PACKAGE__->cgBuildAccessorsScalar(\@AS);

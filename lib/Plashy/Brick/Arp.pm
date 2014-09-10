@@ -3,11 +3,11 @@
 #
 # Arp brick
 #
-package Plashy::Brick::Arp;
+package MetaBricky::Brick::Arp;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 our @AS = qw(
    dnet

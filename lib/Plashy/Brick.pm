@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package Plashy::Brick;
+package MetaBricky::Brick;
 use strict;
 use warnings;
 

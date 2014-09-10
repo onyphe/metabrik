@@ -3,11 +3,11 @@
 #
 # Global brick
 #
-package Plashy::Brick::Global;
+package MetaBricky::Brick::Global;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 our @AS = qw(
    echo
@@ -89,7 +89,7 @@ sub load {
 
    my $module = $brick;
    $module = ucfirst($module);
-   $module =~ s/^/Plashy::Brick::/;
+   $module =~ s/^/MetaBricky::Brick::/;
 
    if (exists($self->loaded->{$brick})) {
       die("Brick [$brick] already loaded\n");
@@ -116,7 +116,7 @@ sub load {
 my @available = ();
 
 sub _find_bricks {
-   if ($File::Find::dir =~ /Plashy\/Brick$/ && /.pm$/) {
+   if ($File::Find::dir =~ /MetaBricky\/Brick$/ && /.pm$/) {
       (my $brick = lc($_)) =~ s/.pm$//;
       push @available, $brick;
    }

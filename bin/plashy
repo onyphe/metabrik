@@ -8,25 +8,25 @@ use warnings;
 BEGIN {
    use File::HomeDir;
 
-   my $lib = File::HomeDir->my_home."/plashy/lib";
+   my $lib = File::HomeDir->my_home."/MetaBricky/lib";
    $lib =~ s/\\/\//g; # Converts Windows path
 
    eval("use lib \"$lib\";");
    if ($@) {
       chomp($@);
-      die("[-] FATAL: plashy: unable to load plashy libs [$@]\n");
+      die("[-] FATAL: meby: unable to load MetaBricky libs [$@]\n");
    }
 }
 
-use Plashy::Shell;
-use Plashy::Log::Console;
+use MetaBricky::Shell;
+use MetaBricky::Log::Console;
 
 my $script = shift;
 
-$Plashy::Shell::Log = Plashy::Log::Console->new(
+$MetaBricky::Shell::Log = MetaBricky::Log::Console->new(
    level => 3,
 );
-my $shell = Plashy::Shell->new;
+my $shell = MetaBricky::Shell->new;
 
 if (defined($script)) {
    $shell->cmd("script $script");

@@ -7,10 +7,10 @@ use warnings;
 use Module::Build;
 
 my $builder = Module::Build->new(
-   module_name => 'Plashy',
+   module_name => 'MetaBricky',
    license => 'artistic',
    dist_author => 'GomoR <gomor-cpan_at_gomor.org>',
-   dist_version_from => 'lib/Plashy.pm',
+   dist_version_from => 'lib/MetaBricky.pm',
    requires => {
       'Class::Gomor' => '1.00',
       'Cwd' => 0,

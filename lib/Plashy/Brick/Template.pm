@@ -3,11 +3,11 @@
 #
 # Template brick
 #
-package Plashy::Brick::Template;
+package MetaBricky::Brick::Template;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 our @AS = qw(
    variable1
@@ -76,20 +76,20 @@ __END__
 
 =head1 NAME
 
-Plashy::Brick::Template - template to write a new Plashy brick
+MetaBricky::Brick::Template - template to write a new MetaBricky brick
 
 =head1 SYNOPSIS
 
-   $ cp lib/Plashy/Brick/Template.pm ~/myplashy/lib/Brick/Mybrick.pm
-   $ vi ~/myplashy/lib/Brick/Mybrick.pm
+   $ cp lib/MetaBricky/Brick/Template.pm ~/myMetaBricky/lib/Brick/Mybrick.pm
+   $ vi ~/myMetaBricky/lib/Brick/Mybrick.pm
 
    # From a module
 
-   use Plashy::Brick::Find;
+   use MetaBricky::Brick::Find;
 
    my $path = join(':', @INC);
-   my $brick = Plashy::Brick::Find->new;
-   my $found = $brick->find($path, '/lib/Plashy/Brick$', '.pm$');
+   my $brick = MetaBricky::Brick::Find->new;
+   my $found = $brick->find($path, '/lib/MetaBricky/Brick$', '.pm$');
    for my $file (@$found) {
       print "$file\n";
    }
@@ -98,11 +98,11 @@ Plashy::Brick::Template - template to write a new Plashy brick
 
    > my $path = join(':', @INC)
    > set find path $path
-   > run find files /lib/Plashy/Brick$ .pm$
+   > run find files /lib/MetaBricky/Brick$ .pm$
 
 =head1 DESCRIPTION
 
-Template to write a new Plashy brick.
+Template to write a new MetaBricky brick.
 
 =head2 COMMANDS
 

@@ -3,11 +3,11 @@
 #
 # Agent brick
 #
-package Plashy::Brick::Agent;
+package MetaBricky::Brick::Agent;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 our @AS = qw(
    port
@@ -34,14 +34,14 @@ sub listen {
 
    my $port = $self->port;
 
-   return Plashy::Brick::Agent::Server->run(
+   return MetaBricky::Brick::Agent::Server->run(
       port => $port,
       ipv => '*',
       global => $self->global,
    );
 }
 
-package Plashy::Brick::Agent::Server;
+package MetaBricky::Brick::Agent::Server;
 use strict;
 use warnings;
 
@@ -62,11 +62,11 @@ sub process_request {
    my $self = shift;
 
    my $global = $self->{server}->{global};
-   my $plashy = $global->plashy;
+   my $meby = $global->meby;
 
    while (<STDIN>) {
       s/[\r\n]+$//;
-      $plashy->cmd($_);
+      $meby->cmd($_);
       last if /^\s*quit\s*$/i;
    }
 }

@@ -3,11 +3,11 @@
 #
 # Base64 brick
 #
-package Plashy::Brick::Base64;
+package MetaBricky::Brick::Base64;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 #our @AS = qw(
 #);

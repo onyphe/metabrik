@@ -3,11 +3,11 @@
 #
 # Keystore brick
 #
-package Plashy::Brick::Keystore;
+package MetaBricky::Brick::Keystore;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 our @AS = qw(
    file
@@ -15,8 +15,8 @@ our @AS = qw(
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Plashy::Brick::Aes;
-use Plashy::Brick::Slurp;
+use MetaBricky::Brick::Aes;
+use MetaBricky::Brick::Slurp;
 
 sub help {
    print "set keystore file <file>\n";
@@ -38,14 +38,14 @@ sub search {
       die("run keystore search <pattern>\n");
    }
 
-   my $slurp = Plashy::Brick::Slurp->new(
+   my $slurp = MetaBricky::Brick::Slurp->new(
       global => $self->global,
       file => $self->file,
    );
 
    my $data = $slurp->text or die("can't slurp");
 
-   my $aes = Plashy::Brick::Aes->new(
+   my $aes = MetaBricky::Brick::Aes->new(
       global => $self->global,
    );
 

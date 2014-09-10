@@ -3,11 +3,11 @@
 #
 # AES brick
 #
-package Plashy::Brick::Aes;
+package MetaBricky::Brick::Aes;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 #our @AS = qw(
 #);

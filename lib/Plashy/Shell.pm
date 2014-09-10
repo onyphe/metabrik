@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package Plashy::Shell;
+package MetaBricky::Shell;
 use strict;
 use warnings;
 
@@ -11,8 +11,8 @@ our @AS = qw(
    path_home
    path_cwd
    prompt
-   plashyrc
-   plashy_history
+   mebyrc
+   mebyrc_history
    ps1
    title
    context
@@ -25,16 +25,16 @@ use IO::All;
 use Module::Reload;
 use IPC::Run;
 
-use Plashy;
-use Plashy::Context;
-use Plashy::Ext::Utils qw(peu_convert_path);
+use MetaBricky;
+use MetaBricky::Context;
+use MetaBricky::Ext::Utils qw(peu_convert_path);
 
 # Exists because we cannot give an argument to Term::Shell::new()
 # Or I didn't found how to do it.
 our $Log;
 
 # Exists to avoid compile-time errors.
-# It is only used by Plashy::Context.
+# It is only used by MetaBricky::Context.
 my $global;
 
 use vars qw{$AUTOLOAD};
@@ -63,10 +63,10 @@ sub init {
    $|++;
 
    if (! defined($Log)) {
-      die("[-] FATAL: Plashy::Shell::init: you must create a `Log' object\n");
+      die("[-] FATAL: MetaBricky::Shell::init: you must create a `Log' object\n");
    }
 
-   my $context = Plashy::Context->new(
+   my $context = MetaBricky::Context->new(
       log => $Log,
       shell => $self,
    );
@@ -77,8 +77,8 @@ sub init {
    $self->ps_update_path_cwd;
    $self->ps_update_prompt;
 
-   my $rc = $self->plashyrc($self->path_home."/.plashyrc");
-   my $history = $self->plashy_history($self->path_home."/.plashy_history");
+   my $rc = $self->mebyrc($self->path_home."/.mebyrc");
+   my $history = $self->meby_history($self->path_home."/.meby_history");
 
    if (-f $rc) {
       open(my $in, '<', $rc) or $Log->fatal("can't open rc file [$rc]: $!");
@@ -113,13 +113,13 @@ sub init {
    #{
       #no strict 'refs';
       #use Data::Dumper;
-      #print Dumper(\%{"Plashy::Shell::"})."\n";
+      #print Dumper(\%{"MetaBricky::Shell::"})."\n";
       #my $commands = $self->ps_get_commands;
       #for my $command (@$commands) {
          #print "** adding command [$command]\n";
-         #${"Plashy::Shell::"}{"run_$command"} = 1;
+         #${"MetaBricky::Shell::"}{"run_$command"} = 1;
       #}
-      #print Dumper(\%{"Plashy::Shell::"})."\n";
+      #print Dumper(\%{"MetaBricky::Shell::"})."\n";
    #};
 
    return $self;
@@ -157,7 +157,7 @@ sub cmdloop {
 }
 
 #
-# Plashy::Shell stuff
+# MetaBricky::Shell stuff
 #
 sub ps_set_title {
    my $self = shift;
@@ -313,7 +313,7 @@ sub run_version {
    my $context = $self->context;
 
    $context->call(sub {
-      return $_ = $Plashy::VERSION;
+      return $_ = $MetaBricky::VERSION;
    }) or return;
 
    return 1;
@@ -822,7 +822,7 @@ sub run_script {
    }
 
    open(my $in, '<', $script)
-      or die("[-] FATAL: Plashy::Shell::run_script: can't open file [$script]: $!\n");
+      or die("[-] FATAL: MetaBricky::Shell::run_script: can't open file [$script]: $!\n");
    while (defined(my $line = <$in>)) {
       next if ($line =~ /^\s*#/);  # Skip comments
       chomp($line);
@@ -835,12 +835,12 @@ sub run_script {
 
 sub help_script {
    <<'END';
-execute plashy commands as contained in the sepcified script
+execute meby commands as contained in the specified script
 END
 }
 
 sub smry_script {
-   "execute plashy commands as contained in the sepcified script"
+   "execute meby commands as contained in the specified script"
 }
 
 #
@@ -875,7 +875,7 @@ sub catch_run {
    return $self->run_pl(@args);
 }
 
-# XXX: move in Plashy::Ext
+# XXX: move in MetaBricky::Ext
 sub _ioa_dirsfiles {
    my $self = shift;
    my ($dir, $grep) = @_;
@@ -1016,9 +1016,9 @@ sub DESTROY {
    my $self = shift;
 
    if (defined($self->term) && $self->term->can('WriteHistory')) {
-      if (defined(my $history = $self->plashy_history)) {
+      if (defined(my $history = $self->meby_history)) {
          $self->term->WriteHistory($history)
-            or die("[-] FATAL: Plashy::Shell::DESTROY: ".
+            or die("[-] FATAL: MetaBricky::Shell::DESTROY: ".
                    "can't write history file [$history]: $!\n");
       }
    }
@@ -1032,29 +1032,29 @@ __END__
 
 =head1 NAME
 
-Plashy::Shell - The Plashy Shell
+MetaBricky::Shell - The MetaBricky Shell
 
 =head1 SYNOPSIS
 
-   use Plashy::Shell;
-   use Plashy::Log::Console;
+   use MetaBricky::Shell;
+   use MetaBricky::Log::Console;
 
-   $Plashy::Shell::Log = Plashy::Log::Console->new(
+   $MetaBricky::Shell::Log = MetaBricky::Log::Console->new(
       level => 3,
    );
 
-   my $shell = Plashy::Shell->new;
+   my $shell = MetaBricky::Shell->new;
    $shell->cmdloop;
 
 =head1 DESCRIPTION
 
-Interactive use of the Plashy Shell.
+Interactive use of the MetaBricky Shell.
 
 =head2 GLOBAL VARIABLES
 
-=head3 B<$Plashy::Shell::Log>
+=head3 B<$MetaBricky::Shell::Log>
 
-Specify a log object. Must be an object inherited from L<Plashy::Log>.
+Specify a log object. Must be an object inherited from L<MetaBricky::Log>.
 
 =head2 COMMANDS
 
@@ -1062,7 +1062,7 @@ Specify a log object. Must be an object inherited from L<Plashy::Log>.
 
 =head1 SEE ALSO
 
-L<Plashy::Log>
+L<MetaBricky::Log>
 
 =head1 COPYRIGHT AND LICENSE
 

@@ -3,11 +3,11 @@
 #
 # Route brick
 #
-package Plashy::Brick::Route;
+package MetaBricky::Brick::Route;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 our @AS = qw(
    dnet

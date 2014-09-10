@@ -6,10 +6,10 @@ use ExtUtils::MakeMaker;
 require v5.6.1;
 
 WriteMakefile(
-   NAME => 'Plashy',
-   VERSION_FROM => 'lib/Plashy.pm',
+   NAME => 'MetaBricky',
+   VERSION_FROM => 'lib/MetaBricky.pm',
    LICENSE => 'artistic',
-   ABSTRACT_FROM => 'lib/Plashy.pm',
+   ABSTRACT_FROM => 'lib/MetaBricky.pm',
    AUTHOR => 'GomoR <gomor-cpan_at_gomor.org>',
    PREREQ_PM => {
       Class::Gomor => '1.00',

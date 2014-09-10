@@ -1,3 +1,8 @@
+Prio:
+-> rename Plasy to MetaBricky
+-> create catageories (Brick::Core::Shell, Brick::Core::Global)
+-> Brickify Context and Shell
+
 Rationales:
 -> Tired of writing again and again some Perl scripts to do same things (where did I put this one?)
 -> Tired of using different programs with different syntax
@@ -7,8 +12,8 @@ MetaBricky:
 -> takes the best from MetaSploit CLI, Scapy ideas, and UNIX Shells.
 -> Bind them in the darkness.
 
-Plashy - knowledge is in your head, detail is in the code
-Plashy - There is a Brick for that.
+MetaBricky - knowledge is in your head, detail is in the code
+MetaBricky - There is a Brick for that.
 > Brain has knowledge, code has details.
 
 Move everything to a Brick. Even ls, save, ..., cd ...
@@ -42,7 +47,7 @@ Developer rules:
 Usage rules:
 1. Three kind of command lines:
 - Perl line
-- Plashy shell line
+- MetaBricky shell line
 - External command
 
 Vocabulary:
@@ -54,15 +59,15 @@ Vocabulary:
 - Brickification: process of turning a process/software into a Meby Brick
 => Rename to use that in all code
 
-Split Plashy into:
-- Plashy::Shell for Term::Shell stuff
+Split MetaBricky into:
+- MetaBricky::Brick::Shell for Term::Shell stuff
 
 Bricks TODO
 - Heartbleed
 - Zmap
 - SSL Capable NetCat
 
-Rename bricks methods to use run_. Modify Plashy::Brick to work like Term::Shell to auto discover methods.
+Rename bricks methods to use run_. Modify MetaBricky::Brick to work like Term::Shell to auto discover methods.
 
 use page() and pager_internal() from Term::Shell
 
@@ -89,7 +94,7 @@ unset VAR => undef $ENV{VAR}
 set $? and $! to indicate error and print error string
 
 Name:
--> Plashy (Perl Awesome|Audit|Attack|All-in-one Shell (Yeaaahh))
+-> MetaBricky (formerly Plashy: Perl Awesome|Audit|Attack|All-in-one Shell (Yeaaahh))
 -> y: Why the Y? Yeaaaah
 
 write/save: writes $_ content to a file (set out 'file.txt')
@@ -123,10 +128,10 @@ pirl: http://cpansearch.perl.org/src/RSAVAGE/Shell-Perl-0.0023/lib/Shell/Perl.pm
 ipirl: https://code.google.com/p/iperl/
 
 Gather available methods/functions:
-use Plashy::Brick::Global;
+use MetaBricky::Brick::Global;
 
 --8<--
-my $pkg = "Plashy::Brick::Global";
+my $pkg = "MetaBricky::Brick::Global";
 no strict 'refs';
 my @r = keys %{ $pkg . "::" };
 use Data::Dumper;

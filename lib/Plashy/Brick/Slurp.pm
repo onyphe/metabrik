@@ -3,11 +3,11 @@
 #
 # Slurp brick
 #
-package Plashy::Brick::Slurp;
+package MetaBricky::Brick::Slurp;
 use strict;
 use warnings;
 
-use base qw(Plashy::Brick);
+use base qw(MetaBricky::Brick);
 
 our @AS = qw(
    file

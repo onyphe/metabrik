@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package Plashy::Context;
+package MetaBricky::Context;
 use strict;
 use warnings;
 
@@ -26,12 +26,12 @@ sub new {
 
    my $log = $self->log;
    if (! defined($log)) {
-      die("[-] FATAL: Plashy::Context::new: you have to give a `log' object\n");
+      die("[-] FATAL: MetaBricky::Context::new: you have to give a `log' object\n");
    }
 
    my $shell = $self->shell;
    if (! defined($shell)) {
-      $log->fatal("Plashy::Context::new: you have to give a `shell' object");
+      $log->fatal("MetaBricky::Context::new: you have to give a `shell' object");
    }
 
    my $lp = Lexical::Persistence->new;
@@ -44,14 +44,14 @@ sub new {
 
          my $__lp_shell = $args{shell};
 
-         eval("use Plashy::Brick::Global;");
+         eval("use MetaBricky::Brick::Global;");
          if ($@) {
             chomp($@);
-            die("new: can't use Plashy::Brick::Global: $@\n");
+            die("new: can't use MetaBricky::Brick::Global: $@\n");
          }
 
          # Only ONE special "global" variable: $global
-         my $global = Plashy::Brick::Global->new(
+         my $global = MetaBricky::Brick::Global->new(
             shell => $__lp_shell,
          );
 
@@ -63,7 +63,7 @@ sub new {
    };
    if ($@) {
       chomp($@);
-      $log->fatal("Plashy::Context::new: can't initialize Brick global: $@");
+      $log->fatal("MetaBricky::Context::new: can't initialize Brick global: $@");
    }
 
    $self->do("use strict;");
