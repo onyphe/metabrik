@@ -12,7 +12,7 @@ our @AS = qw(
    path_cwd
    prompt
    mebyrc
-   mebyrc_history
+   meby_history
    ps1
    title
    context
@@ -835,12 +835,12 @@ sub run_script {
 
 sub help_script {
    <<'END';
-execute meby commands as contained in the specified script
+execute MetaBricky commands as contained in the specified script
 END
 }
 
 sub smry_script {
-   "execute meby commands as contained in the specified script"
+   "execute MetaBricky commands as contained in the specified script"
 }
 
 #

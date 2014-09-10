@@ -1,4 +1,4 @@
-bin/meby
+bin/metabricky
 Build.PL
 examples/dot-mebyrc-sample
 examples/netmask.meby
