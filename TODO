@@ -1,3 +1,8 @@
+Rationales:
+-> Tired of writing again and again some Perl scripts to do same things (where did I put this one?)
+-> Tired of using different programs with different syntax
+-> Tired of being lost when using Windows
+
 MetaBricky:
 -> takes the best from MetaSploit CLI, Scapy ideas, and UNIX Shells.
 -> Bind them in the darkness.
@@ -7,6 +12,7 @@ Plashy - There is a Brick for that.
 > Brain has knowledge, code has details.
 
 Move everything to a Brick. Even ls, save, ..., cd ...
+-> The software in itself is built using Bricks ...
 
 Name:
 MetaBricks?
@@ -41,14 +47,20 @@ Usage rules:
 
 Vocabulary:
 - The Shell has builtins (load, set, run)
-- A Brick
+- The Shell loads Bricks
 - A Brick has commands (not methods)
 - A Brick has attributes (you can set using `set' builtin)
 - A Brick command may have arguments
+- Brickification: process of turning a process/software into a Meby Brick
 => Rename to use that in all code
 
 Split Plashy into:
 - Plashy::Shell for Term::Shell stuff
+
+Bricks TODO
+- Heartbleed
+- Zmap
+- SSL Capable NetCat
 
 Rename bricks methods to use run_. Modify Plashy::Brick to work like Term::Shell to auto discover methods.
 
