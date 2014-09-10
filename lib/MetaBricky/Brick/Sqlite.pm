@@ -3,11 +3,11 @@
 #
 # SQLite brick
 #
-package MetaBricky::Brick::Sqlite;
+package Metabricky::Brick::Sqlite;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    db

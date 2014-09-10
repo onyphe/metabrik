@@ -3,11 +3,11 @@
 #
 # vFeed brick
 #
-package MetaBricky::Brick::Vfeed;
+package Metabricky::Brick::Vfeed;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    db

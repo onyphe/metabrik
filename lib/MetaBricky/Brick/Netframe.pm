@@ -3,11 +3,11 @@
 #
 # Net::Frame modules brick
 #
-package MetaBricky::Brick::Netframe;
+package Metabricky::Brick::Netframe;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 #our @AS = qw(
 #);

@@ -1,11 +1,11 @@
 #
 # $Id$
 #
-package MetaBricky::Log::Console;
+package Metabricky::Log::Console;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Log);
+use base qw(Metabricky::Log);
 __PACKAGE__->cgBuildIndices;
 
 1;
@@ -14,13 +14,13 @@ __END__
 
 =head1 NAME
 
-MetaBricky::Log::Console - logging directly on the console
+Metabricky::Log::Console - logging directly on the console
 
 =head1 SYNOPSIS
 
-   use MetaBricky::Log::Console;
+   use Metabricky::Log::Console;
 
-   my $log = MetaBricky::Log::Console->new(
+   my $log = Metabricky::Log::Console->new(
       level => 1,
    );
 

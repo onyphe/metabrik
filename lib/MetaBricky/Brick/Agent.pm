@@ -3,11 +3,11 @@
 #
 # Agent brick
 #
-package MetaBricky::Brick::Agent;
+package Metabricky::Brick::Agent;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    port
@@ -34,14 +34,14 @@ sub listen {
 
    my $port = $self->port;
 
-   return MetaBricky::Brick::Agent::Server->run(
+   return Metabricky::Brick::Agent::Server->run(
       port => $port,
       ipv => '*',
       global => $self->global,
    );
 }
 
-package MetaBricky::Brick::Agent::Server;
+package Metabricky::Brick::Agent::Server;
 use strict;
 use warnings;
 

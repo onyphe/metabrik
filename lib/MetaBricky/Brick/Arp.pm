@@ -3,11 +3,11 @@
 #
 # Arp brick
 #
-package MetaBricky::Brick::Arp;
+package Metabricky::Brick::Arp;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    dnet

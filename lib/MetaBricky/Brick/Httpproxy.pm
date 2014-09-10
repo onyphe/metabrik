@@ -3,11 +3,11 @@
 #
 # HTTP::Proxy brick
 #
-package MetaBricky::Brick::Httpproxy;
+package Metabricky::Brick::Httpproxy;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    port

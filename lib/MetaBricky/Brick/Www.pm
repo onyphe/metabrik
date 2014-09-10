@@ -3,11 +3,11 @@
 #
 # Www brick
 #
-package MetaBricky::Brick::Www;
+package Metabricky::Brick::Www;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    url

@@ -3,11 +3,11 @@
 #
 # Ssh2 brick
 #
-package MetaBricky::Brick::Ssh2;
+package Metabricky::Brick::Ssh2;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    host

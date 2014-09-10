@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package MetaBricky;
+package Metabricky;
 use strict;
 use warnings;
 
@@ -17,11 +17,11 @@ __END__
 
 =head1 NAME
 
-MetaBricky - formerly PerL Awesome SHell, Yeeeeaaaaaa!
+Metabricky - formerly PerL Awesome SHell, Yeeeeaaaaaa!
 
 =head1 SYNOPSIS
 
-   use MetaBricky;
+   use Metabricky;
 
 =head1 DESCRIPTION
 

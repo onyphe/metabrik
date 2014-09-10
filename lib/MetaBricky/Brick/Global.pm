@@ -3,11 +3,11 @@
 #
 # Global brick
 #
-package MetaBricky::Brick::Global;
+package Metabricky::Brick::Global;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    echo
@@ -89,7 +89,7 @@ sub load {
 
    my $module = $brick;
    $module = ucfirst($module);
-   $module =~ s/^/MetaBricky::Brick::/;
+   $module =~ s/^/Metabricky::Brick::/;
 
    if (exists($self->loaded->{$brick})) {
       die("Brick [$brick] already loaded\n");
@@ -116,7 +116,7 @@ sub load {
 my @available = ();
 
 sub _find_bricks {
-   if ($File::Find::dir =~ /MetaBricky\/Brick$/ && /.pm$/) {
+   if ($File::Find::dir =~ /Metabricky\/Brick$/ && /.pm$/) {
       (my $brick = lc($_)) =~ s/.pm$//;
       push @available, $brick;
    }

@@ -3,11 +3,11 @@
 #
 # SSDP brick
 #
-package MetaBricky::Brick::Ssdp;
+package Metabricky::Brick::Ssdp;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    device

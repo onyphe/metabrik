@@ -3,11 +3,11 @@
 #
 # Audit DNS brick
 #
-package MetaBricky::Brick::Auditdns;
+package Metabricky::Brick::Auditdns;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    nameserver

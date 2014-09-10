@@ -3,11 +3,11 @@
 #
 # Find brick
 #
-package MetaBricky::Brick::Find;
+package Metabricky::Brick::Find;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    path
@@ -86,20 +86,20 @@ __END__
 
 =head1 NAME
 
-MetaBricky::Brick::Find - brick to find some files using pattern matching
+Metabricky::Brick::Find - brick to find some files using pattern matching
 
 =head1 SYNOPSIS
 
    # From a module
 
-   use MetaBricky::Brick::Find;
+   use Metabricky::Brick::Find;
 
    my $path = join(':', @INC);
 
-   my $brick = MetaBricky::Brick::Find->new;
+   my $brick = Metabricky::Brick::Find->new;
    $brick->path($path);
 
-   my $found = $brick->find('/lib/MetaBricky/Brick$', '.pm$');
+   my $found = $brick->find('/lib/Metabricky/Brick$', '.pm$');
    for my $file (@$found) {
       print "$file\n";
    }
@@ -108,7 +108,7 @@ MetaBricky::Brick::Find - brick to find some files using pattern matching
 
    > my $path = join(':', @INC)
    > set find path $path
-   > run find files /lib/MetaBricky/Brick$ .pm$
+   > run find files /lib/Metabricky/Brick$ .pm$
 
 =head1 DESCRIPTION
 

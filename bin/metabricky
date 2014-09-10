@@ -8,25 +8,25 @@ use warnings;
 BEGIN {
    use File::HomeDir;
 
-   my $lib = File::HomeDir->my_home."/MetaBricky/lib";
+   my $lib = File::HomeDir->my_home."/Metabricky/lib";
    $lib =~ s/\\/\//g; # Converts Windows path
 
    eval("use lib \"$lib\";");
    if ($@) {
       chomp($@);
-      die("[-] FATAL: metabricky: unable to load MetaBricky libs [$@]\n");
+      die("[-] FATAL: metabricky: unable to load Metabricky libs [$@]\n");
    }
 }
 
-use MetaBricky::Shell;
-use MetaBricky::Log::Console;
+use Metabricky::Shell;
+use Metabricky::Log::Console;
 
 my $script = shift;
 
-$MetaBricky::Shell::Log = MetaBricky::Log::Console->new(
+$Metabricky::Shell::Log = Metabricky::Log::Console->new(
    level => 3,
 );
-my $shell = MetaBricky::Shell->new;
+my $shell = Metabricky::Shell->new;
 
 if (defined($script)) {
    $shell->cmd("script $script");

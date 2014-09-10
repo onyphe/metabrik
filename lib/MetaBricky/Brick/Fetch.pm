@@ -3,11 +3,11 @@
 #
 # Fetch brick
 #
-package MetaBricky::Brick::Fetch;
+package Metabricky::Brick::Fetch;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    output

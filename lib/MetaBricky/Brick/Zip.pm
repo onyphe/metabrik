@@ -3,11 +3,11 @@
 #
 # Zip brick
 #
-package MetaBricky::Brick::Zip;
+package Metabricky::Brick::Zip;
 use strict;
 use warnings;
 
-use base qw(MetaBricky::Brick);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    input

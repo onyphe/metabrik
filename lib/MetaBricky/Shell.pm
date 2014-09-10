@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package MetaBricky::Shell;
+package Metabricky::Shell;
 use strict;
 use warnings;
 
@@ -25,16 +25,16 @@ use IO::All;
 use Module::Reload;
 use IPC::Run;
 
-use MetaBricky;
-use MetaBricky::Context;
-use MetaBricky::Ext::Utils qw(peu_convert_path);
+use Metabricky;
+use Metabricky::Context;
+use Metabricky::Ext::Utils qw(peu_convert_path);
 
 # Exists because we cannot give an argument to Term::Shell::new()
 # Or I didn't found how to do it.
 our $Log;
 
 # Exists to avoid compile-time errors.
-# It is only used by MetaBricky::Context.
+# It is only used by Metabricky::Context.
 my $global;
 
 use vars qw{$AUTOLOAD};
@@ -63,10 +63,10 @@ sub init {
    $|++;
 
    if (! defined($Log)) {
-      die("[-] FATAL: MetaBricky::Shell::init: you must create a `Log' object\n");
+      die("[-] FATAL: Metabricky::Shell::init: you must create a `Log' object\n");
    }
 
-   my $context = MetaBricky::Context->new(
+   my $context = Metabricky::Context->new(
       log => $Log,
       shell => $self,
    );
@@ -113,13 +113,13 @@ sub init {
    #{
       #no strict 'refs';
       #use Data::Dumper;
-      #print Dumper(\%{"MetaBricky::Shell::"})."\n";
+      #print Dumper(\%{"Metabricky::Shell::"})."\n";
       #my $commands = $self->ps_get_commands;
       #for my $command (@$commands) {
          #print "** adding command [$command]\n";
-         #${"MetaBricky::Shell::"}{"run_$command"} = 1;
+         #${"Metabricky::Shell::"}{"run_$command"} = 1;
       #}
-      #print Dumper(\%{"MetaBricky::Shell::"})."\n";
+      #print Dumper(\%{"Metabricky::Shell::"})."\n";
    #};
 
    return $self;
@@ -157,7 +157,7 @@ sub cmdloop {
 }
 
 #
-# MetaBricky::Shell stuff
+# Metabricky::Shell stuff
 #
 sub ps_set_title {
    my $self = shift;
@@ -313,7 +313,7 @@ sub run_version {
    my $context = $self->context;
 
    $context->call(sub {
-      return $_ = $MetaBricky::VERSION;
+      return $_ = $Metabricky::VERSION;
    }) or return;
 
    return 1;
@@ -822,7 +822,7 @@ sub run_script {
    }
 
    open(my $in, '<', $script)
-      or die("[-] FATAL: MetaBricky::Shell::run_script: can't open file [$script]: $!\n");
+      or die("[-] FATAL: Metabricky::Shell::run_script: can't open file [$script]: $!\n");
    while (defined(my $line = <$in>)) {
       next if ($line =~ /^\s*#/);  # Skip comments
       chomp($line);
@@ -835,12 +835,12 @@ sub run_script {
 
 sub help_script {
    <<'END';
-execute MetaBricky commands as contained in the specified script
+execute Metabricky commands as contained in the specified script
 END
 }
 
 sub smry_script {
-   "execute MetaBricky commands as contained in the specified script"
+   "execute Metabricky commands as contained in the specified script"
 }
 
 #
@@ -875,7 +875,7 @@ sub catch_run {
    return $self->run_pl(@args);
 }
 
-# XXX: move in MetaBricky::Ext
+# XXX: move in Metabricky::Ext
 sub _ioa_dirsfiles {
    my $self = shift;
    my ($dir, $grep) = @_;
@@ -1018,7 +1018,7 @@ sub DESTROY {
    if (defined($self->term) && $self->term->can('WriteHistory')) {
       if (defined(my $history = $self->meby_history)) {
          $self->term->WriteHistory($history)
-            or die("[-] FATAL: MetaBricky::Shell::DESTROY: ".
+            or die("[-] FATAL: Metabricky::Shell::DESTROY: ".
                    "can't write history file [$history]: $!\n");
       }
    }
@@ -1032,29 +1032,29 @@ __END__
 
 =head1 NAME
 
-MetaBricky::Shell - The MetaBricky Shell
+Metabricky::Shell - The Metabricky Shell
 
 =head1 SYNOPSIS
 
-   use MetaBricky::Shell;
-   use MetaBricky::Log::Console;
+   use Metabricky::Shell;
+   use Metabricky::Log::Console;
 
-   $MetaBricky::Shell::Log = MetaBricky::Log::Console->new(
+   $Metabricky::Shell::Log = Metabricky::Log::Console->new(
       level => 3,
    );
 
-   my $shell = MetaBricky::Shell->new;
+   my $shell = Metabricky::Shell->new;
    $shell->cmdloop;
 
 =head1 DESCRIPTION
 
-Interactive use of the MetaBricky Shell.
+Interactive use of the Metabricky Shell.
 
 =head2 GLOBAL VARIABLES
 
-=head3 B<$MetaBricky::Shell::Log>
+=head3 B<$Metabricky::Shell::Log>
 
-Specify a log object. Must be an object inherited from L<MetaBricky::Log>.
+Specify a log object. Must be an object inherited from L<Metabricky::Log>.
 
 =head2 COMMANDS
 
@@ -1062,7 +1062,7 @@ Specify a log object. Must be an object inherited from L<MetaBricky::Log>.
 
 =head1 SEE ALSO
 
-L<MetaBricky::Log>
+L<Metabricky::Log>
 
 =head1 COPYRIGHT AND LICENSE
 
