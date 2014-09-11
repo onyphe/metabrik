@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 26) }
+BEGIN { plan(tests => 25) }
 
 ok(sub { eval("Metabricky::Brick::Aes");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Agent");   $@ ? 0 : 1 }, 1, $@);
