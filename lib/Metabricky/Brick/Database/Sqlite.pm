@@ -3,7 +3,7 @@
 #
 # SQLite brick
 #
-package Metabricky::Brick::Sqlite;
+package Metabricky::Brick::Database::Sqlite;
 use strict;
 use warnings;
 
@@ -21,11 +21,11 @@ use DBI;
 use DBD::SQLite;
 
 sub help {
-   print "set sqlite db <file>\n";
-   print "set sqlite autocommit <0|1>\n";
+   print "set database::sqlite db <file>\n";
+   print "set database::sqlite autocommit <0|1>\n";
    print "\n";
-   print "run sqlite exec <sql>\n";
-   print "run sqlite commit\n";
+   print "run database::sqlite exec <sql>\n";
+   print "run database::sqlite commit\n";
 }
 
 sub init {
@@ -36,7 +36,7 @@ sub init {
    my $db = $self->db;
    if (!defined($db)) {
       $self->inited(0);
-      die("set sqlite db <file>\n");
+      die("set database::sqlite db <file>\n");
    }
 
    my $dbh = DBI->connect("dbi:SQLite:dbname=$db","","")

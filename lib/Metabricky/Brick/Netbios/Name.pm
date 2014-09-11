@@ -3,7 +3,7 @@
 #
 # Net::NBName brick
 #
-package Metabricky::Brick::Nbname;
+package Metabricky::Brick::Netbios::Name;
 use strict;
 use warnings;
 
@@ -15,7 +15,7 @@ __PACKAGE__->cgBuildIndices;
 use Net::NBName;
 
 sub help {
-   print "run nbname nodestatus <ip>\n";
+   print "run netbios::name nodestatus <ip>\n";
 }
 
 sub nodestatus {

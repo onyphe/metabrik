@@ -3,7 +3,7 @@
 #
 # Base64 brick
 #
-package Metabricky::Brick::Base64;
+package Metabricky::Brick::Encode::Base64;
 use strict;
 use warnings;
 
@@ -17,8 +17,8 @@ __PACKAGE__->cgBuildIndices;
 use MIME::Base64 qw(encode_base64 decode_base64);
 
 sub help {
-   print "run base64 encode <data>\n";
-   print "run base64 decode <data>\n";
+   print "run encode::base64 encode <data>\n";
+   print "run encode::base64 decode <data>\n";
 }
 
 sub encode {
@@ -26,7 +26,7 @@ sub encode {
    my ($data) = @_;
 
    if (! defined($data)) {
-      die("run base64 encode <data>\n");
+      die("run encode::base64 encode <data>\n");
    }
 
    my $encoded = encode_base64($data);
@@ -39,7 +39,7 @@ sub decode {
    my ($data) = @_;
 
    if (! defined($data)) {
-      die("run base64 decode <data>\n");
+      die("run encode::base64 decode <data>\n");
    }
 
    my $decoded = decode_base64($data);

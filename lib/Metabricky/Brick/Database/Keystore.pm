@@ -3,7 +3,7 @@
 #
 # Keystore brick
 #
-package Metabricky::Brick::Keystore;
+package Metabricky::Brick::Database::Keystore;
 use strict;
 use warnings;
 
@@ -19,11 +19,11 @@ use Metabricky::Brick::Aes;
 use Metabricky::Brick::Slurp;
 
 sub help {
-   print "set keystore file <file>\n";
+   print "set database::keystore file <file>\n";
    print "\n";
-   print "run keystore search <pattern>\n";
-   #print "run keystore add <data>\n";
-   #print "run keystore remove <data>\n";
+   print "run database::keystore search <pattern>\n";
+   #print "run database::keystore add <data>\n";
+   #print "run database::keystore remove <data>\n";
 }
 
 sub search {
@@ -31,11 +31,11 @@ sub search {
    my ($pattern) = @_;
 
    if (! defined($self->file)) {
-      die("set keystore file <file>\n");
+      die("set database::keystore file <file>\n");
    }
 
    if (! defined($pattern)) {
-      die("run keystore search <pattern>\n");
+      die("run database::keystore search <pattern>\n");
    }
 
    my $slurp = Metabricky::Brick::Slurp->new(

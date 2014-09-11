@@ -3,7 +3,7 @@
 #
 # CWE brick
 #
-package Metabricky::Brick::Cwe;
+package Metabricky::Brick::Database::Cwe;
 use strict;
 use warnings;
 
@@ -22,9 +22,9 @@ use Metabricky::Brick::Fetch;
 use Metabricky::Brick::Zip;
 
 sub help {
-   print "run cwe update\n";
-   print "run cwe load\n";
-   print "run cwe search <pattern>\n";
+   print "run database::cwe update\n";
+   print "run database::cwe load\n";
+   print "run database::cwe search <pattern>\n";
 }
 
 sub default_values {
@@ -64,7 +64,7 @@ sub load {
    my $file = $self->file;
 
    if (! -f $file) {
-      die("run cwe update\n");
+      die("run database::cwe update\n");
    }
 
    my $slurp = Metabricky::Brick::Slurp->new(
@@ -154,11 +154,11 @@ sub search {
    my ($pattern) = @_;
 
    if (!defined($self->xml)) {
-      die("run cwe load\n");
+      die("run database::cwe load\n");
    }
 
    if (!defined($pattern)) {
-      die("run cwe search <pattern>\n");
+      die("run database::cwe search <pattern>\n");
    }
 
    my $xml = $self->xml;

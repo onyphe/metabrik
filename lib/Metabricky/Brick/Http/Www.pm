@@ -3,7 +3,7 @@
 #
 # Www brick
 #
-package Metabricky::Brick::Www;
+package Metabricky::Brick::Http::Www;
 use strict;
 use warnings;
 
@@ -25,17 +25,17 @@ use URI;
 use WWW::Mechanize;
 
 sub help {
-   print "set www url <url>\n";
+   print "set http::www url <url>\n";
    print "\n";
-   print "run www get <url>\n";
-   print "run www post <url> <data>\n";
-   print "run www self\n";
-   print "run www info\n";
-   print "run www forms\n";
-   print "run www links\n";
-   print "run www headers\n";
-   print "run www status\n";
-   print "run www getcertificate <url> | []\n";
+   print "run http::www get <url>\n";
+   print "run http::www post <url> <data>\n";
+   print "run http::www self\n";
+   print "run http::www info\n";
+   print "run http::www forms\n";
+   print "run http::www links\n";
+   print "run http::www headers\n";
+   print "run http::www status\n";
+   print "run http::www getcertificate <url> | []\n";
 }
 
 sub get {
@@ -73,7 +73,7 @@ sub post {
    my ($url, $data) = @_;
 
    if (! defined($data)) {
-      die("run www post <url> <data>\n");
+      die("run http::www post <url> <data>\n");
    }
 
    if ($self->debug) {
@@ -465,7 +465,7 @@ sub getcertificate2 {
    my ($host, $port) = @_;
 
    if (! defined($port)) {
-      die("run www getcertificate2 <hostname> <port>");
+      die("run http::www getcertificate2 <hostname> <port>");
    }
 
    use Net::SSLeay qw(print_errs set_fd);

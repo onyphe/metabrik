@@ -3,7 +3,7 @@
 #
 # Agent brick
 #
-package Metabricky::Brick::Agent;
+package Metabricky::Brick::Server::Agent;
 use strict;
 use warnings;
 
@@ -18,9 +18,9 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 use Net::Server;
 
 sub help {
-   print "set agent port <number>\n";
+   print "set server::agent port <number>\n";
    print "\n";
-   print "run agent listen\n";
+   print "run server::agent listen\n";
 }
 
 sub default_values {
@@ -34,14 +34,14 @@ sub listen {
 
    my $port = $self->port;
 
-   return Metabricky::Brick::Agent::Server->run(
+   return Metabricky::Brick::Server::Agent::Server->run(
       port => $port,
       ipv => '*',
       global => $self->global,
    );
 }
 
-package Metabricky::Brick::Agent::Server;
+package Metabricky::Brick::Server::Agent::Server;
 use strict;
 use warnings;
 

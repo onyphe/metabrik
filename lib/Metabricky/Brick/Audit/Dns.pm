@@ -3,7 +3,7 @@
 #
 # Audit DNS brick
 #
-package Metabricky::Brick::Auditdns;
+package Metabricky::Brick::Audit::Dns;
 use strict;
 use warnings;
 
@@ -19,13 +19,13 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 use Net::DNS::Resolver;
 
 sub help {
-   print "set auditdns nameserver <ip>\n";
-   print "set auditdns domainname <string>\n";
+   print "set audit::dns nameserver <ip>\n";
+   print "set audit::dns domainname <string>\n";
    print "\n";
-   print "run auditdns version\n";
-   print "run auditdns recursion\n";
-   print "run auditdns axfr\n";
-   print "run auditdns all\n";
+   print "run audit::dns version\n";
+   print "run audit::dns recursion\n";
+   print "run audit::dns axfr\n";
+   print "run audit::dns all\n";
 }
 
 sub init {
@@ -42,7 +42,7 @@ sub version {
    my $self = shift;
 
    if (! defined($self->nameserver)) {
-      die("set auditdns nameserver <ip>");
+      die("set audit::dns nameserver <ip>");
    }
 
    my $nameserver = $self->nameserver;
@@ -72,7 +72,7 @@ sub recursion {
    my $self = shift;
 
    if (! defined($self->nameserver)) {
-      die("set auditdns nameserver <ip>");
+      die("set audit::dns nameserver <ip>");
    }
 
    my $nameserver = $self->nameserver;
@@ -99,11 +99,11 @@ sub axfr {
    my $self = shift;
 
    if (! defined($self->nameserver)) {
-      die("set auditdns nameserver <ip>");
+      die("set audit::dns nameserver <ip>");
    }
 
    if (! defined($self->domainname)) {
-      die("set auditdns domainname <string>");
+      die("set audit::dns domainname <string>");
    }
 
    my $nameserver = $self->nameserver;

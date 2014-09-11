@@ -3,7 +3,7 @@
 #
 # Net::Netmask brick
 #
-package Metabricky::Brick::Netmask;
+package Metabricky::Brick::Address::Netmask;
 use strict;
 use warnings;
 
@@ -19,13 +19,13 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 use Net::Netmask;
 
 sub help {
-   print "set netmask subnet <subnet>\n";
+   print "set address::netmask subnet <subnet>\n";
    print "\n";
-   print "run netmask match <ip>\n";
-   print "run netmask first\n";
-   print "run netmask last\n";
-   print "run netmask block\n";
-   print "run netmask iplist\n";
+   print "run address::netmask match <ip>\n";
+   print "run address::netmask first\n";
+   print "run address::netmask last\n";
+   print "run address::netmask block\n";
+   print "run address::netmask iplist\n";
 }
 
 sub match {

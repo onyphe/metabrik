@@ -3,7 +3,7 @@
 #
 # Net::Frame modules brick
 #
-package Metabricky::Brick::Netframe;
+package Metabricky::Brick::Network::Frame;
 use strict;
 use warnings;
 
@@ -25,9 +25,9 @@ use Net::Frame::Layer::ICMPv4;
 use Net::Frame::Layer::ICMPv6;
 
 sub help {
-   print "set netframe device <interface>\n";
+   print "set network::frame device <interface>\n";
    print "\n";
-   #print "run template command2 <argument1> <argument2>\n";
+   #print "run core::template command2 <argument1> <argument2>\n";
 }
 
 sub command1 {

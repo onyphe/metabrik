@@ -3,7 +3,7 @@
 #
 # Template brick
 #
-package Metabricky::Brick::Template;
+package Metabricky::Brick::Core::Template;
 use strict;
 use warnings;
 
@@ -19,11 +19,11 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 #use Template::Some::Module;
 
 sub help {
-   print "set template attribute1 <value>\n";
-   print "set template attribute2 <value>\n";
+   print "set core::template attribute1 <value>\n";
+   print "set core::template attribute2 <value>\n";
    print "\n";
-   print "run template command1 <argument1> <argument2>\n";
-   print "run template command2 <argument1> <argument2>\n";
+   print "run core::template command1 <argument1> <argument2>\n";
+   print "run core::template command2 <argument1> <argument2>\n";
 }
 
 sub default_values {
@@ -49,7 +49,7 @@ sub command1 {
    my ($argument1, $argument2) = @_;
 
    if (! defined($argument2)) {
-      die("run template command1 <argument1> <argument2>\n");
+      die("run core::template command1 <argument1> <argument2>\n");
    }
 
    my $do_something = "you should do something";
@@ -62,7 +62,7 @@ sub command2 {
    my ($argument1, $argument2) = @_;
 
    if (! defined($argument2)) {
-      die("run template command2 <argument1> <argument2>\n");
+      die("run core::template command2 <argument1> <argument2>\n");
    }
 
    my $do_something = "you should do something";
@@ -76,19 +76,19 @@ __END__
 
 =head1 NAME
 
-Metabricky::Brick::Template - template to write a new Metabricky brick
+Metabricky::Brick::Core::Template - template to write a new Metabricky brick
 
 =head1 SYNOPSIS
 
-   $ cp lib/Metabricky/Brick/Template.pm ~/myMetabricky/lib/Brick/Mybrick.pm
-   $ vi ~/myMetabricky/lib/Brick/Mybrick.pm
+   $ cp lib/Metabricky/Brick/Core/Template.pm ~/myMetabricky/lib/Brick/Category/Mybrick.pm
+   $ vi ~/myMetabricky/lib/Brick/Category/Mybrick.pm
 
    # From a module
 
-   use Metabricky::Brick::Find;
+   use Metabricky::Brick::File::Find;
 
    my $path = join(':', @INC);
-   my $brick = Metabricky::Brick::Find->new;
+   my $brick = Metabricky::Brick::File::Find->new;
    my $found = $brick->find($path, '/lib/Metabricky/Brick$', '.pm$');
    for my $file (@$found) {
       print "$file\n";
@@ -97,8 +97,8 @@ Metabricky::Brick::Template - template to write a new Metabricky brick
    # From the Shell
 
    > my $path = join(':', @INC)
-   > set find path $path
-   > run find files /lib/Metabricky/Brick$ .pm$
+   > set file::find path $path
+   > run file::find files /lib/Metabricky/Brick$ .pm$
 
 =head1 DESCRIPTION
 

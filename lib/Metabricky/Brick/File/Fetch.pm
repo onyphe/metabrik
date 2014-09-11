@@ -3,7 +3,7 @@
 #
 # Fetch brick
 #
-package Metabricky::Brick::Fetch;
+package Metabricky::Brick::File::Fetch;
 use strict;
 use warnings;
 
@@ -16,9 +16,9 @@ __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 sub help {
-   print "set fetch output <file>\n";
+   print "set file::fetch output <file>\n";
    print "\n";
-   print "run fetch get <uri>\n";
+   print "run file::fetch get <uri>\n";
 }
 
 sub get {
@@ -27,11 +27,11 @@ sub get {
 
    my $output = $self->output;
    if (! defined($output)) {
-      die("set fetch output <file>\n");
+      die("set file::fetch output <file>\n");
    }
 
    if (! defined($uri)) {
-      die("run fetch get <uri>\n");
+      die("run file::fetch get <uri>\n");
    }
 
    # XXX: dirty for now

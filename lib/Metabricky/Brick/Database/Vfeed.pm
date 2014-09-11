@@ -3,7 +3,7 @@
 #
 # vFeed brick
 #
-package Metabricky::Brick::Vfeed;
+package Metabricky::Brick::Database::Vfeed;
 use strict;
 use warnings;
 
@@ -23,11 +23,11 @@ use vFeed::DB;
 use vFeed::Log;
 
 sub help {
-   print "set vfeed db <sqlite>\n";
+   print "set database::vfeed db <sqlite>\n";
    print "\n";
-   print "run vfeed version\n";
-   print "run vfeed update\n";
-   print "run vfeed cve <id>\n";
+   print "run database::vfeed version\n";
+   print "run database::vfeed update\n";
+   print "run database::vfeed cve <id>\n";
 }
 
 sub init {
@@ -36,7 +36,7 @@ sub init {
    ) or return 1; # Init already done
 
    if (! defined($self->db)) {
-      die("set vfeed db <sqlite>\n");
+      die("set database::vfeed db <sqlite>\n");
    }
 
    my $log = vFeed::Log->new;

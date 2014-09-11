@@ -3,7 +3,7 @@
 #
 # NVD brick
 #
-package Metabricky::Brick::Nvd;
+package Metabricky::Brick::Database::Nvd;
 use strict;
 use warnings;
 
@@ -25,11 +25,11 @@ use Metabricky::Brick::Slurp;
 use Metabricky::Brick::Fetch;
 
 sub help {
-   print "run nvd update <[recent|modified|others]>\n";
-   print "run nvd load <[recent|modified|others]> [ <pattern> ]\n";
-   print "run nvd search <pattern>\n";
-   print "run nvd searchbycpe <cpe>\n";
-   print "run nvd getxml <cve_id>\n";
+   print "run database::nvd update <[recent|modified|others]>\n";
+   print "run database::nvd load <[recent|modified|others]> [ <pattern> ]\n";
+   print "run database::nvd search <pattern>\n";
+   print "run database::nvd searchbycpe <cpe>\n";
+   print "run database::nvd getxml <cve_id>\n";
 }
 
 sub default_values {
@@ -84,13 +84,13 @@ sub update {
    my ($type) = @_;
 
    if (! defined($type)) {
-      die("run nvd update <[recent|modified|others]>\n");
+      die("run database::nvd update <[recent|modified|others]>\n");
    }
 
    if ($type ne 'recent'
    &&  $type ne 'modified'
    &&  $type ne 'others') {
-      die("run nvd update <[recent|modified|others]>\n");
+      die("run database::nvd update <[recent|modified|others]>\n");
    }
 
    my $datadir = $self->global->datadir;
@@ -115,13 +115,13 @@ sub load {
    my ($type, $pattern) = @_;
 
    if (! defined($type)) {
-      die("run nvd load <[recent|modified|others]> [ <pattern> ]\n");
+      die("run database::nvd load <[recent|modified|others]> [ <pattern> ]\n");
    }
 
    if ($type ne 'recent'
    &&  $type ne 'modified'
    &&  $type ne 'others') {
-      die("run nvd load <[recent|modified|others]> [ <pattern> ]\n");
+      die("run database::nvd load <[recent|modified|others]> [ <pattern> ]\n");
    }
 
    my $datadir = $self->global->datadir;
@@ -226,11 +226,11 @@ sub search {
 
    my $xml = $self->xml;
    if (! defined($xml)) {
-      die("run nvd load <[recent|modified|others]> [ <pattern> ]\n");
+      die("run database::nvd load <[recent|modified|others]> [ <pattern> ]\n");
    }
 
    if (! defined($pattern)) {
-      die("run nvd search <pattern>\n");
+      die("run database::nvd search <pattern>\n");
    }
 
    my $entries = $xml->{entry};
@@ -257,11 +257,11 @@ sub searchbycpe {
 
    my $xml = $self->xml;
    if (! defined($xml)) {
-      die("run nvd load <[recent|modified|others]> [ <pattern> ]\n");
+      die("run database::nvd load <[recent|modified|others]> [ <pattern> ]\n");
    }
 
    if (! defined($cpe)) {
-      die("run nvd searchbycpe <cpe>\n");
+      die("run database::nvd searchbycpe <cpe>\n");
    }
 
    my $entries = $xml->{entry};
@@ -291,7 +291,7 @@ sub getxml {
 
    my $xml = $self->xml;
    if (! defined($xml)) {
-      die("run nvd load <[recent|modified|others]> [ <pattern> ]\n");
+      die("run database::nvd load <[recent|modified|others]> [ <pattern> ]\n");
    }
 
    if (defined($xml->{entry})) {

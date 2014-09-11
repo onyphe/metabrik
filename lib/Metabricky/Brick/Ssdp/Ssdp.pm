@@ -3,7 +3,7 @@
 #
 # SSDP brick
 #
-package Metabricky::Brick::Ssdp;
+package Metabricky::Brick::Ssdp::Ssdp;
 use strict;
 use warnings;
 
@@ -18,16 +18,16 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 use IO::Socket::Multicast;
 
 sub help {
-   print "set ssdp device <device>\n";
+   print "set ssdp::ssdp device <device>\n";
    print "\n";
-   print "run ssdp discover\n";
+   print "run ssdp::ssdp discover\n";
 }
 
 sub discover {
    my $self = shift;
 
    if (! defined($self->device)) {
-      die("set ssdp device <device>\n");
+      die("set ssdp::ssdp device <device>\n");
    }
 
    my $device = $self->device;

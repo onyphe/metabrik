@@ -3,7 +3,7 @@
 #
 # Zip brick
 #
-package Metabricky::Brick::Zip;
+package Metabricky::Brick::File::Zip;
 use strict;
 use warnings;
 
@@ -18,12 +18,12 @@ __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 sub help {
-   print "set zip input <file>\n";
-   print "set zip output <file>\n";
-   print "set zip destdir <destdir>\n";
+   print "set file::zip input <file>\n";
+   print "set file::zip output <file>\n";
+   print "set file::zip destdir <destdir>\n";
    print "\n";
-   print "run zip uncompress\n";
-   print "run zip compress\n";
+   print "run file::zip uncompress\n";
+   print "run file::zip compress\n";
 }
 
 sub default_values {
@@ -40,12 +40,12 @@ sub uncompress {
 
    my $input = $self->input;
    if (! defined($input)) {
-      die("set zip input <file>\n");
+      die("set file::zip input <file>\n");
    }
 
    my $dir = $self->destdir;
    if (! defined($dir)) {
-      die("set zip destdir <destdir>\n");
+      die("set file::zip destdir <destdir>\n");
    }
 
    # XXX: dirty for now

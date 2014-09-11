@@ -3,7 +3,7 @@
 #
 # Route brick
 #
-package Metabricky::Brick::Route;
+package Metabricky::Brick::System::Route;
 use strict;
 use warnings;
 
@@ -18,7 +18,7 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 use Net::Libdnet::Route;
 
 sub help {
-   print "run route show\n";
+   print "run system::route show\n";
 }
 
 sub init {

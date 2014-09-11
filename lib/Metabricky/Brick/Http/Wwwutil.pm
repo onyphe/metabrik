@@ -3,7 +3,7 @@
 #
 # Wwwutil brick
 #
-package Metabricky::Brick::Wwwutil;
+package Metabricky::Brick::Http::Wwwutil;
 use strict;
 use warnings;
 
@@ -19,11 +19,11 @@ use Data::Dumper;
 use WWW::Mechanize;
 
 sub help {
-   #print "set www url <url>\n";
+   #print "set http::wwwutil url <url>\n";
    #print "\n";
-   print "run www myip\n";
-   print "run www nslookup <hostname> [nameserver]\n";
-   print "run www whois <ip|domain>\n";
+   print "run http::wwwutil myip\n";
+   print "run http::wwwutil nslookup <hostname> [nameserver]\n";
+   print "run http::wwwutil whois <ip|domain>\n";
 }
 
 sub nslookup {
