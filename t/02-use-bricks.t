@@ -9,7 +9,6 @@ ok(sub { eval("Metabricky::Brick::Base64");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Cwe");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Fetch");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Find");   $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("Metabricky::Brick::Global");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Httpproxy");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Keystore");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Nbname");   $@ ? 0 : 1 }, 1, $@);

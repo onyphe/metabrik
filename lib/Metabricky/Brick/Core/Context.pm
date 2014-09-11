@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package Metabricky::Context;
+package Metabricky::Brick::Core::Context;
 use strict;
 use warnings;
 
@@ -16,7 +16,7 @@ our @AS = qw(
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 use Lexical::Persistence;
-use Metabricky::Brick::Global;
+use Metabricky::Brick::Core::Global;
 
 # Only used to avoid compile-time issue
 my $global = {};
@@ -49,24 +49,24 @@ sub new {
 
    my $log = $self->log;
    if (! defined($log)) {
-      die("[FATAL] Metabricky::Context::new: you have to give a `log' object\n");
+      die("[FATAL] Core::Context::new: you have to give a `log' object\n");
    }
 
    my $shell = $self->shell;
    if (! defined($shell)) {
-      $log->fatal("Metabricky::Context::new: you have to give a `shell' object");
+      $log->fatal("Core::Context::new: you have to give a `shell' object");
    }
 
    eval {
       my $lp = Lexical::Persistence->new;
       $lp->set_context(_ => {
-         '$global' => Metabricky::Brick::Global->new(shell => $shell)->init,
+         '$global' => Metabricky::Brick::Core::Global->new(shell => $shell)->init,
       });
       $self->_lp($lp);
    };
    if ($@) {
       chomp($@);
-      $log->fatal("Metabricky::Context::new: can't initialize Brick global: $@");
+      $log->fatal("Core::Context::new: can't initialize Brick global: $@");
    }
    
    $self->do("use strict;");

@@ -3,7 +3,7 @@
 #
 # Global brick
 #
-package Metabricky::Brick::Global;
+package Metabricky::Brick::Core::Global;
 use strict;
 use warnings;
 

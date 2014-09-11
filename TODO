@@ -129,10 +129,10 @@ pirl: http://cpansearch.perl.org/src/RSAVAGE/Shell-Perl-0.0023/lib/Shell/Perl.pm
 ipirl: https://code.google.com/p/iperl/
 
 Gather available methods/functions:
-use Metabricky::Brick::Global;
+use Metabricky::Brick::Core::Global;
 
 --8<--
-my $pkg = "Metabricky::Brick::Global";
+my $pkg = "Metabricky::Brick::Core::Global";
 no strict 'refs';
 my @r = keys %{ $pkg . "::" };
 use Data::Dumper;
