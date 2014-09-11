@@ -194,14 +194,18 @@ sub load_brick {
       return;
    }
 
+   #print "DEBUG brick[$brick]\n";
+
    my ($category, $module) = split('::', $brick);
    # Brick has a category
    # XXX: when migration to categorised Bricks is finished, we can remove this check:
    #      Every Brick will have a category.
    if (defined($module)) {
+      #print "DEBUG category[$category] module[$module]\n";
       $category = ucfirst($category);
       $module = ucfirst($module);
-      $module = "Metabricky::Brick::$category::$module";
+      $module = 'Metabricky::Brick::'.$category.'::'.$module;
+      #print "DEBUG module[$module]\n";
    }
    # Brick has no category
    else {
