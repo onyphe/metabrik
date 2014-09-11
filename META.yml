@@ -1,0 +1,122 @@
+---
+abstract: 'formerly PerL Awesome SHell, Yeeeeaaaaaa!'
+author:
+  - 'GomoR <gomor-cpan_at_gomor.org>'
+build_requires: {}
+configure_requires:
+  Module::Build: 0.40
+dynamic_config: 1
+generated_by: 'Module::Build version 0.4003, CPAN::Meta::Converter version 2.133380'
+license: artistic
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Metabricky
+provides:
+  Metabricky:
+    file: lib/Metabricky.pm
+    version: 0.30
+  Metabricky::Brick:
+    file: lib/Metabricky/Brick.pm
+  Metabricky::Brick::Aes:
+    file: lib/Metabricky/Brick/Aes.pm
+  Metabricky::Brick::Agent:
+    file: lib/Metabricky/Brick/Agent.pm
+  Metabricky::Brick::Agent::Server:
+    file: lib/Metabricky/Brick/Agent.pm
+  Metabricky::Brick::Arp:
+    file: lib/Metabricky/Brick/Arp.pm
+  Metabricky::Brick::Auditdns:
+    file: lib/Metabricky/Brick/Auditdns.pm
+  Metabricky::Brick::Base64:
+    file: lib/Metabricky/Brick/Base64.pm
+  Metabricky::Brick::Core::Context:
+    file: lib/Metabricky/Brick/Core/Context.pm
+  Metabricky::Brick::Core::Global:
+    file: lib/Metabricky/Brick/Core/Global.pm
+  Metabricky::Brick::Core::Shell:
+    file: lib/Metabricky/Brick/Core/Shell.pm
+  Metabricky::Brick::Cwe:
+    file: lib/Metabricky/Brick/Cwe.pm
+  Metabricky::Brick::Fetch:
+    file: lib/Metabricky/Brick/Fetch.pm
+  Metabricky::Brick::Find:
+    file: lib/Metabricky/Brick/Find.pm
+  Metabricky::Brick::Httpproxy:
+    file: lib/Metabricky/Brick/Httpproxy.pm
+  Metabricky::Brick::Keystore:
+    file: lib/Metabricky/Brick/Keystore.pm
+  Metabricky::Brick::Nbname:
+    file: lib/Metabricky/Brick/Nbname.pm
+  Metabricky::Brick::Netframe:
+    file: lib/Metabricky/Brick/Netframe.pm
+  Metabricky::Brick::Netmask:
+    file: lib/Metabricky/Brick/Netmask.pm
+  Metabricky::Brick::Nvd:
+    file: lib/Metabricky/Brick/Nvd.pm
+  Metabricky::Brick::Route:
+    file: lib/Metabricky/Brick/Route.pm
+  Metabricky::Brick::Slurp:
+    file: lib/Metabricky/Brick/Slurp.pm
+  Metabricky::Brick::Sqlite:
+    file: lib/Metabricky/Brick/Sqlite.pm
+  Metabricky::Brick::Ssdp:
+    file: lib/Metabricky/Brick/Ssdp.pm
+  Metabricky::Brick::Ssh:
+    file: lib/Metabricky/Brick/Ssh.pm
+  Metabricky::Brick::Ssh2:
+    file: lib/Metabricky/Brick/Ssh2.pm
+  Metabricky::Brick::Template:
+    file: lib/Metabricky/Brick/Template.pm
+  Metabricky::Brick::Vfeed:
+    file: lib/Metabricky/Brick/Vfeed.pm
+  Metabricky::Brick::Www:
+    file: lib/Metabricky/Brick/Www.pm
+  Metabricky::Brick::Wwwutil:
+    file: lib/Metabricky/Brick/Wwwutil.pm
+  Metabricky::Brick::Zip:
+    file: lib/Metabricky/Brick/Zip.pm
+  Metabricky::Ext::Utils:
+    file: lib/Metabricky/Ext/Utils.pm
+  Metabricky::Log:
+    file: lib/Metabricky/Log.pm
+  Metabricky::Log::Console:
+    file: lib/Metabricky/Log/Console.pm
+requires:
+  Class::Gomor: 1.00
+  Cwd: 0
+  Data::Dump: 0
+  Data::Dumper: 0
+  File::Find: 0
+  File::HomeDir: 0
+  File::Slurp: 0
+  HTTP::Proxy: 0
+  IO::All: 0
+  IO::Socket::SSL: 0
+  JSON::XS: 0
+  LWP::Protocol::connect: 0
+  LWP::UserAgent: 0
+  Lexical::Persistence: 0
+  Module::Reload: 0
+  Net::Frame: 0
+  Net::Frame::Device: 0
+  Net::Frame::Layer::ETH: 0
+  Net::Frame::Layer::ICMPv4: 0
+  Net::Frame::Layer::ICMPv6: 0
+  Net::Frame::Layer::IPv4: 0
+  Net::Frame::Layer::IPv6: 0
+  Net::Frame::Layer::TCP: 0
+  Net::Frame::Layer::UDP: 0
+  Net::NBName: 0
+  Net::Netmask: 0
+  Net::SSH2: 0
+  Net::SSLeay: 0
+  Net::Server: 0
+  Term::Shell: 0
+  URI: 0
+  WWW::Mechanize: 0
+  XML::Simple: 0
+  vFeed: 0
+resources:
+  license: http://opensource.org/licenses/artistic-license.php
+version: 0.30
