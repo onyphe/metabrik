@@ -5,41 +5,44 @@ package Metabricky::Brick::Core::Context;
 use strict;
 use warnings;
 
-use base qw(Class::Gomor::Hash);
+use base qw(Metabricky::Brick);
 
 our @AS = qw(
    log
    shell
-   global
    _lp
 );
+__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
+use Data::Dump;
+use Data::Dumper;
+use File::Find; # XXX: use Brick::Find
 use Lexical::Persistence;
+
 use Metabricky::Brick::Core::Global;
 
-# Only used to avoid compile-time issue
-my $global = {};
+# Only used to avoid compile-time errors
+my $__ctx = {};
 
 sub help {
-   print "run context do <perl_code>\n";
-   print "run context call <perl_sub>\n";
-   print "run context global_get <attribute>\n";
-   print "run context global_get_available\n";
-   print "run context global_get_loaded\n";
-   print "run context global_update_available_bricks\n";
-   print "run context global_get_loaded_bricks\n";
-   print "run context global_get_set_attributes\n";
-   print "run context global_set_brick_attribute <brick> <attribute> <value>\n";
-   print "run context execute_brick_command <brick> <command> [ <arg1 arg2 .. argN> ]\n";
+   print "run core::context do <perl_code>\n";
+   print "run core::context call <perl_sub>\n";
+   print "run core::context global_get <attribute>\n";
+   print "run core::context global_get_available\n";
+   print "run core::context global_get_loaded\n";
+   print "run core::context global_update_available_bricks\n";
+   print "run core::context global_get_loaded_bricks\n";
+   print "run core::context global_get_set_attributes\n";
+   print "run core::context global_set_brick_attribute <brick> <attribute> <value>\n";
+   print "run core::context execute_brick_command <brick> <command> [ <arg1 arg2 .. argN> ]\n";
 }
 
 #sub default_values {
-#   my $self = shift;
+   #my $self = shift;
 
-#   return {
-#      attribute1 => 'value1',
-#   };
+   #return {
+   #};
 #}
 
 sub new {
@@ -49,31 +52,39 @@ sub new {
 
    my $log = $self->log;
    if (! defined($log)) {
-      die("[FATAL] Core::Context::new: you have to give a `log' object\n");
-   }
-
-   my $shell = $self->shell;
-   if (! defined($shell)) {
-      $log->fatal("Core::Context::new: you have to give a `shell' object");
+      die("[FATAL] core::context::new: you have to give a `log' object\n");
    }
 
    eval {
       my $lp = Lexical::Persistence->new;
-      $lp->set_context(_ => {
-         '$global' => Metabricky::Brick::Core::Global->new(shell => $shell)->init,
-      });
+      $lp->set_context(_ => { '$__ctx' => 1 });
+      $lp->call(sub {
+         my %args = @_;
+
+         $__ctx = { self => $args{self}, shell => $args{shell} };
+
+         eval("use strict;");
+         eval("use warnings;");
+
+         $__ctx->{bricks}->{'core::global'} = Metabricky::Brick::Core::Global->new->init;
+
+         $__ctx->{loaded_bricks} = {
+            'core::global' => $__ctx->{bricks}->{'core::global'},
+            'core::context' => $__ctx->{self},
+            'core::shell' => $__ctx->{shell},
+         };
+         $__ctx->{available_bricks} = { };
+         $__ctx->{set_attributes} = { };
+
+         return 1;
+      }, self => $self, shell => $self->shell);
       $self->_lp($lp);
    };
    if ($@) {
       chomp($@);
-      $log->fatal("Core::Context::new: can't initialize Brick global: $@");
+      $log->fatal("core::context::new: can't initialize context: $@");
    }
    
-   $self->do("use strict;");
-   $self->do("use warnings;");
-   $self->do("use Data::Dumper;");
-   $self->do("use Data::Dump;");
-
    return $self;
 }
 
@@ -84,7 +95,7 @@ sub do {
    my $log = $self->log;
    my $lp = $self->_lp;
 
-   my $echo = $self->global_get('echo');
+   my $echo = $self->get_brick_attribute('core::global', 'echo');
 
    my $res;
    eval {
@@ -98,7 +109,7 @@ sub do {
    };
    if ($@) {
       chomp($@);
-      $log->error("Context::do: $@");
+      $log->error("core::context::do: $@");
       return;
    }
 
@@ -118,74 +129,144 @@ sub call {
    };
    if ($@) {
       chomp($@);
-      $log->error("Context::call: $@");
+      $log->error("core::context::call: $@");
       return;
    }
 
    return $res;
 }
 
-sub global_load {
+
+# XXX: to replace with Brick::Find
+my @available = ();
+
+sub _find_bricks {
+   if ($File::Find::dir =~ /Metabricky\/Brick/ && /.pm$/) {
+      (my $category = lc($File::Find::dir)) =~ s/^.*\/metabricky\/brick\/?(.*?)$/$1/;
+      $category =~ s/\//::/g;
+      (my $brick = lc($_)) =~ s/.pm$//;
+      #print "DEBUG brick[$brick] [$category]\n";
+      if (length($category)) {
+         push @available, $category.'::'.$brick;
+      }
+      else {
+         push @available, $brick;
+      }
+   }
+}
+
+sub find_available_bricks {
    my $self = shift;
-   my ($brick) = @_;
+
+   {
+      no warnings 'File::Find';
+      find(\&_find_bricks, @INC);
+   };
+
+   my %h = map { $_ => 1 } @available;
+
+   return \%h;
+}
+
+sub set_available_bricks {
+   my $self = shift;
+
+   my $h = $self->find_available_bricks;
 
    my $r = $self->call(sub {
       my %args = @_;
 
-      my $__lp_brick = $args{brick};
-
-      return $global->load($__lp_brick);
-   }, brick => $brick);
+      return $__ctx->{available_bricks} = $args{available_bricks};
+   }, available_bricks => $h);
 
    return $r;
 }
 
-sub global_get {
+sub load_brick {
    my $self = shift;
-   my ($attribute) = @_;
+   my ($brick) = @_;
 
-   my $value = $self->call(sub {
+   # XXX: use Module::Loaded (core) or Module::Load/Unload or Module::Reload?
+   my $log = $self->log;
+
+   if (! defined($brick)) {
+      $log->error("run context load <brick>");
+      return;
+   }
+
+   my ($category, $module) = split('::', $brick);
+   # Brick has a category
+   # XXX: when migration to categorised Bricks is finished, we can remove this check:
+   #      Every Brick will have a category.
+   if (defined($module)) {
+      $category = ucfirst($category);
+      $module = ucfirst($module);
+      $module = "Metabricky::Brick::$category::$module";
+   }
+   # Brick has no category
+   else {
+      $module = ucfirst($category);
+      $module =~ s/^/Metabricky::Brick::/;
+   }
+
+   my $loaded_bricks = $self->get_loaded_bricks or return;
+   if (exists($loaded_bricks->{$brick})) {
+      $log->error("Brick [$brick] already loaded");
+      return;
+   }
+
+   my $r = $self->call(sub {
       my %args = @_;
 
-      my $__lp_attribute = $args{attribute};
-      my $__lp_value = $global->$__lp_attribute;
+      my $__lp_module = $args{module};
+      my $__lp_brick = $args{brick};
 
-      if (! $global->can($__lp_attribute)) {
-         die("Brick [global] has no Attribute [$attribute]\n");
+      eval("use $__lp_module;");
+      if ($@) {
+         chomp($@);
+         die("unable to load Brick [$__lp_brick]: $@\n");
       }
 
-      return $__lp_value;
-   }, attribute => $attribute);
+      my $__lp_new = $__lp_module->new(
+         global => $__ctx->{bricks}->{'core::global'},
+      );
+      #$__lp_new->init; # No init now. We wait first run()
 
-   return $value;
+      return $__ctx->{loaded_bricks}->{$__lp_brick} = $__lp_new;
+   }, module => $module, brick => $brick);
+
+   return $self;
 }
 
-sub global_get_available {
+sub get_available_bricks {
    my $self = shift;
 
-   return $self->global_get('available');
+   return $self->call(sub {
+      return $__ctx->{available_bricks};
+   });
 }
 
-sub global_get_loaded {
+sub get_loaded_bricks {
    my $self = shift;
 
-   return $self->global_get('loaded');
+   return $self->call(sub {
+      return $__ctx->{loaded_bricks};
+   });
 }
 
-sub global_update_available_bricks {
+sub get_set_attributes {
    my $self = shift;
 
-   my $r = $self->call(sub { $global->update_available_bricks; })
-      or return;
-
-   return $r;
+   return $self->call(sub {
+      return $__ctx->{set_attributes};
+   });
 }
 
-sub global_get_loaded_bricks {
+sub get_status_bricks {
    my $self = shift;
 
-   my $available = $self->global_get_available or return;
-   my $loaded = $self->global_get_loaded or return;
+   my $available = $self->get_available_bricks or return;
+   my $loaded = $self->get_loaded_bricks or return;
 
    my @loaded = ();
    my @notloaded = ();
@@ -200,13 +281,31 @@ sub global_get_loaded_bricks {
    };
 }
 
-sub global_get_set_attributes {
+sub get_brick_attribute {
    my $self = shift;
+   my ($brick, $attribute) = @_;
 
-   return $self->global_get('set');
+   my $value = $self->call(sub {
+      my %args = @_;
+
+      my $__lp_brick = $args{brick};
+      my $__lp_attribute = $args{attribute};
+
+      if (! exists($__ctx->{loaded_bricks}->{$__lp_brick})) {
+         die("Brick [$__lp_brick] not loaded\n");
+      }
+
+      if (! $__ctx->{loaded_bricks}->{$__lp_brick}->can($__lp_attribute)) {
+         die("Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
+      }
+
+      return $__ctx->{loaded_bricks}->{$__lp_brick}->$__lp_attribute;
+   }, brick => $brick, attribute => $attribute);
+
+   return $value;
 }
 
-sub global_set_brick_attribute {
+sub set_brick_attribute {
    my $self = shift;
    my ($brick, $attribute, $value) = @_;
 
@@ -217,17 +316,17 @@ sub global_set_brick_attribute {
       my $__lp_attribute = $args{attribute};
       my $__lp_value = $args{value};
 
-      if (! exists($global->loaded->{$__lp_brick})) {
+      if (! exists($__ctx->{loaded_bricks}->{$__lp_brick})) {
          die("Brick [$__lp_brick] not loaded\n");
       }
 
-      if (! $global->loaded->{$__lp_brick}->can($__lp_attribute)) {
+      if (! $__ctx->{loaded_bricks}->{$__lp_brick}->can($__lp_attribute)) {
          die("Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
       }
 
-      #$global->loaded->{$__lp_brick}->init; # No init when just setting an attribute
-      $global->loaded->{$__lp_brick}->$__lp_attribute($__lp_value);
-      $global->set->{$__lp_brick}->{$__lp_attribute} = $__lp_value;
+      #$__ctx->{loaded_bricks}->{$__lp_brick}->init; # No init when just setting an attribute
+      $__ctx->{loaded_bricks}->{$__lp_brick}->$__lp_attribute($__lp_value);
+      $__ctx->{set_attributes}->{$__lp_brick}->{$__lp_attribute} = $__lp_value;
 
       return $__lp_value;
    }, brick => $brick, attribute => $attribute, value => $value);
@@ -249,16 +348,16 @@ sub execute_brick_command {
       my $__lp_command = $args{command};
       my @__lp_args = @{$args{args}};
 
-      if (! exists($global->loaded->{$__lp_brick})) {
+      if (! exists($__ctx->{loaded_bricks}->{$__lp_brick})) {
          die("Brick [$__lp_brick] not loaded\n");
       }
 
-      my $__lp_run = $global->loaded->{$__lp_brick};
+      my $__lp_run = $__ctx->{loaded_bricks}->{$__lp_brick};
       if (! defined($__lp_run)) {
          die("Brick [$__lp_brick] not defined\n");
       }
 
-      if (! $global->loaded->{$__lp_brick}->can($__lp_command)) {
+      if (! $__ctx->{loaded_bricks}->{$__lp_brick}->can($__lp_command)) {
          die("Brick [$__lp_brick] has no Command [$__lp_command]\n");
       }
 

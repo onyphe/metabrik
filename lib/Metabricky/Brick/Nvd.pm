@@ -25,11 +25,8 @@ use Metabricky::Brick::Slurp;
 use Metabricky::Brick::Fetch;
 
 sub help {
-   #print "run nvd updaterecent\n";
-   #print "run nvd updatemodified\n";
-   #print "run nvd updateothers\n";
    print "run nvd update <[recent|modified|others]>\n";
-   print "run nvd load <[recent|modified|others]>\n";
+   print "run nvd load <[recent|modified|others]> [ <pattern> ]\n";
    print "run nvd search <pattern>\n";
    print "run nvd searchbycpe <cpe>\n";
    print "run nvd getxml <cve_id>\n";
@@ -82,57 +79,6 @@ sub default_values {
    };
 }
 
-# XXX: to remove
-sub _updaterecent {
-   my $self = shift;
-
-   my $datadir = $self->global->datadir;
-   my $uri = $self->uri_recent;
-   my $xml = $self->xml_recent;
-
-   my $fetch = Metabricky::Brick::Fetch->new(
-      output => $xml->[0],
-   );
-   $fetch->get($uri->[0]) or die("fetch::get: uri[".$uri->[0]."]\n");
-
-   return 1;
-}
-
-# XXX: to remove
-sub _updatemodified {
-   my $self = shift;
-
-   my $datadir = $self->global->datadir;
-   my $uri = $self->uri_modified;
-   my $xml = $self->xml_modified;
-
-   my $fetch = Metabricky::Brick::Fetch->new(
-      output => $xml->[0],
-   );
-   $fetch->get($uri->[0]) or die("fetch::get: uri[".$uri->[0]."]\n");
-
-   return 1;
-}
-
-# XXX: to remove
-sub _updateothers {
-   my $self = shift;
-
-   my $datadir = $self->global->datadir;
-   my $uri_list = $self->uri_others;
-   my $xml_list = $self->xml_others;
-   my $count = scalar @$uri_list;
-
-   for my $c (0..$count-1) {
-      my $fetch = Metabricky::Brick::Fetch->new(
-         output => $xml_list->[$c],
-      );
-      $fetch->get($uri_list->[$c]) or die("fetch::get: uri[".$uri_list->[$c]."]\n");
-   }
-
-   return 1;
-}
-
 sub update {
    my $self = shift;
    my ($type) = @_;
@@ -175,7 +121,7 @@ sub load {
    if ($type ne 'recent'
    &&  $type ne 'modified'
    &&  $type ne 'others') {
-      die("run nvd load <[recent|modified|others]>\n");
+      die("run nvd load <[recent|modified|others]> [ <pattern> ]\n");
    }
 
    my $datadir = $self->global->datadir;
@@ -280,7 +226,7 @@ sub search {
 
    my $xml = $self->xml;
    if (! defined($xml)) {
-      die("run nvd load <..>\n");
+      die("run nvd load <[recent|modified|others]> [ <pattern> ]\n");
    }
 
    if (! defined($pattern)) {
@@ -311,7 +257,7 @@ sub searchbycpe {
 
    my $xml = $self->xml;
    if (! defined($xml)) {
-      die("run nvd load <..>\n");
+      die("run nvd load <[recent|modified|others]> [ <pattern> ]\n");
    }
 
    if (! defined($cpe)) {
@@ -345,7 +291,7 @@ sub getxml {
 
    my $xml = $self->xml;
    if (! defined($xml)) {
-      die("run nvd load <..>\n");
+      die("run nvd load <[recent|modified|others]> [ <pattern> ]\n");
    }
 
    if (defined($xml->{entry})) {

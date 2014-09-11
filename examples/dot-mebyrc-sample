@@ -12,10 +12,11 @@ title "Metabricky v$version"
 my $home = $ENV{HOME}
 my $user = $ENV{USER}
 
-set global datadir $home."/metabricky/data"
-set global ctimeout 20
-set global rtimeout 20
-set global commands vi:cat:less:w:nc:grep:find:cpanm
+set core::global datadir $home."/metabricky/data"
+set core::global ctimeout 20
+set core::global rtimeout 20
+
+set core::shell commands vi:cat:less:w:nc:grep:find:cpanm
 
 load www
 
@@ -37,3 +38,5 @@ set vfeed db $home."/metabricky/data/vfeed.db"
 use lib "$ENV{HOME}/path/to/lib"
 
 load mybrick
+
+set core::global echo 1

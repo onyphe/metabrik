@@ -16,6 +16,8 @@ our @AS = qw(
    ps1
    title
    context
+
+   commands
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
@@ -59,7 +61,7 @@ sub init {
    $|++;
 
    if (! defined($Log)) {
-      die("[FATAL] Core::Shell::init: you must create a `Log' object\n");
+      die("[FATAL] core::shell::init: you must create a `Log' object\n");
    }
 
    my $context = Metabricky::Brick::Core::Context->new(
@@ -97,14 +99,15 @@ sub init {
       }
    }
 
-   $context->global_update_available_bricks
-      or $Log->fatal("init: global_update_available_bricks");
+   $context->set_available_bricks
+      or $Log->fatal("core::shell::init: set_available_bricks");
 
-   my $available = $context->global_get('available')
-      or $Log->fatal("init: unable to get available bricks");
-   for my $a (keys %$available) {
-      $self->add_handlers("run_$a");
-   }
+   # XXX: not used now
+   #my $available = $context->get_available_bricks
+      #or $Log->fatal("init: unable to get available bricks");
+   #for my $a (keys %$available) {
+      #$self->add_handlers("run_$a");
+   #}
 
    #{
       #no strict 'refs';
@@ -256,7 +259,7 @@ sub ps_get_commands {
 
    my $context = $self->context;
 
-   my $commands = $context->global_get('commands');
+   my $commands = $context->get_brick_attribute('core::global', 'commands');
    if (! defined($commands)) {
       return [];
    }
@@ -560,7 +563,7 @@ sub run_pl {
    #print "[DEBUG] [$line]\n";
    $line =~ s/^pl\s+//;
 
-   my $newline = $context->global_get('newline');
+   my $newline = $context->get_brick_attribute('core::global', 'newline');
    if ($newline && $line =~ /^\s*print/) {
       $line .= ';print "\n";';
    }
@@ -602,7 +605,7 @@ sub run_load {
 
    my $context = $self->context;
 
-   my $r = $context->global_load($brick);
+   my $r = $context->load_brick($brick) or return;
    if ($r) {
       $Log->verbose("Brick [$brick] loaded");
    }
@@ -615,7 +618,7 @@ sub run_show {
 
    my $context = $self->context;
 
-   my $loaded = $context->global_get_loaded_bricks;
+   my $loaded = $context->get_status_bricks;
 
    print "Available bricks:\n";
 
@@ -651,7 +654,7 @@ sub run_set {
 
    # set is called without args, we display everything
    if (! defined($brick)) {
-      my $attributes = $context->global_get_set_attributes or return;
+      my $attributes = $context->get_set_attributes or return;
 
       print "Set attribute(s):\n";
 
@@ -669,8 +672,8 @@ sub run_set {
    }
    # set is called with only a brick as an arg, we show its attributes
    elsif (defined($brick) && ! defined($attribute)) {
-      my $available = $context->global_get_available or return;
-      my $attributes = $context->global_get_set_attributes or return;
+      my $available = $context->get_available_bricks or return;
+      my $attributes = $context->get_set_attributes or return;
 
       if (! exists($available->{$brick})) {
          $Log->error("Brick [$brick] does not exist");
@@ -691,8 +694,8 @@ sub run_set {
    }
    # set is called with is a brick and a key without value
    elsif (defined($brick) && defined($attribute) && ! defined($value)) {
-      my $available = $context->global_get_available or return;
-      my $attributes = $context->global_get_set_attributes or return;
+      my $available = $context->get_available_bricks or return;
+      my $attributes = $context->get_set_attributes or return;
 
       if (! exists($available->{$brick})) {
          $Log->error("Brick [$brick] does not exist");
@@ -712,7 +715,7 @@ sub run_set {
    }
    # set is called with all args (brick, key, value)
    else {
-      return $context->global_set_brick_attribute($brick, $attribute, $value);
+      return $context->set_brick_attribute($brick, $attribute, $value);
    }
 
    return 1;
@@ -758,7 +761,7 @@ sub run_script {
    }
 
    open(my $in, '<', $script)
-      or die("[FATAL] Core::Shell::run_script: can't open file [$script]: $!\n");
+      or die("[FATAL] core::shell::run_script: can't open file [$script]: $!\n");
    while (defined(my $line = <$in>)) {
       next if ($line =~ /^\s*#/);  # Skip comments
       chomp($line);
@@ -795,7 +798,7 @@ sub catch_run {
       }
    }
 
-   my $available = $context->global_get('available') or return;
+   my $available = $context->get_available_bricks or return;
    if (defined($available)) {
       for my $brick (keys %$available) {
          if ($args[0] eq $brick) {
@@ -868,7 +871,7 @@ sub comp_run {
 
    my $context = $self->context;
 
-   my $available = $context->global_get('available');
+   my $available = $context->get_available_bricks or return;
    if (! defined($available)) {
       $Log->warning("can't fetch available Bricks");
       return ();
@@ -954,7 +957,7 @@ sub DESTROY {
    if (defined($self->term) && $self->term->can('WriteHistory')) {
       if (defined(my $history = $self->meby_history)) {
          $self->term->WriteHistory($history)
-            or die("[FATAL] Core::Shell::DESTROY: ".
+            or die("[FATAL] core::shell::DESTROY: ".
                    "can't write history file [$history]: $!\n");
       }
    }

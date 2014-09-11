@@ -1,7 +1,7 @@
 Prio:
--> rename Plasy to Metabricky
 -> create catageories (Brick::Core::Shell, Brick::Core::Global)
 -> Brickify Context and Shell
+-> Merge Context and Global? And Shell?
 
 Rationales:
 -> Tired of writing again and again some Perl scripts to do same things (where did I put this one?)
@@ -59,6 +59,10 @@ Vocabulary:
 - A Brick is attached to a Category
 - Brickification: process of turning a process/software into a Meby Brick
 => Rename to use that in all code
+
+Doc:
+- core::context Brick autoloads core::global Brick
+=> core::global Brick is then availble through $global variable.
 
 Split Metabricky into:
 - Metabricky::Brick::Shell for Term::Shell stuff
