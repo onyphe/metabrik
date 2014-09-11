@@ -3,7 +3,7 @@
 #
 # Ssh brick
 #
-package Metabricky::Brick::Ssh;
+package Metabricky::Brick::Identify::Ssh;
 use strict;
 use warnings;
 
@@ -16,9 +16,9 @@ __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 sub help {
-   print "set ssh banner <string>\n";
+   print "set identify::ssh banner <string>\n";
    print "\n";
-   print "run ssh parsebanner\n";
+   print "run identify::ssh parsebanner\n";
 }
 
 sub parsebanner {

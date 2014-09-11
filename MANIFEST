@@ -26,7 +26,7 @@ lib/Metabricky/Brick/System/Route.pm
 lib/Metabricky/Brick/File/Slurp.pm
 lib/Metabricky/Brick/Database/Sqlite.pm
 lib/Metabricky/Brick/Ssdp/Ssdp.pm
-lib/Metabricky/Brick/Ssh.pm
+lib/Metabricky/Brick/Identify/Ssh.pm
 lib/Metabricky/Brick/Remote/Ssh2.pm
 lib/Metabricky/Brick/Core/Template.pm
 lib/Metabricky/Brick/Database/Vfeed.pm
