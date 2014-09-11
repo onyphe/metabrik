@@ -3,7 +3,7 @@
 #
 # Arp brick
 #
-package Metabricky::Brick::Arp;
+package Metabricky::Brick::System::Arp;
 use strict;
 use warnings;
 
@@ -18,7 +18,7 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 use Net::Libdnet::Arp;
 
 sub help {
-   print "run arp show\n";
+   print "run system::arp show\n";
 }
 
 sub init {

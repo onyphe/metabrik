@@ -3,7 +3,7 @@
 #
 # HTTP::Proxy brick
 #
-package Metabricky::Brick::Httpproxy;
+package Metabricky::Brick::Http::Proxy;
 use strict;
 use warnings;
 
@@ -22,12 +22,12 @@ use HTTP::Proxy::HeaderFilter::simple;
 use LWP::Protocol::connect;
 
 sub help {
-   print "set httpproxy port <port> (default: 3128)\n";
-   print "set httpproxy truncate_response <characters> (default: 0, do not truncate)\n";
-   print "set httpproxy truncate_request <characters> (default: 512 characters)\n";
+   print "set http::proxy port <port> (default: 3128)\n";
+   print "set http::proxy truncate_response <characters> (default: 0, do not truncate)\n";
+   print "set http::proxy truncate_request <characters> (default: 512 characters)\n";
    print "\n";
-   print "run httpproxy requests - simply display browser requests\n";
-   print "run httpproxy requests_responses - simply display browser requests and server responses\n";
+   print "run http::proxy requests - simply display browser requests\n";
+   print "run http::proxy requests_responses - simply display browser requests and server responses\n";
 }
 
 sub default_values {

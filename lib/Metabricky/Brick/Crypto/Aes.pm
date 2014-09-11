@@ -3,7 +3,7 @@
 #
 # AES brick
 #
-package Metabricky::Brick::Aes;
+package Metabricky::Brick::Crypto::Aes;
 use strict;
 use warnings;
 
@@ -18,8 +18,8 @@ use Crypt::CBC;
 use Crypt::OpenSSL::AES;
 
 sub help {
-   print "run aes encrypt <data>\n";
-   print "run aes decrypt <data>\n";
+   print "run crypto::aes encrypt <data>\n";
+   print "run crypto::aes decrypt <data>\n";
 }
 
 sub encrypt {
@@ -27,7 +27,7 @@ sub encrypt {
    my ($data) = @_;
 
    if (! defined($data)) {
-      die("run aes encrypt <data>\n");
+      die("run crypto::aes encrypt <data>\n");
    }
 
    #my $key = 'key';
@@ -50,7 +50,7 @@ sub decrypt {
    my ($data) = @_;
 
    if (! defined($data)) {
-      die("run aes decrypt <data>\n");
+      die("run crypto::aes decrypt <data>\n");
    }
 
    #my $key = 'key';

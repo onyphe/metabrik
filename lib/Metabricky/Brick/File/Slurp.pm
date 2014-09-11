@@ -3,7 +3,7 @@
 #
 # Slurp brick
 #
-package Metabricky::Brick::Slurp;
+package Metabricky::Brick::File::Slurp;
 use strict;
 use warnings;
 
@@ -22,16 +22,16 @@ use XML::Simple;
 sub help {
    print "set slurp file <file>\n";
    print "\n";
-   print "run slurp text\n";
-   print "run slurp json\n";
-   print "run slurp xml\n";
+   print "run file::slurp text\n";
+   print "run file::slurp json\n";
+   print "run file::slurp xml\n";
 }
 
 sub text {
    my $self = shift;
 
    if (! defined($self->file)) {
-      die("set slurp file <file>\n");
+      die("set file::slurp file <file>\n");
    }
 
    my $text = read_file($self->file)
@@ -44,7 +44,7 @@ sub json {
    my $self = shift;
 
    if (! defined($self->file)) {
-      die("set slurp file <file>\n");
+      die("set file::slurp file <file>\n");
    }
 
    return decode_json($self->text);
@@ -54,7 +54,7 @@ sub xml {
    my $self = shift;
 
    if (! defined($self->file)) {
-      die("set slurp file <file>\n");
+      die("set file::slurp file <file>\n");
    }
 
    my $xs = XML::Simple->new;

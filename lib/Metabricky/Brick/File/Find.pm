@@ -3,7 +3,7 @@
 #
 # Find brick
 #
-package Metabricky::Brick::Find;
+package Metabricky::Brick::File::Find;
 use strict;
 use warnings;
 
@@ -29,9 +29,9 @@ use File::Find;
 #   };
 #}
 sub help {
-   print "set find path <director1:directory2:..:directoryN>\n";
+   print "set file::find path <director1:directory2:..:directoryN>\n";
    print "\n";
-   print "run find files <dirpattern> <filepattern>\n";
+   print "run file::find files <dirpattern> <filepattern>\n";
 }
 
 #sub files_require_command {
@@ -49,7 +49,7 @@ sub files {
 
    my $path = $self->path;
    if (! defined($path)) {
-      die("set find path <director1:directory2:..:directoryN>\n");
+      die("set file::find path <director1:directory2:..:directoryN>\n");
    }
 
    my @path_list = split(':', $path);
@@ -86,17 +86,17 @@ __END__
 
 =head1 NAME
 
-Metabricky::Brick::Find - brick to find some files using pattern matching
+Metabricky::Brick::File::Find - brick to find some files using pattern matching
 
 =head1 SYNOPSIS
 
    # From a module
 
-   use Metabricky::Brick::Find;
+   use Metabricky::Brick::File::Find;
 
    my $path = join(':', @INC);
 
-   my $brick = Metabricky::Brick::Find->new;
+   my $brick = Metabricky::Brick::File::Find->new;
    $brick->path($path);
 
    my $found = $brick->find('/lib/Metabricky/Brick$', '.pm$');

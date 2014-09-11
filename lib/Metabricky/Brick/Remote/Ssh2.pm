@@ -3,7 +3,7 @@
 #
 # Ssh2 brick
 #
-package Metabricky::Brick::Ssh2;
+package Metabricky::Brick::Remote::Ssh2;
 use strict;
 use warnings;
 
@@ -23,16 +23,16 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 use Net::SSH2;
 
 sub help {
-   print "set ssh2 host <ip|hostname>\n";
-   print "set ssh2 username <user>\n";
-   print "set ssh2 publickey <file>\n";
-   print "set ssh2 privatekey <file>\n";
+   print "set remote::ssh2 host <ip|hostname>\n";
+   print "set remote::ssh2 username <user>\n";
+   print "set remote::ssh2 publickey <file>\n";
+   print "set remote::ssh2 privatekey <file>\n";
    print "\n";
-   print "run ssh2 connect\n";
-   print "run ssh2 cat <file>\n";
-   print "run ssh2 cmd <command>\n";
-   print "run ssh2 listfiles <glob>\n";
-   print "run ssh2 disconnect\n";
+   print "run remote::ssh2 connect\n";
+   print "run remote::ssh2 cat <file>\n";
+   print "run remote::ssh2 cmd <command>\n";
+   print "run remote::ssh2 listfiles <glob>\n";
+   print "run remote::ssh2 disconnect\n";
 }
 
 sub require_set_connect { qw(host username publickey privatekey) }
@@ -87,7 +87,7 @@ sub disconnect {
    my $ssh2 = $self->ssh2;
 
    if (! defined($ssh2)) {
-      die("run ssh2 connect\n");
+      die("run remote::ssh2 connect\n");
    }
 
    return $ssh2->disconnect;
@@ -104,11 +104,11 @@ sub cmd {
    my $ssh2 = $self->ssh2;
 
    if (! defined($ssh2)) {
-      die("run ssh2 connect\n");
+      die("run remote::ssh2 connect\n");
    }
 
    if (! defined($cmd)) {
-      die("run ssh2 cmd <cmd>\n");
+      die("run remote::ssh2 cmd <cmd>\n");
    }
 
    print "DEBUG: cmd[$cmd]\n" if $self->debug;
@@ -182,7 +182,7 @@ sub cat {
    my ($file) = @_;
 
    if (! defined($file)) {
-      die("you must provide a file as an argument to 'run ssh2 cat'\n");
+      die("you must provide a file as an argument to 'run remote::ssh2 cat'\n");
    }
 
    return $self->cmd('cat '.$file);
