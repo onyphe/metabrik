@@ -9,7 +9,7 @@ use base qw(Metabricky::Brick);
 
 our @AS = qw(
    log
-   shell
+   meby
    _lp
 );
 __PACKAGE__->cgBuildIndices;
@@ -61,7 +61,7 @@ sub new {
       $lp->call(sub {
          my %args = @_;
 
-         $__ctx = { self => $args{self}, shell => $args{shell} };
+         $__ctx = { self => $args{self}, meby => $args{meby} };
 
          eval("use strict;");
          eval("use warnings;");
@@ -71,13 +71,13 @@ sub new {
          $__ctx->{loaded_bricks} = {
             'core::global' => $__ctx->{bricks}->{'core::global'},
             'core::context' => $__ctx->{self},
-            'core::shell' => $__ctx->{shell},
+            'core::meby' => $__ctx->{meby},
          };
          $__ctx->{available_bricks} = { };
          $__ctx->{set_attributes} = { };
 
          return 1;
-      }, self => $self, shell => $self->shell);
+      }, self => $self, meby => $self->meby);
       $self->_lp($lp);
    };
    if ($@) {

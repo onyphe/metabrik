@@ -66,7 +66,7 @@ sub init {
 
    my $context = Metabricky::Brick::Core::Context->new(
       log => $Log,
-      shell => $self,
+      meby => $self,
    );
    $self->context($context);
 
@@ -259,7 +259,7 @@ sub ps_get_commands {
 
    my $context = $self->context;
 
-   my $commands = $context->get_brick_attribute('core::global', 'commands');
+   my $commands = $context->get_brick_attribute('core::meby', 'commands');
    if (! defined($commands)) {
       return [];
    }
