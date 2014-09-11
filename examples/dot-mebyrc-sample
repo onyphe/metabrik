@@ -7,7 +7,7 @@ print "\n"
 print "    There is a Brick for that.\n\n"
 
 # Change terminal title
-title "Metabricky running"
+title "meby Metabricky shell"
 
 my $home = $ENV{HOME}
 my $user = $ENV{USER}
