@@ -104,11 +104,11 @@ Metabricky::Brick::File::Find - brick to find some files using pattern matching
       print "$file\n";
    }
 
-   # From the Shell
+   # From meby shell
 
    > my $path = join(':', @INC)
-   > set find path $path
-   > run find files /lib/Metabricky/Brick$ .pm$
+   > set file::find path $path
+   > run file::find files /lib/Metabricky/Brick$ .pm$
 
 =head1 DESCRIPTION
 

@@ -94,7 +94,7 @@ Metabricky::Brick::Core::Template - template to write a new Metabricky brick
       print "$file\n";
    }
 
-   # From the Shell
+   # From meby shell
 
    > my $path = join(':', @INC)
    > set file::find path $path

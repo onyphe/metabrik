@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package Metabricky::Brick::Core::Shell;
+package Metabricky::Brick::Core::Meby;
 use strict;
 use warnings;
 
@@ -61,7 +61,7 @@ sub init {
    $|++;
 
    if (! defined($Log)) {
-      die("[FATAL] core::shell::init: you must create a `Log' object\n");
+      die("[FATAL] core::meby::init: you must create a `Log' object\n");
    }
 
    my $context = Metabricky::Brick::Core::Context->new(
@@ -100,7 +100,7 @@ sub init {
    }
 
    $context->set_available_bricks
-      or $Log->fatal("core::shell::init: set_available_bricks");
+      or $Log->fatal("core::meby::init: set_available_bricks");
 
    # XXX: not used now
    #my $available = $context->get_available_bricks
@@ -112,13 +112,13 @@ sub init {
    #{
       #no strict 'refs';
       #use Data::Dumper;
-      #print Dumper(\%{"Metabricky::Brick::Core::Shell::"})."\n";
+      #print Dumper(\%{"Metabricky::Brick::Core::Meby::"})."\n";
       #my $commands = $self->ps_get_commands;
       #for my $command (@$commands) {
          #print "** adding command [$command]\n";
-         #${"Metabricky::Brick::Core::Shell::"}{"run_$command"} = 1;
+         #${"Metabricky::Brick::Core::Meby::"}{"run_$command"} = 1;
       #}
-      #print Dumper(\%{"Metabricky::Brick::Core::Shell::"})."\n";
+      #print Dumper(\%{"Metabricky::Brick::Core::Meby::"})."\n";
    #};
 
    return $self;
@@ -156,7 +156,7 @@ sub cmdloop {
 }
 
 #
-# Metabricky::Brick::Core::Shell stuff
+# Metabricky::Brick::Core::Meby stuff
 #
 sub ps_set_title {
    my $self = shift;
@@ -761,7 +761,7 @@ sub run_script {
    }
 
    open(my $in, '<', $script)
-      or die("[FATAL] core::shell::run_script: can't open file [$script]: $!\n");
+      or die("[FATAL] core::meby::run_script: can't open file [$script]: $!\n");
    while (defined(my $line = <$in>)) {
       next if ($line =~ /^\s*#/);  # Skip comments
       chomp($line);
@@ -957,7 +957,7 @@ sub DESTROY {
    if (defined($self->term) && $self->term->can('WriteHistory')) {
       if (defined(my $history = $self->meby_history)) {
          $self->term->WriteHistory($history)
-            or die("[FATAL] core::shell::DESTROY: ".
+            or die("[FATAL] core::meby::DESTROY: ".
                    "can't write history file [$history]: $!\n");
       }
    }
@@ -971,27 +971,27 @@ __END__
 
 =head1 NAME
 
-Metabricky::Brick::Core::Shell - The Metabricky Shell
+Metabricky::Brick::Core::Meby - the Metabricky shell
 
 =head1 SYNOPSIS
 
    use Metabricky::Log::Console;
-   use Metabricky::Brick::Core::Shell;
+   use Metabricky::Brick::Core::Meby;
 
-   $Metabricky::Brick::Core::Shell::Log = Metabricky::Log::Console->new(
+   $Metabricky::Brick::Core::Meby::Log = Metabricky::Log::Console->new(
       level => 3,
    );
 
-   my $shell = Metabricky::Brick::Core::Shell->new;
-   $shell->cmdloop;
+   my $meby = Metabricky::Brick::Core::Meby->new;
+   $meby->cmdloop;
 
 =head1 DESCRIPTION
 
-Interactive use of the Metabricky Shell.
+Interactive use of the Metabricky shell.
 
 =head2 GLOBAL VARIABLES
 
-=head3 B<$Metabricky::Brick::Core::Shell::Log>
+=head3 B<$Metabricky::Brick::Core::Meby::Log>
 
 Specify a log object. Must be an object inherited from L<Metabricky::Log>.
 

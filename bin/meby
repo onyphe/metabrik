@@ -19,18 +19,18 @@ BEGIN {
 }
 
 use Metabricky::Log::Console;
-use Metabricky::Brick::Core::Shell;
+use Metabricky::Brick::Core::Meby;
 
 my $script = shift;
 
-$Metabricky::Brick::Core::Shell::Log = Metabricky::Log::Console->new(
+$Metabricky::Brick::Core::Meby::Log = Metabricky::Log::Console->new(
    level => 3,
 );
-my $shell = Metabricky::Brick::Core::Shell->new;
+my $meby = Metabricky::Brick::Core::Meby->new;
 
 if (defined($script)) {
-   $shell->cmd("script $script");
+   $meby->cmd("script $script");
 }
 else {
-   $shell->cmdloop;
+   $meby->cmdloop;
 }

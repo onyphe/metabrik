@@ -142,6 +142,7 @@ my @available = ();
 
 sub _find_bricks {
    if ($File::Find::dir =~ /Metabricky\/Brick/ && /.pm$/) {
+      #print "DEBUG found[$File::Find::dir/$_\n";
       (my $category = lc($File::Find::dir)) =~ s/^.*\/metabricky\/brick\/?(.*?)$/$1/;
       $category =~ s/\//::/g;
       (my $brick = lc($_)) =~ s/.pm$//;
@@ -160,7 +161,12 @@ sub find_available_bricks {
 
    {
       no warnings 'File::Find';
-      find(\&_find_bricks, @INC);
+      my @dirs = ();
+      # We skip dot directories
+      for my $dir (@INC) {
+         push @dirs, $dir unless $dir =~ /^\./;
+      }
+      find(\&_find_bricks, @dirs);
    };
 
    my %h = map { $_ => 1 } @available;
@@ -210,7 +216,7 @@ sub load_brick {
    # Brick has no category
    else {
       $module = ucfirst($category);
-      $module =~ s/^/Metabricky::Brick::/;
+      $module = 'Metabricky::Brick::'.$module;
    }
 
    my $loaded_bricks = $self->get_loaded_bricks or return;

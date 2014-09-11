@@ -15,8 +15,8 @@ our @AS = qw(
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Metabricky::Brick::Aes;
-use Metabricky::Brick::Slurp;
+use Metabricky::Brick::Crypto::Aes;
+use Metabricky::Brick::File::Slurp;
 
 sub help {
    print "set database::keystore file <file>\n";
@@ -38,14 +38,14 @@ sub search {
       die("run database::keystore search <pattern>\n");
    }
 
-   my $slurp = Metabricky::Brick::Slurp->new(
+   my $slurp = Metabricky::Brick::File::Slurp->new(
       global => $self->global,
       file => $self->file,
    );
 
    my $data = $slurp->text or die("can't slurp");
 
-   my $aes = Metabricky::Brick::Aes->new(
+   my $aes = Metabricky::Brick::Crypto::Aes->new(
       global => $self->global,
    );
 

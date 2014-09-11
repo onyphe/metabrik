@@ -1,4 +1,4 @@
-bin/metabricky
+bin/meby
 Build.PL
 examples/dot-mebyrc-sample
 examples/netmask.meby
@@ -12,7 +12,7 @@ lib/Metabricky/Brick/Audit/Dns.pm
 lib/Metabricky/Brick/Encode/Base64.pm
 lib/Metabricky/Brick/Core/Context.pm
 lib/Metabricky/Brick/Core/Global.pm
-lib/Metabricky/Brick/Core/Shell.pm
+lib/Metabricky/Brick/Core/Meby.pm
 lib/Metabricky/Brick/Database/Cwe.pm
 lib/Metabricky/Brick/File/Fetch.pm
 lib/Metabricky/Brick/File/Find.pm

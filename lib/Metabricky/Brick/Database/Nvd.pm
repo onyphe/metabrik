@@ -21,8 +21,8 @@ our @AS = qw(
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Metabricky::Brick::Slurp;
-use Metabricky::Brick::Fetch;
+use Metabricky::Brick::File::Fetch;
+use Metabricky::Brick::File::Slurp;
 
 sub help {
    print "run database::nvd update <[recent|modified|others]>\n";
@@ -101,7 +101,7 @@ sub update {
    my $count = scalar @$xml_files;
 
    for my $c (0..$count-1) {
-      my $fetch = Metabricky::Brick::Fetch->new(
+      my $fetch = Metabricky::Brick::File::Fetch->new(
          output => $xml_files->[$c],
       );
       $fetch->get($uri_list->[$c]) or die("fetch::get: uri[".$uri_list->[$c]."]\n");
@@ -136,7 +136,7 @@ sub load {
       if (defined($pattern) && $file !~ /$pattern/) {
          next;
       }
-      my $slurp = Metabricky::Brick::Slurp->new(
+      my $slurp = Metabricky::Brick::File::Slurp->new(
          file => $file,
       );
       print "DEBUG Slurping file: ".$xml_files->[$c]."\n";

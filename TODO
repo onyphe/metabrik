@@ -53,6 +53,7 @@ Usage rules:
 Vocabulary:
 - The Shell has builtins (load, set, run)
 - The Shell loads Bricks
+- meby is the Metabricky shell
 - A Brick has Commands (not methods)
 - A Brick has Attributes (you can set using `set' builtin)
 - A Brick Command may have Arguments

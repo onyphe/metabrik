@@ -7,7 +7,7 @@ print "\n"
 print "    There is a Brick for that.\n\n"
 
 # Change terminal title
-title "Metabricky v$version"
+title "Metabricky running"
 
 my $home = $ENV{HOME}
 my $user = $ENV{USER}
@@ -18,25 +18,25 @@ set core::global rtimeout 20
 
 set core::shell commands vi:cat:less:w:nc:grep:find:cpanm
 
-load www
+load http::www
 
-load slurp
+load file::slurp
 
-load httpproxy
+load http::proxy
 
-load ssh2
-set ssh2 debug 1
-set ssh2 host localhost
-set ssh2 username $user
-set ssh2 publickey $user."/.ssh/id_rsa.pub"
-set ssh2 privatekey $user."/.ssh/id_rsa"
+load remote::ssh2
+set remote::ssh2 debug 1
+set remote::ssh2 host localhost
+set remote::ssh2 username $user
+set remote::ssh2 publickey $user."/.ssh/id_rsa.pub"
+set remote::ssh2 privatekey $user."/.ssh/id_rsa"
 
-load vfeed
-set vfeed db $home."/metabricky/data/vfeed.db"
+load database::vfeed
+set database::vfeed db $home."/metabricky/data/vfeed.db"
 
 # Use your own private bricks
 use lib "$ENV{HOME}/path/to/lib"
 
-load mybrick
+load category::mybrick
 
 set core::global echo 1
