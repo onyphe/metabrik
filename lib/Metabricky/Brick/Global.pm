@@ -21,7 +21,6 @@ our @AS = qw(
    set
    available
    loaded
-   not_loaded
    ctimeout
    rtimeout
    commands
@@ -75,6 +74,7 @@ sub help {
    print "set global datadir <directory>\n";
    print "\n";
    print "run global load <brick>\n";
+   print "run global update_available_bricks\n";
 }
 
 sub load {

@@ -10,8 +10,8 @@ use warnings;
 use base qw(Metabricky::Brick);
 
 our @AS = qw(
-   variable1
-   variable2
+   attribute1
+   attribute2
 );
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
@@ -19,8 +19,8 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 #use Template::Some::Module;
 
 sub help {
-   print "set template variable1 <value>\n";
-   print "set template variable2 <value>\n";
+   print "set template attribute1 <value>\n";
+   print "set template attribute2 <value>\n";
    print "\n";
    print "run template command1 <argument1> <argument2>\n";
    print "run template command2 <argument1> <argument2>\n";
@@ -30,7 +30,7 @@ sub default_values {
    my $self = shift;
 
    return {
-      variable1 => 'value1',
+      attribute1 => 'value1',
    };
 }
 

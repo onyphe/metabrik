@@ -156,7 +156,7 @@ sub update {
 
    for my $c (0..$count-1) {
       my $fetch = Metabricky::Brick::Fetch->new(
-         output => $uri_list->[$c],
+         output => $xml_files->[$c],
       );
       $fetch->get($uri_list->[$c]) or die("fetch::get: uri[".$uri_list->[$c]."]\n");
    }

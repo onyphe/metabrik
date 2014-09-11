@@ -37,6 +37,7 @@ sub get {
    # XXX: dirty for now
    for my $path (split(':', $ENV{PATH})) {
       if (-f "$path/wget") {
+         #print "DEBUG $path/wget --output-document=$output $uri\n";
          my $ret = `$path/wget --output-document=$output $uri`;
          return !$ret;
       }

@@ -14,7 +14,7 @@ BEGIN {
    eval("use lib \"$lib\";");
    if ($@) {
       chomp($@);
-      die("[-] FATAL: metabricky: unable to load Metabricky libs [$@]\n");
+      die("[FATAL] metabricky: unable to load Metabricky libs [$@]\n");
    }
 }
 

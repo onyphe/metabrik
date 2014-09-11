@@ -47,11 +47,11 @@ sub init {
    return $self;
 }
 
-sub require_variables {
+sub require_attributes {
    my $self = shift;
-   my (@vars) = @_;
+   my (@attributes) = @_;
 
-   die("you must set variable(s): ".join(', ', @vars)."\n");
+   die("you must set attribute(s): ".join(', ', @attributes)."\n");
 }
 
 sub self {

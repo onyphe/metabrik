@@ -40,7 +40,7 @@ sub fatal {
    my $self = shift;
    my ($msg) = @_;
    my ($package) = caller();
-   print RED, "[-] FATAL: ", RESET;
+   print RED, "[FATAL] ", RESET;
    die("$package: $msg\n");
 }
 

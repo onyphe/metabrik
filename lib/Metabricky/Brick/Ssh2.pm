@@ -52,7 +52,7 @@ sub connect {
    ||  ! defined($self->username)
    ||  ! defined($self->publickey)
    ||  ! defined($self->privatekey)) {
-      return $self->require_variables(qw(host username publickey privatekey));
+      return $self->require_attributes(qw(host username publickey privatekey));
    }
 
    my $ssh2 = Net::SSH2->new;

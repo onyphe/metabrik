@@ -33,10 +33,6 @@ use Metabricky::Ext::Utils qw(peu_convert_path);
 # Or I didn't found how to do it.
 our $Log;
 
-# Exists to avoid compile-time errors.
-# It is only used by Metabricky::Context.
-my $global;
-
 use vars qw{$AUTOLOAD};
 
 sub AUTOLOAD {
@@ -63,7 +59,7 @@ sub init {
    $|++;
 
    if (! defined($Log)) {
-      die("[-] FATAL: Metabricky::Shell::init: you must create a `Log' object\n");
+      die("[FATAL] Metabricky::Shell::init: you must create a `Log' object\n");
    }
 
    my $context = Metabricky::Context->new(
@@ -600,12 +596,13 @@ sub run_reload {
    return 1;
 }
 
-# Just an alias
 sub run_load {
    my $self = shift;
    my ($brick) = @_;
 
-   my $r = $self->cmd("run global load $brick");
+   my $context = $self->context;
+
+   my $r = $context->global_load($brick);
    if ($r) {
       $Log->verbose("Brick [$brick] loaded");
    }
@@ -618,137 +615,104 @@ sub run_show {
 
    my $context = $self->context;
 
-   $context->call(sub {
-      my $__lp_available = $global->available;
-      my $__lp_loaded = $global->loaded;
+   my $loaded = $context->global_get_loaded_bricks;
 
-      print "Available bricks:\n";
+   print "Available bricks:\n";
 
-      my @__lp_loaded = ();
-      my @__lp_notloaded = ();
+   my $total = 0;
+   my $count = 0;
+   print "   Loaded:\n";
+   for my $loaded (@{$loaded->{loaded}}) {
+      print "      $loaded\n";
+      $count++;
+      $total++;
+   }
+   print "   Count: $count\n";
 
-      my $__lp_total = 0;
-      for my $k (sort { $a cmp $b } keys %$__lp_available) {
-         #print "   $k";
-         #print (exists $__lp_loaded->{$k} ? " [LOADED]\n" : "\n");
-         exists($__lp_loaded->{$k}) ? push @__lp_loaded, $k : push @__lp_notloaded, $k;
-         $__lp_total++;
-      }
+   $count = 0;
+   print "   Not loaded:\n";
+   for my $notloaded (@{$loaded->{notloaded}}) {
+      print "      $notloaded\n";
+      $count++;
+      $total++;
+   }
+   print "   Count: $count\n";
 
-      my $__lp_count = 0;
-      print "   Loaded:\n";
-      for my $loaded (@__lp_loaded) {
-         print "      $loaded\n";
-         $__lp_count++;
-      }
-      print "   Count: $__lp_count\n";
-
-      $__lp_count = 0;
-      print "   Not loaded:\n";
-      for my $notloaded (@__lp_notloaded) {
-         print "      $notloaded\n";
-         $__lp_count++;
-      }
-      print "   Count: $__lp_count\n";
-
-      print "Total: $__lp_total\n";
-
-      return 1;
-   }) or return;
+   print "Total: $total\n";
 
    return 1;
 }
 
 sub run_set {
    my $self = shift;
-   my ($brick, $k, $v) = @_;
+   my ($brick, $attribute, $value) = @_;
 
    my $context = $self->context;
 
-   # set is called, we display everything
+   # set is called without args, we display everything
    if (! defined($brick)) {
-      my $r = $context->call(sub {
-         my $__lp_set = $global->set;
-         my $__lp_count = 0;
+      my $attributes = $context->global_get_set_attributes or return;
 
-         print "Set variable(s):\n";
+      print "Set attribute(s):\n";
 
-         for my $brick (sort { $a cmp $b } keys %$__lp_set) {
-            for my $k (sort { $a cmp $b } keys %{$__lp_set->{$brick}}) {
-               print "   $brick $k ".$__lp_set->{$brick}->{$k}."\n";
-               $__lp_count++;
-            }
+      my $count = 0;
+      for my $brick (sort { $a cmp $b } keys %$attributes) {
+         for my $k (sort { $a cmp $b } keys %{$attributes->{$brick}}) {
+            print "   $brick $k ".$attributes->{$brick}->{$k}."\n";
+            $count++;
          }
-
-         print "Total: $__lp_count\n";
-      });
-      if (! defined($r)) {
-         return;
       }
+
+      print "Total: $count\n";
 
       return 1;
    }
-   # set is called with a brick, we show its attributes
-   elsif (! defined($k)) {
-      my $available = $context->global_get('available') or return;
+   # set is called with only a brick as an arg, we show its attributes
+   elsif (defined($brick) && ! defined($attribute)) {
+      my $available = $context->global_get_available or return;
+      my $attributes = $context->global_get_set_attributes or return;
 
       if (! exists($available->{$brick})) {
          $Log->error("Brick [$brick] does not exist");
          return;
       }
 
-      my $r = $context->call(sub {
-         my %args = @_;
+      print "Set attribute(s) for Brick [$brick]:\n";
 
-         my $__lp_set = $global->set;
-         my $__lp_count = 0;
-
-         my $__lp_brick = $__lp_set->{$args{brick}};
-
-         print "Set variable(s):\n";
-
-         for my $k (sort { $a cmp $b } keys %$__lp_brick) {
-            print "   $args{brick} $k ".$__lp_brick->{$k}."\n";
-            $__lp_count++;
-         }
-
-         print "Total: $__lp_count\n";
-      }, brick => $brick);
-      if (! defined($r)) {
-         return;
+      my $count = 0;
+      for my $k (sort { $a cmp $b } keys %{$attributes->{$brick}}) {
+         print "   $brick $k ".$attributes->{$brick}->{$k}."\n";
+         $count++;
       }
+
+      print "Total: $count\n";
 
       return 1;
    }
+   # set is called with is a brick and a key without value
+   elsif (defined($brick) && defined($attribute) && ! defined($value)) {
+      my $available = $context->global_get_available or return;
+      my $attributes = $context->global_get_set_attributes or return;
 
-   my $r = $context->call(sub {
-      my %args = @_;
-
-      my $__lp_brick = $args{brick};
-
-      if (! exists($global->loaded->{$__lp_brick})) {
-         die("Brick [$__lp_brick] not loaded or does not exist\n");
+      if (! exists($available->{$brick})) {
+         $Log->error("Brick [$brick] does not exist");
+         return;
       }
-   }, brick => $brick);
-   if (! defined($r)) {
-      $Log->error("run_set2");
-      return;
+
+      if (! exists($attributes->{$brick}->{$attribute})) {
+         $Log->error("Attribute [$attribute] does not exist for Brick [$brick]");
+         return;
+      }
+
+      print "Set attribute [$attribute] for Brick [$brick]:\n";
+
+      print "   $brick $attribute ".$attributes->{$brick}->{$attribute}."\n";
+
+      return 1;
    }
-
-   $r = $context->call(sub {
-      my %args = @_;
-
-      my $__lp_brick = $args{brick};
-      my $__lp_key = $args{key};
-      my $__lp_val = $args{val};
-
-      #$global->loaded->{$__lp_brick}->init; # No init when just setting an attribute
-      $global->loaded->{$__lp_brick}->$__lp_key($__lp_val);
-      $global->set->{$__lp_brick}->{$__lp_key} = $__lp_val;
-   }, brick => $brick, key => $k, val => $v);
-   if (! defined($r)) {
-      $Log->error("run_set3");
-      return;
+   # set is called with all args (brick, key, value)
+   else {
+      return $context->global_set_brick_attribute($brick, $attribute, $value);
    }
 
    return 1;
@@ -758,42 +722,14 @@ sub run_run {
    my $self = shift;
    my ($brick, $command, @args) = @_;
 
+   if (! defined($brick) || ! defined($command)) {
+      $Log->error("run [brick] [command] <[arg1 arg2 .. argN]>\n");
+      return;
+   }
+
    my $context = $self->context;
 
-   $context->call(sub {
-      my %args = @_;
-
-      my $__lp_brick = $args{brick};
-      my $__lp_command = $args{command};
-      my @__lp_args = @{$args{args}};
-
-      if (! defined($__lp_brick)) {
-         die("no Brick specified\n");
-      }
-      if (! defined($__lp_command)) {
-         die("no Brick command specified\n");
-      }
-
-      my $__lp_run = $global->loaded->{$__lp_brick};
-      if (! defined($__lp_run)) {
-         die("Brick [$__lp_brick] not loaded\n");
-      }
-
-      $__lp_run->init; # Will init() only if not already done
-
-      if (! $__lp_run->can("$__lp_command")) {
-         die("no command [$__lp_command] defined for brick [$__lp_brick]\n");
-      }
-
-      $_ = $__lp_run->$__lp_command(@__lp_args);
-
-      $global->shell->run_title("$_");
-
-      return $_;
-   }, brick => $brick, command => $command, args => \@args)
-      or return;
-
-   return 1;
+   return $context->execute_brick_command($brick, $command, @args);
 }
 
 sub run_title {
@@ -822,7 +758,7 @@ sub run_script {
    }
 
    open(my $in, '<', $script)
-      or die("[-] FATAL: Metabricky::Shell::run_script: can't open file [$script]: $!\n");
+      or die("[FATAL] Metabricky::Shell::run_script: can't open file [$script]: $!\n");
    while (defined(my $line = <$in>)) {
       next if ($line =~ /^\s*#/);  # Skip comments
       chomp($line);
@@ -1018,7 +954,7 @@ sub DESTROY {
    if (defined($self->term) && $self->term->can('WriteHistory')) {
       if (defined(my $history = $self->meby_history)) {
          $self->term->WriteHistory($history)
-            or die("[-] FATAL: Metabricky::Shell::DESTROY: ".
+            or die("[FATAL] Metabricky::Shell::DESTROY: ".
                    "can't write history file [$history]: $!\n");
       }
    }
