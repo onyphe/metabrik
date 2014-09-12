@@ -1,7 +1,36 @@
+### TODO
+
 Prio:
--> create catageories (Brick::Core::Shell, Brick::Core::Global)
--> Brickify Context and Shell
--> Merge Context and Global? And Shell?
+-> Brickify Shell:
+=> Split Metabricky into:
+==> Metabricky::Brick::Ext::Shell for Term::Shell stuff
+==> Metabricky::Brick::Shell/Core::Meby for an example of a Metabricky shell
+
+Bricks API:
+-> require_arg() to check for a method invocation
+-> require_called_first() or require_commands() to check for a previous method to be called first
+-> require_modules() to eval() required modules for bricks.
+
+Rename bricks methods to use run_. Modify Metabricky::Brick to work like Term::Shell to auto discover methods.
+use page() and pager_internal() from Term::Shell
+
+Wwwutil:
+-> Interrogates Hurricane Electric stuff: http://bgp.he.net/ip/130.193.27.21
+
+
+
+### BRICKS TODO
+- Heartbleed
+- Zmap
+- SSL Capable NetCat
+
+
+
+### DOC/PRES
+
+Name:
+-> Metabricky (formerly Plashy: Perl Awesome|Audit|Attack|All-in-one Shell (Yeaaahh))
+-> y: Why the Y? Yeaaaah
 
 Rationales:
 -> Tired of writing again and again some Perl scripts to do same things (where did I put this one?)
@@ -63,25 +92,15 @@ Vocabulary:
 
 Doc:
 - core::context Brick autoloads core::global Brick
-=> core::global Brick is then availble through $global variable.
 
-Split Metabricky into:
-- Metabricky::Brick::Shell for Term::Shell stuff
-
-Bricks TODO
-- Heartbleed
-- Zmap
-- SSL Capable NetCat
-
-Rename bricks methods to use run_. Modify Metabricky::Brick to work like Term::Shell to auto discover methods.
-
-use page() and pager_internal() from Term::Shell
-
-Wwwutil:
--> Interrogates Hurricane Electric stuff: http://bgp.he.net/ip/130.193.27.21
+### FURTURE WORK
 
 staticperl, standalone Perl with libc:
 http://search.cpan.org/~mlehmann/App-Staticperl-1.43/
+
+Take stuff from pirl:
+pirl: http://cpansearch.perl.org/src/RSAVAGE/Shell-Perl-0.0023/lib/Shell/Perl.pm
+ipirl: https://code.google.com/p/iperl/
 
 How to launch a process in foreground and move it to background:
 IPC::Run
@@ -99,10 +118,6 @@ unset VAR => undef $ENV{VAR}
 => completion on ENV variables
 set $? and $! to indicate error and print error string
 
-Name:
--> Metabricky (formerly Plashy: Perl Awesome|Audit|Attack|All-in-one Shell (Yeaaahh))
--> y: Why the Y? Yeaaaah
-
 write/save: writes $_ content to a file (set out 'file.txt')
 set global input $_  # default
 set global ouput $_  # default
@@ -111,11 +126,6 @@ set global ouput $_  # default
 Proc::Simple:
 => launch cmd as background jobs (&)
 => launch system commands as background jobs
-
-Bricks API:
--> require_arg() to check for a method invocation
--> require_called_first() or require_commands() to check for a previous method to be called first
--> require_modules() to eval() required modules for bricks.
 
 Makes use of modules:
 File::Spec (path manipulation)
@@ -128,10 +138,6 @@ File::Tools
 => ls, cd, cat, df, ...
 Term::ShellKit::Commands
 => reload, load, show methods/functions of a module
-
-Take stuff from pirl:
-pirl: http://cpansearch.perl.org/src/RSAVAGE/Shell-Perl-0.0023/lib/Shell/Perl.pm
-ipirl: https://code.google.com/p/iperl/
 
 Gather available methods/functions:
 use Metabricky::Brick::Core::Global;
