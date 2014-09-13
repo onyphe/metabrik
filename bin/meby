@@ -14,25 +14,17 @@ BEGIN {
    eval("use lib \"$lib\";");
    if ($@) {
       chomp($@);
-      die("[FATAL] metabricky: unable to load Metabricky libs [$@]\n");
+      die("[FATAL] meby: unable to load Metabricky libs [$@]\n");
    }
 }
 
-use Metabricky::Log::Console;
 use Metabricky::Brick::Core::Context;
 
 my $script = shift;
 
-my $log = Metabricky::Log::Console->new(
-   level => 3,
-);
-
-# XXX: brickify Log/Log::Console
-my $context = Metabricky::Brick::Core::Context->new(
-   log => $log,
-);
+my $context = Metabricky::Brick::Core::Context->new;
 $context->init or return;
-$context->load_brick('core::global') or return;
+
 $context->load_brick('core::meby') or return;
 
 if (defined($script)) {

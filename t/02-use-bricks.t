@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 25) }
+BEGIN { plan(tests => 26) }
 
 ok(sub { eval("Metabricky::Brick::Address::Netmask");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Audit::Dns");   $@ ? 0 : 1 }, 1, $@);
@@ -19,6 +19,7 @@ ok(sub { eval("Metabricky::Brick::Http::Proxy");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Http::Www");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Http::Wwwutil");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Identify::Ssh");   $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("Metabricky::Brick::Log::Console");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Netbios::Name");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Network::Frame");   $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Remote::Ssh2");   $@ ? 0 : 1 }, 1, $@);

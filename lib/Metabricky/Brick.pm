@@ -11,6 +11,7 @@ our @AS = qw(
    debug
    inited
    bricks
+   log
 );
 
 __PACKAGE__->cgBuildIndices;
@@ -51,7 +52,7 @@ sub require_attributes {
    my $self = shift;
    my (@attributes) = @_;
 
-   die("you must set attribute(s): ".join(', ', @attributes)."\n");
+   $self->log->fatal("you must set attribute(s): ".join(', ', @attributes));
 }
 
 sub self {

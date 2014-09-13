@@ -10,7 +10,6 @@ use warnings;
 use base qw(Metabricky::Brick);
 
 our @AS = qw(
-   url
    mechanize
 );
 
@@ -25,8 +24,6 @@ use URI;
 use WWW::Mechanize;
 
 sub help {
-   print "set http::www url <url>\n";
-   print "\n";
    print "run http::www get <url>\n";
    print "run http::www post <url> <data>\n";
    print "run http::www self\n";
@@ -42,13 +39,13 @@ sub get {
    my $self = shift;
    my ($url) = @_;
 
-   if (! defined($url) && ! defined($self->url)) {
-      die("No url specified\n");
+   if (! defined($url)) {
+      $self->log->fatal("run http::www get <url>");
    }
 
-   $url ||= $self->url;
-
-   $self->url($url);
+   if ($self->debug) {
+      $self->log->debug("url[$url]");
+   }
 
    $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
 
@@ -57,11 +54,8 @@ sub get {
    #$mech->ssl_opts(SSL_ca_path => '/etc/ssl/certs');
    #$mech->ssl_opts(verify_hostname => 0);
 
-   if ($self->debug) {
-      print "DEBUG url[$url]\n";
-   }
-
    $mech->get($url);
+   $self->log->info("GET $url");
 
    $self->mechanize($mech);
 
@@ -73,12 +67,12 @@ sub post {
    my ($url, $data) = @_;
 
    if (! defined($data)) {
-      die("run http::www post <url> <data>\n");
+      $self->log->fatal("run http::www post <url> <data>");
    }
 
    if ($self->debug) {
-      print "DEBUG url[$url]\n";
-      print "DEBUG data[$data]\n";
+      $self->log->debug("url[$url]");
+      $self->log->debug("DEBUG data[$data]");
    }
 
    #$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
@@ -96,7 +90,7 @@ sub info {
    my $self = shift;
 
    if (! defined($self->mechanize)) {
-      die("No WWW::Mechanize object found\n");
+      $self->log->fatal("run http::www <get|post> <url>");
    }
 
    my $mech = $self->mechanize;

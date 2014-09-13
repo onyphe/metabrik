@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package Metabricky::Log;
+package Metabricky::Ext::Log;
 use strict;
 use warnings;
 
@@ -75,13 +75,13 @@ __END__
 
 =head1 NAME
 
-Metabricky::Log - logging base-class
+Metabricky::Ext::Log - logging base-class for use log Bricks
 
 =head1 SYNOPSIS
 
-   use Metabricky::Log;
+   use Metabricky::Ext::Log;
 
-   my $log = Metabricky::Log->new(
+   my $log = Metabricky::Ext::Log->new(
       level => 1,
    );
 

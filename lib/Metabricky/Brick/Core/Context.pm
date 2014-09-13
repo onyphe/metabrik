@@ -19,6 +19,9 @@ use Data::Dumper;
 use File::Find; # XXX: use Brick::Find
 use Lexical::Persistence;
 
+use Metabricky::Brick::Core::Global;
+use Metabricky::Brick::Log::Console;
+
 # Only used to avoid compile-time errors
 my $__ctx = {};
 
@@ -35,22 +38,10 @@ sub help {
    print "run core::context execute_brick_command <brick> <command> [ <arg1 arg2 .. argN> ]\n";
 }
 
-#sub default_values {
-   #my $self = shift;
-
-   #return {
-   #};
-#}
-
 sub new {
    my $self = shift->SUPER::new(
       @_,
    );
-
-   my $log = $self->log;
-   if (! defined($log)) {
-      die("[FATAL] core::context: new: you have to give a `log' object\n");
-   }
 
    eval {
       my $lp = Lexical::Persistence->new;
@@ -63,9 +54,16 @@ sub new {
 
          $__ctx->{loaded_bricks} = {
             'core::context' => $args{self},
+            'core::global' => Metabricky::Brick::Core::Global->new->init,
+            # XXX: rename log::console to core::log
+            'log::console' => Metabricky::Brick::Log::Console->new->init,
          };
          $__ctx->{available_bricks} = { };
          $__ctx->{set_attributes} = { };
+         $__ctx->{log} = $__ctx->{loaded_bricks}->{'log::console'};
+
+         $__ctx->{loaded_bricks}->{'core::context'}->log($__ctx->{log});
+         $__ctx->{loaded_bricks}->{'core::global'}->log($__ctx->{log});
 
          return 1;
       }, self => $self);
@@ -73,10 +71,32 @@ sub new {
    };
    if ($@) {
       chomp($@);
-      $log->fatal("core::context: new: unable to initialize context: $@");
+      die("[FATAL] core::context: new: unable to create context: $@\n");
    }
    
    return $self;
+}
+
+sub brick_log {
+   my $self = shift;
+
+   # We can't use get_brick_attribute() here, we would have a deep recursion
+   # We can't use call() for the same reason
+
+   my $lp = $self->_lp;
+
+   my $r;
+   eval {
+      $r = $lp->call(sub {
+         return $__ctx->{loaded_bricks}->{'core::context'}->log;
+      });
+   };
+   if ($@) {
+      chomp($@);
+      die("[FATAL] core::context: brick_log: $@\n");
+   }
+
+   return $r;
 }
 
 sub init {
@@ -84,22 +104,31 @@ sub init {
       @_,
    ) or return 1; # Init already done
 
-   $self->set_available_bricks
-      or $self->log->fatal("core::context: init: unable to set_available_bricks");
+   my $log = $self->brick_log;
+
+   my $r = $self->set_available_bricks;
+   if (! defined($r)) {
+      $log->fatal("core::context: init: unable to init Brick [core::context]");
+   }
 
    return $self;
 }
 
 sub do {
    my $self = shift;
-   my ($code) = @_;
+   my ($code, $dump) = @_;
 
-   my $log = $self->log;
+   my $log = $self->brick_log;
    my $lp = $self->_lp;
 
    my $res;
    eval {
-      $res = $lp->do($code);
+      if ($dump) {
+         $res = Data::Dump::dump($lp->do($code));
+      }
+      else {
+         $res = $lp->do($code);
+      }
    };
    if ($@) {
       chomp($@);
@@ -114,7 +143,7 @@ sub call {
    my $self = shift;
    my ($subref, %args) = @_;
 
-   my $log = $self->log;
+   my $log = $self->brick_log;
    my $lp = $self->_lp;
 
    my $res;
@@ -190,7 +219,7 @@ sub load_brick {
    my ($brick) = @_;
 
    # XXX: use Module::Loaded (core) or Module::Load/Unload or Module::Reload?
-   my $log = $self->log;
+   my $log = $self->brick_log;
 
    if (! defined($brick)) {
       $log->error("run context load <brick>");
@@ -236,6 +265,7 @@ sub load_brick {
 
       my $__lp_new = $__lp_module->new(
          bricks => $__ctx->{loaded_bricks},
+         log => $__ctx->{log},
       );
       #$__lp_new->init; # No init now. We wait first run()
 
