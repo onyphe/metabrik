@@ -18,6 +18,8 @@ Prio:
 -> run [brick]
 => display possible commands (like help)
 => run sets $_ to useful value, but can display useful result to user
+-> shell::meby: require_bricks { 'core::context' => 1 }
+-> rename: core::context: load_brick => load, ...set... => set, execute_brick_command => run
 
 Bricks API:
 -> require_arg() to check for a method invocation

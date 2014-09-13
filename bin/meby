@@ -19,18 +19,25 @@ BEGIN {
 }
 
 use Metabricky::Log::Console;
-use Metabricky::Brick::Core::Meby;
+use Metabricky::Brick::Core::Context;
 
 my $script = shift;
 
-$Metabricky::Brick::Core::Meby::Log = Metabricky::Log::Console->new(
+my $log = Metabricky::Log::Console->new(
    level => 3,
 );
-my $meby = Metabricky::Brick::Core::Meby->new;
+
+# XXX: brickify Log/Log::Console
+my $context = Metabricky::Brick::Core::Context->new(
+   log => $log,
+);
+$context->init or return;
+$context->load_brick('core::global') or return;
+$context->load_brick('core::meby') or return;
 
 if (defined($script)) {
-   $meby->cmd("script $script");
+   $context->execute_brick_command('core::meby', 'script', $script);
 }
 else {
-   $meby->cmdloop;
+   $context->execute_brick_command('core::meby', 'cmdloop');
 }

@@ -9,7 +9,6 @@ use base qw(Metabricky::Brick);
 
 our @AS = qw(
    log
-   meby
    _lp
 );
 __PACKAGE__->cgBuildIndices;
@@ -19,8 +18,6 @@ use Data::Dump;
 use Data::Dumper;
 use File::Find; # XXX: use Brick::Find
 use Lexical::Persistence;
-
-use Metabricky::Brick::Core::Global;
 
 # Only used to avoid compile-time errors
 my $__ctx = {};
@@ -57,33 +54,21 @@ sub new {
 
    eval {
       my $lp = Lexical::Persistence->new;
-      $lp->set_context(_ => { '$__ctx' => 1 });
+      $lp->set_context(_ => { '$__ctx' => { } });
       $lp->call(sub {
          my %args = @_;
-
-         $__ctx = {
-            brick_core_context => $args{self},
-            brick_core_meby => $args{meby},
-         };
 
          eval("use strict;");
          eval("use warnings;");
 
-         $__ctx->{brick_core_global} = Metabricky::Brick::Core::Global->new->init;
-         if (! defined($__ctx->{brick_core_global})) {
-            die("core::context: new: unable to initialize Brick [core::global]\n");
-         }
-
          $__ctx->{loaded_bricks} = {
-            'core::global' => $__ctx->{brick_core_global},
-            'core::context' => $__ctx->{brick_core_context},
-            'core::meby' => $__ctx->{brick_core_meby},
+            'core::context' => $args{self},
          };
          $__ctx->{available_bricks} = { };
          $__ctx->{set_attributes} = { };
 
          return 1;
-      }, self => $self, meby => $self->meby);
+      }, self => $self);
       $self->_lp($lp);
    };
    if ($@) {
@@ -91,6 +76,17 @@ sub new {
       $log->fatal("core::context: new: unable to initialize context: $@");
    }
    
+   return $self;
+}
+
+sub init {
+   my $self = shift->SUPER::init(
+      @_,
+   ) or return 1; # Init already done
+
+   $self->set_available_bricks
+      or $self->log->fatal("core::context: init: unable to set_available_bricks");
+
    return $self;
 }
 
@@ -246,6 +242,7 @@ sub load_brick {
       return $__ctx->{loaded_bricks}->{$__lp_brick} = $__lp_new;
    }, module => $module, brick => $brick);
    if (! defined($r)) {
+      $log->error("core::context: load_brick: unable to load Brick [$brick]");
       return;
    }
 
