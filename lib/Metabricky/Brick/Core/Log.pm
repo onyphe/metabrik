@@ -1,12 +1,59 @@
 #
 # $Id$
 #
-package Metabricky::Brick::Log::Console;
+package Metabricky::Brick::Core::Log;
 use strict;
 use warnings;
 
 use base qw(Metabricky::Ext::Log Metabricky::Brick);
 __PACKAGE__->cgBuildIndices;
+
+use Term::ANSIColor qw(:constants);
+
+sub warning {
+   my $self = shift;
+   my ($msg) = @_;
+   print("[!] $msg\n");
+}
+
+sub error {
+   my $self = shift;
+   my ($msg) = @_;
+   print RED, "[-] ", RESET;
+   print("$msg\n");
+}
+
+sub fatal {
+   my $self = shift;
+   my ($msg) = @_;
+   print RED, "[FATAL] ", RESET;
+   die("$msg\n");
+}
+
+sub info {
+   my $self = shift;
+   my ($msg) = @_;
+   return unless $self->level > 0;
+   print GREEN, "[*] ", RESET;
+   print("$msg\n");
+}
+
+sub verbose {
+   my $self = shift;
+   my ($msg) = @_;
+   return unless $self->level > 1;
+   print YELLOW, "[+] ", RESET;
+   print("$msg\n");
+}
+
+sub debug {
+   my $self = shift;
+   my ($msg) = @_;
+   return unless $self->level > 2;
+   my ($package) = caller();
+   print BLUE, "[DEBUG] ", RESET;
+   print("$package: $msg\n");
+}
 
 1;
 
@@ -14,13 +61,13 @@ __END__
 
 =head1 NAME
 
-Metabricky::Brick::Log::Console - logging directly on the console
+Metabricky::Brick::Core::Log - logging directly on the console
 
 =head1 SYNOPSIS
 
-   use Metabricky::Brick::Log::Console;
+   use Metabricky::Brick::Core::Log;
 
-   my $log = Metabricky::Brick::Log::Console->new(
+   my $log = Metabricky::Brick::Core::Log->new(
       level => 1,
    );
 

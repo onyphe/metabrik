@@ -12,11 +12,9 @@ our @AS = qw(
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Term::ANSIColor qw(:constants);
-
 sub new {
    my $self = shift->SUPER::new(
-      level => 0,
+      level => 1,
       @_,
    );
 
@@ -32,31 +30,27 @@ sub warning {
 sub error {
    my $self = shift;
    my ($msg) = @_;
-   print RED, "[-] ", RESET;
-   print("$msg\n");
+   print("[-] $msg\n");
 }
 
 sub fatal {
    my $self = shift;
    my ($msg) = @_;
-   print RED, "[FATAL] ", RESET;
-   die("$msg\n");
+   die("[FATAL] $msg\n");
 }
 
 sub info {
    my $self = shift;
    my ($msg) = @_;
    return unless $self->level > 0;
-   print GREEN, "[*] ", RESET;
-   print("$msg\n");
+   print("[*] $msg\n");
 }
 
 sub verbose {
    my $self = shift;
    my ($msg) = @_;
    return unless $self->level > 1;
-   print YELLOW, "[+] ", RESET;
-   print("$msg\n");
+   print("[+] $msg\n");
 }
 
 sub debug {
@@ -64,8 +58,7 @@ sub debug {
    my ($msg) = @_;
    return unless $self->level > 2;
    my ($package) = caller();
-   print BLUE, "[DEBUG] ", RESET;
-   print("$package: $msg\n");
+   print("[DEBUG] $package: $msg\n");
 }
 
 1;

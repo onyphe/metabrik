@@ -9,7 +9,7 @@ lib/Metabricky/Brick/Address/Netmask.pm
 lib/Metabricky/Brick/Audit/Dns.pm
 lib/Metabricky/Brick/Core/Context.pm
 lib/Metabricky/Brick/Core/Global.pm
-lib/Metabricky/Brick/Core/Meby.pm
+lib/Metabricky/Brick/Core/Log.pm
 lib/Metabricky/Brick/Core/Template.pm
 lib/Metabricky/Brick/Crypto/Aes.pm
 lib/Metabricky/Brick/Database/Cwe.pm
@@ -26,11 +26,11 @@ lib/Metabricky/Brick/Http/Proxy.pm
 lib/Metabricky/Brick/Http/Www.pm
 lib/Metabricky/Brick/Http/Wwwutil.pm
 lib/Metabricky/Brick/Identify/Ssh.pm
-lib/Metabricky/Brick/Log/Console.pm
 lib/Metabricky/Brick/Netbios/Name.pm
 lib/Metabricky/Brick/Network/Frame.pm
 lib/Metabricky/Brick/Remote/Ssh2.pm
 lib/Metabricky/Brick/Server/Agent.pm
+lib/Metabricky/Brick/Shell/Meby.pm
 lib/Metabricky/Brick/Ssdp/Ssdp.pm
 lib/Metabricky/Brick/System/Arp.pm
 lib/Metabricky/Brick/System/Route.pm

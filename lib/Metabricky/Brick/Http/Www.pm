@@ -40,7 +40,7 @@ sub get {
    my ($url) = @_;
 
    if (! defined($url)) {
-      $self->log->fatal("run http::www get <url>");
+      return $self->log->info("run http::www get <url>");
    }
 
    if ($self->debug) {
@@ -67,7 +67,7 @@ sub post {
    my ($url, $data) = @_;
 
    if (! defined($data)) {
-      $self->log->fatal("run http::www post <url> <data>");
+      return $self->log->info("run http::www post <url> <data>");
    }
 
    if ($self->debug) {
@@ -90,7 +90,7 @@ sub info {
    my $self = shift;
 
    if (! defined($self->mechanize)) {
-      $self->log->fatal("run http::www <get|post> <url>");
+      return $self->log->info("run http::www <get|post> <url>");
    }
 
    my $mech = $self->mechanize;

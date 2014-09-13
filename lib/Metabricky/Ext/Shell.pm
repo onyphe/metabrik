@@ -34,8 +34,6 @@ use Metabricky::Ext::Utils qw(peu_convert_path);
 
 # Exists because we cannot give an argument to Term::Shell::new()
 # Or I didn't found how to do it.
-# XXX: remove $Log when log will be brickyfied
-our $Log;
 our $Bricks;
 
 use vars qw{$AUTOLOAD};
@@ -43,14 +41,18 @@ use vars qw{$AUTOLOAD};
 sub AUTOLOAD {
    my $self = shift;
 
-   $Log->debug("autoload[$AUTOLOAD]");
-   $Log->debug("self[$self]");
+   $self->get_log->debug("autoload[$AUTOLOAD]");
+   $self->get_log->debug("self[$self]");
 
    $self->ps_update_prompt('xxx $AUTOLOAD ');
    #$self->ps1('$AUTOLOAD ');
    $self->ps_update_prompt;
 
    return 1;
+}
+
+sub get_log {
+   return $Bricks->{'core::context'}->log;
 }
 
 #
@@ -60,10 +62,6 @@ sub init {
    my $self = shift;
 
    $|++;
-
-   if (! defined($Log)) {
-      die("[FATAL] ext::shell: init: you must create a `Log' object\n");
-   }
 
    $self->ps_set_path_home;
    $self->ps_set_signals;
@@ -75,7 +73,7 @@ sub init {
 
    if (-f $rc) {
       open(my $in, '<', $rc)
-         or $Log->fatal("ext::shell: init: can't open rc file [$rc]: $!");
+         or $self->get_log->fatal("ext::shell: init: can't open rc file [$rc]: $!");
       while (defined(my $line = <$in>)) {
          next if ($line =~ /^\s*#/);  # Skip comments
          chomp($line);
@@ -92,13 +90,13 @@ sub init {
       if (-f $history) {
          #print "DEBUG: ReadHistory\n";
          $self->term->ReadHistory($history)
-            or $Log->fatal("ext::shell: init: can't read history file [$history]: $!");
+            or $self->get_log->fatal("ext::shell: init: can't read history file [$history]: $!");
       }
    }
 
    # XXX: not used now
    #my $available = $context->get_available_bricks
-      #or $Log->fatal("ext::shell: init: unable to get available bricks");
+      #or $self->get_log->fatal("ext::shell: init: unable to get available bricks");
    #for my $a (keys %$available) {
       #$self->add_handlers("run_$a");
    #}
@@ -106,13 +104,13 @@ sub init {
    #{
       #no strict 'refs';
       #use Data::Dumper;
-      #print Dumper(\%{"Metabricky::Brick::Core::Meby::"})."\n";
+      #print Dumper(\%{"Metabricky::Brick::Shell::Meby::"})."\n";
       #my $commands = $self->ps_get_commands;
       #for my $command (@$commands) {
          #print "** adding command [$command]\n";
-         #${"Metabricky::Brick::Core::Meby::"}{"run_$command"} = 1;
+         #${"Metabricky::Brick::Shell::Meby::"}{"run_$command"} = 1;
       #}
-      #print Dumper(\%{"Metabricky::Brick::Core::Meby::"})."\n";
+      #print Dumper(\%{"Metabricky::Brick::Shell::Meby::"})."\n";
    #};
 
    return $self;
@@ -152,7 +150,7 @@ sub cmdloop {
 }
 
 #
-# Metabricky::Brick::Core::Meby stuff
+# Metabricky::Brick::Shell::Meby stuff
 #
 sub ps_set_title {
    my $self = shift;
@@ -174,7 +172,7 @@ sub ps_lookup_var {
          $var =~ s/\$${1}/$res/;
       }
       else {
-         $Log->debug("ext::shell: ps_lookup_var: unable to lookup variable [$var]");
+         $self->get_log->debug("ext::shell: ps_lookup_var: unable to lookup variable [$var]");
          last;
       }
    }
@@ -196,7 +194,7 @@ sub ps_lookup_vars_in_line {
                $line =~ s/\$${1}/$res/;
             }
             else {
-               $Log->debug("ext::shell: ps_lookup_vars_in_line: unable to lookup variable [$a]");
+               $self->get_log->debug("ext::shell: ps_lookup_vars_in_line: unable to lookup variable [$a]");
                last;
             }
          }
@@ -255,7 +253,7 @@ sub ps_get_commands {
 
    my $context = $Bricks->{'core::context'};
 
-   my $commands = $context->get_brick_attribute('core::meby', 'commands');
+   my $commands = $context->get_brick_attribute('shell::meby', 'commands');
    if (! defined($commands)) {
       return [];
    }
@@ -320,7 +318,7 @@ sub run_write_history {
    if ($self->term->can('WriteHistory') && defined($self->meby_history)) {
       my $r = $self->term->WriteHistory($self->meby_history);
       if (! defined($r)) {
-         $Log->error("ext::shell: write_history: unable to write history file");
+         $self->get_log->error("ext::shell: write_history: unable to write history file");
          return;
       }
       #print "DEBUG: WriteHistory ok\n";
@@ -372,7 +370,7 @@ sub run_system {
       eval("use Proc::Simple");
       if ($@) {
          chomp($@);
-         $Log->fatal("ext::shell: can't load Proc::Simple module: $@");
+         $self->get_log->fatal("ext::shell: can't load Proc::Simple module: $@");
          return;
       }
 
@@ -458,7 +456,7 @@ sub run_save {
    my $context = $Bricks->{'core::context'};
 
    if (! defined($file)) {
-      $Log->error("ext::shell: save: pass \$data and \$file parameters");
+      $self->get_log->error("ext::shell: save: pass \$data and \$file parameters");
       return;
    }
 
@@ -466,7 +464,7 @@ sub run_save {
 
    my $r = open(my $out, '>', $file);
    if (!defined($r)) {
-      $Log->error("ext::shell: save: unable to open file [$file] for writing: $!");
+      $self->get_log->error("ext::shell: save: unable to open file [$file] for writing: $!");
       return;
    }
    print $out $data;
@@ -483,7 +481,7 @@ sub run_cd {
 
    if (defined($dir)) {
       if (! -d $dir) {
-         $Log->error("ext::shell: cd: $dir: can't cd to this");
+         $self->get_log->error("ext::shell: cd: $dir: can't cd to this");
          return;
       }
       chdir($dir);
@@ -515,7 +513,7 @@ sub run_doc {
    my $context = $self->brick->{'core::context'};
 
    if (! defined($args[0])) {
-      $Log->error("ext::shell: doc: you have to provide a module as an argument");
+      $self->get_log->error("ext::shell: doc: you have to provide a module as an argument");
       return;
    }
 
@@ -531,7 +529,7 @@ sub run_sub {
    my $context = $Bricks->{'core::context'};
 
    if (! defined($args[0])) {
-      $Log->error("ext::shell: sub: you have to provide a function as an argument");
+      $self->get_log->error("ext::shell: sub: you have to provide a function as an argument");
       return;
    }
 
@@ -547,7 +545,7 @@ sub run_src {
    my $context = $Bricks->{'core::context'};
 
    if (! defined($args[0])) {
-      $Log->error("ext::shell: src: you have to provide a module as an argument");
+      $self->get_log->error("ext::shell: src: you have to provide a module as an argument");
       return;
    }
 
@@ -563,7 +561,7 @@ sub run_faq {
    my $context = $Bricks->{'core::context'};
 
    if (! defined($args[0])) {
-      $Log->error("ext::shell: faq: you have to provide a question as an argument");
+      $self->get_log->error("ext::shell: faq: you have to provide a question as an argument");
       return;
    }
 
@@ -588,7 +586,7 @@ sub run_pl {
 
    my $r = $context->do($line, $self->echo);
    if (! defined($r)) {
-      $Log->error("ext::shell: pl: unable to execute Code [$line]");
+      $self->get_log->error("ext::shell: pl: unable to execute Code [$line]");
       return;
    }
 
@@ -619,7 +617,7 @@ sub run_reload {
 
    my $reloaded = Module::Reload->check;
    if ($reloaded) {
-      $Log->info("ext::shell: reload: some modules were reloaded");
+      $self->get_log->info("ext::shell: reload: some modules were reloaded");
    }
 
    return 1;
@@ -633,7 +631,7 @@ sub run_load {
 
    my $r = $context->load_brick($brick) or return;
    if ($r) {
-      $Log->verbose("ext::shell: load: Brick [$brick] loaded");
+      $self->get_log->verbose("ext::shell: load: Brick [$brick] loaded");
    }
 
    return $r;
@@ -702,7 +700,7 @@ sub run_set {
       my $attributes = $context->get_set_attributes or return;
 
       if (! exists($available->{$brick})) {
-         $Log->error("ext::shell: set: Brick [$brick] does not exist");
+         $self->get_log->error("ext::shell: set: Brick [$brick] does not exist");
          return;
       }
 
@@ -724,12 +722,12 @@ sub run_set {
       my $attributes = $context->get_set_attributes or return;
 
       if (! exists($available->{$brick})) {
-         $Log->error("ext::shell: set: Brick [$brick] does not exist");
+         $self->get_log->error("ext::shell: set: Brick [$brick] does not exist");
          return;
       }
 
       if (! exists($attributes->{$brick}->{$attribute})) {
-         $Log->error("ext::shell: set: Attribute [$attribute] does not exist for Brick [$brick]");
+         $self->get_log->error("ext::shell: set: Attribute [$attribute] does not exist for Brick [$brick]");
          return;
       }
 
@@ -743,7 +741,7 @@ sub run_set {
    else {
       my $r = $context->set_brick_attribute($brick, $attribute, $value);
       if (! defined($r)) {
-         $Log->error("ext::shell: set: unable to set Brick [$brick] Attribute [$attribute] to Value [$value]");
+         $self->get_log->error("ext::shell: set: unable to set Brick [$brick] Attribute [$attribute] to Value [$value]");
          return;
       }
 
@@ -758,7 +756,7 @@ sub run_run {
    my ($brick, $command, @args) = @_;
 
    if (! defined($brick) || ! defined($command)) {
-      $Log->info("run [brick] [command] <[arg1 arg2 .. argN]>");
+      $self->get_log->info("run [brick] [command] <[arg1 arg2 .. argN]>");
       return;
    }
 
@@ -766,7 +764,7 @@ sub run_run {
 
    my $r = $context->execute_brick_command($brick, $command, @args);
    if (! defined($r)) {
-      $Log->error("ext::shell: run: unable to execute Brick [$brick] Command [$command]");
+      $self->get_log->error("ext::shell: run: unable to execute Brick [$brick] Command [$command]");
       return;
    }
 
@@ -791,12 +789,12 @@ sub run_script {
    my ($script) = @_;
 
    if (! defined($script)) {
-      $Log->error("ext::shell: script: you must provide a script to run");
+      $self->get_log->error("ext::shell: script: you must provide a script to run");
       return;
    }
 
    if (! -f $script) {
-      $Log->error("ext::shell: script: script [$script] is not a file");
+      $self->get_log->error("ext::shell: script: script [$script] is not a file");
       return;
    }
 
@@ -867,7 +865,7 @@ sub _ioa_dirsfiles {
    };
    if ($@) {
       chomp($@);
-      $Log->error("ext::shell: $dir: dirs: $@");
+      $self->get_log->error("ext::shell: $dir: dirs: $@");
       return [], [];
    }
 
@@ -877,7 +875,7 @@ sub _ioa_dirsfiles {
    };
    if ($@) {
       chomp($@);
-      $Log->error("ext::shell: $dir: files: $@");
+      $self->get_log->error("ext::shell: $dir: files: $@");
       return [], [];
    }
 
@@ -911,7 +909,7 @@ sub comp_run {
 
    my $available = $context->get_available_bricks or return;
    if (! defined($available)) {
-      $Log->warning("ext::shell: comp_run: can't fetch available Bricks");
+      $self->get_log->warning("ext::shell: comp_run: can't fetch available Bricks");
       return ();
    }
 
@@ -946,7 +944,7 @@ sub comp_doc {
       #print "[DEBUG] inc[$inc]\n";
       my $r = opendir(my $dir, $inc);
       if (! defined($r)) {
-         $Log->error("ext::shell: comp_doc: opendir: $dir: $!");
+         $self->get_log->error("ext::shell: comp_doc: opendir: $dir: $!");
          next;
       }
 
@@ -1002,9 +1000,7 @@ Interactive use of the Metabricky shell.
 
 =head2 GLOBAL VARIABLES
 
-=head3 B<$Metabricky::Brick::Core::Meby::Log>
-
-Specify a log object. Must be an object inherited from L<Metabricky::Log>.
+=head3 B<$Metabricky::Ext::Shell::Bricks>
 
 =head2 COMMANDS
 

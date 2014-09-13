@@ -20,7 +20,7 @@ use File::Find; # XXX: use Brick::Find
 use Lexical::Persistence;
 
 use Metabricky::Brick::Core::Global;
-use Metabricky::Brick::Log::Console;
+use Metabricky::Brick::Core::Log;
 
 # Only used to avoid compile-time errors
 my $__ctx = {};
@@ -55,12 +55,11 @@ sub new {
          $__ctx->{loaded_bricks} = {
             'core::context' => $args{self},
             'core::global' => Metabricky::Brick::Core::Global->new->init,
-            # XXX: rename log::console to core::log
-            'log::console' => Metabricky::Brick::Log::Console->new->init,
+            'core::log' => Metabricky::Brick::Core::Log->new->init,
          };
          $__ctx->{available_bricks} = { };
          $__ctx->{set_attributes} = { };
-         $__ctx->{log} = $__ctx->{loaded_bricks}->{'log::console'};
+         $__ctx->{log} = $__ctx->{loaded_bricks}->{'core::log'};
 
          $__ctx->{loaded_bricks}->{'core::context'}->log($__ctx->{log});
          $__ctx->{loaded_bricks}->{'core::global'}->log($__ctx->{log});

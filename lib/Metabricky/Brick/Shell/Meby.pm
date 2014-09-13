@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package Metabricky::Brick::Core::Meby;
+package Metabricky::Brick::Shell::Meby;
 use strict;
 use warnings;
 
@@ -19,12 +19,12 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 use Metabricky::Ext::Shell;
 
 sub help {
-   print "set core::meby echo <0|1>\n";
-   print "set core::meby newline <0|1>\n";
-   print "set core::meby commands <command1:command2:..:commandN>\n";
+   print "set shell::meby echo <0|1>\n";
+   print "set shell::meby newline <0|1>\n";
+   print "set shell::meby commands <command1:command2:..:commandN>\n";
    print "\n";
-   print "run core::meby cmdloop\n";
-   print "run core::meby script <script>\n";
+   print "run shell::meby cmdloop\n";
+   print "run shell::meby script <script>\n";
 }
 
 sub default_values {
@@ -41,9 +41,6 @@ sub init {
    my $self = shift->SUPER::init(
       @_,
    ) or return 1; # Init already done
-
-   # XXX: remove $Log, will use Brick::Core::Log or whatever log brick
-   $Metabricky::Ext::Shell::Log = $self->bricks->{'core::context'}->log;
 
    $Metabricky::Ext::Shell::Bricks = $self->bricks;
 
@@ -76,7 +73,7 @@ __END__
 
 =head1 NAME
 
-Metabricky::Brick::Core::Meby - the Metabricky shell
+Metabricky::Brick::Shell::Meby - the Metabricky shell
 
 =head1 SYNOPSIS
 
@@ -88,7 +85,7 @@ Interactive use of the Metabricky shell.
 
 =head2 GLOBAL VARIABLES
 
-=head3 B<$Metabricky::Brick::Core::Meby::Log>
+=head3 B<$Metabricky::Brick::Shell::Meby::Bricks>
 
 Specify a log object. Must be an object inherited from L<Metabricky::Log>.
 

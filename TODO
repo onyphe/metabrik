@@ -15,7 +15,6 @@ Prio:
 -> shell::meby: require_bricks { 'core::context' => 1 }
 -> rename: core::context: load_brick => load, ...set... => set, execute_brick_command => run
 => review core::context API naming scheme
--> rename: core::meby to shell::meby?
 -> core::context: rename: loaded_bricks => loaded, available_... => available, set_attr... => set ...
 
 Bricks API:
@@ -83,7 +82,7 @@ Design rules:
 9. Reuse CPAN modules as much as possible
 10. Run command once, analyze at will
 
--> Within meby Shell, bricks do not print anything by default, except if core::meby echo is set to true.
+-> Within meby Shell, bricks do not print anything by default, except if shell::meby echo is set to true.
 => $_ is written with the result.
 
 Developer rules:

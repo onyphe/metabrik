@@ -62,7 +62,7 @@ sub process_request {
    my $self = shift;
 
    my $bricks = $self->{server}->{bricks};
-   my $meby = $bricks->{'core::meby'};
+   my $meby = $bricks->{'shell::meby'};
 
    while (<STDIN>) {
       s/[\r\n]+$//;
