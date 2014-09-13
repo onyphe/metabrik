@@ -80,15 +80,7 @@ Metabricky::Brick::Core::Meby - the Metabricky shell
 
 =head1 SYNOPSIS
 
-   use Metabricky::Log::Console;
-   use Metabricky::Brick::Core::Meby;
-
-   $Metabricky::Brick::Core::Meby::Log = Metabricky::Log::Console->new(
-      level => 3,
-   );
-
-   my $meby = Metabricky::Brick::Core::Meby->new;
-   $meby->cmdloop;
+   # XXX: TODO
 
 =head1 DESCRIPTION
 
