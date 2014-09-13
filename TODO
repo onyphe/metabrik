@@ -15,6 +15,9 @@ Prio:
 => review core::context API naming scheme
 -> core::context: rename: loaded_bricks => loaded, available_... => available, set_attr... => set ...
 
+BUG:
+=> set shell::meby does not write to ext::shell attributes (cannot update echo, newline and the like)
+
 Bricks API:
 -> require_arg() to check for a method invocation
 -> require_called_first() or require_commands() to check for a previous method to be called first
