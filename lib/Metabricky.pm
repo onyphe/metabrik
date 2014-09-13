@@ -5,7 +5,7 @@ package Metabricky;
 use strict;
 use warnings;
 
-our $VERSION = '0.41';
+our $VERSION = '0.50';
 
 use base qw(Class::Gomor::Array);
 
