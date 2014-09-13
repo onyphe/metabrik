@@ -17,6 +17,8 @@ our @AS = qw(
    title
    context
 
+   echo
+   newline
    commands
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
@@ -61,7 +63,7 @@ sub init {
    $|++;
 
    if (! defined($Log)) {
-      die("[FATAL] core::meby::init: you must create a `Log' object\n");
+      die("[FATAL] core::meby: init: you must create a `Log' object\n");
    }
 
    my $context = Metabricky::Brick::Core::Context->new(
@@ -79,7 +81,8 @@ sub init {
    my $history = $self->meby_history($self->path_home."/.meby_history");
 
    if (-f $rc) {
-      open(my $in, '<', $rc) or $Log->fatal("can't open rc file [$rc]: $!");
+      open(my $in, '<', $rc)
+         or $Log->fatal("core::meby: init: can't open rc file [$rc]: $!");
       while (defined(my $line = <$in>)) {
          next if ($line =~ /^\s*#/);  # Skip comments
          chomp($line);
@@ -95,16 +98,16 @@ sub init {
    if ($self->term->can('ReadHistory')) {
       if (-f $history) {
          $self->term->ReadHistory($history)
-            or $Log->fatal("can't read history file [$history]: $!");
+            or $Log->fatal("core::meby: init: can't read history file [$history]: $!");
       }
    }
 
    $context->set_available_bricks
-      or $Log->fatal("core::meby::init: set_available_bricks");
+      or $Log->fatal("core::meby: init: set_available_bricks");
 
    # XXX: not used now
    #my $available = $context->get_available_bricks
-      #or $Log->fatal("init: unable to get available bricks");
+      #or $Log->fatal("core::meby: init: unable to get available bricks");
    #for my $a (keys %$available) {
       #$self->add_handlers("run_$a");
    #}
@@ -178,7 +181,7 @@ sub ps_lookup_var {
          $var =~ s/\$${1}/$res/;
       }
       else {
-         $Log->warning("ps_lookup_var: unable to lookup variable [$var]");
+         $Log->debug("core::meby: ps_lookup_var: unable to lookup variable [$var]");
          last;
       }
    }
@@ -200,7 +203,7 @@ sub ps_lookup_vars_in_line {
                $line =~ s/\$${1}/$res/;
             }
             else {
-               $Log->warning("ps_lookup_vars_in_line: unable to lookup variable [$a]");
+               $Log->debug("core::meby: ps_lookup_vars_in_line: unable to lookup variable [$a]");
                last;
             }
          }
@@ -353,7 +356,7 @@ sub run_system {
       eval("use Proc::Simple");
       if ($@) {
          chomp($@);
-         $Log->fatal("can't load Proc::Simple module: $@");
+         $Log->fatal("core::meby: can't load Proc::Simple module: $@");
          return;
       }
 
@@ -439,7 +442,7 @@ sub run_save {
    my $context = $self->context;
 
    if (! defined($file)) {
-      $Log->error("save: pass \$data and \$file parameters");
+      $Log->error("core::meby: save: pass \$data and \$file parameters");
       return;
    }
 
@@ -447,7 +450,7 @@ sub run_save {
 
    my $r = open(my $out, '>', $file);
    if (!defined($r)) {
-      $Log->error("save: unable to open file [$file] for writing: $!");
+      $Log->error("core::meby: save: unable to open file [$file] for writing: $!");
       return;
    }
    print $out $data;
@@ -464,7 +467,7 @@ sub run_cd {
 
    if (defined($dir)) {
       if (! -d $dir) {
-         $Log->error("cd: $dir: can't cd to this");
+         $Log->error("core::meby: cd: $dir: can't cd to this");
          return;
       }
       chdir($dir);
@@ -496,7 +499,7 @@ sub run_doc {
    my $context = $self->context;
 
    if (! defined($args[0])) {
-      $Log->error("you have to provide a module as an argument");
+      $Log->error("core::meby: doc: you have to provide a module as an argument");
       return;
    }
 
@@ -512,7 +515,7 @@ sub run_sub {
    my $context = $self->context;
 
    if (! defined($args[0])) {
-      $Log->error("you have to provide a function as an argument");
+      $Log->error("core::meby: sub: you have to provide a function as an argument");
       return;
    }
 
@@ -528,7 +531,7 @@ sub run_src {
    my $context = $self->context;
 
    if (! defined($args[0])) {
-      $Log->error("you have to provide a module as an argument");
+      $Log->error("core::meby: src: you have to provide a module as an argument");
       return;
    }
 
@@ -544,7 +547,7 @@ sub run_faq {
    my $context = $self->context;
 
    if (! defined($args[0])) {
-      $Log->error("you have to provide a question as an argument");
+      $Log->error("core::meby: faq: you have to provide a question as an argument");
       return;
    }
 
@@ -563,12 +566,21 @@ sub run_pl {
    #print "[DEBUG] [$line]\n";
    $line =~ s/^pl\s+//;
 
-   my $newline = $context->get_brick_attribute('core::global', 'newline');
-   if ($newline && $line =~ /^\s*print/) {
+   if ($self->newline && $line =~ /^\s*print/) {
       $line .= ';print "\n";';
    }
 
-   return $context->do($line);
+   my $r = $context->do($line);
+   if (! defined($r)) {
+      $Log->error("core::meby: pl: unable to execute code");
+      return;
+   }
+
+   if ($self->echo) {
+      print "$r\n";
+   }
+
+   return $r;
 }
 
 sub run_su {
@@ -593,7 +605,7 @@ sub run_reload {
 
    my $reloaded = Module::Reload->check;
    if ($reloaded) {
-      $Log->info("some modules were reloaded");
+      $Log->info("core::meby: reload: some modules were reloaded");
    }
 
    return 1;
@@ -607,7 +619,7 @@ sub run_load {
 
    my $r = $context->load_brick($brick) or return;
    if ($r) {
-      $Log->verbose("Brick [$brick] loaded");
+      $Log->verbose("core::meby: load: Brick [$brick] loaded");
    }
 
    return $r;
@@ -676,7 +688,7 @@ sub run_set {
       my $attributes = $context->get_set_attributes or return;
 
       if (! exists($available->{$brick})) {
-         $Log->error("Brick [$brick] does not exist");
+         $Log->error("core::meby: set: Brick [$brick] does not exist");
          return;
       }
 
@@ -698,12 +710,12 @@ sub run_set {
       my $attributes = $context->get_set_attributes or return;
 
       if (! exists($available->{$brick})) {
-         $Log->error("Brick [$brick] does not exist");
+         $Log->error("core::meby: set: Brick [$brick] does not exist");
          return;
       }
 
       if (! exists($attributes->{$brick}->{$attribute})) {
-         $Log->error("Attribute [$attribute] does not exist for Brick [$brick]");
+         $Log->error("core::meby: set: Attribute [$attribute] does not exist for Brick [$brick]");
          return;
       }
 
@@ -715,7 +727,13 @@ sub run_set {
    }
    # set is called with all args (brick, key, value)
    else {
-      return $context->set_brick_attribute($brick, $attribute, $value);
+      my $r = $context->set_brick_attribute($brick, $attribute, $value);
+      if (! defined($r)) {
+         $Log->error("core::meby: set: unable to set Brick [$brick] Attribute [$attribute] to Value [$value]");
+         return;
+      }
+
+      return $r;
    }
 
    return 1;
@@ -726,13 +744,23 @@ sub run_run {
    my ($brick, $command, @args) = @_;
 
    if (! defined($brick) || ! defined($command)) {
-      $Log->error("run [brick] [command] <[arg1 arg2 .. argN]>\n");
+      $Log->info("run [brick] [command] <[arg1 arg2 .. argN]>");
       return;
    }
 
    my $context = $self->context;
 
-   return $context->execute_brick_command($brick, $command, @args);
+   my $r = $context->execute_brick_command($brick, $command, @args);
+   if (! defined($r)) {
+      $Log->error("core::meby: run: unable to execute Brick [$brick] Command [$command]\n");
+      return;
+   }
+
+   if ($self->echo) {
+      print "$r\n";
+   }
+
+   return $r;
 }
 
 sub run_title {
@@ -751,12 +779,12 @@ sub run_script {
    my $context = $self->context;
 
    if (! defined($script)) {
-      $Log->error("run: you must provide a script to run");
+      $Log->error("core::meby: script: you must provide a script to run");
       return;
    }
 
    if (! -f $script) {
-      $Log->error("run: script [$script] is not a file");
+      $Log->error("core::meby: script: script [$script] is not a file");
       return;
    }
 
@@ -829,7 +857,7 @@ sub _ioa_dirsfiles {
    };
    if ($@) {
       chomp($@);
-      $Log->error("$dir: dirs: $@");
+      $Log->error("core::meby: $dir: dirs: $@");
       return [], [];
    }
 
@@ -839,7 +867,7 @@ sub _ioa_dirsfiles {
    };
    if ($@) {
       chomp($@);
-      $Log->error("$dir: files: $@");
+      $Log->error("core::meby: $dir: files: $@");
       return [], [];
    }
 
@@ -873,7 +901,7 @@ sub comp_run {
 
    my $available = $context->get_available_bricks or return;
    if (! defined($available)) {
-      $Log->warning("can't fetch available Bricks");
+      $Log->warning("core::meby: comp_run: can't fetch available Bricks");
       return ();
    }
 
@@ -910,7 +938,7 @@ sub comp_doc {
       #print "[DEBUG] inc[$inc]\n";
       my $r = opendir(my $dir, $inc);
       if (! defined($r)) {
-         $Log->error("comp_doc: opendir: $dir: $!");
+         $Log->error("core::meby: comp_doc: opendir: $dir: $!");
          next;
       }
 

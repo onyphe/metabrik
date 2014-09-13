@@ -261,7 +261,7 @@ sub getcertificate {
    my $ua = LWP::UserAgent->new(
       ssl_opts => { verify_hostname => 0 }, # will do manual check
    );
-   $ua->timeout($self->global->rtimeout);
+   $ua->timeout($self->bricks->{'core::global'}->rtimeout);
    $ua->max_redirect(0);
    $ua->env_proxy;
 

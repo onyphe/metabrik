@@ -37,7 +37,7 @@ sub listen {
    return Metabricky::Brick::Server::Agent::Server->run(
       port => $port,
       ipv => '*',
-      global => $self->global,
+      bricks => $self->bricks,
    );
 }
 
@@ -54,15 +54,15 @@ sub options {
 
    $self->SUPER::options($template);
 
-   $prop->{'global'} ||= undef;
-   $template->{'global'} = \ $prop->{'global'};
+   $prop->{'bricks'} ||= undef;
+   $template->{'bricks'} = \ $prop->{'bricks'};
 }
 
 sub process_request {
    my $self = shift;
 
-   my $global = $self->{server}->{global};
-   my $meby = $global->meby;
+   my $bricks = $self->{server}->{bricks};
+   my $meby = $bricks->{'core::meby'};
 
    while (<STDIN>) {
       s/[\r\n]+$//;

@@ -30,7 +30,7 @@ sub default_values {
    my $self = shift;
 
    return {
-      destdir => $self->global->datadir,
+      destdir => $self->bricks->{'core::global'}->datadir,
    };
 }
 

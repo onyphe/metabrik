@@ -42,8 +42,6 @@ sub require_cmd_connect { qw() }
 sub connect {
    my $self = shift;
 
-   my $global = $self->global;
-
    if (defined($self->ssh2)) {
       die("we are already connected\n");
    }

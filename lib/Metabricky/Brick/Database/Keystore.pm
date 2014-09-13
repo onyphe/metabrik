@@ -39,14 +39,14 @@ sub search {
    }
 
    my $slurp = Metabricky::Brick::File::Slurp->new(
-      global => $self->global,
       file => $self->file,
+      bricks => $self->bricks,
    );
 
    my $data = $slurp->text or die("can't slurp");
 
    my $aes = Metabricky::Brick::Crypto::Aes->new(
-      global => $self->global,
+      bricks => $self->bricks,
    );
 
    my $decrypted = $aes->decrypt($data) or die("can't decrypt");

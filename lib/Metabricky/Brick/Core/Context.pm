@@ -28,13 +28,13 @@ my $__ctx = {};
 sub help {
    print "run core::context do <perl_code>\n";
    print "run core::context call <perl_sub>\n";
-   print "run core::context global_get <attribute>\n";
-   print "run core::context global_get_available\n";
-   print "run core::context global_get_loaded\n";
-   print "run core::context global_update_available_bricks\n";
-   print "run core::context global_get_loaded_bricks\n";
-   print "run core::context global_get_set_attributes\n";
-   print "run core::context global_set_brick_attribute <brick> <attribute> <value>\n";
+   print "run core::context get <attribute>\n";
+   print "run core::context get_available\n";
+   print "run core::context get_loaded\n";
+   print "run core::context update_available_bricks\n";
+   print "run core::context get_loaded_bricks\n";
+   print "run core::context get_set_attributes\n";
+   print "run core::context set_brick_attribute <brick> <attribute> <value>\n";
    print "run core::context execute_brick_command <brick> <command> [ <arg1 arg2 .. argN> ]\n";
 }
 
@@ -52,7 +52,7 @@ sub new {
 
    my $log = $self->log;
    if (! defined($log)) {
-      die("[FATAL] core::context::new: you have to give a `log' object\n");
+      die("[FATAL] core::context: new: you have to give a `log' object\n");
    }
 
    eval {
@@ -61,17 +61,23 @@ sub new {
       $lp->call(sub {
          my %args = @_;
 
-         $__ctx = { self => $args{self}, meby => $args{meby} };
+         $__ctx = {
+            brick_core_context => $args{self},
+            brick_core_meby => $args{meby},
+         };
 
          eval("use strict;");
          eval("use warnings;");
 
-         $__ctx->{bricks}->{'core::global'} = Metabricky::Brick::Core::Global->new->init;
+         $__ctx->{brick_core_global} = Metabricky::Brick::Core::Global->new->init;
+         if (! defined($__ctx->{brick_core_global})) {
+            die("core::context: new: unable to initialize Brick [core::global]\n");
+         }
 
          $__ctx->{loaded_bricks} = {
-            'core::global' => $__ctx->{bricks}->{'core::global'},
-            'core::context' => $__ctx->{self},
-            'core::meby' => $__ctx->{meby},
+            'core::global' => $__ctx->{brick_core_global},
+            'core::context' => $__ctx->{brick_core_context},
+            'core::meby' => $__ctx->{brick_core_meby},
          };
          $__ctx->{available_bricks} = { };
          $__ctx->{set_attributes} = { };
@@ -82,7 +88,7 @@ sub new {
    };
    if ($@) {
       chomp($@);
-      $log->fatal("core::context::new: can't initialize context: $@");
+      $log->fatal("core::context: new: unable to initialize context: $@");
    }
    
    return $self;
@@ -95,21 +101,13 @@ sub do {
    my $log = $self->log;
    my $lp = $self->_lp;
 
-   my $echo = $self->get_brick_attribute('core::global', 'echo');
-
    my $res;
    eval {
-      if ($echo) {
-         $res = Data::Dump::dump($lp->do($code));
-         print "$res\n";
-      }
-      else {
-         $res = $lp->do($code);
-      }
+      $res = $lp->do($code);
    };
    if ($@) {
       chomp($@);
-      $log->error("core::context::do: $@");
+      $log->error("core::context: do: $@");
       return;
    }
 
@@ -129,7 +127,7 @@ sub call {
    };
    if ($@) {
       chomp($@);
-      $log->error("core::context::call: $@");
+      $log->error("core::context: call: $@");
       return;
    }
 
@@ -184,6 +182,9 @@ sub set_available_bricks {
 
       return $__ctx->{available_bricks} = $args{available_bricks};
    }, available_bricks => $h);
+   if (! defined($r)) {
+      return;
+   }
 
    return $r;
 }
@@ -238,38 +239,56 @@ sub load_brick {
       }
 
       my $__lp_new = $__lp_module->new(
-         global => $__ctx->{bricks}->{'core::global'},
+         bricks => $__ctx->{loaded_bricks},
       );
       #$__lp_new->init; # No init now. We wait first run()
 
       return $__ctx->{loaded_bricks}->{$__lp_brick} = $__lp_new;
    }, module => $module, brick => $brick);
+   if (! defined($r)) {
+      return;
+   }
 
-   return $self;
+   return $r;
 }
 
 sub get_available_bricks {
    my $self = shift;
 
-   return $self->call(sub {
+   my $r = $self->call(sub {
       return $__ctx->{available_bricks};
    });
+   if (! defined($r)) {
+      return;
+   }
+
+   return $r;
 }
 
 sub get_loaded_bricks {
    my $self = shift;
 
-   return $self->call(sub {
+   my $r = $self->call(sub {
       return $__ctx->{loaded_bricks};
    });
+   if (! defined($r)) {
+      return;
+   }
+
+   return $r;
 }
 
 sub get_set_attributes {
    my $self = shift;
 
-   return $self->call(sub {
+   my $r = $self->call(sub {
       return $__ctx->{set_attributes};
    });
+   if (! defined($r)) {
+      return;
+   }
+
+   return $r;
 }
 
 sub get_status_bricks {
@@ -295,7 +314,7 @@ sub get_brick_attribute {
    my $self = shift;
    my ($brick, $attribute) = @_;
 
-   my $value = $self->call(sub {
+   my $r = $self->call(sub {
       my %args = @_;
 
       my $__lp_brick = $args{brick};
@@ -311,8 +330,11 @@ sub get_brick_attribute {
 
       return $__ctx->{loaded_bricks}->{$__lp_brick}->$__lp_attribute;
    }, brick => $brick, attribute => $attribute);
+   if (! defined($r)) {
+      return;
+   }
 
-   return $value;
+   return $r;
 }
 
 sub set_brick_attribute {
@@ -344,7 +366,7 @@ sub set_brick_attribute {
       return;
    }
 
-   return 1;
+   return $r;
 }
 
 sub execute_brick_command {
@@ -379,7 +401,7 @@ sub execute_brick_command {
       return;
    }
 
-   return 1;
+   return $r;
 }
 
 1;

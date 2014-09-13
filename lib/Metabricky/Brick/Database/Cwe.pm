@@ -31,14 +31,14 @@ sub default_values {
    my $self = shift;
 
    return {
-      file => $self->global->datadir."/2000.xml",
+      file => $self->bricks->{'core::global'}->datadir."/2000.xml",
    };
 }
 
 sub update {
    my $self = shift;
 
-   my $datadir = $self->global->datadir;
+   my $datadir = $self->bricks->{'core::global'}->datadir;
 
    my $fetch = Metabricky::Brick::File::Fetch->new(
       output => "$datadir/2000.xml.zip",
@@ -48,9 +48,9 @@ sub update {
       or die("fetch::get\n");
 
    my $zip = Metabricky::Brick::File::Zip->new(
-      global => $self->global,
       input => "$datadir/2000.xml.zip",
       destdir => $datadir,
+      bricks => $self->bricks,
    );
 
    $zip->uncompress or die("zip::uncompress");

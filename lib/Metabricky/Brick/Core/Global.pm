@@ -19,11 +19,6 @@ our @AS = qw(
    ctimeout
    rtimeout
    datadir
-
-   commands
-
-   echo
-   newline
 );
 
 __PACKAGE__->cgBuildIndices;
@@ -33,8 +28,6 @@ use File::Find;
 
 sub new {
    my $self = shift->SUPER::new(
-      echo => 0,
-      newline => 0,
       datadir => '/tmp',
       @_,
    );
@@ -43,8 +36,6 @@ sub new {
 }
 
 sub help {
-   print "set core::global echo <1|0>\n";
-   print "set core::global newline <1|0>\n";
    print "set core::global input <input>\n";
    print "set core::global output <output>\n";
    print "set core::global db <db>\n";
@@ -53,7 +44,6 @@ sub help {
    print "set core::global target <target>\n";
    print "set core::global ctimeout <connection_timeout>\n";
    print "set core::global rtimeout <read_timeout>\n";
-   print "set core::global commands <command1:command2:..:commandN>\n";
    print "set core::global datadir <directory>\n";
 }
 

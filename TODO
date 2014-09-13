@@ -5,6 +5,19 @@ Prio:
 => Split Metabricky into:
 ==> Metabricky::Brick::Ext::Shell for Term::Shell stuff
 ==> Metabricky::Brick::Shell/Core::Meby for an example of a Metabricky shell
+-> Show Brick Attribute even when not set
+-> Rename system to command, renamed commands attribute to command
+-> More doc in Term::Shell format
+-> Review Log model: move it to a Brick?
+=> Log: to prefix messages with "category::brick: command:" (for errors only?)
+-> eval() required module for use in a Brick
+-> use $log->info() to display help when a command is not valid (like `run' in the shell)
+-> Brick API: name() => returns 'core::global' or whatever name it is for use in logs, for instance
+-> Within meby Shell, bricks do not print anything by default, except if core::meby echo is set to true.
+=> $_ is written with the result.
+-> run [brick]
+=> display possible commands (like help)
+=> run sets $_ to useful value, but can display useful result to user
 
 Bricks API:
 -> require_arg() to check for a method invocation
@@ -24,6 +37,7 @@ Wwwutil:
 - Zmap
 - SSL Capable NetCat
 - /usr/ports/net/GeoIP
+- system::os: version, name, ...
 
 
 ### DOC/PRES
@@ -68,6 +82,7 @@ Design rules:
 7. Performance is not the goal
 8. Return USEFUL things from brick EVERY commands
 9. Reuse CPAN modules as much as possible
+10. Run command once, analyze at will
 
 Developer rules:
 - in Context::call or ::do, die() will be catched.

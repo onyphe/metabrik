@@ -8,9 +8,9 @@ use warnings;
 use base qw(Class::Gomor::Array);
 
 our @AS = qw(
-   global
    debug
    inited
+   bricks
 );
 
 __PACKAGE__->cgBuildIndices;

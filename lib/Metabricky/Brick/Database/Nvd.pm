@@ -35,7 +35,7 @@ sub help {
 sub default_values {
    my $self = shift;
 
-   my $datadir = $self->global->datadir;
+   my $datadir = $self->bricks->{'core::global'}->datadir;
 
    # http://nvd.nist.gov/download.cfm
    # nvdcve-2.0-modified.xml includes all recently published and recently updated vulnerabilities
@@ -93,7 +93,7 @@ sub update {
       die("run database::nvd update <[recent|modified|others]>\n");
    }
 
-   my $datadir = $self->global->datadir;
+   my $datadir = $self->bricks->{'core::global'}->datadir;
    my $xml_method = "xml_$type";
    my $xml_files = $self->$xml_method;
    my $uri_method = "uri_$type";
@@ -124,7 +124,7 @@ sub load {
       die("run database::nvd load <[recent|modified|others]> [ <pattern> ]\n");
    }
 
-   my $datadir = $self->global->datadir;
+   my $datadir = $self->bricks->{'core::global'}->datadir;
    my $xml_method = "xml_$type";
    my $xml_files = $self->$xml_method;
    my $count = scalar @$xml_files;
