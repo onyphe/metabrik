@@ -39,9 +39,8 @@ sub error {
 sub fatal {
    my $self = shift;
    my ($msg) = @_;
-   my ($package) = caller();
    print RED, "[FATAL] ", RESET;
-   die("$package: $msg\n");
+   die("$msg\n");
 }
 
 sub info {

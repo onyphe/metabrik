@@ -77,7 +77,7 @@ sub new {
    return $self;
 }
 
-sub brick_log {
+sub get_log {
    my $self = shift;
 
    # We can't use get_brick_attribute() here, we would have a deep recursion
@@ -88,12 +88,12 @@ sub brick_log {
    my $r;
    eval {
       $r = $lp->call(sub {
-         return $__ctx->{loaded_bricks}->{'core::context'}->log;
+         return $__ctx->{log};
       });
    };
    if ($@) {
       chomp($@);
-      die("[FATAL] core::context: brick_log: $@\n");
+      die("[FATAL] core::context: get_log: $@\n");
    }
 
    return $r;
@@ -104,7 +104,7 @@ sub init {
       @_,
    ) or return 1; # Init already done
 
-   my $log = $self->brick_log;
+   my $log = $self->get_log;
 
    my $r = $self->set_available_bricks;
    if (! defined($r)) {
@@ -118,7 +118,7 @@ sub do {
    my $self = shift;
    my ($code, $dump) = @_;
 
-   my $log = $self->brick_log;
+   my $log = $self->get_log;
    my $lp = $self->_lp;
 
    my $res;
@@ -143,7 +143,7 @@ sub call {
    my $self = shift;
    my ($subref, %args) = @_;
 
-   my $log = $self->brick_log;
+   my $log = $self->get_log;
    my $lp = $self->_lp;
 
    my $res;
@@ -218,32 +218,27 @@ sub load_brick {
    my $self = shift;
    my ($brick) = @_;
 
-   # XXX: use Module::Loaded (core) or Module::Load/Unload or Module::Reload?
-   my $log = $self->brick_log;
+   my $log = $self->get_log;
 
    if (! defined($brick)) {
       $log->error("run context load <brick>");
       return;
    }
 
-   #print "DEBUG brick[$brick]\n";
+   if ($brick !~ /^[a-z0-9]+::[a-z0-9]+$/) {
+      $log->fatal("invalid format for Brick [$brick]");
+   }
 
    my ($category, $module) = split('::', $brick);
-   # Brick has a category
-   # XXX: when migration to categorised Bricks is finished, we can remove this check:
-   #      Every Brick will have a category.
-   if (defined($module)) {
-      #print "DEBUG category[$category] module[$module]\n";
-      $category = ucfirst($category);
-      $module = ucfirst($module);
-      $module = 'Metabricky::Brick::'.$category.'::'.$module;
-      #print "DEBUG module[$module]\n";
-   }
-   # Brick has no category
-   else {
-      $module = ucfirst($category);
-      $module = 'Metabricky::Brick::'.$module;
-   }
+
+   $log->debug("category[$category]");
+   $log->debug("module[$module]");
+
+   $category = ucfirst($category);
+   $module = ucfirst($module);
+   $module = 'Metabricky::Brick::'.$category.'::'.$module;
+
+   $log->debug("module[$module]");
 
    my $loaded_bricks = $self->get_loaded_bricks or return;
    if (exists($loaded_bricks->{$brick})) {
