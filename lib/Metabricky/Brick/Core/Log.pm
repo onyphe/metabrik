@@ -21,6 +21,7 @@ sub error {
    my ($msg) = @_;
    print RED, "[-] ", RESET;
    print("$msg\n");
+   return;
 }
 
 sub fatal {
@@ -36,6 +37,7 @@ sub info {
    return unless $self->level > 0;
    print GREEN, "[*] ", RESET;
    print("$msg\n");
+   return 1;
 }
 
 sub verbose {
@@ -44,6 +46,7 @@ sub verbose {
    return unless $self->level > 1;
    print YELLOW, "[+] ", RESET;
    print("$msg\n");
+   return 1;
 }
 
 sub debug {
@@ -53,6 +56,7 @@ sub debug {
    my ($package) = caller();
    print BLUE, "[DEBUG] ", RESET;
    print("$package: $msg\n");
+   return 1;
 }
 
 1;

@@ -510,7 +510,7 @@ sub run_doc {
    my $self = shift;
    my (@args) = @_;
 
-   my $context = $self->brick->{'core::context'};
+   my $context = $Bricks->{'core::context'};
 
    if (! defined($args[0])) {
       $self->get_log->error("ext::shell: doc: you have to provide a module as an argument");
@@ -832,6 +832,7 @@ sub catch_run {
    my $commands = $self->ps_get_commands;
    for my $command (@$commands) {
       if ($args[0] eq $command) {
+         $self->get_log->debug("catch_run: command [$command]");
          return $self->run_command(@args);
       }
    }

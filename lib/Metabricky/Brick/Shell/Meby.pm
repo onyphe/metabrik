@@ -33,7 +33,7 @@ sub default_values {
    return {
       echo => 0,
       newline => 1,
-      commands => 'vi:ls:w:top:less:cat:find:grep:nc',
+      commands => 'vi:ls:w:top:less:cat:find:grep:nc:cpanm',
    };
 }
 

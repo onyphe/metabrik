@@ -1,13 +1,11 @@
 ### TODO
 
 Prio:
--> Brickify Shell:
 -> Show Brick Attribute even when not set
 -> Rename system to command, renamed commands attribute to command
--> Review Log model: move it to a Brick?
-=> Log: to prefix messages with "category::brick: command:" (for errors only?)
+-> Log: to prefix messages with "category::brick: command:" (for errors only?)
 -> eval() required module for use in a Brick
--> use $log->info() to display help when a command is not valid (like `run' in the shell)
+-> use return $self->log->info() to display help when a command is not valid (like `run' in the shell)
 -> Brick API: name() => returns 'core::global', category() => returns 'core'
 -> run [brick]
 => display possible commands (like help)

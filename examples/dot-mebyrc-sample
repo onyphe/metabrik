@@ -1,3 +1,5 @@
+set core::log level 3
+
 version
 my $version = $_
 
@@ -16,7 +18,7 @@ set core::global datadir $home."/metabricky/data"
 set core::global ctimeout 20
 set core::global rtimeout 20
 
-set core::shell commands vi:cat:less:w:nc:grep:find:cpanm
+set shell::meby commands vi:cat:less:w:nc:grep:find:cpanm
 
 load http::www
 
@@ -39,4 +41,4 @@ use lib "$ENV{HOME}/path/to/lib"
 
 load category::mybrick
 
-set core::global echo 1
+set shell::meby echo 1
