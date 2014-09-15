@@ -25,11 +25,11 @@ my $script = shift;
 my $context = Metabricky::Brick::Core::Context->new;
 $context->init or return;
 
-$context->load_brick('shell::meby') or return;
+$context->load('shell::meby') or return;
 
 if (defined($script)) {
-   $context->execute_brick_command('shell::meby', 'script', $script);
+   $context->run('shell::meby', 'script', $script);
 }
 else {
-   $context->execute_brick_command('shell::meby', 'cmdloop');
+   $context->run('shell::meby', 'cmdloop');
 }

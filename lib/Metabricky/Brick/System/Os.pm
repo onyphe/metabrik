@@ -46,15 +46,11 @@ sub init {
 sub name {
    my $self = shift;
 
-   print $self->_uname->{name}."\n";
-
    return $self->_uname->{name};
 }
 
 sub release {
    my $self = shift;
-
-   print $self->_uname->{release}."\n";
 
    return $self->_uname->{release};
 }
@@ -62,23 +58,17 @@ sub release {
 sub version {
    my $self = shift;
 
-   print $self->_uname->{version}."\n";
-
    return $self->_uname->{version};
 }
 
 sub hostname {
    my $self = shift;
 
-   print $self->_uname->{hostname}."\n";
-
    return $self->_uname->{hostname};
 }
 
 sub arch {
    my $self = shift;
-
-   print $self->_uname->{arch}."\n";
 
    return $self->_uname->{arch};
 }

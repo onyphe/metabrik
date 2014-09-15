@@ -25,17 +25,47 @@ use Metabricky::Brick::Core::Log;
 # Only used to avoid compile-time errors
 my $__ctx = {};
 
+{
+   no warnings;
+
+   # We rewrite the log accessor so we can fetch it from within context
+   *log = sub {
+      my $self = shift;
+
+      # We can't use get() here, we would have a deep recursion
+      # We can't use call() for the same reason
+
+      my $lp = $self->_lp;
+
+      my $r;
+      eval {
+         $r = $lp->call(sub {
+            return $__ctx->{log};
+         });
+      };
+      if ($@) {
+         chomp($@);
+         die("[FATAL] core::context: log: $@\n");
+      }
+
+      return $r;
+   };
+}
+
 sub help {
+   print "run core::context load <brick>\n";
+   print "run core::context set <brick> <attribute> <value>\n";
+   print "run core::context get [ <brick> ] [ <attribute> ]\n";
+   print "run core::context run <brick> <command> [ <arg1 arg2 .. argN> ]\n";
+   print "\n";
+   print "run core::context get_loaded\n"; # XXX: loaded => use accessor
+   print "run core::context find_available\n";
+   print "run core::context set_available\n"; # XXX: update_available
+   print "run core::context get_available\n"; # XXX: available => use accessor
+   print "run core::context get_status\n"; # XXX: status
+   print "\n";
    print "run core::context do <perl_code>\n";
    print "run core::context call <perl_sub>\n";
-   print "run core::context get <attribute>\n";
-   print "run core::context get_available\n";
-   print "run core::context get_loaded\n";
-   print "run core::context update_available_bricks\n";
-   print "run core::context get_loaded_bricks\n";
-   print "run core::context get_set_attributes\n";
-   print "run core::context set_brick_attribute <brick> <attribute> <value>\n";
-   print "run core::context execute_brick_command <brick> <command> [ <arg1 arg2 .. argN> ]\n";
 }
 
 sub new {
@@ -45,24 +75,29 @@ sub new {
 
    eval {
       my $lp = Lexical::Persistence->new;
-      $lp->set_context(_ => { '$__ctx' => { } });
+      $lp->set_context(_ => {
+         '$__ctx' => { },
+         '$context' => $self,
+      });
       $lp->call(sub {
          my %args = @_;
 
          eval("use strict;");
          eval("use warnings;");
 
-         $__ctx->{loaded_bricks} = {
+         $__ctx->{loaded} = {
             'core::context' => $args{self},
             'core::global' => Metabricky::Brick::Core::Global->new->init,
             'core::log' => Metabricky::Brick::Core::Log->new->init,
          };
-         $__ctx->{available_bricks} = { };
-         $__ctx->{set_attributes} = { };
-         $__ctx->{log} = $__ctx->{loaded_bricks}->{'core::log'};
+         $__ctx->{available} = { };
+         $__ctx->{set} = { };
+         $__ctx->{log} = $__ctx->{loaded}->{'core::log'};
 
-         $__ctx->{loaded_bricks}->{'core::context'}->log($__ctx->{log});
-         $__ctx->{loaded_bricks}->{'core::global'}->log($__ctx->{log});
+         # We don't use the log accessor to write the value because we wrote 
+         # our own log accessor.
+         $__ctx->{loaded}->{'core::context'}->{log} = $__ctx->{log};
+         $__ctx->{loaded}->{'core::global'}->{log} = $__ctx->{log};
 
          return 1;
       }, self => $self);
@@ -76,38 +111,14 @@ sub new {
    return $self;
 }
 
-sub get_log {
-   my $self = shift;
-
-   # We can't use get_brick_attribute() here, we would have a deep recursion
-   # We can't use call() for the same reason
-
-   my $lp = $self->_lp;
-
-   my $r;
-   eval {
-      $r = $lp->call(sub {
-         return $__ctx->{log};
-      });
-   };
-   if ($@) {
-      chomp($@);
-      die("[FATAL] core::context: get_log: $@\n");
-   }
-
-   return $r;
-}
-
 sub init {
    my $self = shift->SUPER::init(
       @_,
    ) or return 1; # Init already done
 
-   my $log = $self->get_log;
-
-   my $r = $self->set_available_bricks;
+   my $r = $self->set_available;
    if (! defined($r)) {
-      $log->fatal("core::context: init: unable to init Brick [core::context]");
+      return $self->log->fatal("core::context: init: unable to init Brick [core::context]");
    }
 
    return $self;
@@ -117,7 +128,6 @@ sub do {
    my $self = shift;
    my ($code, $dump) = @_;
 
-   my $log = $self->get_log;
    my $lp = $self->_lp;
 
    my $res;
@@ -131,8 +141,7 @@ sub do {
    };
    if ($@) {
       chomp($@);
-      $log->error("core::context: do: $@");
-      return;
+      return $self->log->error("core::context: do: $@");
    }
 
    return $res;
@@ -142,7 +151,6 @@ sub call {
    my $self = shift;
    my ($subref, %args) = @_;
 
-   my $log = $self->get_log;
    my $lp = $self->_lp;
 
    my $res;
@@ -151,8 +159,7 @@ sub call {
    };
    if ($@) {
       chomp($@);
-      $log->error("core::context: call: $@");
-      return;
+      return $self->log->error("core::context: call: $@");
    }
 
    return $res;
@@ -178,7 +185,7 @@ sub _find_bricks {
    }
 }
 
-sub find_available_bricks {
+sub find_available {
    my $self = shift;
 
    {
@@ -196,16 +203,16 @@ sub find_available_bricks {
    return \%h;
 }
 
-sub set_available_bricks {
+sub set_available {
    my $self = shift;
 
-   my $h = $self->find_available_bricks;
+   my $h = $self->find_available;
 
    my $r = $self->call(sub {
       my %args = @_;
 
-      return $__ctx->{available_bricks} = $args{available_bricks};
-   }, available_bricks => $h);
+      return $__ctx->{available} = $args{available};
+   }, available => $h);
    if (! defined($r)) {
       return;
    }
@@ -213,36 +220,32 @@ sub set_available_bricks {
    return $r;
 }
 
-sub load_brick {
+sub load {
    my $self = shift;
    my ($brick) = @_;
 
-   my $log = $self->get_log;
-
    if (! defined($brick)) {
-      $log->error("run context load <brick>");
-      return;
+      return $self->log->error("run context load <brick>");
    }
 
    if ($brick !~ /^[a-z0-9]+::[a-z0-9]+$/) {
-      $log->fatal("invalid format for Brick [$brick]");
+      return $self->log->error("invalid format for Brick [$brick]");
    }
 
    my ($category, $module) = split('::', $brick);
 
-   $log->debug("category[$category]");
-   $log->debug("module[$module]");
+   $self->log->debug("category[$category]");
+   $self->log->debug("module[$module]");
 
    $category = ucfirst($category);
    $module = ucfirst($module);
    $module = 'Metabricky::Brick::'.$category.'::'.$module;
 
-   $log->debug("module[$module]");
+   $self->log->debug("module[$module]");
 
-   my $loaded_bricks = $self->get_loaded_bricks or return;
-   if (exists($loaded_bricks->{$brick})) {
-      $log->error("Brick [$brick] already loaded");
-      return;
+   my $loaded = $self->get_loaded or return;
+   if (exists($loaded->{$brick})) {
+      return $self->log->error("Brick [$brick] already loaded");
    }
 
    my $r = $self->call(sub {
@@ -258,26 +261,26 @@ sub load_brick {
       }
 
       my $__lp_new = $__lp_module->new(
-         bricks => $__ctx->{loaded_bricks},
+         bricks => $__ctx->{loaded},
          log => $__ctx->{log},
       );
       #$__lp_new->init; # No init now. We wait first run()
 
-      return $__ctx->{loaded_bricks}->{$__lp_brick} = $__lp_new;
+      return $__ctx->{loaded}->{$__lp_brick} = $__lp_new;
    }, module => $module, brick => $brick);
    if (! defined($r)) {
-      $log->error("core::context: load_brick: unable to load Brick [$brick]");
+      return $self->log->error("core::context: load: unable to load Brick [$brick]");
       return;
    }
 
    return $r;
 }
 
-sub get_available_bricks {
+sub get_available {
    my $self = shift;
 
    my $r = $self->call(sub {
-      return $__ctx->{available_bricks};
+      return $__ctx->{available};
    });
    if (! defined($r)) {
       return;
@@ -286,11 +289,11 @@ sub get_available_bricks {
    return $r;
 }
 
-sub get_loaded_bricks {
+sub get_loaded {
    my $self = shift;
 
    my $r = $self->call(sub {
-      return $__ctx->{loaded_bricks};
+      return $__ctx->{loaded};
    });
    if (! defined($r)) {
       return;
@@ -299,24 +302,11 @@ sub get_loaded_bricks {
    return $r;
 }
 
-sub get_set_attributes {
+sub get_status {
    my $self = shift;
 
-   my $r = $self->call(sub {
-      return $__ctx->{set_attributes};
-   });
-   if (! defined($r)) {
-      return;
-   }
-
-   return $r;
-}
-
-sub get_status_bricks {
-   my $self = shift;
-
-   my $available = $self->get_available_bricks or return;
-   my $loaded = $self->get_loaded_bricks or return;
+   my $available = $self->get_available or return;
+   my $loaded = $self->get_loaded or return;
 
    my @loaded = ();
    my @notloaded = ();
@@ -331,7 +321,7 @@ sub get_status_bricks {
    };
 }
 
-sub get_brick_attribute {
+sub get {
    my $self = shift;
    my ($brick, $attribute) = @_;
 
@@ -341,15 +331,32 @@ sub get_brick_attribute {
       my $__lp_brick = $args{brick};
       my $__lp_attribute = $args{attribute};
 
-      if (! exists($__ctx->{loaded_bricks}->{$__lp_brick})) {
-         die("Brick [$__lp_brick] not loaded\n");
+      # Without arguments, we want to get all set attributes
+      if (! defined($__lp_brick) && ! defined($__lp_attribute)) {
+         return $__ctx->{set};
+      }
+      # With only one argument, we want to get set Attributes for the specified Brick
+      elsif (defined($__lp_brick) && ! defined($__lp_attribute)) {
+         if (! exists($__ctx->{loaded}->{$__lp_brick})) {
+            die("Brick [$__lp_brick] not loaded\n");
+         }
+
+         return $__ctx->{set}->{$__lp_brick};
+      }
+      # Else we get one Brick Attribute
+      else {
+         if (! exists($__ctx->{loaded}->{$__lp_brick})) {
+            die("Brick [$__lp_brick] not loaded\n");
+         }
+
+         if (! $__ctx->{loaded}->{$__lp_brick}->can($__lp_attribute)) {
+            die("Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
+         }
+
+         return $__ctx->{loaded}->{$__lp_brick}->$__lp_attribute;
       }
 
-      if (! $__ctx->{loaded_bricks}->{$__lp_brick}->can($__lp_attribute)) {
-         die("Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
-      }
-
-      return $__ctx->{loaded_bricks}->{$__lp_brick}->$__lp_attribute;
+      return;
    }, brick => $brick, attribute => $attribute);
    if (! defined($r)) {
       return;
@@ -358,7 +365,7 @@ sub get_brick_attribute {
    return $r;
 }
 
-sub set_brick_attribute {
+sub set {
    my $self = shift;
    my ($brick, $attribute, $value) = @_;
 
@@ -369,17 +376,17 @@ sub set_brick_attribute {
       my $__lp_attribute = $args{attribute};
       my $__lp_value = $args{value};
 
-      if (! exists($__ctx->{loaded_bricks}->{$__lp_brick})) {
+      if (! exists($__ctx->{loaded}->{$__lp_brick})) {
          die("Brick [$__lp_brick] not loaded\n");
       }
 
-      if (! $__ctx->{loaded_bricks}->{$__lp_brick}->can($__lp_attribute)) {
+      if (! $__ctx->{loaded}->{$__lp_brick}->can($__lp_attribute)) {
          die("Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
       }
 
-      #$__ctx->{loaded_bricks}->{$__lp_brick}->init; # No init when just setting an attribute
-      $__ctx->{loaded_bricks}->{$__lp_brick}->$__lp_attribute($__lp_value);
-      $__ctx->{set_attributes}->{$__lp_brick}->{$__lp_attribute} = $__lp_value;
+      #$__ctx->{loaded}->{$__lp_brick}->init; # No init when just setting an attribute
+      $__ctx->{loaded}->{$__lp_brick}->$__lp_attribute($__lp_value);
+      $__ctx->{set}->{$__lp_brick}->{$__lp_attribute} = $__lp_value;
 
       return $__lp_value;
    }, brick => $brick, attribute => $attribute, value => $value);
@@ -390,7 +397,7 @@ sub set_brick_attribute {
    return $r;
 }
 
-sub execute_brick_command {
+sub run {
    my $self = shift;
    my ($brick, $command, @args) = @_;
 
@@ -401,16 +408,16 @@ sub execute_brick_command {
       my $__lp_command = $args{command};
       my @__lp_args = @{$args{args}};
 
-      if (! exists($__ctx->{loaded_bricks}->{$__lp_brick})) {
+      if (! exists($__ctx->{loaded}->{$__lp_brick})) {
          die("Brick [$__lp_brick] not loaded\n");
       }
 
-      my $__lp_run = $__ctx->{loaded_bricks}->{$__lp_brick};
+      my $__lp_run = $__ctx->{loaded}->{$__lp_brick};
       if (! defined($__lp_run)) {
          die("Brick [$__lp_brick] not defined\n");
       }
 
-      if (! $__ctx->{loaded_bricks}->{$__lp_brick}->can($__lp_command)) {
+      if (! $__ctx->{loaded}->{$__lp_brick}->can($__lp_command)) {
          die("Brick [$__lp_brick] has no Command [$__lp_command]\n");
       }
 

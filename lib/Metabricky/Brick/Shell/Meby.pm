@@ -18,6 +18,60 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 use Metabricky::Ext::Shell;
 
+{
+   no warnings;
+
+   # We redefine some accessors so we can write the value to Ext::Shell
+
+   *echo = sub {
+      my $self = shift;
+      my ($value) = @_;
+
+      if (defined($value)) {
+         # set shell echo attribute only when is has been populated
+         if (defined($self->shell)) {
+            return $self->shell->echo($self->{echo} = $value);
+         }
+
+         return $self->{echo} = $value;
+      }
+
+      return $self->{echo};
+   };
+
+   *newline = sub {
+      my $self = shift;
+      my ($value) = @_;
+
+      if (defined($value)) {
+         # set shell newline attribute only when is has been populated
+         if (defined($self->shell)) {
+            return $self->shell->newline($self->{newline} = $value);
+         }
+
+         return $self->{newline} = $value;
+      }
+
+      return $self->{newline};
+   };
+
+   *commands = sub {
+      my $self = shift;
+      my ($value) = @_;
+
+      if (defined($value)) {
+         # set shell commands attribute only when is has been populated
+         if (defined($self->shell)) {
+            return $self->shell->commands($self->{commands} = $value);
+         }
+
+         return $self->{commands} = $value;
+      }
+
+      return $self->{commands};
+   };
+}
+
 sub help {
    print "set shell::meby echo <0|1>\n";
    print "set shell::meby newline <0|1>\n";
@@ -31,7 +85,7 @@ sub default_values {
    my $self = shift;
 
    return {
-      echo => 0,
+      echo => 1,
       newline => 1,
       commands => 'vi:ls:w:top:less:cat:find:grep:nc:cpanm',
    };

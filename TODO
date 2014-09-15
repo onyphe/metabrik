@@ -1,24 +1,28 @@
 ### TODO
 
 Prio:
+-> $context variable when entering Perl code within shell::meby?
+-> completion: for Commands
+=> example: main::system::os, obssi::remote::serenade
+=> force repository main?
+-> rename: core::template to example::template
 -> Show Brick Attribute even when not set
 -> Rename system to command, renamed commands attribute to command
 -> Log: to prefix messages with "category::brick: command:" (for errors only?)
 -> eval() required module for use in a Brick
 -> use return $self->log->info() to display help when a command is not valid (like `run' in the shell)
--> Brick API: name() => returns 'core::global', category() => returns 'core'
+-> Brick API: name() => returns 'core::global', category() => returns 'core', repository()
+=> Repository (main) / category / name
 -> run [brick]
 => display possible commands (like help)
 => run sets $_ to useful value, but can display useful result to user
 -> shell::meby: require_bricks { 'core::context' => 1 }
--> rename: core::context: load_brick => load, ...set... => set, execute_brick_command => run
-=> review core::context API naming scheme
--> core::context: rename: loaded_bricks => loaded, available_... => available, set_attr... => set ...
+-> shell::meby: modify run_set and add run_get to use core::context:get
+=> huge cleanup for shell::meby TODO
+=> move reload() from core::context to shell::meby
+-> todo: redefine log() in core::context as in shell::meby with echo
 
-BUG:
-=> set shell::meby does not write to ext::shell attributes (cannot update echo, newline and the like)
-
-Bricks API:
+Bricks API: See remote::ssh2
 -> require_arg() to check for a method invocation
 -> require_called_first() or require_commands() to check for a previous method to be called first
 -> require_modules() to eval() required modules for bricks.
@@ -37,6 +41,10 @@ Wwwutil:
 - SSL Capable NetCat
 - /usr/ports/net/GeoIP
 - system::os: version, name, ...
+- string::grep
+- string::less
+- file::grep
+- file::less
 
 
 ### DOC/PRES
@@ -82,6 +90,7 @@ Design rules:
 8. Return USEFUL things from brick EVERY commands
 9. Reuse CPAN modules as much as possible
 10. Run command once, analyze at will
+11. Commands should be non-blocking
 
 -> Within meby Shell, bricks do not print anything by default, except if shell::meby echo is set to true.
 => $_ is written with the result.

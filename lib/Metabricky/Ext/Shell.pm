@@ -41,8 +41,8 @@ use vars qw{$AUTOLOAD};
 sub AUTOLOAD {
    my $self = shift;
 
-   $self->get_log->debug("autoload[$AUTOLOAD]");
-   $self->get_log->debug("self[$self]");
+   $self->log->debug("autoload[$AUTOLOAD]");
+   $self->log->debug("self[$self]");
 
    $self->ps_update_prompt('xxx $AUTOLOAD ');
    #$self->ps1('$AUTOLOAD ');
@@ -51,8 +51,13 @@ sub AUTOLOAD {
    return 1;
 }
 
-sub get_log {
-   return $Bricks->{'core::context'}->log;
+{
+   no warnings;
+
+   # We rewrite the log accessor
+   *log = sub {
+      return $Bricks->{'core::context'}->log;
+   };
 }
 
 #
@@ -73,7 +78,7 @@ sub init {
 
    if (-f $rc) {
       open(my $in, '<', $rc)
-         or $self->get_log->fatal("ext::shell: init: can't open rc file [$rc]: $!");
+         or $self->log->fatal("ext::shell: init: can't open rc file [$rc]: $!");
       while (defined(my $line = <$in>)) {
          next if ($line =~ /^\s*#/);  # Skip comments
          chomp($line);
@@ -90,13 +95,13 @@ sub init {
       if (-f $history) {
          #print "DEBUG: ReadHistory\n";
          $self->term->ReadHistory($history)
-            or $self->get_log->fatal("ext::shell: init: can't read history file [$history]: $!");
+            or $self->log->fatal("ext::shell: init: can't read history file [$history]: $!");
       }
    }
 
    # XXX: not used now
-   #my $available = $context->get_available_bricks
-      #or $self->get_log->fatal("ext::shell: init: unable to get available bricks");
+   #my $available = $context->get_available
+      #or $self->log->fatal("ext::shell: init: unable to get available bricks");
    #for my $a (keys %$available) {
       #$self->add_handlers("run_$a");
    #}
@@ -172,7 +177,7 @@ sub ps_lookup_var {
          $var =~ s/\$${1}/$res/;
       }
       else {
-         $self->get_log->debug("ext::shell: ps_lookup_var: unable to lookup variable [$var]");
+         $self->log->debug("ext::shell: ps_lookup_var: unable to lookup variable [$var]");
          last;
       }
    }
@@ -194,7 +199,7 @@ sub ps_lookup_vars_in_line {
                $line =~ s/\$${1}/$res/;
             }
             else {
-               $self->get_log->debug("ext::shell: ps_lookup_vars_in_line: unable to lookup variable [$a]");
+               $self->log->debug("ext::shell: ps_lookup_vars_in_line: unable to lookup variable [$a]");
                last;
             }
          }
@@ -253,7 +258,7 @@ sub ps_get_commands {
 
    my $context = $Bricks->{'core::context'};
 
-   my $commands = $context->get_brick_attribute('shell::meby', 'commands');
+   my $commands = $context->get('shell::meby', 'commands');
    if (! defined($commands)) {
       return [];
    }
@@ -318,7 +323,7 @@ sub run_write_history {
    if ($self->term->can('WriteHistory') && defined($self->meby_history)) {
       my $r = $self->term->WriteHistory($self->meby_history);
       if (! defined($r)) {
-         $self->get_log->error("ext::shell: write_history: unable to write history file");
+         $self->log->error("ext::shell: write_history: unable to write history file");
          return;
       }
       #print "DEBUG: WriteHistory ok\n";
@@ -370,7 +375,7 @@ sub run_system {
       eval("use Proc::Simple");
       if ($@) {
          chomp($@);
-         $self->get_log->fatal("ext::shell: can't load Proc::Simple module: $@");
+         $self->log->fatal("ext::shell: can't load Proc::Simple module: $@");
          return;
       }
 
@@ -456,7 +461,7 @@ sub run_save {
    my $context = $Bricks->{'core::context'};
 
    if (! defined($file)) {
-      $self->get_log->error("ext::shell: save: pass \$data and \$file parameters");
+      $self->log->error("ext::shell: save: pass \$data and \$file parameters");
       return;
    }
 
@@ -464,7 +469,7 @@ sub run_save {
 
    my $r = open(my $out, '>', $file);
    if (!defined($r)) {
-      $self->get_log->error("ext::shell: save: unable to open file [$file] for writing: $!");
+      $self->log->error("ext::shell: save: unable to open file [$file] for writing: $!");
       return;
    }
    print $out $data;
@@ -481,7 +486,7 @@ sub run_cd {
 
    if (defined($dir)) {
       if (! -d $dir) {
-         $self->get_log->error("ext::shell: cd: $dir: can't cd to this");
+         $self->log->error("ext::shell: cd: $dir: can't cd to this");
          return;
       }
       chdir($dir);
@@ -513,7 +518,7 @@ sub run_doc {
    my $context = $Bricks->{'core::context'};
 
    if (! defined($args[0])) {
-      $self->get_log->error("ext::shell: doc: you have to provide a module as an argument");
+      $self->log->error("ext::shell: doc: you have to provide a module as an argument");
       return;
    }
 
@@ -529,7 +534,7 @@ sub run_sub {
    my $context = $Bricks->{'core::context'};
 
    if (! defined($args[0])) {
-      $self->get_log->error("ext::shell: sub: you have to provide a function as an argument");
+      $self->log->error("ext::shell: sub: you have to provide a function as an argument");
       return;
    }
 
@@ -545,7 +550,7 @@ sub run_src {
    my $context = $Bricks->{'core::context'};
 
    if (! defined($args[0])) {
-      $self->get_log->error("ext::shell: src: you have to provide a module as an argument");
+      $self->log->error("ext::shell: src: you have to provide a module as an argument");
       return;
    }
 
@@ -561,7 +566,7 @@ sub run_faq {
    my $context = $Bricks->{'core::context'};
 
    if (! defined($args[0])) {
-      $self->get_log->error("ext::shell: faq: you have to provide a question as an argument");
+      $self->log->error("ext::shell: faq: you have to provide a question as an argument");
       return;
    }
 
@@ -586,7 +591,7 @@ sub run_pl {
 
    my $r = $context->do($line, $self->echo);
    if (! defined($r)) {
-      $self->get_log->error("ext::shell: pl: unable to execute Code [$line]");
+      $self->log->error("ext::shell: pl: unable to execute Code [$line]");
       return;
    }
 
@@ -617,7 +622,7 @@ sub run_reload {
 
    my $reloaded = Module::Reload->check;
    if ($reloaded) {
-      $self->get_log->info("ext::shell: reload: some modules were reloaded");
+      $self->log->info("ext::shell: reload: some modules were reloaded");
    }
 
    return 1;
@@ -629,9 +634,9 @@ sub run_load {
 
    my $context = $Bricks->{'core::context'};
 
-   my $r = $context->load_brick($brick) or return;
+   my $r = $context->load($brick) or return;
    if ($r) {
-      $self->get_log->verbose("ext::shell: load: Brick [$brick] loaded");
+      $self->log->verbose("ext::shell: load: Brick [$brick] loaded");
    }
 
    return $r;
@@ -642,7 +647,7 @@ sub run_show {
 
    my $context = $Bricks->{'core::context'};
 
-   my $loaded = $context->get_status_bricks;
+   my $loaded = $context->get_status;
 
    print "Available bricks:\n";
 
@@ -678,7 +683,7 @@ sub run_set {
 
    # set is called without args, we display everything
    if (! defined($brick)) {
-      my $attributes = $context->get_set_attributes or return;
+      my $attributes = $context->get or return;
 
       print "Set attribute(s):\n";
 
@@ -696,11 +701,11 @@ sub run_set {
    }
    # set is called with only a brick as an arg, we show its attributes
    elsif (defined($brick) && ! defined($attribute)) {
-      my $available = $context->get_available_bricks or return;
-      my $attributes = $context->get_set_attributes or return;
+      my $available = $context->get_available or return;
+      my $attributes = $context->get or return;
 
       if (! exists($available->{$brick})) {
-         $self->get_log->error("ext::shell: set: Brick [$brick] does not exist");
+         $self->log->error("ext::shell: set: Brick [$brick] does not exist");
          return;
       }
 
@@ -718,16 +723,16 @@ sub run_set {
    }
    # set is called with is a brick and a key without value
    elsif (defined($brick) && defined($attribute) && ! defined($value)) {
-      my $available = $context->get_available_bricks or return;
-      my $attributes = $context->get_set_attributes or return;
+      my $available = $context->get_available or return;
+      my $attributes = $context->get or return;
 
       if (! exists($available->{$brick})) {
-         $self->get_log->error("ext::shell: set: Brick [$brick] does not exist");
+         $self->log->error("ext::shell: set: Brick [$brick] does not exist");
          return;
       }
 
       if (! exists($attributes->{$brick}->{$attribute})) {
-         $self->get_log->error("ext::shell: set: Attribute [$attribute] does not exist for Brick [$brick]");
+         $self->log->error("ext::shell: set: Attribute [$attribute] does not exist for Brick [$brick]");
          return;
       }
 
@@ -739,9 +744,9 @@ sub run_set {
    }
    # set is called with all args (brick, key, value)
    else {
-      my $r = $context->set_brick_attribute($brick, $attribute, $value);
+      my $r = $context->set($brick, $attribute, $value);
       if (! defined($r)) {
-         $self->get_log->error("ext::shell: set: unable to set Brick [$brick] Attribute [$attribute] to Value [$value]");
+         $self->log->error("ext::shell: set: unable to set Brick [$brick] Attribute [$attribute] to Value [$value]");
          return;
       }
 
@@ -756,15 +761,15 @@ sub run_run {
    my ($brick, $command, @args) = @_;
 
    if (! defined($brick) || ! defined($command)) {
-      $self->get_log->info("run [brick] [command] <[arg1 arg2 .. argN]>");
+      $self->log->info("run [brick] [command] <[arg1 arg2 .. argN]>");
       return;
    }
 
    my $context = $Bricks->{'core::context'};
 
-   my $r = $context->execute_brick_command($brick, $command, @args);
+   my $r = $context->run($brick, $command, @args);
    if (! defined($r)) {
-      $self->get_log->error("ext::shell: run: unable to execute Brick [$brick] Command [$command]");
+      $self->log->error("ext::shell: run: unable to execute Command [$command] for Brick [$brick]");
       return;
    }
 
@@ -789,12 +794,12 @@ sub run_script {
    my ($script) = @_;
 
    if (! defined($script)) {
-      $self->get_log->error("ext::shell: script: you must provide a script to run");
+      $self->log->error("ext::shell: script: you must provide a script to run");
       return;
    }
 
    if (! -f $script) {
-      $self->get_log->error("ext::shell: script: script [$script] is not a file");
+      $self->log->error("ext::shell: script: script [$script] is not a file");
       return;
    }
 
@@ -832,12 +837,12 @@ sub catch_run {
    my $commands = $self->ps_get_commands;
    for my $command (@$commands) {
       if ($args[0] eq $command) {
-         $self->get_log->debug("catch_run: command [$command]");
+         $self->log->debug("catch_run: command [$command]");
          return $self->run_command(@args);
       }
    }
 
-   my $available = $context->get_available_bricks or return;
+   my $available = $context->get_available or return;
    if (defined($available)) {
       for my $brick (keys %$available) {
          if ($args[0] eq $brick) {
@@ -866,7 +871,7 @@ sub _ioa_dirsfiles {
    };
    if ($@) {
       chomp($@);
-      $self->get_log->error("ext::shell: $dir: dirs: $@");
+      $self->log->error("ext::shell: $dir: dirs: $@");
       return [], [];
    }
 
@@ -876,7 +881,7 @@ sub _ioa_dirsfiles {
    };
    if ($@) {
       chomp($@);
-      $self->get_log->error("ext::shell: $dir: files: $@");
+      $self->log->error("ext::shell: $dir: files: $@");
       return [], [];
    }
 
@@ -908,9 +913,9 @@ sub comp_run {
 
    my $context = $Bricks->{'core::context'};
 
-   my $available = $context->get_available_bricks or return;
+   my $available = $context->get_available or return;
    if (! defined($available)) {
-      $self->get_log->warning("ext::shell: comp_run: can't fetch available Bricks");
+      $self->log->warning("ext::shell: comp_run: can't fetch available Bricks");
       return ();
    }
 
@@ -945,7 +950,7 @@ sub comp_doc {
       #print "[DEBUG] inc[$inc]\n";
       my $r = opendir(my $dir, $inc);
       if (! defined($r)) {
-         $self->get_log->error("ext::shell: comp_doc: opendir: $dir: $!");
+         $self->log->error("ext::shell: comp_doc: opendir: $dir: $!");
          next;
       }
 

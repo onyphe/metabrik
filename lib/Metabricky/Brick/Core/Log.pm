@@ -5,10 +5,16 @@ package Metabricky::Brick::Core::Log;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Ext::Log Metabricky::Brick);
+use base qw(Metabricky::Brick Metabricky::Ext::Log);
 __PACKAGE__->cgBuildIndices;
 
 use Term::ANSIColor qw(:constants);
+
+sub default_values {
+   return {
+      level => 1,
+   };
+}
 
 sub warning {
    my $self = shift;

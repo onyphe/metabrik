@@ -88,7 +88,11 @@ sub disconnect {
       die("run remote::ssh2 connect\n");
    }
 
-   return $ssh2->disconnect;
+   my $r = $ssh2->disconnect;
+
+   $self->ssh2(undef);
+
+   return $r;
 }
 
 sub require_set_cmd { qw() }

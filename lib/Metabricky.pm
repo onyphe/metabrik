@@ -5,9 +5,9 @@ package Metabricky;
 use strict;
 use warnings;
 
-our $VERSION = '0.60';
+our $VERSION = '0.70';
 
-use base qw(Class::Gomor::Array);
+use base qw(Class::Gomor::Hash);
 
 __PACKAGE__->cgBuildIndices;
 
