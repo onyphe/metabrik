@@ -1,7 +1,6 @@
 ### TODO
 
 Prio:
--> $context variable when entering Perl code within shell::meby?
 -> completion: for Commands
 => example: main::system::os, obssi::remote::serenade
 => force repository main?
@@ -13,14 +12,11 @@ Prio:
 -> use return $self->log->info() to display help when a command is not valid (like `run' in the shell)
 -> Brick API: name() => returns 'core::global', category() => returns 'core', repository()
 => Repository (main) / category / name
--> run [brick]
-=> display possible commands (like help)
 => run sets $_ to useful value, but can display useful result to user
 -> shell::meby: require_bricks { 'core::context' => 1 }
 -> shell::meby: modify run_set and add run_get to use core::context:get
 => huge cleanup for shell::meby TODO
 => move reload() from core::context to shell::meby
--> todo: redefine log() in core::context as in shell::meby with echo
 
 Bricks API: See remote::ssh2
 -> require_arg() to check for a method invocation
@@ -91,6 +87,7 @@ Design rules:
 9. Reuse CPAN modules as much as possible
 10. Run command once, analyze at will
 11. Commands should be non-blocking
+12. Commands to return only base scalars (scalar, hashref, arrayref)
 
 -> Within meby Shell, bricks do not print anything by default, except if shell::meby echo is set to true.
 => $_ is written with the result.

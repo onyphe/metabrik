@@ -100,7 +100,7 @@ sub init {
    }
 
    # XXX: not used now
-   #my $available = $context->get_available
+   #my $available = $context->available
       #or $self->log->fatal("ext::shell: init: unable to get available bricks");
    #for my $a (keys %$available) {
       #$self->add_handlers("run_$a");
@@ -647,14 +647,14 @@ sub run_show {
 
    my $context = $Bricks->{'core::context'};
 
-   my $loaded = $context->get_status;
+   my $status = $context->status;
 
    print "Available bricks:\n";
 
    my $total = 0;
    my $count = 0;
    print "   Loaded:\n";
-   for my $loaded (@{$loaded->{loaded}}) {
+   for my $loaded (@{$status->{loaded}}) {
       print "      $loaded\n";
       $count++;
       $total++;
@@ -663,7 +663,7 @@ sub run_show {
 
    $count = 0;
    print "   Not loaded:\n";
-   for my $notloaded (@{$loaded->{notloaded}}) {
+   for my $notloaded (@{$status->{notloaded}}) {
       print "      $notloaded\n";
       $count++;
       $total++;
@@ -701,7 +701,7 @@ sub run_set {
    }
    # set is called with only a brick as an arg, we show its attributes
    elsif (defined($brick) && ! defined($attribute)) {
-      my $available = $context->get_available or return;
+      my $available = $context->available or return;
       my $attributes = $context->get or return;
 
       if (! exists($available->{$brick})) {
@@ -723,7 +723,7 @@ sub run_set {
    }
    # set is called with is a brick and a key without value
    elsif (defined($brick) && defined($attribute) && ! defined($value)) {
-      my $available = $context->get_available or return;
+      my $available = $context->available or return;
       my $attributes = $context->get or return;
 
       if (! exists($available->{$brick})) {
@@ -842,7 +842,7 @@ sub catch_run {
       }
    }
 
-   my $available = $context->get_available or return;
+   my $available = $context->available or return;
    if (defined($available)) {
       for my $brick (keys %$available) {
          if ($args[0] eq $brick) {
@@ -913,7 +913,7 @@ sub comp_run {
 
    my $context = $Bricks->{'core::context'};
 
-   my $available = $context->get_available or return;
+   my $available = $context->available or return;
    if (! defined($available)) {
       $self->log->warning("ext::shell: comp_run: can't fetch available Bricks");
       return ();

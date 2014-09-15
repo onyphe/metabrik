@@ -58,11 +58,11 @@ sub help {
    print "run core::context get [ <brick> ] [ <attribute> ]\n";
    print "run core::context run <brick> <command> [ <arg1 arg2 .. argN> ]\n";
    print "\n";
-   print "run core::context get_loaded\n"; # XXX: loaded => use accessor
+   print "run core::context loaded\n";
    print "run core::context find_available\n";
-   print "run core::context set_available\n"; # XXX: update_available
-   print "run core::context get_available\n"; # XXX: available => use accessor
-   print "run core::context get_status\n"; # XXX: status
+   print "run core::context update_available\n";
+   print "run core::context available\n";
+   print "run core::context status\n";
    print "\n";
    print "run core::context do <perl_code>\n";
    print "run core::context call <perl_sub>\n";
@@ -116,7 +116,7 @@ sub init {
       @_,
    ) or return 1; # Init already done
 
-   my $r = $self->set_available;
+   my $r = $self->update_available;
    if (! defined($r)) {
       return $self->log->fatal("core::context: init: unable to init Brick [core::context]");
    }
@@ -203,7 +203,7 @@ sub find_available {
    return \%h;
 }
 
-sub set_available {
+sub update_available {
    my $self = shift;
 
    my $h = $self->find_available;
@@ -243,7 +243,7 @@ sub load {
 
    $self->log->debug("module[$module]");
 
-   my $loaded = $self->get_loaded or return;
+   my $loaded = $self->loaded or return;
    if (exists($loaded->{$brick})) {
       return $self->log->error("Brick [$brick] already loaded");
    }
@@ -276,7 +276,7 @@ sub load {
    return $r;
 }
 
-sub get_available {
+sub available {
    my $self = shift;
 
    my $r = $self->call(sub {
@@ -289,7 +289,7 @@ sub get_available {
    return $r;
 }
 
-sub get_loaded {
+sub loaded {
    my $self = shift;
 
    my $r = $self->call(sub {
@@ -302,11 +302,11 @@ sub get_loaded {
    return $r;
 }
 
-sub get_status {
+sub status {
    my $self = shift;
 
-   my $available = $self->get_available or return;
-   my $loaded = $self->get_loaded or return;
+   my $available = $self->available or return;
+   my $loaded = $self->loaded or return;
 
    my @loaded = ();
    my @notloaded = ();
