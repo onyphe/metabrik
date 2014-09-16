@@ -70,6 +70,22 @@ use Metabricky::Ext::Shell;
 
       return $self->{commands};
    };
+
+   *debug = sub {
+      my $self = shift;
+      my ($value) = @_;
+
+      if (defined($value)) {
+         # set shell debug attribute only when is has been populated
+         if (defined($self->shell)) {
+            return $self->shell->debug($self->{debug} = $value);
+         }
+
+         return $self->{debug} = $value;
+      }
+
+      return $self->{debug};
+   };
 }
 
 sub help {
@@ -102,6 +118,7 @@ sub init {
    $shell->echo($self->echo);
    $shell->newline($self->newline);
    $shell->commands($self->commands);
+   $shell->debug($self->debug);
 
    $self->shell($shell);
 

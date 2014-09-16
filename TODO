@@ -2,6 +2,8 @@
 
 Prio:
 -> completion: for Commands
+=> Metabricky::Brick::get_commands and get_attributes: rename API?
+-> add repository capacity
 => example: main::system::os, obssi::remote::serenade
 => force repository main?
 -> rename: core::template to example::template
@@ -105,6 +107,7 @@ Usage rules:
 Vocabulary:
 - The Shell has builtins (load, set, run)
 - The Shell loads Bricks
+- You enter Words on shell CLI (run core::context get, 3 words)
 - meby is the Metabricky shell
 - A Brick has Commands (not methods)
 - A Brick has Attributes (you can set using `set' builtin)

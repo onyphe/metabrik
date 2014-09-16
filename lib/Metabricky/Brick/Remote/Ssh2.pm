@@ -31,6 +31,7 @@ sub help {
    print "run remote::ssh2 connect\n";
    print "run remote::ssh2 cat <file>\n";
    print "run remote::ssh2 cmd <command>\n";
+   print "run remote::ssh2 readline\n";
    print "run remote::ssh2 listfiles <glob>\n";
    print "run remote::ssh2 disconnect\n";
 }
@@ -43,7 +44,7 @@ sub connect {
    my $self = shift;
 
    if (defined($self->ssh2)) {
-      die("we are already connected\n");
+      return $self->log->verbose("we are already connected");
    }
 
    if (! defined($self->host)
@@ -56,7 +57,7 @@ sub connect {
    my $ssh2 = Net::SSH2->new;
    my $ret = $ssh2->connect($self->host);
    if (! $ret) {
-      die("can't connect via SSH2: $!\n");
+      return $self->log->error("can't connect via SSH2: $!");
    }
 
    $ret = $ssh2->auth(
@@ -65,7 +66,7 @@ sub connect {
       privatekey => $self->privatekey,
    );
    if (! $ret) {
-      die("can't authenticate via SSH2: $!\n");
+      return $self->log->error("can't authenticate via SSH2: $!");
    }
 
    if ($self->debug) {
@@ -85,7 +86,7 @@ sub disconnect {
    my $ssh2 = $self->ssh2;
 
    if (! defined($ssh2)) {
-      die("run remote::ssh2 connect\n");
+      return $self->log->info("run remote::ssh2 connect");
    }
 
    my $r = $ssh2->disconnect;
@@ -106,22 +107,36 @@ sub cmd {
    my $ssh2 = $self->ssh2;
 
    if (! defined($ssh2)) {
-      die("run remote::ssh2 connect\n");
+      return $self->log->info("run remote::ssh2 connect");
    }
 
    if (! defined($cmd)) {
-      die("run remote::ssh2 cmd <cmd>\n");
+      return $self->log->info("run remote::ssh2 cmd <cmd>");
    }
 
    print "DEBUG: cmd[$cmd]\n" if $self->debug;
 
    my $chan = $ssh2->channel;
-   $chan->exec($cmd) or die("can't execute command [$cmd]: $!\n");
+   $chan->exec($cmd) or return $self->log->error("can't execute command [$cmd]: $!");
 
    #my @lines = <$chan>;
    #print "@lines\n";
 
    return $chan;
+}
+
+sub readline {
+   my $self = shift;
+
+   my $ssh2 = $self->ssh2;
+
+   if (! defined($ssh2)) {
+      return $self->log->info("run remote::ssh2 connect");
+   }
+
+   my $channel = $ssh2->channel;
+
+   return <$channel>;
 }
 
 sub listfiles {
@@ -143,38 +158,6 @@ sub listfiles {
    return \@files;
 }
 
-sub test {
-   my $self = shift;
-   my ($cmd) = @_;
-
-   my $ssh2 = Net::SSH2->new;
-   my $ret = $ssh2->connect($self->host);
-   if (! $ret) {
-      die("can't connect via SSH2: $!\n");
-   }
-
-   $ret = $ssh2->auth(
-      username => $self->username,
-      publickey => $self->publickey,
-      privatekey => $self->privatekey,
-   );
-   if (! $ret) {
-      die("can't authenticate via SSH2: $!\n");
-   }
-
-   if ($self->debug) {
-      print "DEBUG: ssh2 connected to [".$self->host."]\n";
-   }
-
-   my $chan = $ssh2->channel or die("channel: $!");
-   $chan->exec($cmd) or die("can't execute command [$cmd]: $!\n");
-
-   #my $line = <$chan>;
-   #print "$line\n";
-
-   return $chan;
-}
-
 sub require_set_cat { qw() }
 sub require_arg_cat { qw(file) }
 sub require_cmd_cat { qw(connect) }
@@ -184,7 +167,7 @@ sub cat {
    my ($file) = @_;
 
    if (! defined($file)) {
-      die("you must provide a file as an argument to 'run remote::ssh2 cat'\n");
+      return $self->log->info("run remote::ssh2 cat <file>");
    }
 
    return $self->cmd('cat '.$file);

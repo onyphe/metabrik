@@ -37,6 +37,8 @@ my $__ctx = {};
 
       my $lp = $self->_lp;
 
+      my $save = $@;
+
       my $r;
       eval {
          $r = $lp->call(sub {
@@ -47,6 +49,8 @@ my $__ctx = {};
          chomp($@);
          die("[FATAL] core::context: log: $@\n");
       }
+
+      $@ = $save;
 
       return $r;
    };

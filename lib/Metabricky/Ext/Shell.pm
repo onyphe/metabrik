@@ -19,6 +19,7 @@ our @AS = qw(
    echo
    newline
    commands
+   debug
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
@@ -909,20 +910,49 @@ sub comp_run {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
-   #print "[DEBUG] word[$word] line[$line] start[$start]\n";
-
    my $context = $Bricks->{'core::context'};
 
-   my $available = $context->available or return;
-   if (! defined($available)) {
-      $self->log->warning("ext::shell: comp_run: can't fetch available Bricks");
-      return ();
+   my @words = split(/\s+/, $line);
+   my $count = scalar(@words);
+
+   if ($self->debug) {
+      $self->log->debug("word[$word] line[$line] start[$start] count[$count]");
    }
 
+   my $shell_command = defined($words[0]) ? $words[0] : undef;
+   my $brick = defined($words[1]) ? $words[1] : undef;
+   my $brick_command = defined($words[2]) ? $words[2] : undef;
+
    my @comp = ();
-   for my $a (keys %$available) {
-      #print "[$a] [$word]\n";
-      push @comp, $a if $a =~ /^$word/;
+
+   # Two words or less entered on command line, we check the second one for completion
+   if ($count == 1 || $count <= 2 && length($word) > 0) {
+      my $available = $context->available or return;
+      if (! defined($available)) {
+         $self->log->warning("ext::shell: comp_run: can't fetch available Bricks");
+         return ();
+      }
+
+      for my $a (keys %$available) {
+         #if ($self->debug) {
+            #$self->log->debug("[$a] [$word]");
+         #}
+         push @comp, $a if $a =~ /^$word/;
+      }
+   }
+   # Second word found or third word started, we search against available Brick Commands
+   elsif ($count == 2 && length($word) == 0) {
+      my $commands = $Bricks->{$brick}->get_commands;
+      push @comp, @$commands;
+   }
+   elsif ($count == 3) {
+      my $commands = $Bricks->{$brick}->get_commands;
+
+      for my $a (@$commands) {
+         if ($a =~ /^$word/) {
+            push @comp, $a; 
+         }
+      }
    }
 
    return @comp;
