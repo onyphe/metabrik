@@ -19,7 +19,6 @@ __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 use Net::Frame::Dump::Offline;
-use Net::Frame::Simple;
 
 sub help {
    print "set remote::tcpdump host <ip|hostname>\n";
@@ -129,13 +128,7 @@ sub next {
    }
 
    if (my $h = $dump->next) {
-      my $f = Net::Frame::Simple->new(
-         raw        => $h->{raw},
-         firstLayer => $h->{firstLayer},
-         timestamp  => $h->{timestamp},
-      );
-
-      return $f;
+      return $h;
    }
 
    return;
@@ -166,12 +159,7 @@ sub nextall {
 
    my @next = ();
    while (my $h = $dump->next) {
-      my $f = Net::Frame::Simple->new(
-         raw        => $h->{raw},
-         firstLayer => $h->{firstLayer},
-         timestamp  => $h->{timestamp},
-      );
-      push @next, $f;
+      push @next, $h;
    }
 
    return \@next;
