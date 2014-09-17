@@ -13,10 +13,13 @@ our @AS = qw(
    attribute1
    attribute2
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-#use Template::Some::Module;
+sub require_modules {
+   return [
+      'Template::Some::Module',
+   ];
+}
 
 sub help {
    print "set core::template attribute1 <value>\n";
