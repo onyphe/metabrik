@@ -4,6 +4,7 @@ Prio:
 -> alias support. example: alias ls "!ls -lF"
 
 -> all shell commands writes $_, $!, $? and $@ (including !, which is an alias)
+=> version() does not comply, check every shell command
 -> $_ is a string, @_ is strings splitted by "\n"
 => example: !w returns result in $_, and lines in @_
 => %_ => line numbered avec arrayref for each word
