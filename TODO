@@ -1,48 +1,31 @@
 ### TODO
 
 Prio:
--> use line_args() and line_parsed() where needed in ext::shell completion functions
--> make shell::meby Brick to depend on the fewest module as possible
+-> alias support. example: alias ls "!ls -lF"
+
+-> all shell commands writes $_, $!, $? and $@ (including !, which is an alias)
 -> $_ is a string, @_ is strings splitted by "\n"
 => example: !w returns result in $_, and lines in @_
 => %_ => line numbered avec arrayref for each word
--> Brick: help to auto-populate with get_attributes and get_commands and require_arg
--> update() function to autoupdate
--> rename show to search?
--> fetch default_values() to write set attributes on init() or load()?
-=> this could overwhelm set attributes when entering set()
--> all shell commands writes $_, $!, $? and $@ (including !, which is an alias)
--> replace show by loaded?
+
+-> use line_args() and line_parsed() where needed in ext::shell completion functions
+-> make shell::meby Brick to depend on the fewest module as possible
+
 -> add support for get instead of set to gather attributes
--> alias support. example: alias ls "!ls -lF"
--> remove newline(), no need thanks to echo()
--> use \ to enter multi-lines
--> completion: for Commands
-=> Metabricky::Brick::get_commands and get_attributes: rename API?
 -> add repository capacity
 => example: main::system::os, obssi::remote::serenade
 => force repository main?
--> rename: core::template to example::template
--> Show Brick Attribute even when not set
--> Rename system to command, renamed commands attribute to command
--> Log: to prefix messages with "category::brick: command:" (for errors only?)
--> eval() required module for use in a Brick
--> use return $self->log->info() to display help when a command is not valid (like `run' in the shell)
--> Brick API: name() => returns 'core::global', category() => returns 'core', repository()
-=> Repository (main) / category / name
-=> run sets $_ to useful value, but can display useful result to user
--> shell::meby: require_bricks { 'core::context' => 1 }
 -> shell::meby: modify run_set and add run_get to use core::context:get
 => huge cleanup for shell::meby TODO
-=> move reload() from core::context to shell::meby
+
+Future:
+-> update() function to autoupdate
+-> use page() and pager_internal() from Term::Shell
+-> shell::meby: require_bricks { 'core::context' => 1 }
 
 Bricks API: See remote::ssh2
 -> require_arg() to check for a method invocation
 -> require_called_first() or require_commands() to check for a previous method to be called first
--> require_modules() to eval() required modules for bricks.
-
-Rename bricks methods to use run_. Modify Metabricky::Brick to work like Term::Shell to auto discover methods.
-use page() and pager_internal() from Term::Shell
 
 Wwwutil:
 -> Interrogates Hurricane Electric stuff: http://bgp.he.net/ip/130.193.27.21
@@ -130,6 +113,8 @@ Vocabulary:
 - A Brick has Attributes (you can set using `set' builtin)
 - A Brick Command may have Arguments
 - A Brick is attached to a Category
+- A Brick has a Category
+- A Brick may have a Repository
 - Brickification: process of turning a process/software into a Meby Brick
 => Rename to use that in all code
 - Meby shell can execute Code (Perl code)

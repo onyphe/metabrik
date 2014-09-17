@@ -6,7 +6,6 @@ use strict;
 use warnings;
 
 use base qw(Metabricky::Brick Metabricky::Ext::Log);
-__PACKAGE__->cgBuildIndices;
 
 use Term::ANSIColor qw(:constants);
 
@@ -47,10 +46,8 @@ sub info {
    my $self = shift;
    my ($msg) = @_;
    return unless $self->level > 0;
-   my ($package) = lc(caller());
-   $package =~ s/^metabricky::brick:://;
    print GREEN, "[*] ", RESET;
-   print("$package: $msg\n");
+   print("$msg\n");
    return 1;
 }
 

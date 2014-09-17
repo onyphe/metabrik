@@ -12,18 +12,22 @@ use base qw(Metabricky::Brick);
 our @AS = qw(
    file
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Metabricky::Brick::Crypto::Aes;
-use Metabricky::Brick::File::Slurp;
+sub require_modules {
+   return [
+      'Metabricky::Brick::Crypto::Aes',
+      'Metabricky::Brick::File::Slurp',
+   ];
+}
 
 sub help {
-   print "set database::keystore file <file>\n";
-   print "\n";
-   print "run database::keystore search <pattern>\n";
-   #print "run database::keystore add <data>\n";
-   #print "run database::keystore remove <data>\n";
+   return [
+      'set database::keystore file <file>',
+      'run database::keystore search <pattern>',
+   ];
+      #'run database::keystore add <data>',
+      #'run database::keystore remove <data>',
 }
 
 sub search {
@@ -31,11 +35,11 @@ sub search {
    my ($pattern) = @_;
 
    if (! defined($self->file)) {
-      die("set database::keystore file <file>\n");
+      return $self->log->info("set database::keystore file <file>");
    }
 
    if (! defined($pattern)) {
-      die("run database::keystore search <pattern>\n");
+      return $self->log->info("run database::keystore search <pattern>");
    }
 
    my $slurp = Metabricky::Brick::File::Slurp->new(
@@ -43,13 +47,13 @@ sub search {
       bricks => $self->bricks,
    );
 
-   my $data = $slurp->text or die("can't slurp");
+   my $data = $slurp->text or return $self->log->error("can't slurp");
 
    my $aes = Metabricky::Brick::Crypto::Aes->new(
       bricks => $self->bricks,
    );
 
-   my $decrypted = $aes->decrypt($data) or die("can't decrypt");
+   my $decrypted = $aes->decrypt($data) or return $self->log->error("can't decrypt");
 
    my @lines = split(/\n/, $decrypted);
    for (@lines) {

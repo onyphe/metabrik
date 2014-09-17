@@ -13,18 +13,18 @@ our @AS = qw(
    file
    xml
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Metabricky::Brick::Database::Sqlite;
-use Metabricky::Brick::File::Fetch;
-use Metabricky::Brick::File::Slurp;
-use Metabricky::Brick::File::Zip;
+sub require_modules {
+   return [ 'Metabricky::Brick::Database::Sqlite', 'Metabricky::Brick::File::Fetch', 'Metabricky::Brick::File::Slurp', 'Metabricky::Brick::File::Zip' ];
+}
 
 sub help {
-   print "run database::cwe update\n";
-   print "run database::cwe load\n";
-   print "run database::cwe search <pattern>\n";
+   return [
+      'run database::cwe update',
+      'run database::cwe load',
+      'run database::cwe search <pattern>',
+   ];
 }
 
 sub default_values {
@@ -45,7 +45,7 @@ sub update {
    );
 
    $fetch->get('http://cwe.mitre.org/data/xml/views/2000.xml.zip')
-      or die("fetch::get\n");
+      or return $self->log->error("can't fetch file");
 
    my $zip = Metabricky::Brick::File::Zip->new(
       input => "$datadir/2000.xml.zip",
@@ -53,7 +53,7 @@ sub update {
       bricks => $self->bricks,
    );
 
-   $zip->uncompress or die("zip::uncompress");
+   $zip->uncompress or return $self->log->error("can't unzip file");
 
    return 1;
 }
@@ -64,7 +64,7 @@ sub load {
    my $file = $self->file;
 
    if (! -f $file) {
-      die("run database::cwe update\n");
+      return $self->log->info("run database::cwe update");
    }
 
    my $slurp = Metabricky::Brick::File::Slurp->new(
@@ -153,12 +153,12 @@ sub search {
    my $self = shift;
    my ($pattern) = @_;
 
-   if (!defined($self->xml)) {
-      die("run database::cwe load\n");
+   if (! defined($self->xml)) {
+      return $self->log->info("run database::cwe load");
    }
 
-   if (!defined($pattern)) {
-      die("run database::cwe search <pattern>\n");
+   if (! defined($pattern)) {
+      return $self->log->info("run database::cwe search <pattern>");
    }
 
    my $xml = $self->xml;

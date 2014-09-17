@@ -12,30 +12,34 @@ use base qw(Metabricky::Brick);
 our @AS = qw(
    file
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use File::Slurp;
-use JSON::XS;
-use XML::Simple;
+sub require_modules {
+   return [
+      'File::Slurp',
+      'JSON::XS',
+      'XML::Simple',
+   ];
+}
 
 sub help {
-   print "set slurp file <file>\n";
-   print "\n";
-   print "run file::slurp text\n";
-   print "run file::slurp json\n";
-   print "run file::slurp xml\n";
+   return [
+      'set slurp file <file>',
+      'run file::slurp text',
+      'run file::slurp json',
+      'run file::slurp xml',
+   ];
 }
 
 sub text {
    my $self = shift;
 
    if (! defined($self->file)) {
-      die("set file::slurp file <file>\n");
+      return $self->log->info("set file::slurp file <file>");
    }
 
    my $text = read_file($self->file)
-      or die("nothing to read from file [".$self->file."]\n");
+      or return $self->log->verbose("nothing to read from file [".$self->file."]");
 
    return $text;
 }
@@ -44,7 +48,7 @@ sub json {
    my $self = shift;
 
    if (! defined($self->file)) {
-      die("set file::slurp file <file>\n");
+      return $self->log->info("set file::slurp file <file>");
    }
 
    return decode_json($self->text);
@@ -54,7 +58,7 @@ sub xml {
    my $self = shift;
 
    if (! defined($self->file)) {
-      die("set file::slurp file <file>\n");
+      return $self->log->info("set file::slurp file <file>");
    }
 
    my $xs = XML::Simple->new;

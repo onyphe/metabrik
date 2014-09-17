@@ -13,8 +13,6 @@ our @AS = qw(
    bricks
    log
 );
-
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 sub new {
@@ -24,9 +22,18 @@ sub new {
       @_,
    );
 
-   my $href = $self->default_values;
-   for my $k (keys %$href) {
-      $self->$k($href->{$k});
+   my $default_values = $self->default_values;
+   for my $k (keys %$default_values) {
+      $self->$k($default_values->{$k});
+   }
+
+   my $modules = $self->require_modules;
+   for my $module (@$modules) {
+      eval("use $module");
+      if ($@) {
+         chomp($@);
+         return $self->log->error("new: you have to install Module [$module]");
+      }
    }
 
    return $self;
@@ -34,6 +41,55 @@ sub new {
 
 sub default_values {
    return {};
+}
+
+sub name {
+   my $self = shift;
+
+   my $module = lc(ref($self));
+   $module =~ s/^metabricky::brick:://;
+
+   return $module;
+}
+
+sub repository {
+   my $self = shift;
+
+   my $name = $self->name;
+
+   my @toks = split('::', $name);
+
+   # No repository defined
+   if (@toks == 2) {
+      return 'main';
+   }
+   elsif (@toks > 2) {
+      my ($repository) = $name =~ /^(.*?)::.*/;
+      return $repository;
+   }
+
+   return $self->log->fatal("repository: no Repository found");
+}
+
+sub category {
+   my $self = shift;
+
+   my $name = $self->name;
+
+   my @toks = split('::', $name);
+
+   # No repository defined
+   if (@toks == 2) {
+      my ($category) = $name =~ /^(.*?)::.*/;
+      return $category;
+   }
+   elsif (@toks > 2) {
+      my ($category) = $name =~ /^.*?::(.*?)::.*/;
+      return $category;
+   }
+
+   # Error, category not found
+   return $self->log->fatal("category: no Category found");
 }
 
 sub get_commands {
@@ -95,6 +151,10 @@ sub init {
    $self->inited(1);
 
    return $self;
+}
+
+sub require_modules {
+   return [];
 }
 
 sub require_attributes {

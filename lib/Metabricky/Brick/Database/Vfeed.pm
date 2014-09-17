@@ -13,21 +13,23 @@ our @AS = qw(
    db
    vfeed
 );
-
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Data::Dumper;
-
-use vFeed::DB;
-use vFeed::Log;
+sub require_modules {
+   return [
+      'Data::Dumper',
+      'vFeed::DB',
+      'vFeed::Log',
+   ];
+}
 
 sub help {
-   print "set database::vfeed db <sqlite>\n";
-   print "\n";
-   print "run database::vfeed version\n";
-   print "run database::vfeed update\n";
-   print "run database::vfeed cve <id>\n";
+   return [
+      'set database::vfeed db <sqlite>',
+      'run database::vfeed version',
+      'run database::vfeed update',
+      'run database::vfeed cve <id>',
+   ];
 }
 
 sub init {
@@ -36,7 +38,7 @@ sub init {
    ) or return 1; # Init already done
 
    if (! defined($self->db)) {
-      die("set database::vfeed db <sqlite>\n");
+      return $self->log->info("set database::vfeed db <sqlite>");
    }
 
    my $log = vFeed::Log->new;

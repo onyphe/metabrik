@@ -20,11 +20,7 @@ our @AS = qw(
    rtimeout
    datadir
 );
-
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
-use File::Find;
 
 sub new {
    my $self = shift->SUPER::new(
@@ -36,15 +32,17 @@ sub new {
 }
 
 sub help {
-   print "set core::global input <input>\n";
-   print "set core::global output <output>\n";
-   print "set core::global db <db>\n";
-   print "set core::global file <file>\n";
-   print "set core::global uri <uri>\n";
-   print "set core::global target <target>\n";
-   print "set core::global ctimeout <connection_timeout>\n";
-   print "set core::global rtimeout <read_timeout>\n";
-   print "set core::global datadir <directory>\n";
+   return [
+      'set core::global input <input>',
+      'set core::global output <output>',
+      'set core::global db <db>',
+      'set core::global file <file>',
+      'set core::global uri <uri>',
+      'set core::global target <target>',
+      'set core::global ctimeout <connection_timeout>',
+      'set core::global rtimeout <read_timeout>',
+      'set core::global datadir <directory>',
+   ];
 }
 
 1;

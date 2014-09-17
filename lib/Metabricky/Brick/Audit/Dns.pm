@@ -13,19 +13,23 @@ our @AS = qw(
    nameserver
    domainname
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Net::DNS::Resolver;
+sub require_modules {
+   return [
+      'Net::DNS::Resolver',
+   ];
+}
 
 sub help {
-   print "set audit::dns nameserver <ip>\n";
-   print "set audit::dns domainname <string>\n";
-   print "\n";
-   print "run audit::dns version\n";
-   print "run audit::dns recursion\n";
-   print "run audit::dns axfr\n";
-   print "run audit::dns all\n";
+   return [
+      'set audit::dns nameserver <ip>',
+      'set audit::dns domainname <string>',
+      'run audit::dns version',
+      'run audit::dns recursion',
+      'run audit::dns axfr',
+      'run audit::dns all',
+   ];
 }
 
 sub init {
@@ -42,7 +46,7 @@ sub version {
    my $self = shift;
 
    if (! defined($self->nameserver)) {
-      die("set audit::dns nameserver <ip>");
+      return $self->log->info("set audit::dns nameserver <ip>");
    }
 
    my $nameserver = $self->nameserver;
@@ -52,7 +56,7 @@ sub version {
       recurse     => 0,
       searchlist  => [],
       debug       => $self->debug,
-   ) or die("Net::DNS::Resolver->new");
+   ) or return $self->log->error("Net::DNS::Resolver: new");
 
    my $version = 'UNKNOWN';
    my $res = $dns->send('version.bind', 'TXT', 'CH');
@@ -72,7 +76,7 @@ sub recursion {
    my $self = shift;
 
    if (! defined($self->nameserver)) {
-      die("set audit::dns nameserver <ip>");
+      return $self->log->info("set audit::dns nameserver <ip>");
    }
 
    my $nameserver = $self->nameserver;
@@ -82,7 +86,7 @@ sub recursion {
       recurse     => 1,
       searchlist  => [],
       debug       => $self->debug,
-   ) or die("Net::DNS::Resolver->new");
+   ) or return $self->log->error("Net::DNS::Resolver: new");
 
    my $recursion_allowed = 0;
    my $res = $dns->search('example.com');
@@ -99,11 +103,11 @@ sub axfr {
    my $self = shift;
 
    if (! defined($self->nameserver)) {
-      die("set audit::dns nameserver <ip>");
+      return $self->log->info("set audit::dns nameserver <ip>");
    }
 
    if (! defined($self->domainname)) {
-      die("set audit::dns domainname <string>");
+      return $self->log->info("set audit::dns domainname <string>");
    }
 
    my $nameserver = $self->nameserver;
@@ -114,7 +118,7 @@ sub axfr {
       recurse     => 0,
       searchlist  => [ $domainname, ],
       debug       => $self->debug,
-   ) or die("Net::DNS::Resolver->new");
+   ) or return $self->log->error("Net::DNS::Resolver: new");
 
    my $axfr_allowed = 0;
    my @res = $dns->axfr;

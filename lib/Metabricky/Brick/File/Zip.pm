@@ -14,16 +14,16 @@ our @AS = qw(
    output
    destdir
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 sub help {
-   print "set file::zip input <file>\n";
-   print "set file::zip output <file>\n";
-   print "set file::zip destdir <destdir>\n";
-   print "\n";
-   print "run file::zip uncompress\n";
-   print "run file::zip compress\n";
+   return [
+      'set file::zip input <file>',
+      'set file::zip output <file>',
+      'set file::zip destdir <destdir>',
+      'run file::zip uncompress',
+      'run file::zip compress',
+   ];
 }
 
 sub default_values {
@@ -40,12 +40,12 @@ sub uncompress {
 
    my $input = $self->input;
    if (! defined($input)) {
-      die("set file::zip input <file>\n");
+      return $self->log->info("set file::zip input <file>");
    }
 
    my $dir = $self->destdir;
    if (! defined($dir)) {
-      die("set file::zip destdir <destdir>\n");
+      return $self->log->info("set file::zip destdir <destdir>");
    }
 
    # XXX: dirty for now
@@ -57,7 +57,7 @@ sub uncompress {
       }
    }
 
-   return die("unzip binary not found\n");
+   return $self->log->error("unzip binary not found");
 }
 
 1;

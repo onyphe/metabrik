@@ -349,18 +349,6 @@ sub run_system {
    return system(@args);
 }
 
-# XXX: should be a shell alias
-sub run_ls {
-   my $self = shift;
-
-   if ($^O =~ /win32/i) {
-      return $self->run_shell('dir', @_);
-   }
-   else {
-      return $self->run_shell('ls', '-lF', @_);
-   }
-}
-
 sub run_history {
    my $self = shift;
    my ($c) = @_;
@@ -376,29 +364,6 @@ sub run_history {
          $c++;
       }
    }
-
-   return 1;
-}
-
-# XXX: should be a brick, and run_save an alias.
-sub run_save {
-   my $self = shift;
-   my ($data, $file) = @_;
-
-   if (! defined($file)) {
-      $self->log->error("save: pass \$data and \$file parameters");
-      return;
-   }
-
-   $data = $self->ps_lookup_var($data);
-
-   my $r = open(my $out, '>', $file);
-   if (!defined($r)) {
-      $self->log->error("save: unable to open file [$file] for writing: $!");
-      return;
-   }
-   print $out $data;
-   close($out);
 
    return 1;
 }
@@ -461,12 +426,14 @@ sub run_su {
    my $self = shift;
    my ($cmd, @args) = @_;
 
-   #print "[DEBUG] cmd[$cmd] args[@args]\n";
-   if (defined($cmd)) {
-      system('sudo', $cmd, @args);
-   }
-   else {
-      system('sudo', $0);
+   # sudo not supported on Windows 
+   if ($^O !~ /win32/i) {
+      if (defined($cmd)) {
+         system('sudo', $cmd, @args);
+      }
+      else {
+         system('sudo', $0);
+      }
    }
 
    return 1;
@@ -495,6 +462,10 @@ sub run_load {
    }
 
    return $r;
+}
+
+sub comp_load {
+   return shift->comp_run(@_);
 }
 
 sub run_show {
@@ -528,6 +499,53 @@ sub run_show {
    print "Total: $total\n";
 
    return 1;
+}
+
+sub run_info {
+   my $self = shift;
+   my ($brick) = @_;
+
+   if (! defined($brick)) {
+      return $self->log->info("help <brick>");
+   }
+
+   if (! exists($Bricks->{$brick})) {
+      return $self->log->error("Brick [$brick] not loaded");
+   }
+
+   my $help = $Bricks->{$brick}->help;
+
+   for my $line (@$help) {
+      $self->log->info($line);
+   }
+
+   return 1;
+}
+
+sub comp_info {
+   my $self = shift;
+   my ($word, $line, $start) = @_;
+
+   my $context = $Bricks->{'core::context'};
+
+   my @words = $self->line_parsed($line);
+   my $count = scalar(@words);
+
+   $self->debug && $self->log->debug("word[$word] line[$line] start[$start] count[$count]");
+
+   my $available = $context->available or return;
+   if (! defined($available)) {
+      $self->log->warning("comp_info: can't fetch available Bricks");
+      return ();
+   }
+
+   my @comp = ();
+
+   for my $a (keys %$available) {
+      push @comp, $a if $a =~ /^$word/;
+   }
+
+   return @comp;
 }
 
 sub run_set {
@@ -611,6 +629,64 @@ sub run_set {
    return 1;
 }
 
+sub comp_set {
+   my $self = shift;
+   my ($word, $line, $start) = @_;
+
+   my $context = $Bricks->{'core::context'};
+
+   my @words = $self->line_parsed($line);
+   my $count = scalar(@words);
+
+   if ($self->debug) {
+      $self->log->debug("word[$word] line[$line] start[$start] count[$count]");
+   }
+
+   my $shell_command = defined($words[0]) ? $words[0] : undef;
+   my $brick = defined($words[1]) ? $words[1] : undef;
+   my $brick_attribute = defined($words[2]) ? $words[2] : undef;
+
+   my @comp = ();
+
+   if ($count == 1 || $count == 2 && length($word) > 0) {
+      my $available = $context->available or return;
+      if (! defined($available)) {
+         $self->log->warning("comp_run: can't fetch available Bricks");
+         return ();
+      }
+
+      for my $a (keys %$available) {
+         push @comp, $a if $a =~ /^$word/;
+      }
+   }
+   elsif ($count == 2 && length($word) == 0) {
+      if (! exists($Bricks->{$brick})) {
+         $self->log->verbose("Brick [$brick] not loaded");
+         return;
+      }
+
+      my $attributes = $Bricks->{$brick}->get_attributes;
+      push @comp, @$attributes;
+   }
+   elsif ($count == 3 && length($word) > 0) {
+      my $attributes = $Bricks->{$brick}->get_attributes;
+
+      for my $a (@$attributes) {
+         if ($a =~ /^$word/) {
+            push @comp, $a;
+         }
+      }
+   }
+
+   return @comp;
+}
+
+sub run_get {
+}
+
+sub comp_get {
+}
+
 sub run_run {
    my $self = shift;
    my ($brick, $command, @args) = @_;
@@ -633,6 +709,63 @@ sub run_run {
    }
 
    return $r;
+}
+
+sub comp_run {
+   my $self = shift;
+   my ($word, $line, $start) = @_;
+
+   my $context = $Bricks->{'core::context'};
+
+   my @words = $self->line_parsed($line);
+   my $count = scalar(@words);
+
+   if ($self->debug) {
+      $self->log->debug("word[$word] line[$line] start[$start] count[$count]");
+   }
+
+   my $shell_command = defined($words[0]) ? $words[0] : undef;
+   my $brick = defined($words[1]) ? $words[1] : undef;
+   my $brick_command = defined($words[2]) ? $words[2] : undef;
+
+   my @comp = ();
+
+   # Two words or less entered on command line, we check the second one for completion
+   if ($count == 1 || $count <= 2 && length($word) > 0) {
+      my $available = $context->available or return;
+      if (! defined($available)) {
+         $self->log->warning("comp_run: can't fetch available Bricks");
+         return ();
+      }
+
+      for my $a (keys %$available) {
+         #if ($self->debug) {
+            #$self->log->debug("[$a] [$word]");
+         #}
+         push @comp, $a if $a =~ /^$word/;
+      }
+   }
+   # Second word found or third word started, we search against available Brick Commands
+   elsif ($count == 2 && length($word) == 0) {
+      if (! exists($Bricks->{$brick})) {
+         $self->log->verbose("Brick [$brick] not loaded");
+         return;
+      }
+
+      my $commands = $Bricks->{$brick}->get_commands;
+      push @comp, @$commands;
+   }
+   elsif ($count == 3) {
+      my $commands = $Bricks->{$brick}->get_commands;
+
+      for my $a (@$commands) {
+         if ($a =~ /^$word/) {
+            push @comp, $a; 
+         }
+      }
+   }
+
+   return @comp;
 }
 
 sub run_title {
@@ -659,7 +792,7 @@ sub run_script {
    }
 
    open(my $in, '<', $script)
-      or die("[FATAL] ext::shell::run_script: can't open file [$script]: $!\n");
+      or return $self->log->error("run_script: can't open file [$script]: $!");
    while (defined(my $line = <$in>)) {
       next if ($line =~ /^\s*#/);  # Skip comments
       chomp($line);
@@ -754,122 +887,6 @@ sub _ioa_dirsfiles {
    #print "after[@dirs|@files]\n";
 
    return \@dirs, \@files;
-}
-
-#
-# Term::Shell::comp stuff
-#
-sub comp_run {
-   my $self = shift;
-   my ($word, $line, $start) = @_;
-
-   my $context = $Bricks->{'core::context'};
-
-   my @words = split(/\s+/, $line);
-   my $count = scalar(@words);
-
-   if ($self->debug) {
-      $self->log->debug("word[$word] line[$line] start[$start] count[$count]");
-   }
-
-   my $shell_command = defined($words[0]) ? $words[0] : undef;
-   my $brick = defined($words[1]) ? $words[1] : undef;
-   my $brick_command = defined($words[2]) ? $words[2] : undef;
-
-   my @comp = ();
-
-   # Two words or less entered on command line, we check the second one for completion
-   if ($count == 1 || $count <= 2 && length($word) > 0) {
-      my $available = $context->available or return;
-      if (! defined($available)) {
-         $self->log->warning("comp_run: can't fetch available Bricks");
-         return ();
-      }
-
-      for my $a (keys %$available) {
-         #if ($self->debug) {
-            #$self->log->debug("[$a] [$word]");
-         #}
-         push @comp, $a if $a =~ /^$word/;
-      }
-   }
-   # Second word found or third word started, we search against available Brick Commands
-   elsif ($count == 2 && length($word) == 0) {
-      if (! exists($Bricks->{$brick})) {
-         $self->log->verbose("Brick [$brick] not loaded");
-         return;
-      }
-
-      my $commands = $Bricks->{$brick}->get_commands;
-      push @comp, @$commands;
-   }
-   elsif ($count == 3) {
-      my $commands = $Bricks->{$brick}->get_commands;
-
-      for my $a (@$commands) {
-         if ($a =~ /^$word/) {
-            push @comp, $a; 
-         }
-      }
-   }
-
-   return @comp;
-}
-
-sub comp_set {
-   my $self = shift;
-   my ($word, $line, $start) = @_;
-
-   my $context = $Bricks->{'core::context'};
-
-   my @words = split(/\s+/, $line);
-   my $count = scalar(@words);
-
-   if ($self->debug) {
-      $self->log->debug("word[$word] line[$line] start[$start] count[$count]");
-   }
-
-   my $shell_command = defined($words[0]) ? $words[0] : undef;
-   my $brick = defined($words[1]) ? $words[1] : undef;
-   my $brick_attribute = defined($words[2]) ? $words[2] : undef;
-
-   my @comp = ();
-
-   if ($count == 1 || $count == 2 && length($word) > 0) {
-      my $available = $context->available or return;
-      if (! defined($available)) {
-         $self->log->warning("comp_run: can't fetch available Bricks");
-         return ();
-      }
-
-      for my $a (keys %$available) {
-         push @comp, $a if $a =~ /^$word/;
-      }
-   }
-   elsif ($count == 2 && length($word) == 0) {
-      if (! exists($Bricks->{$brick})) {
-         $self->log->verbose("Brick [$brick] not loaded");
-         return;
-      }
-
-      my $attributes = $Bricks->{$brick}->get_attributes;
-      push @comp, @$attributes;
-   }
-   elsif ($count == 3 && length($word) > 0) {
-      my $attributes = $Bricks->{$brick}->get_attributes;
-
-      for my $a (@$attributes) {
-         if ($a =~ /^$word/) {
-            push @comp, $a;
-         }
-      }
-   }
-
-   return @comp;
-}
-
-sub comp_load {
-   return shift->comp_run(@_);
 }
 
 # Default to check for global completion value

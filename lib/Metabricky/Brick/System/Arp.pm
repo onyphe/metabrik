@@ -12,13 +12,18 @@ use base qw(Metabricky::Brick);
 our @AS = qw(
    _dnet
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Net::Libdnet::Arp;
+sub require_modules {
+   return [
+      'Net::Libdnet::Arp',
+   ];
+}
 
 sub help {
-   print "run system::arp cache\n";
+   return [
+      'run system::arp cache',
+   ];
 }
 
 sub init {

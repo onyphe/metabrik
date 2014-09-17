@@ -15,22 +15,26 @@ our @AS = qw(
    _out
    _dump
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Net::Frame::Dump::Offline;
+sub require_modules {
+   return [
+      'Net::Frame::Dump::Offline',
+   ];
+}
 
 sub help {
-   print "set remote::tcpdump host <ip|hostname>\n";
-   print "set remote::tcpdump username <user>\n";
-   print "set remote::tcpdump publickey <file>\n";
-   print "set remote::tcpdump privatekey <file>\n";
-   print "\n";
-   print "run remote::tcpdump start\n";
-   print "run remote::tcpdump status\n";
-   print "run remote::tcpdump stop\n";
-   print "run remote::tcpdump next\n";
-   print "run remote::tcpdump nextall\n";
+   return [
+      'set remote::tcpdump host <ip|hostname>',j
+      'set remote::tcpdump username <user>',
+      'set remote::tcpdump publickey <file>',
+      'set remote::tcpdump privatekey <file>',
+      'run remote::tcpdump start',
+      'run remote::tcpdump status',
+      'run remote::tcpdump stop',
+      'run remote::tcpdump next',
+      'run remote::tcpdump nextall',
+   ];
 }
 
 sub default_values {

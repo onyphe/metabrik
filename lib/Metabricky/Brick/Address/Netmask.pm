@@ -12,20 +12,23 @@ use base qw(Metabricky::Brick);
 our @AS = qw(
    subnet
 );
-
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Net::Netmask;
+sub require_modules {
+   return [
+      'Net::Netmask',
+   ];
+}
 
 sub help {
-   print "set address::netmask subnet <subnet>\n";
-   print "\n";
-   print "run address::netmask match <ip>\n";
-   print "run address::netmask first\n";
-   print "run address::netmask last\n";
-   print "run address::netmask block\n";
-   print "run address::netmask iplist\n";
+   return [
+      'set address::netmask subnet <subnet>',
+      'run address::netmask match <ip>',
+      'run address::netmask first',
+      'run address::netmask last',
+      'run address::netmask block',
+      'run address::netmask iplist',
+   ];
 }
 
 sub match {

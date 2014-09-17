@@ -9,17 +9,15 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-#our @AS = qw(
-#);
-__PACKAGE__->cgBuildIndices;
-#__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
-use Crypt::CBC;
-use Crypt::OpenSSL::AES;
+sub require_modules {
+   return [ 'Crypt::CBC', 'Crypt::OpenSSL::AES' ];
+}
 
 sub help {
-   print "run crypto::aes encrypt <data>\n";
-   print "run crypto::aes decrypt <data>\n";
+   return [
+      'run crypto::aes encrypt <data>',
+      'run crypto::aes decrypt <data>',
+   ];
 }
 
 sub encrypt {
@@ -27,7 +25,7 @@ sub encrypt {
    my ($data) = @_;
 
    if (! defined($data)) {
-      die("run crypto::aes encrypt <data>\n");
+      return $self->log->info("run crypto::aes encrypt <data>");
    }
 
    #my $key = 'key';
@@ -35,7 +33,7 @@ sub encrypt {
    #my $cipher = Crypt::CBC->new(
       #-key => $key,
       #-cipher => 'Crypt::OpenSSL::AES',
-   #) or die("cipher: $!");
+   #) or return $self->log->error("cipher: $!");
 
    #my $crypted = $cipher->encrypt_hex($data);
 
@@ -50,7 +48,7 @@ sub decrypt {
    my ($data) = @_;
 
    if (! defined($data)) {
-      die("run crypto::aes decrypt <data>\n");
+      return $self->log->info("run crypto::aes decrypt <data>");
    }
 
    #my $key = 'key';
@@ -58,7 +56,7 @@ sub decrypt {
    #my $cipher = Crypt::CBC->new(
       #-key => $key,
       #-cipher => 'Crypt::OpenSSL::AES',
-   #) or die("cipher: $!");
+   #) or return $self->log->error("cipher: $!");
 
    #my $decrypted = $cipher->decrypt_hex($data);
 

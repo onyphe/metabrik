@@ -11,10 +11,7 @@ our @AS = qw(
    echo
    shell
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
-use Metabricky::Ext::Shell;
 
 {
    no warnings;
@@ -54,11 +51,16 @@ use Metabricky::Ext::Shell;
    };
 }
 
+sub require_modules {
+   return [ 'Metabricky::Ext::Shell' ];
+}
+
 sub help {
-   print "set shell::meby echo <0|1>\n";
-   print "\n";
-   print "run shell::meby cmdloop\n";
-   print "run shell::meby script <script>\n";
+   return [
+      'set shell::meby echo <0|1>',
+      'run shell::meby cmdloop',
+      'run shell::meby script <script>',
+   ];
 }
 
 sub default_values {

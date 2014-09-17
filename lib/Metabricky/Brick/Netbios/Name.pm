@@ -9,13 +9,16 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-__PACKAGE__->cgBuildIndices;
-#__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
-use Net::NBName;
+sub require_modules {
+   return [
+      'Net::NBName',
+   ];
+}
 
 sub help {
-   print "run netbios::name nodestatus <ip>\n";
+   return [
+      'run netbios::name nodestatus <ip>',
+   ];
 }
 
 sub nodestatus {
@@ -23,12 +26,12 @@ sub nodestatus {
    my ($ip) = @_;
 
    if (! defined($ip)) {
-      die($self->help."\n");
+      return $self->log->info("run netbios::name nodestatus <ip>");
    }
 
    my $nb = Net::NBName->new;
    if (! $nb) {
-      die("can't new() Net::NBName: $!\n");
+      return $self->log->error("can't new() Net::NBName: $!");
    }
 
    my $ns = $nb->node_status($ip);

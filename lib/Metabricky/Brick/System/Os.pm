@@ -12,17 +12,22 @@ use base qw(Metabricky::Brick);
 our @AS = qw(
    _uname
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use POSIX;
+sub require_modules {
+   return [
+      'POSIX',
+   ];
+}
 
 sub help {
-   print "run system::os name\n";
-   print "run system::os release\n";
-   print "run system::os version\n";
-   print "run system::os hostname\n";
-   print "run system::os arch\n";
+   return [
+      'run system::os name',
+      'run system::os release',
+      'run system::os version',
+      'run system::os hostname',
+      'run system::os arch',
+   ];
 }
 
 sub init {

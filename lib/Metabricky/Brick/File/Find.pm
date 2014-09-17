@@ -12,36 +12,20 @@ use base qw(Metabricky::Brick);
 our @AS = qw(
    path
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use File::Find;
-
-#sub require_modules {
-#   return [
-#      'File::Find',
-#   ];
-#}
-
-#sub help {
-#   return {
-#      'find' => 'run find files <directories> <pattern>',
-#   };
-#}
-sub help {
-   print "set file::find path <director1:directory2:..:directoryN>\n";
-   print "\n";
-   print "run file::find files <dirpattern> <filepattern>\n";
+sub require_modules {
+   return [
+      'File::Find',
+   ];
 }
 
-#sub files_require_command {
-#}
-
-#sub files_require_arg {
-#   return [
-#      'directories', 'pattern',
-#   ];
-#}
+sub help {
+   return [
+      'set file::find path <director1:directory2:..:directoryN>',
+      'run file::find files <dirpattern> <filepattern>',
+   ];
+}
 
 sub files {
    my $self = shift;
@@ -49,7 +33,7 @@ sub files {
 
    my $path = $self->path;
    if (! defined($path)) {
-      die("set file::find path <director1:directory2:..:directoryN>\n");
+      return $self->log->info("set file::find path <director1:directory2:..:directoryN>");
    }
 
    my @path_list = split(':', $path);

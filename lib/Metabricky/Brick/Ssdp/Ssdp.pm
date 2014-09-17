@@ -12,22 +12,26 @@ use base qw(Metabricky::Brick);
 our @AS = qw(
    device
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use IO::Socket::Multicast;
+sub require_modules {
+   return [
+      'IO::Socket::Multicast',
+   ];
+}
 
 sub help {
-   print "set ssdp::ssdp device <device>\n";
-   print "\n";
-   print "run ssdp::ssdp discover\n";
+   return [
+      'set ssdp::ssdp device <device>',
+      'run ssdp::ssdp discover',
+   ];
 }
 
 sub discover {
    my $self = shift;
 
    if (! defined($self->device)) {
-      die("set ssdp::ssdp device <device>\n");
+      return $self->log->info("set ssdp::ssdp device <device>");
    }
 
    my $device = $self->device;
@@ -41,7 +45,7 @@ sub discover {
       PeerDest  => $ssdpAddr,
       PeerPort  => $ssdpPort,
       ReuseAddr => 1,
-   ) or die("multicast: $!");
+   ) or return $self->log->error("multicast: $!");
    $m->mcast_if($device);
 
    my $ssdpSearch =
@@ -57,7 +61,7 @@ sub discover {
 
    my $data;
    for (1..3) {
-      $m->mcast_send($ssdpSearch, "$ssdpAddr:$ssdpPort") or die("mcast_send: $!");
+      $m->mcast_send($ssdpSearch, "$ssdpAddr:$ssdpPort") or $self->log->error("mcast_send: $!");
       print "[+] Request sent\n";
       $m->recv($data, 1024);
       if ($data && length($data)) {

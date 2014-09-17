@@ -9,21 +9,19 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-#our @AS = qw(
-#);
-
-__PACKAGE__->cgBuildIndices;
-#__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
-use Data::Dumper;
-use WWW::Mechanize;
+sub require_modules {
+   return [
+      'Data::Dumper',
+      'WWW::Mechanize',
+   ];
+}
 
 sub help {
-   #print "set http::wwwutil url <url>\n";
-   #print "\n";
-   print "run http::wwwutil myip\n";
-   print "run http::wwwutil nslookup <hostname> [nameserver]\n";
-   print "run http::wwwutil whois <ip|domain>\n";
+   return [
+      'run http::wwwutil myip',
+      'run http::wwwutil nslookup <hostname> [nameserver]',
+      'run http::wwwutil whois <ip|domain>',
+   ];
 }
 
 sub nslookup {
@@ -47,7 +45,7 @@ sub nslookup {
    }
 
    if (! defined($lookup)) {
-      die("no return from lookup");
+      return $self->log->error("no return from lookup");
    }
 
    my $res = _clean_html($lookup);
@@ -77,7 +75,7 @@ sub whois {
       my ($inetnum, $role, $person, $route) = $html =~ /.*<pre>(inetnum:.*?)<\/pre>.*?<pre>(role:.*?)<\/pre>.*?<pre>(person:.*?)<\/pre>.*?<pre>(route:.*?)<\/pre>.*?/s;
 
       if (! defined($inetnum)) {
-         die("no return from lookup");
+         return $self->log->error("no return from lookup");
       }
 
       print _clean_html($inetnum)."\n\n";
@@ -95,7 +93,7 @@ sub whois {
       my ($data) = $html =~ /^.*(WHOIS Information for .*?)<br><br><\/td><\/tr><tr><\/tr>/s;
 
       if (! defined($data)) {
-         die("no return from lookup");
+         return $self->log->error("no return from lookup");
       }
 
       $res = _clean_html($data);

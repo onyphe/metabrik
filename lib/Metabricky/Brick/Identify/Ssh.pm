@@ -12,20 +12,20 @@ use base qw(Metabricky::Brick);
 our @AS = qw(
    banner
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 sub help {
-   print "set identify::ssh banner <string>\n";
-   print "\n";
-   print "run identify::ssh parsebanner\n";
+   return [
+      'set identify::ssh banner <string>',
+      'run identify::ssh parsebanner',
+   ];
 }
 
 sub parsebanner {
    my $self = shift;
 
    if (! defined($self->banner)) {
-      die($self->help);
+      return $self->log->info("set identify::ssh banner <string>");
    }
 
    my $banner = $self->banner;

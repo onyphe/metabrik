@@ -6,10 +6,10 @@ use strict;
 use warnings;
 
 use base qw(Class::Gomor::Hash);
+
 our @AS = qw(
    level
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 sub new {

@@ -14,20 +14,24 @@ our @AS = qw(
    truncate_request
    truncate_response
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use HTTP::Proxy;
-use HTTP::Proxy::HeaderFilter::simple;
-use LWP::Protocol::connect;
+sub require_modules {
+   return [
+      'HTTP::Proxy',
+      'HTTP::Proxy::HeaderFilter::simple',
+      'LWP::Protocol::connect',
+   ];
+}
 
 sub help {
-   print "set http::proxy port <port> (default: 3128)\n";
-   print "set http::proxy truncate_response <characters> (default: 0, do not truncate)\n";
-   print "set http::proxy truncate_request <characters> (default: 512 characters)\n";
-   print "\n";
-   print "run http::proxy requests - simply display browser requests\n";
-   print "run http::proxy requests_responses - simply display browser requests and server responses\n";
+   return [
+      'set http::proxy port <port> (default: 3128)',
+      'set http::proxy truncate_response <characters> (default: 0, do not truncate)',
+      'set http::proxy truncate_request <characters> (default: 512 characters)',
+      'run http::proxy requests - simply display browser requests',
+      'run http::proxy requests_responses - simply display browser requests and server responses',
+   ];
 }
 
 sub default_values {

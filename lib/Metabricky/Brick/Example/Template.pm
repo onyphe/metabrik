@@ -3,7 +3,7 @@
 #
 # Template brick
 #
-package Metabricky::Brick::Core::Template;
+package Metabricky::Brick::Example::Template;
 use strict;
 use warnings;
 
@@ -22,11 +22,12 @@ sub require_modules {
 }
 
 sub help {
-   print "set core::template attribute1 <value>\n";
-   print "set core::template attribute2 <value>\n";
-   print "\n";
-   print "run core::template command1 <argument1> <argument2>\n";
-   print "run core::template command2 <argument1> <argument2>\n";
+   return [
+      'set example::template attribute1 <value>',
+      'set example::template attribute2 <value>',
+      'run example::template command1 <argument1> <argument2>',
+      'run example::template command2 <argument1> <argument2>',
+   ];
 }
 
 sub default_values {
@@ -52,7 +53,7 @@ sub command1 {
    my ($argument1, $argument2) = @_;
 
    if (! defined($argument2)) {
-      die("run core::template command1 <argument1> <argument2>\n");
+      return $self->log->info("run example::template command1 <argument1> <argument2>");
    }
 
    my $do_something = "you should do something";
@@ -65,7 +66,7 @@ sub command2 {
    my ($argument1, $argument2) = @_;
 
    if (! defined($argument2)) {
-      die("run core::template command2 <argument1> <argument2>\n");
+      return $self->log->info("run example::template command2 <argument1> <argument2>");
    }
 
    my $do_something = "you should do something";
@@ -79,11 +80,11 @@ __END__
 
 =head1 NAME
 
-Metabricky::Brick::Core::Template - template to write a new Metabricky brick
+Metabricky::Brick::Example::Template - template to write a new Metabricky brick
 
 =head1 SYNOPSIS
 
-   $ cp lib/Metabricky/Brick/Core/Template.pm ~/myMetabricky/lib/Brick/Category/Mybrick.pm
+   $ cp lib/Metabricky/Brick/Example/Template.pm ~/myMetabricky/lib/Brick/Category/Mybrick.pm
    $ vi ~/myMetabricky/lib/Brick/Category/Mybrick.pm
 
    # From a module

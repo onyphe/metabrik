@@ -12,13 +12,18 @@ use base qw(Metabricky::Brick);
 our @AS = qw(
    dnet
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Net::Libdnet::Route;
+sub require_modules {
+   return [
+      'Net::Libdnet::Route',
+   ];
+}
 
 sub help {
-   print "run system::route show\n";
+   return [
+      'run system::route show',
+   ];
 }
 
 sub init {
@@ -26,7 +31,9 @@ sub init {
       @_,
    ) or return 1; # Init already done
 
-   my $dnet = Net::Libdnet::Route->new or die("init");
+   my $dnet = Net::Libdnet::Route->new
+      or return $self->log->error("can't create Net::Libdnet::Route object");
+
    $self->dnet($dnet);
 
    return $self;

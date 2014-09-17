@@ -11,7 +11,6 @@ our @AS = qw(
    log
    _lp
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 use Data::Dump;
@@ -57,19 +56,19 @@ my $__ctx = {};
 }
 
 sub help {
-   print "run core::context load <brick>\n";
-   print "run core::context set <brick> <attribute> <value>\n";
-   print "run core::context get [ <brick> ] [ <attribute> ]\n";
-   print "run core::context run <brick> <command> [ <arg1 arg2 .. argN> ]\n";
-   print "\n";
-   print "run core::context loaded\n";
-   print "run core::context find_available\n";
-   print "run core::context update_available\n";
-   print "run core::context available\n";
-   print "run core::context status\n";
-   print "\n";
-   print "run core::context do <perl_code>\n";
-   print "run core::context call <perl_sub>\n";
+   return [
+      'run core::context load <brick>',
+      'run core::context set <brick> <attribute> <value>',
+      'run core::context get [ <brick> ] [ <attribute> ]',
+      'run core::context run <brick> <command> [ <arg1 arg2 .. argN> ]',
+      'run core::context loaded',
+      'run core::context find_available',
+      'run core::context update_available',
+      'run core::context available',
+      'run core::context status',
+      'run core::context do <perl_code>',
+      'run core::context call <perl_sub>',
+   ];
 }
 
 sub new {

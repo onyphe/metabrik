@@ -16,24 +16,25 @@ our @AS = qw(
    privatekey
    ssh2
 );
-
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Net::SSH2;
+sub require_modules {
+   return [ 'Net::SSH2' ];
+}
 
 sub help {
-   print "set remote::ssh2 host <ip|hostname>\n";
-   print "set remote::ssh2 username <user>\n";
-   print "set remote::ssh2 publickey <file>\n";
-   print "set remote::ssh2 privatekey <file>\n";
-   print "\n";
-   print "run remote::ssh2 connect\n";
-   print "run remote::ssh2 cat <file>\n";
-   print "run remote::ssh2 cmd <command>\n";
-   print "run remote::ssh2 readline\n";
-   print "run remote::ssh2 listfiles <glob>\n";
-   print "run remote::ssh2 disconnect\n";
+   return [
+      'set remote::ssh2 host <ip|hostname>',
+      'set remote::ssh2 username <user>',
+      'set remote::ssh2 publickey <file>',
+      'set remote::ssh2 privatekey <file>',
+      'run remote::ssh2 connect',
+      'run remote::ssh2 cat <file>',
+      'run remote::ssh2 cmd <command>',
+      'run remote::ssh2 readline',
+      'run remote::ssh2 listfiles <glob>',
+      'run remote::ssh2 disconnect',
+   ];
 }
 
 sub require_set_connect { qw(host username publickey privatekey) }

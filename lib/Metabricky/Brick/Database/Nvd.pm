@@ -18,18 +18,23 @@ our @AS = qw(
    xml_others
    xml
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Metabricky::Brick::File::Fetch;
-use Metabricky::Brick::File::Slurp;
+sub require_modules {
+   return [
+      'Metabricky::Brick::File::Fetch',
+      'Metabricky::Brick::File::Slurp',
+   ];
+}
 
 sub help {
-   print "run database::nvd update <[recent|modified|others]>\n";
-   print "run database::nvd load <[recent|modified|others]> [ <pattern> ]\n";
-   print "run database::nvd search <pattern>\n";
-   print "run database::nvd searchbycpe <cpe>\n";
-   print "run database::nvd getxml <cve_id>\n";
+   return [
+      'run database::nvd update <[recent|modified|others]>',
+      'run database::nvd load <[recent|modified|others]> [ <pattern> ]',
+      'run database::nvd search <pattern>',
+      'run database::nvd searchbycpe <cpe>',
+      'run database::nvd getxml <cve_id>',
+   ];
 }
 
 sub default_values {
@@ -84,13 +89,13 @@ sub update {
    my ($type) = @_;
 
    if (! defined($type)) {
-      die("run database::nvd update <[recent|modified|others]>\n");
+      return $self->log->info("run database::nvd update <[recent|modified|others]>");
    }
 
    if ($type ne 'recent'
    &&  $type ne 'modified'
    &&  $type ne 'others') {
-      die("run database::nvd update <[recent|modified|others]>\n");
+      return $self->log->info("run database::nvd update <[recent|modified|others]>");
    }
 
    my $datadir = $self->bricks->{'core::global'}->datadir;
@@ -104,7 +109,7 @@ sub update {
       my $fetch = Metabricky::Brick::File::Fetch->new(
          output => $xml_files->[$c],
       );
-      $fetch->get($uri_list->[$c]) or die("fetch::get: uri[".$uri_list->[$c]."]\n");
+      $fetch->get($uri_list->[$c]) or $self->log->error("fetch::get: uri[".$uri_list->[$c]."]");
    }
 
    return 1;
@@ -115,13 +120,13 @@ sub load {
    my ($type, $pattern) = @_;
 
    if (! defined($type)) {
-      die("run database::nvd load <[recent|modified|others]> [ <pattern> ]\n");
+      return $self->log->info("run database::nvd load <[recent|modified|others]> [ <pattern> ]");
    }
 
    if ($type ne 'recent'
    &&  $type ne 'modified'
    &&  $type ne 'others') {
-      die("run database::nvd load <[recent|modified|others]> [ <pattern> ]\n");
+      return $self->log->info("run database::nvd load <[recent|modified|others]> [ <pattern> ]");
    }
 
    my $datadir = $self->bricks->{'core::global'}->datadir;
@@ -140,7 +145,7 @@ sub load {
          file => $file,
       );
       print "DEBUG Slurping file: ".$xml_files->[$c]."\n";
-      my $xml = $slurp->xml or die("load::slurp::xml");
+      my $xml = $slurp->xml or return $self->log->error("load::slurp::xml");
 
       # Merge XML data
       if (defined($old_xml)) {
@@ -226,16 +231,16 @@ sub search {
 
    my $xml = $self->xml;
    if (! defined($xml)) {
-      die("run database::nvd load <[recent|modified|others]> [ <pattern> ]\n");
+      return $self->log->info("run database::nvd load <[recent|modified|others]> [ <pattern> ]");
    }
 
    if (! defined($pattern)) {
-      die("run database::nvd search <pattern>\n");
+      return $self->log->info("run database::nvd search <pattern>");
    }
 
    my $entries = $xml->{entry};
    if (! defined($entries)) {
-      die("nothing in this xml file");
+      return $self->log->error("nothing in this xml file");
    }
 
    my @entries = ();
@@ -257,16 +262,16 @@ sub searchbycpe {
 
    my $xml = $self->xml;
    if (! defined($xml)) {
-      die("run database::nvd load <[recent|modified|others]> [ <pattern> ]\n");
+      return $self->log->info("run database::nvd load <[recent|modified|others]> [ <pattern> ]");
    }
 
    if (! defined($cpe)) {
-      die("run database::nvd searchbycpe <cpe>\n");
+      return $self->log->info("run database::nvd searchbycpe <cpe>");
    }
 
    my $entries = $xml->{entry};
    if (! defined($entries)) {
-      die("nothing in this xml file");
+      return $self->log->error("nothing in this xml file");
    }
 
    my @entries = ();
@@ -291,7 +296,7 @@ sub getxml {
 
    my $xml = $self->xml;
    if (! defined($xml)) {
-      die("run database::nvd load <[recent|modified|others]> [ <pattern> ]\n");
+      return $self->log->info("run database::nvd load <[recent|modified|others]> [ <pattern> ]");
    }
 
    if (defined($xml->{entry})) {

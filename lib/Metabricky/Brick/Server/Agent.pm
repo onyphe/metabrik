@@ -12,15 +12,19 @@ use base qw(Metabricky::Brick);
 our @AS = qw(
    port
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Net::Server;
+sub require_modules {
+   return [
+      'Net::Server',
+   ];
+}
 
 sub help {
-   print "set server::agent port <number>\n";
-   print "\n";
-   print "run server::agent listen\n";
+   return [
+      'set server::agent port <number>',
+      'run server::agent listen',
+   ];
 }
 
 sub default_values {

@@ -12,13 +12,13 @@ use base qw(Metabricky::Brick);
 our @AS = qw(
    output
 );
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 sub help {
-   print "set file::fetch output <file>\n";
-   print "\n";
-   print "run file::fetch get <uri>\n";
+   return [
+      'set file::fetch output <file>',
+      'run file::fetch get <uri>',
+   ];
 }
 
 sub get {
@@ -27,11 +27,11 @@ sub get {
 
    my $output = $self->output;
    if (! defined($output)) {
-      die("set file::fetch output <file>\n");
+      return $self->log->info("set file::fetch output <file>");
    }
 
    if (! defined($uri)) {
-      die("run file::fetch get <uri>\n");
+      return $self->log->info("run file::fetch get <uri>");
    }
 
    # XXX: dirty for now
@@ -43,7 +43,7 @@ sub get {
       }
    }
 
-   return die("wget binary not found\n");
+   return $self->log->error("wget binary not found");
 }
 
 1;

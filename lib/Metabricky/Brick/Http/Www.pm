@@ -12,27 +12,30 @@ use base qw(Metabricky::Brick);
 our @AS = qw(
    mechanize
 );
-
-__PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Data::Dumper;
-#use Net::SSL;
-use IO::Socket::SSL;
-use LWP::UserAgent;
-use URI;
-use WWW::Mechanize;
+sub require_modules {
+   return [
+      'Data::Dumper',
+      'IO::Socket::SSL',
+      'LWP::UserAgent',
+      'URI',
+      'WWW::Mechanize',
+   ];
+}
 
 sub help {
-   print "run http::www get <url>\n";
-   print "run http::www post <url> <data>\n";
-   print "run http::www self\n";
-   print "run http::www info\n";
-   print "run http::www forms\n";
-   print "run http::www links\n";
-   print "run http::www headers\n";
-   print "run http::www status\n";
-   print "run http::www getcertificate <url> | []\n";
+   return [
+      'run http::www get <url>',
+      'run http::www post <url> <data>',
+      'run http::www self',
+      'run http::www info',
+      'run http::www forms',
+      'run http::www links',
+      'run http::www headers',
+      'run http::www status',
+      'run http::www getcertificate <url> | []',
+   ];
 }
 
 sub get {
@@ -164,7 +167,7 @@ sub links {
    my $self = shift;
 
    if (! defined($self->mechanize)) {
-      die("No WWW::Mechanize object found\n");
+      return $self->log->error("No WWW::Mechanize object found");
    }
 
    my @links = ();
@@ -180,7 +183,7 @@ sub headers {
    my $self = shift;
 
    if (! defined($self->mechanize)) {
-      die("No WWW::Mechanize object found\n");
+      return $self->log->error("No WWW::Mechanize object found");
    }
 
    my $headers = $self->mechanize->response->headers;
@@ -193,7 +196,7 @@ sub status {
    my $self = shift;
 
    if (! defined($self->mechanize)) {
-      die("No WWW::Mechanize object found\n");
+      return $self->log->error("No WWW::Mechanize object found");
    }
 
    my $mech = $self->mechanize;
@@ -207,7 +210,7 @@ sub forms {
    my $self = shift;
 
    if (! defined($self->mechanize)) {
-      die("No WWW::Mechanize object found\n");
+      return $self->log->error("No WWW::Mechanize object found");
    }
 
    my $mech = $self->mechanize;
@@ -245,11 +248,11 @@ sub getcertificate {
    my ($url) = @_;
 
    if (! defined($url)) {
-      die("give url");
+      return $self->log->info("run http::www getcertificate <url>");
    }
 
    if ($url !~ /^https:\/\//) {
-      die("must use https to get certificate");
+      return $self->log->info("must use https to get a certificate");
    }
 
    my $ua = LWP::UserAgent->new(
@@ -267,7 +270,7 @@ sub getcertificate {
 
    my $cc = $ua->conn_cache->{cc_conns};
    if (! defined($cc)) {
-      die("unable to retrieve connection cache");
+      return $self->log->error("unable to retrieve connection cache");
    }
 
    my $sock = $cc->[0][0];
@@ -296,7 +299,7 @@ sub getcertificate {
       print Dumper(\%info)."\n";
    }
    else {
-      die("socket [$sock] cannot do 'peer_certificate'");
+      return $self->log->error("socket [$sock] cannot do 'peer_certificate'");
    }
 
    #$sock->stop_SSL;
@@ -459,7 +462,7 @@ sub getcertificate2 {
    my ($host, $port) = @_;
 
    if (! defined($port)) {
-      die("run http::www getcertificate2 <hostname> <port>");
+      return $self->log->info("run http::www getcertificate2 <hostname> <port>");
    }
 
    use Net::SSLeay qw(print_errs set_fd);
@@ -480,26 +483,26 @@ sub getcertificate2 {
    # Taken from Net::SSLeay source code: sslcat()
    my ($got, $errs) = Net::SSLeay::open_proxy_tcp_connection($host, $port);
    if (! $got) {
-      die("Net::SSLeay::open_proxy_tcp_connection: $errs");
+      return $self->log->error("Net::SSLeay::open_proxy_tcp_connection: $errs");
    }
 
    Net::SSLeay::initialize();
 
    my $ctx = Net::SSLeay::new_x_ctx();
    if ($errs = print_errs('Net::SSLeay::new_x_ctx') || ! $ctx) {
-      die($errs);
+      return $self->log->error($errs);
    }
 
    Net::SSLeay::CTX_set_options($ctx, &Net::SSLeay::OP_ALL);
    if ($errs = print_errs('Net::SSLeay::CTX_set_options')) {
-      die($errs);
+      return $self->log->error($errs);
    }
 
    # Certificate chain verification routines
    Net::SSLeay::CTX_set_default_verify_paths($ctx);
    my $cert_dir = '/etc/ssl/certs';
    Net::SSLeay::CTX_load_verify_locations($ctx, '', $cert_dir)
-      or die("CTX load verify loc=`$cert_dir' $!");
+      or return $self->log->error("CTX load verify loc=`$cert_dir' $!");
    Net::SSLeay::CTX_set_verify($ctx, 0, \&verify);
    #die_if_ssl_error('callback: ctx set verify');
 
@@ -507,12 +510,12 @@ sub getcertificate2 {
 
    my $ssl = Net::SSLeay::new($ctx);
    if ($errs = print_errs('Net::SSLeay::new')) {
-      die($errs);
+      return $self->log->error($errs);
    }
 
    set_fd($ssl, fileno(Net::SSLeay::SSLCAT_S));
    if ($errs = print_errs('fileno')) {
-      die($errs);
+      return $self->log->error($errs);
    }
 
    # Gather cipher list
@@ -534,7 +537,7 @@ sub getcertificate2 {
    $got = Net::SSLeay::connect($ssl);
    if (! $got) {
       $errs = print_errs('Net::SSLeay::connect');
-      die($errs);
+      return $self->log->error($errs);
    }
 
    my $cipher = Net::SSLeay::get_cipher($ssl);
