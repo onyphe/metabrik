@@ -19,30 +19,38 @@ sub default_values {
 sub warning {
    my $self = shift;
    my ($msg) = @_;
-   print("[!] $msg\n");
+   my ($package) = lc(caller());
+   $package =~ s/^metabricky::brick:://;
+   print("[!] $package: $msg\n");
 }
 
 sub error {
    my $self = shift;
    my ($msg) = @_;
+   my ($package) = lc(caller());
+   $package =~ s/^metabricky::brick:://;
    print RED, "[-] ", RESET;
-   print("$msg\n");
+   print("$package: $msg\n");
    return;
 }
 
 sub fatal {
    my $self = shift;
    my ($msg) = @_;
+   my ($package) = lc(caller());
+   $package =~ s/^metabricky::brick:://;
    print RED, "[FATAL] ", RESET;
-   die("$msg\n");
+   die("$package: $msg\n");
 }
 
 sub info {
    my $self = shift;
    my ($msg) = @_;
    return unless $self->level > 0;
+   my ($package) = lc(caller());
+   $package =~ s/^metabricky::brick:://;
    print GREEN, "[*] ", RESET;
-   print("$msg\n");
+   print("$package: $msg\n");
    return 1;
 }
 
@@ -50,8 +58,10 @@ sub verbose {
    my $self = shift;
    my ($msg) = @_;
    return unless $self->level > 1;
+   my ($package) = lc(caller());
+   $package =~ s/^metabricky::brick:://;
    print YELLOW, "[+] ", RESET;
-   print("$msg\n");
+   print("$package: $msg\n");
    return 1;
 }
 
@@ -59,7 +69,8 @@ sub debug {
    my $self = shift;
    my ($msg) = @_;
    return unless $self->level > 2;
-   my ($package) = caller();
+   my ($package) = lc(caller());
+   $package =~ s/^metabricky::brick:://;
    print BLUE, "[DEBUG] ", RESET;
    print("$package: $msg\n");
    return 1;

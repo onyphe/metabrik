@@ -18,8 +18,6 @@ set core::global datadir $home."/metabricky/data"
 set core::global ctimeout 20
 set core::global rtimeout 20
 
-set shell::meby commands vi:cat:less:w:nc:grep:find:cpanm
-
 load http::www
 
 load file::slurp

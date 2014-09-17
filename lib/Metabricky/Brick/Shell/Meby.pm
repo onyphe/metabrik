@@ -9,8 +9,6 @@ use base qw(Metabricky::Brick);
 
 our @AS = qw(
    echo
-   newline
-   commands
    shell
 );
 __PACKAGE__->cgBuildIndices;
@@ -39,38 +37,6 @@ use Metabricky::Ext::Shell;
       return $self->{echo};
    };
 
-   *newline = sub {
-      my $self = shift;
-      my ($value) = @_;
-
-      if (defined($value)) {
-         # set shell newline attribute only when is has been populated
-         if (defined($self->shell)) {
-            return $self->shell->newline($self->{newline} = $value);
-         }
-
-         return $self->{newline} = $value;
-      }
-
-      return $self->{newline};
-   };
-
-   *commands = sub {
-      my $self = shift;
-      my ($value) = @_;
-
-      if (defined($value)) {
-         # set shell commands attribute only when is has been populated
-         if (defined($self->shell)) {
-            return $self->shell->commands($self->{commands} = $value);
-         }
-
-         return $self->{commands} = $value;
-      }
-
-      return $self->{commands};
-   };
-
    *debug = sub {
       my $self = shift;
       my ($value) = @_;
@@ -90,20 +56,14 @@ use Metabricky::Ext::Shell;
 
 sub help {
    print "set shell::meby echo <0|1>\n";
-   print "set shell::meby newline <0|1>\n";
-   print "set shell::meby commands <command1:command2:..:commandN>\n";
    print "\n";
    print "run shell::meby cmdloop\n";
    print "run shell::meby script <script>\n";
 }
 
 sub default_values {
-   my $self = shift;
-
    return {
       echo => 1,
-      newline => 1,
-      commands => 'vi:ls:w:top:less:cat:find:grep:nc:cpanm',
    };
 }
 
@@ -116,8 +76,6 @@ sub init {
 
    my $shell = Metabricky::Ext::Shell->new;
    $shell->echo($self->echo);
-   $shell->newline($self->newline);
-   $shell->commands($self->commands);
    $shell->debug($self->debug);
 
    $self->shell($shell);

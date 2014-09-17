@@ -1,6 +1,12 @@
 ### TODO
 
 Prio:
+-> all shell commands writes $_, $!, $? and $@ (including !, which is an alias)
+-> replace show by loaded?
+-> add support for get instead of set to gather attributes
+-> alias support. example: alias ls "!ls -lF"
+-> remove newline(), no need thanks to echo()
+-> use \ to enter multi-lines
 -> completion: for Commands
 => Metabricky::Brick::get_commands and get_attributes: rename API?
 -> add repository capacity
@@ -79,6 +85,7 @@ Bricko Depo
 
 Design rules:
 1. Only shell commands can overwrite $_
+=> all shell commands writes $_, $!, $? and $@ (including !, which is an alias)
 2. Must be quick and easy to develop bricks
 3. Must be quick and easy to USE bricks
 4. Do simple functions

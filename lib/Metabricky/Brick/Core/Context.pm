@@ -81,7 +81,7 @@ sub new {
       my $lp = Lexical::Persistence->new;
       $lp->set_context(_ => {
          '$__ctx' => { },
-         '$context' => $self,
+         '$Context' => $self,
       });
       $lp->call(sub {
          my %args = @_;
@@ -122,7 +122,7 @@ sub init {
 
    my $r = $self->update_available;
    if (! defined($r)) {
-      return $self->log->fatal("core::context: init: unable to init Brick [core::context]");
+      return $self->log->fatal("init: unable to init Brick [core::context]");
    }
 
    return $self;
@@ -145,7 +145,7 @@ sub do {
    };
    if ($@) {
       chomp($@);
-      return $self->log->error("core::context: do: $@");
+      return $self->log->error("do: $@");
    }
 
    return $res;
@@ -163,7 +163,7 @@ sub call {
    };
    if ($@) {
       chomp($@);
-      return $self->log->error("core::context: call: $@");
+      return $self->log->error("call: $@");
    }
 
    return $res;
@@ -273,7 +273,7 @@ sub load {
       return $__ctx->{loaded}->{$__lp_brick} = $__lp_new;
    }, module => $module, brick => $brick);
    if (! defined($r)) {
-      return $self->log->error("core::context: load: unable to load Brick [$brick]");
+      return $self->log->error("load: unable to load Brick [$brick]");
       return;
    }
 
