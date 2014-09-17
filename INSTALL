@@ -9,3 +9,9 @@ cpanm Net::SSLeay
 cpanm Net::SSH2
 
 export PERL_RL=Gnu
+
+
+# Cygwin
+
+=> setup.exe --no-admin
+

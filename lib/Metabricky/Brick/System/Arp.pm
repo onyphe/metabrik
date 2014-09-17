@@ -10,7 +10,7 @@ use warnings;
 use base qw(Metabricky::Brick);
 
 our @AS = qw(
-   dnet
+   _dnet
 );
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
@@ -18,7 +18,7 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 use Net::Libdnet::Arp;
 
 sub help {
-   print "run system::arp show\n";
+   print "run system::arp cache\n";
 }
 
 sub init {
@@ -26,29 +26,32 @@ sub init {
       @_,
    ) or return 1; # Init already done
 
-   my $dnet = Net::Libdnet::Arp->new or die("init");
-   $self->dnet($dnet);
+   my $dnet = Net::Libdnet::Arp->new;
+   if (! defined($dnet)) {
+      return $self->log->error("unable to create Net::Libdnet::Arp object");
+   }
+
+   $self->_dnet($dnet);
 
    return $self;
 }
 
-sub _display {
+sub _loop {
    my ($entry, $data) = @_;
 
-   my $buf = sprintf("%-30s %-30s", $entry->{arp_pa}, $entry->{arp_ha});
-   print "$buf\n";
+   $data->{ip}->{$entry->{arp_pa}} = $entry->{arp_ha};
+   $data->{mac}->{$entry->{arp_ha}} = $entry->{arp_pa};
 
-   return $buf;
+   return $data;
 }
 
-sub show {
+sub cache {
    my $self = shift;
 
-   printf("%-30s %-30s\n", 'IP address', 'MAC address');
-   my $data = '';
-   $self->dnet->loop(\&_display, \$data);
+   my %data = ();
+   $self->_dnet->loop(\&_loop, \%data);
 
-   return 1;
+   return \%data;
 }
 
 1;

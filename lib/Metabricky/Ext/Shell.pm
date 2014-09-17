@@ -349,6 +349,7 @@ sub run_system {
    return system(@args);
 }
 
+# XXX: should be a shell alias
 sub run_ls {
    my $self = shift;
 
@@ -358,31 +359,6 @@ sub run_ls {
    else {
       return $self->run_shell('ls', '-lF', @_);
    }
-}
-
-# XXX: off for now, need to work on it
-sub _run_li {
-   my $self = shift;
-   my (@args) = @_;
-
-   my $cwd = $self->path_cwd;
-
-   my @files = io($cwd)->all;
-   for my $this (@files) {
-      my $file = io($this);
-      my $name = $file->relative;
-      next if $name =~ /^\./;
-
-      my $size = $file->size;
-      my $mtime = $file->mtime;
-      my $uid = $file->uid;
-      my $gid = $file->gid;
-      #my $modes = $file->modes;
-
-      print "$size $mtime $uid:$gid $file\n";
-   }
-
-   return 1;
 }
 
 sub run_history {
@@ -454,62 +430,6 @@ sub run_pwd {
    my $self = shift;
 
    print $self->path_cwd."\n";
-
-   return 1;
-}
-
-sub run_doc {
-   my $self = shift;
-   my (@args) = @_;
-
-   if (! defined($args[0])) {
-      $self->log->error("doc: you have to provide a module as an argument");
-      return;
-   }
-
-   system('perldoc', @args);
-
-   return 1;
-}
-
-sub run_sub {
-   my $self = shift;
-   my (@args) = @_;
-
-   if (! defined($args[0])) {
-      $self->log->error("sub: you have to provide a function as an argument");
-      return;
-   }
-
-   system('perldoc', '-f', @args);
-
-   return 1;
-}
-
-sub run_src {
-   my $self = shift;
-   my (@args) = @_;
-
-   if (! defined($args[0])) {
-      $self->log->error("src: you have to provide a module as an argument");
-      return;
-   }
-
-   system('perldoc', '-m', @args);
-
-   return 1;
-}
-
-sub run_faq {
-   my $self = shift;
-   my (@args) = @_;
-
-   if (! defined($args[0])) {
-      $self->log->error("faq: you have to provide a question as an argument");
-      return;
-   }
-
-   system('perldoc', '-q', @args);
 
    return 1;
 }
@@ -950,35 +870,6 @@ sub comp_set {
 
 sub comp_load {
    return shift->comp_run(@_);
-}
-
-sub comp_doc {
-   my $self = shift;
-   my ($word, $line, $start) = @_;
-
-   #print "[DEBUG] word[$word] line[$line] start[$start]\n";
-
-   my %comp = ();
-   for my $inc (@INC) {
-      if (! -d $inc) {
-         next;
-      }
-      #print "[DEBUG] inc[$inc]\n";
-      my $r = opendir(my $dir, $inc);
-      if (! defined($r)) {
-         $self->log->error("comp_doc: opendir: $dir: $!");
-         next;
-      }
-
-      my @dirs = readdir($dir);
-      my @comp = grep(/^$word/, @dirs);
-      #print "@comp\n";
-      for my $c (@comp) {
-         $comp{$c}++;
-      }
-   }
-
-   return keys %comp;
 }
 
 # Default to check for global completion value

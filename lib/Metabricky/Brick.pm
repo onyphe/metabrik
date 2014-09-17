@@ -49,6 +49,7 @@ sub get_commands {
       for (@list) {
          next unless /^[a-z]/; # Brick Commands always begin with a minuscule
          next if /^cg[A-Z]/; # Class::Gomor stuff
+         next if /^_/; # Internal stuff
          next if /^(?:a|b|import|init|new|SUPER::|BEGIN|isa|can|EXPORT|AA|AS|ISA|DESTROY|__ANON__)$/; # Perl stuff
          my $is_attribute = 0;
          for my $attribute (@$attributes) {
@@ -73,9 +74,12 @@ sub get_attributes {
    {
       no strict 'refs';
 
-      @attributes = ( @{ref($self).'::AS'}, @{'Metabricky::Brick::AS'} );
-      my %h = map { $_ => 1 } @attributes;
-      @attributes = sort { $a cmp $b } keys %h;
+      my @as = ( @{ref($self).'::AS'}, @{'Metabricky::Brick::AS'} );
+      my %h = map { $_ => 1 } @as;
+      for (sort { $a cmp $b } keys %h) {
+         next if /^_/; # Internal stuff
+         push @attributes, $_;
+      }
    };
 
    return \@attributes;

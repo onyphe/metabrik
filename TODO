@@ -1,6 +1,13 @@
 ### TODO
 
 Prio:
+-> use line_args() and line_parsed() where needed in ext::shell completion functions
+-> make shell::meby Brick to depend on the fewest module as possible
+-> $_ is a string, @_ is strings splitted by "\n"
+=> example: !w returns result in $_, and lines in @_
+=> %_ => line numbered avec arrayref for each word
+-> Brick: help to auto-populate with get_attributes and get_commands and require_arg
+-> update() function to autoupdate
 -> rename show to search?
 -> fetch default_values() to write set attributes on init() or load()?
 => this could overwhelm set attributes when entering set()
