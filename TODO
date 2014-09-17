@@ -1,6 +1,9 @@
 ### TODO
 
 Prio:
+-> rename show to search?
+-> fetch default_values() to write set attributes on init() or load()?
+=> this could overwhelm set attributes when entering set()
 -> all shell commands writes $_, $!, $? and $@ (including !, which is an alias)
 -> replace show by loaded?
 -> add support for get instead of set to gather attributes
