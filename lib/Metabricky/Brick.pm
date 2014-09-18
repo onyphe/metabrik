@@ -92,7 +92,7 @@ sub category {
    return $self->log->fatal("category: no Category found");
 }
 
-sub get_commands {
+sub commands {
    my $self = shift;
 
    my @commands = ();
@@ -100,7 +100,7 @@ sub get_commands {
       no strict 'refs';
 
       my @list = ( keys %{ref($self).'::'}, keys %{'Metabricky::Brick::'} );
-      my $attributes = $self->get_attributes;
+      my $attributes = $self->attributes;
 
       for (@list) {
          next unless /^[a-z]/; # Brick Commands always begin with a minuscule
@@ -123,7 +123,7 @@ sub get_commands {
    return \@commands;
 }
 
-sub get_attributes {
+sub attributes {
    my $self = shift;
 
    my @attributes = ();

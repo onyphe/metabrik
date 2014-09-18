@@ -665,11 +665,11 @@ sub comp_set {
          return;
       }
 
-      my $attributes = $Bricks->{$brick}->get_attributes;
+      my $attributes = $Bricks->{$brick}->attributes;
       push @comp, @$attributes;
    }
    elsif ($count == 3 && length($word) > 0) {
-      my $attributes = $Bricks->{$brick}->get_attributes;
+      my $attributes = $Bricks->{$brick}->attributes;
 
       for my $a (@$attributes) {
          if ($a =~ /^$word/) {
@@ -752,11 +752,11 @@ sub comp_run {
          return;
       }
 
-      my $commands = $Bricks->{$brick}->get_commands;
+      my $commands = $Bricks->{$brick}->commands;
       push @comp, @$commands;
    }
    elsif ($count == 3) {
-      my $commands = $Bricks->{$brick}->get_commands;
+      my $commands = $Bricks->{$brick}->commands;
 
       for my $a (@$commands) {
          if ($a =~ /^$word/) {

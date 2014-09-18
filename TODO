@@ -9,6 +9,8 @@ Prio:
 => example: !w returns result in $_, and lines in @_
 => %_ => line numbered avec arrayref for each word
 
+-> decide which Brick will be in main repository and which own are private
+
 -> use line_args() and line_parsed() where needed in ext::shell completion functions
 -> make shell::meby Brick to depend on the fewest module as possible
 
