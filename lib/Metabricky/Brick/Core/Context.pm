@@ -72,7 +72,7 @@ sub help {
 }
 
 sub revision {
-   return '$Revision';
+   return '$Revision$';
 }
 
 sub new {
