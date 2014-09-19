@@ -3,6 +3,11 @@
 Prio:
 -> alias support. example: alias ls "!ls -lF"
 
+-> completion on filesystem always on: set file::slurp file <TAB>
+=> run file::slurp csv
+
+-> Brick should have a version Command
+
 -> all shell commands writes $_, $!, $? and $@ (including !, which is an alias)
 => version() does not comply, check every shell command
 -> $_ is a string, @_ is strings splitted by "\n"

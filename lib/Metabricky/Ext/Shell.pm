@@ -411,7 +411,9 @@ sub run_pl {
 
    my $r = $context->do($line, $self->echo);
    if (! defined($r)) {
-      $self->log->error("pl: unable to execute Code [$line]");
+      # When ext::shell:echo is off, we can get undef and it is not an error.
+      # XXX: we should use $@ to know if there is an error
+      #$self->log->error("pl: unable to execute Code [$line]");
       return;
    }
 
@@ -651,7 +653,7 @@ sub comp_set {
    if ($count == 1 || $count == 2 && length($word) > 0) {
       my $available = $context->available or return;
       if (! defined($available)) {
-         $self->log->warning("comp_run: can't fetch available Bricks");
+         $self->log->warning("comp_set: can't fetch available Bricks");
          return ();
       }
 
@@ -669,6 +671,11 @@ sub comp_set {
       push @comp, @$attributes;
    }
    elsif ($count == 3 && length($word) > 0) {
+      if (! exists($Bricks->{$brick})) {
+         $self->log->verbose("Brick [$brick] not loaded");
+         return;
+      }
+
       my $attributes = $Bricks->{$brick}->attributes;
 
       for my $a (@$attributes) {
@@ -756,6 +763,11 @@ sub comp_run {
       push @comp, @$commands;
    }
    elsif ($count == 3) {
+      if (! exists($Bricks->{$brick})) {
+         $self->log->verbose("Brick [$brick] not loaded");
+         return;
+      }
+
       my $commands = $Bricks->{$brick}->commands;
 
       for my $a (@$commands) {

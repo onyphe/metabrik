@@ -136,9 +136,11 @@ sub do {
    my $res;
    eval {
       if ($dump) {
+         $self->debug && $self->log->debug("do: echo on");
          $res = Data::Dump::dump($lp->do($code));
       }
       else {
+         $self->debug && $self->log->debug("do: echo off");
          $res = $lp->do($code);
       }
    };
@@ -146,6 +148,8 @@ sub do {
       chomp($@);
       return $self->log->error("do: $@");
    }
+
+   $self->debug && $self->log->debug("do: returned[".(defined($res) ? $res : 'undef')."]");
 
    return $res;
 }
@@ -260,7 +264,7 @@ sub load {
       eval("use $__lp_module;");
       if ($@) {
          chomp($@);
-         die("unable to load Brick [$__lp_brick]: $@\n");
+         die("load: unable to load Brick [$__lp_brick]: $@\n");
       }
 
       my $__lp_new = $__lp_module->new(
@@ -268,12 +272,14 @@ sub load {
          log => $__ctx->{log},
       );
       #$__lp_new->init; # No init now. We wait first run()
+      if (! defined($__lp_new)) {
+         die("load: unable to create Brick [$__lp_brick]\n");
+      }
 
       return $__ctx->{loaded}->{$__lp_brick} = $__lp_new;
    }, module => $module, brick => $brick);
    if (! defined($r)) {
       return $self->log->error("load: unable to load Brick [$brick]");
-      return;
    }
 
    return $r;
@@ -341,7 +347,7 @@ sub get {
       # With only one argument, we want to get set Attributes for the specified Brick
       elsif (defined($__lp_brick) && ! defined($__lp_attribute)) {
          if (! exists($__ctx->{loaded}->{$__lp_brick})) {
-            die("Brick [$__lp_brick] not loaded\n");
+            die("get: Brick [$__lp_brick] not loaded\n");
          }
 
          return $__ctx->{set}->{$__lp_brick};
@@ -349,11 +355,11 @@ sub get {
       # Else we get one Brick Attribute
       else {
          if (! exists($__ctx->{loaded}->{$__lp_brick})) {
-            die("Brick [$__lp_brick] not loaded\n");
+            die("get: Brick [$__lp_brick] not loaded\n");
          }
 
          if (! $__ctx->{loaded}->{$__lp_brick}->can($__lp_attribute)) {
-            die("Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
+            die("get: Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
          }
 
          return $__ctx->{loaded}->{$__lp_brick}->$__lp_attribute;
@@ -380,11 +386,11 @@ sub set {
       my $__lp_value = $args{value};
 
       if (! exists($__ctx->{loaded}->{$__lp_brick})) {
-         die("Brick [$__lp_brick] not loaded\n");
+         die("set: Brick [$__lp_brick] not loaded\n");
       }
 
       if (! $__ctx->{loaded}->{$__lp_brick}->can($__lp_attribute)) {
-         die("Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
+         die("set: Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
       }
 
       #$__ctx->{loaded}->{$__lp_brick}->init; # No init when just setting an attribute
@@ -412,16 +418,16 @@ sub run {
       my @__lp_args = @{$args{args}};
 
       if (! exists($__ctx->{loaded}->{$__lp_brick})) {
-         die("Brick [$__lp_brick] not loaded\n");
+         die("run: Brick [$__lp_brick] not loaded\n");
       }
 
       my $__lp_run = $__ctx->{loaded}->{$__lp_brick};
       if (! defined($__lp_run)) {
-         die("Brick [$__lp_brick] not defined\n");
+         die("run: Brick [$__lp_brick] not defined\n");
       }
 
       if (! $__ctx->{loaded}->{$__lp_brick}->can($__lp_command)) {
-         die("Brick [$__lp_brick] has no Command [$__lp_command]\n");
+         die("run: Brick [$__lp_brick] has no Command [$__lp_command]\n");
       }
 
       $__lp_run->init; # Will init() only if not already done

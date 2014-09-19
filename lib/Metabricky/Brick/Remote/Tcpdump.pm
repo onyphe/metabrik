@@ -25,7 +25,7 @@ sub require_modules {
 
 sub help {
    return [
-      'set remote::tcpdump host <ip|hostname>',j
+      'set remote::tcpdump host <ip|hostname>',
       'set remote::tcpdump username <user>',
       'set remote::tcpdump publickey <file>',
       'set remote::tcpdump privatekey <file>',

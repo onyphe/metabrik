@@ -11,6 +11,7 @@ use base qw(Metabricky::Brick);
 
 our @AS = qw(
    file
+   separator
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
@@ -19,16 +20,25 @@ sub require_modules {
       'File::Slurp',
       'JSON::XS',
       'XML::Simple',
+      'Text::CSV::Hashify',
    ];
 }
 
 sub help {
    return [
-      'set slurp file <file>',
+      'set file::slurp file <file>',
+      'set file::slurp separator <separator>',
       'run file::slurp text',
       'run file::slurp json',
       'run file::slurp xml',
+      'run file::slurp csv',
    ];
+}
+
+sub default_values {
+   return {
+      separator => ';',
+   };
 }
 
 sub text {
@@ -38,7 +48,7 @@ sub text {
       return $self->log->info("set file::slurp file <file>");
    }
 
-   my $text = read_file($self->file)
+   my $text = File::Slurp::read_file($self->file)
       or return $self->log->verbose("nothing to read from file [".$self->file."]");
 
    return $text;
@@ -51,7 +61,7 @@ sub json {
       return $self->log->info("set file::slurp file <file>");
    }
 
-   return decode_json($self->text);
+   return JSON::XS::decode_json($self->text);
 }
 
 sub xml {
@@ -64,6 +74,26 @@ sub xml {
    my $xs = XML::Simple->new;
 
    return $xs->XMLin($self->text);
+}
+
+sub csv {
+   my $self = shift;
+
+   if (! defined($self->file)) {
+      return $self->log->info("set file::slurp file <file>");
+   }
+
+   if (! defined($self->separator)) {
+      return $self->log->info("set file::slurp separator <separator>");
+   }
+
+   my $obj = Text::CSV::Hashify->new({
+      file => $self->file,
+      format => 'aoh',
+      sep_char => $self->separator,
+   }) or return $self->log->error("Text::CSV::Hashify: new");
+
+   return $obj->all;
 }
 
 1;
