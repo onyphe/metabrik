@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Brick.pm 93 2014-09-18 06:06:28Z gomor $
 #
 package Metabricky::Brick;
 use strict;
@@ -14,6 +14,8 @@ our @AS = qw(
    log
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
+
+our ($VERSION) = '$Revision$' =~ /(\d+)/;
 
 sub new {
    my $self = shift->SUPER::new(
