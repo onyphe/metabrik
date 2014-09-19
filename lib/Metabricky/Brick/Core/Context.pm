@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Context.pm 94 2014-09-19 05:24:06Z gomor $
 #
 package Metabricky::Brick::Core::Context;
 use strict;
@@ -69,6 +69,10 @@ sub help {
       'run core::context do <perl_code>',
       'run core::context call <perl_sub>',
    ];
+}
+
+sub revision {
+   return '$Revision';
 }
 
 sub new {
