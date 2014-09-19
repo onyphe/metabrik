@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Ssh.pm 89 2014-09-17 20:29:29Z gomor $
 #
 # Ssh brick
 #
@@ -13,6 +13,10 @@ our @AS = qw(
    banner
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
+
+sub revision {
+   return '$Revision$';
+}
 
 sub help {
    return [

@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Name.pm 89 2014-09-17 20:29:29Z gomor $
 #
 # Net::NBName brick
 #
@@ -8,6 +8,10 @@ use strict;
 use warnings;
 
 use base qw(Metabricky::Brick);
+
+sub revision {
+   return '$Revision$';
+}
 
 sub require_modules {
    return [

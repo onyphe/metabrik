@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Slurp.pm 94 2014-09-19 05:24:06Z gomor $
 #
 # Slurp brick
 #
@@ -14,6 +14,10 @@ our @AS = qw(
    separator
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
+
+sub revision {
+   return '$Revision$';
+}
 
 sub require_modules {
    return [

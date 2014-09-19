@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Cwe.pm 89 2014-09-17 20:29:29Z gomor $
 #
 # CWE brick
 #
@@ -15,8 +15,17 @@ our @AS = qw(
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
+sub revision {
+   return '$Revision$';
+}
+
 sub require_modules {
-   return [ 'Metabricky::Brick::Database::Sqlite', 'Metabricky::Brick::File::Fetch', 'Metabricky::Brick::File::Slurp', 'Metabricky::Brick::File::Zip' ];
+   return [
+      'Metabricky::Brick::Database::Sqlite',
+      'Metabricky::Brick::File::Fetch',
+      'Metabricky::Brick::File::Slurp',
+      'Metabricky::Brick::File::Zip',
+   ];
 }
 
 sub help {

@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Zip.pm 89 2014-09-17 20:29:29Z gomor $
 #
 # Zip brick
 #
@@ -15,6 +15,10 @@ our @AS = qw(
    destdir
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
+
+sub revision {
+   return '$Revision$';
+}
 
 sub help {
    return [

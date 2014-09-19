@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Www.pm 89 2014-09-17 20:29:29Z gomor $
 #
 # Www brick
 #
@@ -13,6 +13,10 @@ our @AS = qw(
    mechanize
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
+
+sub revision {
+   return '$Revision$';
+}
 
 sub require_modules {
    return [

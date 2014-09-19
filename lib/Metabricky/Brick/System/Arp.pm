@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Arp.pm 89 2014-09-17 20:29:29Z gomor $
 #
 # Arp brick
 #
@@ -13,6 +13,10 @@ our @AS = qw(
    _dnet
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
+
+sub revision {
+   return '$Revision$';
+}
 
 sub require_modules {
    return [

@@ -55,6 +55,10 @@ my $__ctx = {};
    };
 }
 
+sub revision {
+   return '$Revision$';
+}
+
 sub help {
    return [
       'run core::context load <brick>',

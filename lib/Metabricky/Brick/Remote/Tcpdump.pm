@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Tcpdump.pm 94 2014-09-19 05:24:06Z gomor $
 #
 # remote::tcpdump brick
 #
@@ -16,6 +16,10 @@ our @AS = qw(
    _dump
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
+
+sub revision {
+   return '$Revision$';
+}
 
 sub require_modules {
    return [

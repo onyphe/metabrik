@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Vfeed.pm 89 2014-09-17 20:29:29Z gomor $
 #
 # vFeed brick
 #
@@ -14,6 +14,10 @@ our @AS = qw(
    vfeed
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
+
+sub revision {
+   return '$Revision$';
+}
 
 sub require_modules {
    return [
