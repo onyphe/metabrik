@@ -75,10 +75,6 @@ sub help {
    ];
 }
 
-sub revision {
-   return '$Revision$';
-}
-
 sub new {
    my $self = shift->SUPER::new(
       @_,

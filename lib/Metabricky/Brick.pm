@@ -49,7 +49,8 @@ sub version {
    my $revision = $self->revision;
    my ($version) = $revision =~ /(\d+)/;
 
-   return $version;
+   # Version 1 of the API
+   return "1.$version";
 }
 
 sub default_values {
