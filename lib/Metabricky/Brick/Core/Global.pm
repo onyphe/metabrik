@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Global.pm 89 2014-09-17 20:29:29Z gomor $
 #
 # Global brick
 #
@@ -21,6 +21,10 @@ our @AS = qw(
    datadir
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
+
+sub revision {
+   return '$Revision$';
+}
 
 sub new {
    my $self = shift->SUPER::new(

@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Log.pm 89 2014-09-17 20:29:29Z gomor $
 #
 package Metabricky::Brick::Core::Log;
 use strict;
@@ -8,6 +8,10 @@ use warnings;
 use base qw(Metabricky::Brick Metabricky::Ext::Log);
 
 use Term::ANSIColor qw(:constants);
+
+sub revision {
+   return '$Revision$';
+}
 
 sub default_values {
    return {

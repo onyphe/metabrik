@@ -15,8 +15,6 @@ our @AS = qw(
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-our ($VERSION) = '$Revision$' =~ /(\d+)/;
-
 sub new {
    my $self = shift->SUPER::new(
       debug => 0,
@@ -39,6 +37,19 @@ sub new {
    }
 
    return $self;
+}
+
+sub revision {
+   return 1;
+}
+
+sub version {
+   my $self = shift;
+
+   my $revision = $self->revision;
+   my ($version) = $revision =~ /(\d+)/;
+
+   return $version;
 }
 
 sub default_values {
