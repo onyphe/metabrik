@@ -503,28 +503,31 @@ sub run_show {
    return 1;
 }
 
-sub run_info {
+sub run_help {
    my $self = shift;
-   my ($brick) = @_;
+   my ($command) = @_;
 
-   if (! defined($brick)) {
-      return $self->log->info("help <brick>");
+   if (! defined($command)) {
+      return $self->SUPER::run_help;
    }
+   else {
+      if (exists($Bricks->{$command})) {
+         my $help = $Bricks->{$command}->help;
 
-   if (! exists($Bricks->{$brick})) {
-      return $self->log->error("Brick [$brick] not loaded");
-   }
-
-   my $help = $Bricks->{$brick}->help;
-
-   for my $line (@$help) {
-      $self->log->info($line);
+         for my $line (@$help) {
+            $self->log->info($line);
+         }
+      }
+      else {
+         # We return to standard help() method
+         return $self->SUPER::run_help($command);
+      }
    }
 
    return 1;
 }
 
-sub comp_info {
+sub comp_help {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
@@ -537,7 +540,7 @@ sub comp_info {
 
    my $available = $context->available or return;
    if (! defined($available)) {
-      $self->log->warning("comp_info: can't fetch available Bricks");
+      $self->log->warning("comp_help: can't fetch available Bricks");
       return ();
    }
 
@@ -746,9 +749,6 @@ sub comp_run {
       }
 
       for my $a (keys %$available) {
-         #if ($self->debug) {
-            #$self->log->debug("[$a] [$word]");
-         #}
          push @comp, $a if $a =~ /^$word/;
       }
    }

@@ -6,7 +6,10 @@ Prio:
 -> completion on filesystem always on: set file::slurp file <TAB>
 => run file::slurp csv
 
+-> add <brick> in help command menu
+
 -> Brick should have a version Command
+=> use SVN Id
 
 -> all shell commands writes $_, $!, $? and $@ (including !, which is an alias)
 => version() does not comply, check every shell command
