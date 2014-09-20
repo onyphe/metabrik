@@ -3,13 +3,21 @@
 Prio:
 -> alias support. example: alias ls "!ls -lF"
 
+-> update help to uset a hashref: set:XXX => 'set brick attr ...', run:XXX => 'run br'...
+
+-> bug: set cannot be used to fetch 'not set' Attributes
+
+-> add core::global username
+-> rename remote::ssh2 to remote::ssh and rename Commands to match Net::SSH2 module
+-> remote::ssh, cmd => exec, check also exit_status
+
+-> file::slurp csv noheader 1|0
+=> slurp csv column 'name|number' => arrayrey
+
 -> completion on filesystem always on: set file::slurp file <TAB>
 => run file::slurp csv
 
 -> add <brick> in help command menu
-
--> Brick should have a version Command
-=> use SVN Id
 
 -> all shell commands writes $_, $!, $? and $@ (including !, which is an alias)
 => version() does not comply, check every shell command
@@ -17,7 +25,7 @@ Prio:
 => example: !w returns result in $_, and lines in @_
 => %_ => line numbered avec arrayref for each word
 
--> decide which Brick will be in main repository and which own are private
+-> decide which Brick will be in main repository and which ones are private
 
 -> use line_args() and line_parsed() where needed in ext::shell completion functions
 -> make shell::meby Brick to depend on the fewest module as possible
@@ -26,10 +34,12 @@ Prio:
 -> add repository capacity
 => example: main::system::os, obssi::remote::serenade
 => force repository main?
+
 -> shell::meby: modify run_set and add run_get to use core::context:get
 => huge cleanup for shell::meby TODO
 
-Future:
+
+### Future:
 -> update() function to autoupdate
 -> use page() and pager_internal() from Term::Shell
 -> shell::meby: require_bricks { 'core::context' => 1 }

@@ -11,6 +11,7 @@ use base qw(Metabricky::Brick);
 
 our @AS = qw(
    host
+   port
    username
    publickey
    privatekey
@@ -31,6 +32,7 @@ sub require_modules {
 sub help {
    return [
       'set remote::ssh2 host <ip|hostname>',
+      'set remote::ssh2 port <port>',
       'set remote::ssh2 username <user>',
       'set remote::ssh2 publickey <file>',
       'set remote::ssh2 privatekey <file>',
@@ -43,28 +45,45 @@ sub help {
    ];
 }
 
-sub require_set_connect { qw(host username publickey privatekey) }
-sub require_arg_connect { qw() }
-sub require_cmd_connect { qw() }
+sub default_values {
+   return {
+      host => 'localhost',
+      port => 22,
+      username => 'root',
+   };
+}
 
 sub connect {
    my $self = shift;
 
    if (defined($self->ssh2)) {
-      return $self->log->verbose("we are already connected");
+      return $self->log->verbose("connect: already connected");
    }
 
-   if (! defined($self->host)
-   ||  ! defined($self->username)
-   ||  ! defined($self->publickey)
-   ||  ! defined($self->privatekey)) {
-      return $self->require_attributes(qw(host username publickey privatekey));
+   if (! defined($self->host)) {
+      return $self->log->info("set remote::ssh2 host <ip|hostname>");
+   }
+
+   if (! defined($self->port)) {
+      return $self->log->info("set remote::ssh2 port <port>");
+   }
+
+   if (! defined($self->username)) {
+      return $self->log->info("set remote::ssh2 username <user>");
+   }
+
+   if (! defined($self->publickey)) {
+      return $self->log->info("set remote::ssh2 publickey <file>");
+   }
+
+   if (! defined($self->privatekey)) {
+      return $self->log->info("set remote::ssh2 privatekey <file>");
    }
 
    my $ssh2 = Net::SSH2->new;
-   my $ret = $ssh2->connect($self->host);
+   my $ret = $ssh2->connect($self->host, $self->port);
    if (! $ret) {
-      return $self->log->error("can't connect via SSH2: $!");
+      return $self->log->error("connect: can't connect via SSH2: $!");
    }
 
    $ret = $ssh2->auth(
@@ -73,19 +92,13 @@ sub connect {
       privatekey => $self->privatekey,
    );
    if (! $ret) {
-      return $self->log->error("can't authenticate via SSH2: $!");
+      return $self->log->error("connect: can't authenticate via SSH2: $!");
    }
 
-   if ($self->debug) {
-      print "DEBUG: ssh2 connected to [".$self->host."]\n";
-   }
+   $self->log->verbose("connect: ssh2 connected to [".$self->host."]");
 
    return $self->ssh2($ssh2);
 }
-
-sub require_set_disconnect { qw() }
-sub require_arg_disconnect { qw() }
-sub require_cmd_disconnect { qw(connect) }
 
 sub disconnect {
    my $self = shift;
@@ -103,10 +116,6 @@ sub disconnect {
    return $r;
 }
 
-sub require_set_cmd { qw() }
-sub require_arg_cmd { qw(command) }
-sub require_cmd_cmd { qw(connect) }
-
 sub cmd {
    my $self = shift;
    my ($cmd) = @_;
@@ -121,13 +130,15 @@ sub cmd {
       return $self->log->info("run remote::ssh2 cmd <cmd>");
    }
 
-   print "DEBUG: cmd[$cmd]\n" if $self->debug;
+   $self->debug && $self->log->debug("cmd: cmd [$cmd]");
 
    my $chan = $ssh2->channel;
-   $chan->exec($cmd) or return $self->log->error("can't execute command [$cmd]: $!");
+   if (! defined($chan)) {
+      return $self->log->error("cmd: channel creation error");
+   }
 
-   #my @lines = <$chan>;
-   #print "@lines\n";
+   $chan->exec($cmd)
+      or return $self->log->error("cmd: can't execute command [$cmd]: $!");
 
    return $chan;
 }
@@ -142,32 +153,64 @@ sub readline {
    }
 
    my $channel = $ssh2->channel;
+   if (! defined($channel)) {
+      return $self->log->error("readline: channel creation error");
+   }
 
-   return <$channel>;
+   my @lines = ();
+   while (! $channel->eof) {
+      if (defined(my $line = <$channel>)) {
+         chomp($line);
+         push @lines, $line;
+         # We only want one line
+         last;
+      }
+   }
+
+   return \@lines;
+}
+
+sub readall {
+   my $self = shift;
+
+   my $ssh2 = $self->ssh2;
+
+   if (! defined($ssh2)) {
+      return $self->log->info("run remote::ssh2 connect");
+   }
+
+   my $channel = $ssh2->channel;
+   if (! defined($channel)) {
+      return $self->log->error("readall: channel creation error");
+   }
+
+   my @lines = ();
+   while (! $channel->eof) {
+      if (defined(my $line = <$channel>)) {
+         chomp($line);
+         push @lines, $line;
+      }
+   }
+
+   return \@lines;
 }
 
 sub listfiles {
    my $self = shift;
    my ($glob) = @_;
 
-   my $chan = $self->cmd("ls $glob 2> /dev/null");
-
-   my @files = ();
-   my @lines = <$chan>;
-   if (@lines > 0) {
-      for my $l (@lines) {
-         chomp($l);
-         #print "DEBUG file[$l]\n";
-         push @files, $l;
-      }
+   my $channel = $self->cmd("ls $glob 2> /dev/null");
+   if (! defined($channel)) {
+      return $self->log->error("listfiles: cmd error");
    }
 
-   return \@files;
-}
+   my $all = $self->readall;
+   if (! defined($all)) {
+      return $self->log->error("listfiles: readall error");
+   }
 
-sub require_set_cat { qw() }
-sub require_arg_cat { qw(file) }
-sub require_cmd_cat { qw(connect) }
+   return $all;
+}
 
 sub cat {
    my $self = shift;
@@ -182,6 +225,8 @@ sub cat {
 
 sub DESTROY {
    my $self = shift;
+
+   $self->debug && $self->log->debug("DESTROY: called");
 
    my $ssh2 = $self->ssh2;
    if (defined($ssh2)) {

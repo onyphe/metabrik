@@ -4,7 +4,7 @@
       "GomoR <gomor-cpan_at_gomor.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.133380",
+   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.132510",
    "license" : [
       "artistic_1"
    ],
@@ -38,7 +38,7 @@
    "provides" : {
       "Metabricky" : {
          "file" : "lib/Metabricky.pm",
-         "version" : "0.81"
+         "version" : "0.83"
       },
       "Metabricky::Brick" : {
          "file" : "lib/Metabricky/Brick.pm"
@@ -152,8 +152,8 @@
    "release_status" : "stable",
    "resources" : {
       "license" : [
-         "http://opensource.org/licenses/artistic-license.php"
+         "http://www.perlfoundation.org/artistic_license_1_0"
       ]
    },
-   "version" : "0.81"
+   "version" : "0.83"
 }

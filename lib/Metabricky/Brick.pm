@@ -171,13 +171,6 @@ sub require_modules {
    return [];
 }
 
-sub require_attributes {
-   my $self = shift;
-   my (@attributes) = @_;
-
-   return $self->log->fatal("you must set attribute(s): ".join(', ', @attributes));
-}
-
 sub self {
    my $self = shift;
 
