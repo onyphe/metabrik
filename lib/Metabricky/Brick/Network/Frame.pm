@@ -30,9 +30,9 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set network::frame device <interface>',
-   ];
+   return {
+      'set:device' => '<device>',
+   };
 }
 
 sub command1 {

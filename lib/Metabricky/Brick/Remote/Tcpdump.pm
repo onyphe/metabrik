@@ -28,17 +28,17 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set remote::tcpdump host <ip|hostname>',
-      'set remote::tcpdump username <user>',
-      'set remote::tcpdump publickey <file>',
-      'set remote::tcpdump privatekey <file>',
-      'run remote::tcpdump start',
-      'run remote::tcpdump status',
-      'run remote::tcpdump stop',
-      'run remote::tcpdump next',
-      'run remote::tcpdump nextall',
-   ];
+   return {
+      'set:host' => '<ip|hostname>',
+      'set:username' => '<user>',
+      'set:publickey' => '<file>',
+      'set:privatekey' => '<file>',
+      'run:start' => '',
+      'run:status' => '',
+      'run:stop' => '',
+      'run:next' => '',
+      'run:nextall' => '',
+   };
 }
 
 sub default_values {
@@ -54,7 +54,7 @@ sub start {
    my $self = shift;
 
    if ($self->_started) {
-      return $self->log->verbose("already start");
+      return $self->log->verbose("already started");
    }
 
    $self->connect or return;
@@ -65,7 +65,7 @@ sub start {
    my $dump = Net::Frame::Dump::Offline->new;
    $self->_dump($dump);
 
-   $self->log->debug("dump file[".$dump->file."]");
+   $self->debug && $self->log->debug("dump file[".$dump->file."]");
 
    open(my $out, '>', $dump->file)
       or return $self->log->error("cannot open file: $!");
@@ -75,9 +75,8 @@ sub start {
    $self->_out($out);
 
    my $channel = $self->cmd("tcpdump -U -w - 2> /dev/null") or return;
-   if ($self->debug) {
-      $self->log->info("tcpdump started");
-   }
+
+   $self->debug && $self->log->debug("tcpdump started");
 
    $self->_started(1);
 
@@ -94,7 +93,7 @@ sub stop {
    my $self = shift;
 
    if (! $self->_started) {
-      return $self->log->verbose("run remote::tcpdump start");
+      return $self->log->info($self->help_run('start'));
    }
 
    $self->nextall;
@@ -116,7 +115,7 @@ sub next {
    my $self = shift;
 
    if (! $self->_started) {
-      return $self->log->verbose("run remote::tcpdump start");
+      return $self->log->info($self->help_run('start'));
    }
 
    my $channel = $self->_channel;
@@ -146,7 +145,7 @@ sub nextall {
    my $self = shift;
 
    if (! $self->_started) {
-      return $self->log->verbose("run remote::tcpdump start");
+      return $self->log->info($self->help_run('start'));
    }
 
    my $channel = $self->_channel;

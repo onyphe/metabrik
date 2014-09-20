@@ -26,17 +26,15 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set example::template attribute1 <value>',
-      'set example::template attribute2 <value>',
-      'run example::template command1 <argument1> <argument2>',
-      'run example::template command2 <argument1> <argument2>',
-   ];
+   return {
+      'set:attribute1' => '<value>',
+      'set:attribute2' => '<value>',
+      'run:command1' => '<argument1> <argument2>',
+      'run:command2' => '<argument1> <argument2>',
+   };
 }
 
 sub default_values {
-   my $self = shift;
-
    return {
       attribute1 => 'value1',
    };
@@ -57,7 +55,7 @@ sub command1 {
    my ($argument1, $argument2) = @_;
 
    if (! defined($argument2)) {
-      return $self->log->info("run example::template command1 <argument1> <argument2>");
+      return $self->log->info($self->help_run('command1'));
    }
 
    my $do_something = "you should do something";
@@ -70,7 +68,7 @@ sub command2 {
    my ($argument1, $argument2) = @_;
 
    if (! defined($argument2)) {
-      return $self->log->info("run example::template command2 <argument1> <argument2>");
+      return $self->log->info($self->help_run('command2'));
    }
 
    my $do_something = "you should do something";

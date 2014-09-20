@@ -21,13 +21,13 @@ sub revision {
 }
 
 sub help {
-   return [
-      'set file::zip input <file>',
-      'set file::zip output <file>',
-      'set file::zip destdir <destdir>',
-      'run file::zip uncompress',
-      'run file::zip compress',
-   ];
+   return {
+      'set:input' => '<file>',
+      'set:output' => '<file>',
+      'set:destdir' => '<destdir>',
+      'run:uncompress' => '',
+      'run:compress' => '',
+   };
 }
 
 sub default_values {
@@ -44,12 +44,12 @@ sub uncompress {
 
    my $input = $self->input;
    if (! defined($input)) {
-      return $self->log->info("set file::zip input <file>");
+      return $self->log->info($self->help_set('input'));
    }
 
    my $dir = $self->destdir;
    if (! defined($dir)) {
-      return $self->log->info("set file::zip destdir <destdir>");
+      return $self->log->info($self->help_set('destdir'));
    }
 
    # XXX: dirty for now

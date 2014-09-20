@@ -25,14 +25,14 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set address::netmask subnet <subnet>',
-      'run address::netmask match <ip>',
-      'run address::netmask first',
-      'run address::netmask last',
-      'run address::netmask block',
-      'run address::netmask iplist',
-   ];
+   return {
+      'set:subnet' => '<subnet>',
+      'run:match' => '<ip> - tells if given IP address is within subnet',
+      'run:first' => '',
+      'run:last' => '',
+      'run:block' => '',
+      'run:iplist' => '',
+   };
 }
 
 sub match {

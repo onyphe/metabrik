@@ -26,12 +26,12 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set database::keystore file <file>',
-      'run database::keystore search <pattern>',
-   ];
-      #'run database::keystore add <data>',
-      #'run database::keystore remove <data>',
+   return {
+      'set:file' => '<file>',
+      'run:search' => '<pattern>',
+   };
+      #'run:add' => '<data>',
+      #'run:remove' => '<data>',
 }
 
 sub search {
@@ -39,11 +39,11 @@ sub search {
    my ($pattern) = @_;
 
    if (! defined($self->file)) {
-      return $self->log->info("set database::keystore file <file>");
+      return $self->log->info($self->help_set('file'));
    }
 
    if (! defined($pattern)) {
-      return $self->log->info("run database::keystore search <pattern>");
+      return $self->log->info($self->help_run('search'));
    }
 
    my $slurp = Metabricky::Brick::File::Slurp->new(
@@ -51,13 +51,15 @@ sub search {
       bricks => $self->bricks,
    );
 
-   my $data = $slurp->text or return $self->log->error("can't slurp");
+   my $data = $slurp->text
+      or return $self->log->error("can't slurp");
 
    my $aes = Metabricky::Brick::Crypto::Aes->new(
       bricks => $self->bricks,
    );
 
-   my $decrypted = $aes->decrypt($data) or return $self->log->error("can't decrypt");
+   my $decrypted = $aes->decrypt($data)
+      or return $self->log->error("can't decrypt");
 
    my @lines = split(/\n/, $decrypted);
    for (@lines) {

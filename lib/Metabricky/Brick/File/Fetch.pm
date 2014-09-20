@@ -19,10 +19,10 @@ sub revision {
 }
 
 sub help {
-   return [
-      'set file::fetch output <file>',
-      'run file::fetch get <uri>',
-   ];
+   return {
+      'set:output' => '<file>',
+      'run:get' => '<uri>',
+   };
 }
 
 sub get {
@@ -31,11 +31,11 @@ sub get {
 
    my $output = $self->output;
    if (! defined($output)) {
-      return $self->log->info("set file::fetch output <file>");
+      return $self->log->info($self->help_set('output'));
    }
 
    if (! defined($uri)) {
-      return $self->log->info("run file::fetch get <uri>");
+      return $self->log->info($self->help_run('get'));
    }
 
    # XXX: dirty for now

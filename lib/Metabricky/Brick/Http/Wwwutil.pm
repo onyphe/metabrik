@@ -21,11 +21,11 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'run http::wwwutil myip',
-      'run http::wwwutil nslookup <hostname> [nameserver]',
-      'run http::wwwutil whois <ip|domain>',
-   ];
+   return {
+      'run:myip' => '',
+      'run:nslookup' => '<hostname> [ <nameserver> ]',
+      'run:whois' => '<ip|domain>',
+   };
 }
 
 sub nslookup {

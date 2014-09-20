@@ -25,13 +25,13 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'run system::os name',
-      'run system::os release',
-      'run system::os version',
-      'run system::os hostname',
-      'run system::os arch',
-   ];
+   return {
+      'run:name' => '',
+      'run:release' => '',
+      'run:version' => '',
+      'run:hostname' => '',
+      'run:arch' => '',
+   };
 }
 
 sub init {

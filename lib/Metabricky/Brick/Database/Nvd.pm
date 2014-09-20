@@ -32,13 +32,13 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'run database::nvd update <[recent|modified|others]>',
-      'run database::nvd load <[recent|modified|others]> [ <pattern> ]',
-      'run database::nvd search <pattern>',
-      'run database::nvd searchbycpe <cpe>',
-      'run database::nvd getxml <cve_id>',
-   ];
+   return {
+      'run:update' => '<recent|modified|others>',
+      'run:load' => '<recent|modified|others> [ <pattern> ]',
+      'run:search' => '<pattern>',
+      'run:searchbycpe' => '<cpe>',
+      'run:getxml' => '<cve_id>',
+   };
 }
 
 sub default_values {
@@ -93,13 +93,13 @@ sub update {
    my ($type) = @_;
 
    if (! defined($type)) {
-      return $self->log->info("run database::nvd update <[recent|modified|others]>");
+      return $self->log->info($self->help_run('update'));
    }
 
    if ($type ne 'recent'
    &&  $type ne 'modified'
    &&  $type ne 'others') {
-      return $self->log->info("run database::nvd update <[recent|modified|others]>");
+      return $self->log->info($self->help_run('update'));
    }
 
    my $datadir = $self->bricks->{'core::global'}->datadir;
@@ -124,13 +124,13 @@ sub load {
    my ($type, $pattern) = @_;
 
    if (! defined($type)) {
-      return $self->log->info("run database::nvd load <[recent|modified|others]> [ <pattern> ]");
+      return $self->log->info($self->help_run('load'));
    }
 
    if ($type ne 'recent'
    &&  $type ne 'modified'
    &&  $type ne 'others') {
-      return $self->log->info("run database::nvd load <[recent|modified|others]> [ <pattern> ]");
+      return $self->log->info($self->help_run('load'));
    }
 
    my $datadir = $self->bricks->{'core::global'}->datadir;
@@ -235,11 +235,11 @@ sub search {
 
    my $xml = $self->xml;
    if (! defined($xml)) {
-      return $self->log->info("run database::nvd load <[recent|modified|others]> [ <pattern> ]");
+      return $self->log->info($self->help_run('load'));
    }
 
    if (! defined($pattern)) {
-      return $self->log->info("run database::nvd search <pattern>");
+      return $self->log->info($self->help_run('search'));
    }
 
    my $entries = $xml->{entry};
@@ -266,11 +266,11 @@ sub searchbycpe {
 
    my $xml = $self->xml;
    if (! defined($xml)) {
-      return $self->log->info("run database::nvd load <[recent|modified|others]> [ <pattern> ]");
+      return $self->log->info($self->help_run('load'));
    }
 
    if (! defined($cpe)) {
-      return $self->log->info("run database::nvd searchbycpe <cpe>");
+      return $self->log->info($self->help_run('searchbycpe'));
    }
 
    my $entries = $xml->{entry};
@@ -300,7 +300,7 @@ sub getxml {
 
    my $xml = $self->xml;
    if (! defined($xml)) {
-      return $self->log->info("run database::nvd load <[recent|modified|others]> [ <pattern> ]");
+      return $self->log->info($self->help_run('load'));
    }
 
    if (defined($xml->{entry})) {

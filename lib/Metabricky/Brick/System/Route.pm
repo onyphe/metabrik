@@ -25,9 +25,9 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'run system::route show',
-   ];
+   return {
+      'run:show' => '',
+   };
 }
 
 sub init {

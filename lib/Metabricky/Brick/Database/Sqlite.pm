@@ -28,12 +28,12 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set database::sqlite db <file>',
-      'set database::sqlite autocommit <0|1>',
-      'run database::sqlite exec <sql>',
-      'run database::sqlite commit',
-   ];
+   return {
+      'set:db' => '<file>',
+      'set:autocommit' => '<0|1>',
+      'run:exec' => '<sql>',
+      'run:commit' => '',
+   };
 }
 
 sub init {
@@ -44,7 +44,7 @@ sub init {
    my $db = $self->db;
    if (! defined($db)) {
       $self->inited(0);
-      return $self->log->info("set database::sqlite db <file>");
+      return $self->log->info($self->help_set('db'));
    }
 
    my $dbh = DBI->connect("dbi:SQLite:dbname=$db","","")
@@ -65,7 +65,7 @@ sub exec {
    my ($sql) = @_;
 
    if (! defined($sql)) {
-      return $self->log->info("run database::sqlite exec <sql>");
+      return $self->log->info($self->help_run('exec'));
    }
 
    my $dbh = $self->dbh;

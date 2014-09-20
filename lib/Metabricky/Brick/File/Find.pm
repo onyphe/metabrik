@@ -25,10 +25,10 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set file::find path <director1:directory2:..:directoryN>',
-      'run file::find files <dirpattern> <filepattern>',
-   ];
+   return {
+      'set:path' => '<director1:directory2:..:directoryN>',
+      'run:files' => '<dirpattern> <filepattern>',
+   };
 }
 
 sub files {
@@ -37,7 +37,7 @@ sub files {
 
    my $path = $self->path;
    if (! defined($path)) {
-      return $self->log->info("set file::find path <director1:directory2:..:directoryN>");
+      return $self->log->info($self->help_set('path'));
    }
 
    my @path_list = split(':', $path);

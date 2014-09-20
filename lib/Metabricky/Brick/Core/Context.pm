@@ -60,19 +60,19 @@ sub revision {
 }
 
 sub help {
-   return [
-      'run core::context load <brick>',
-      'run core::context set <brick> <attribute> <value>',
-      'run core::context get [ <brick> ] [ <attribute> ]',
-      'run core::context run <brick> <command> [ <arg1 arg2 .. argN> ]',
-      'run core::context loaded',
-      'run core::context find_available',
-      'run core::context update_available',
-      'run core::context available',
-      'run core::context status',
-      'run core::context do <perl_code>',
-      'run core::context call <perl_sub>',
-   ];
+   return {
+      'run:load' => '<brick>',
+      'run:set' => '<brick> <attribute> <value>',
+      'run:get' => '<brick> <attribute>',
+      'run:run' => '<brick> <command> [ <arg1 arg2 .. argN> ]',
+      'run:loaded' => '',
+      'run:find_available' => '',
+      'run:update_available' => '',
+      'run:available' => '',
+      'run:status' => '',
+      'run:do' => '<perl_code>',
+      'run:call' => '<perl_sub>',
+   };
 }
 
 sub new {
@@ -135,6 +135,10 @@ sub do {
    my $self = shift;
    my ($code, $dump) = @_;
 
+   if (! defined($code)) {
+      return $self->log->info($self->help_run('do'));
+   }
+
    my $lp = $self->_lp;
 
    my $res;
@@ -161,6 +165,10 @@ sub do {
 sub call {
    my $self = shift;
    my ($subref, %args) = @_;
+
+   if (! defined($subref)) {
+      return $self->log->info($self->help_run('call'));
+   }
 
    my $lp = $self->_lp;
 
@@ -225,7 +233,7 @@ sub update_available {
       return $__ctx->{available} = $args{available};
    }, available => $h);
    if (! defined($r)) {
-      return;
+      return $self->log->error("update_available: unable to get available Bricks");
    }
 
    return $r;
@@ -236,15 +244,24 @@ sub load {
    my ($brick) = @_;
 
    if (! defined($brick)) {
-      return $self->log->error("run context load <brick>");
+      return $self->log->info($self->help_run('load'));
    }
 
-   if ($brick !~ /^[a-z0-9]+::[a-z0-9]+$/) {
-      return $self->log->error("invalid format for Brick [$brick]");
+   my $repository = '';
+   my $category = '';
+   my $module = '';
+
+   if ($brick =~ /^[a-z0-9]+::[a-z0-9]+$/) {
+      ($category, $module) = split('::', $brick);
+   }
+   elsif ($brick =~ /^[a-z0-9]+::[a-z0-9]+::[a-z0-9]+$/) {
+      ($repository, $category, $module) = split('::', $brick);
+   }
+   else {
+      return $self->log->error("load: invalid format for Brick [$brick]");
    }
 
-   my ($category, $module) = split('::', $brick);
-
+   $self->log->debug("repository[$repository]");
    $self->log->debug("category[$category]");
    $self->log->debug("module[$module]");
 
@@ -252,11 +269,15 @@ sub load {
    $module = ucfirst($module);
    $module = 'Metabricky::Brick::'.$category.'::'.$module;
 
-   $self->log->debug("module[$module]");
+   $self->log->debug("module2[$module]");
 
-   my $loaded = $self->loaded or return;
+   my $loaded = $self->loaded;
+   if (! defined($loaded)) {
+      $self->debug && $self->log->debug("load: unable to get loaded Bricks");
+      return;
+   }
    if (exists($loaded->{$brick})) {
-      return $self->log->error("Brick [$brick] already loaded");
+      return $self->log->error("load: Brick [$brick] already loaded");
    }
 
    my $r = $self->call(sub {
@@ -296,7 +317,7 @@ sub available {
       return $__ctx->{available};
    });
    if (! defined($r)) {
-      return;
+      return $self->log->error("available: unable to get available Bricks");
    }
 
    return $r;
@@ -309,7 +330,7 @@ sub loaded {
       return $__ctx->{loaded};
    });
    if (! defined($r)) {
-      return;
+      return $self->log->error("loaded: unable to get loaded Bricks");
    }
 
    return $r;
@@ -318,8 +339,17 @@ sub loaded {
 sub status {
    my $self = shift;
 
-   my $available = $self->available or return;
-   my $loaded = $self->loaded or return;
+   my $available = $self->available;
+   if (! defined($available)) {
+      $self->debug && $self->log->debug("status: unable to get available Bricks");
+      return { loaded => [], notloaded => [] };
+   }
+
+   my $loaded = $self->loaded;
+   if (! defined($loaded)) {
+      $self->debug && $self->log->debug("status: unable to get loaded Bricks");
+      return { loaded => [], notloaded => [] };
+   }
 
    my @loaded = ();
    my @notloaded = ();
@@ -334,53 +364,13 @@ sub status {
    };
 }
 
-sub get {
-   my $self = shift;
-   my ($brick, $attribute) = @_;
-
-   my $r = $self->call(sub {
-      my %args = @_;
-
-      my $__lp_brick = $args{brick};
-      my $__lp_attribute = $args{attribute};
-
-      # Without arguments, we want to get all set attributes
-      if (! defined($__lp_brick) && ! defined($__lp_attribute)) {
-         return $__ctx->{set};
-      }
-      # With only one argument, we want to get set Attributes for the specified Brick
-      elsif (defined($__lp_brick) && ! defined($__lp_attribute)) {
-         if (! exists($__ctx->{loaded}->{$__lp_brick})) {
-            die("get: Brick [$__lp_brick] not loaded\n");
-         }
-
-         return $__ctx->{set}->{$__lp_brick};
-      }
-      # Else we get one Brick Attribute
-      else {
-         if (! exists($__ctx->{loaded}->{$__lp_brick})) {
-            die("get: Brick [$__lp_brick] not loaded\n");
-         }
-
-         if (! $__ctx->{loaded}->{$__lp_brick}->can($__lp_attribute)) {
-            die("get: Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
-         }
-
-         return $__ctx->{loaded}->{$__lp_brick}->$__lp_attribute;
-      }
-
-      return;
-   }, brick => $brick, attribute => $attribute);
-   if (! defined($r)) {
-      return;
-   }
-
-   return $r;
-}
-
 sub set {
    my $self = shift;
    my ($brick, $attribute, $value) = @_;
+
+   if (! defined($brick) || ! defined($attribute) || ! defined($value)) {
+      return $self->log->info($self->help_run('set'));
+   }
 
    my $r = $self->call(sub {
       my %args = @_;
@@ -397,14 +387,46 @@ sub set {
          die("set: Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
       }
 
-      #$__ctx->{loaded}->{$__lp_brick}->init; # No init when just setting an attribute
       $__ctx->{loaded}->{$__lp_brick}->$__lp_attribute($__lp_value);
       $__ctx->{set}->{$__lp_brick}->{$__lp_attribute} = $__lp_value;
 
       return $__lp_value;
    }, brick => $brick, attribute => $attribute, value => $value);
    if (! defined($r)) {
-      return;
+      return $self->log->error("set: unable to set Attribute");
+   }
+
+   return $r;
+}
+
+sub get {
+   my $self = shift;
+   my ($brick, $attribute) = @_;
+
+   if (! defined($brick) || ! defined($attribute)) {
+      return $self->log->info($self->help_run('get'));
+   }
+
+   my $r = $self->call(sub {
+      my %args = @_;
+
+      my $__lp_brick = $args{brick};
+      my $__lp_attribute = $args{attribute};
+
+      if (! exists($__ctx->{loaded}->{$__lp_brick})) {
+         die("get: Brick [$__lp_brick] not loaded\n");
+      }
+
+      if (! $__ctx->{loaded}->{$__lp_brick}->can($__lp_attribute)) {
+         die("get: Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
+      }
+
+      my $__lp_value = $__ctx->{loaded}->{$__lp_brick}->$__lp_attribute || 'undef';
+
+      return $__lp_value;
+   }, brick => $brick, attribute => $attribute);
+   if (! defined($r)) {
+      return $self->log->error("get: unable to get Attribute");
    }
 
    return $r;
@@ -413,6 +435,10 @@ sub set {
 sub run {
    my $self = shift;
    my ($brick, $command, @args) = @_;
+
+   if (! defined($brick) || ! defined($command)) {
+      return $self->log->info($self->help_run('run'));
+   }
 
    my $r = $self->call(sub {
       my %args = @_;
@@ -439,7 +465,7 @@ sub run {
       return $_ = $__lp_run->$__lp_command(@__lp_args);
    }, brick => $brick, command => $command, args => \@args);
    if (! defined($r)) {
-      return;
+      return $self->log->error("run: unable to run Command");
    }
 
    return $r;

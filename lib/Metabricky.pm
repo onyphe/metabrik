@@ -5,7 +5,7 @@ package Metabricky;
 use strict;
 use warnings;
 
-our $VERSION = '0.83';
+our $VERSION = '0.90';
 
 use base qw(Class::Gomor::Hash);
 
@@ -23,7 +23,7 @@ Metabricky - formerly PerL Awesome SHell, Yeeeeaaaaaa!
 
 =head1 DESCRIPTION
 
-Nothing to do with this module.
+Just exports Metabricky $VERSION variable.
 
 =head2 COMMANDS
 

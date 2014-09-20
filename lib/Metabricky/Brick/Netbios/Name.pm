@@ -20,9 +20,9 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'run netbios::name nodestatus <ip>',
-   ];
+   return {
+      'run:nodestatus' => '<ip>',
+   };
 }
 
 sub nodestatus {
@@ -30,7 +30,7 @@ sub nodestatus {
    my ($ip) = @_;
 
    if (! defined($ip)) {
-      return $self->log->info("run netbios::name nodestatus <ip>");
+      return $self->log->info($self->help_run('nodestatus'));
    }
 
    my $nb = Net::NBName->new;

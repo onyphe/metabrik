@@ -15,6 +15,52 @@ our @AS = qw(
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
+sub help {
+   return { };
+}
+
+sub help_set {
+   my $self = shift;
+   my ($attribute) = @_;
+
+   my $name = $self->name;
+
+   if (! defined($attribute)) {
+      $self->log->warning("help_set: no Attribute given");
+      return '';
+   }
+
+   if (exists($self->help->{"set:$attribute"})) {
+      my $help = $self->help->{"set:$attribute"};
+      return "set $name $attribute $help";
+   }
+
+   $self->log->warning("help_set: no help for Attribute [$attribute]");
+   return '';
+}
+
+sub help_run {
+   my $self = shift;
+   my ($command) = @_;
+
+   my $name = $self->name;
+
+   if (! defined($command)) {
+      $self->log->warning("help_run: no Command given");
+      return '';
+   }
+
+   $self->debug && $self->log->debug("help_run: help [".Dumper($self->help)."]");
+
+   if (exists($self->help->{"run:$command"})) {
+      my $help = $self->help->{"run:$command"};
+      return "run $name $command $help";
+   }
+
+   $self->log->warning("help_run: no help for Command [$command]");
+   return '';
+}
+
 sub new {
    my $self = shift->SUPER::new(
       debug => 0,

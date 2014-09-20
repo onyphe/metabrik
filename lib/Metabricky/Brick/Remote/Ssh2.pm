@@ -10,7 +10,7 @@ use warnings;
 use base qw(Metabricky::Brick);
 
 our @AS = qw(
-   host
+   hostname
    port
    username
    publickey
@@ -30,26 +30,28 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set remote::ssh2 host <ip|hostname>',
-      'set remote::ssh2 port <port>',
-      'set remote::ssh2 username <user>',
-      'set remote::ssh2 publickey <file>',
-      'set remote::ssh2 privatekey <file>',
-      'run remote::ssh2 connect',
-      'run remote::ssh2 cat <file>',
-      'run remote::ssh2 cmd <command>',
-      'run remote::ssh2 readline',
-      'run remote::ssh2 listfiles <glob>',
-      'run remote::ssh2 disconnect',
-   ];
+   return {
+      'set:hostname' => '<ip|hostname>',
+      'set:port' => '<port>',
+      'set:username' => '<user>',
+      'set:publickey' => '<file>',
+      'set:privatekey' => '<file>',
+      'run:connect' => '',
+      'run:cat' => '<file>',
+      'run:exec' => '<command>',
+      'run:readline' => '',
+      'run:listfiles' => '<glob>',
+      'run:disconnect' => '',
+   };
 }
 
 sub default_values {
+   my $self = shift;
+
    return {
-      host => 'localhost',
-      port => 22,
-      username => 'root',
+      hostname => $self->bricks->{'core::global'}->hostname || 'localhost',
+      port => $self->bricks->{'core::global'}->port || 22,
+      username => $self->bricks->{'core::global'}->username || 'root',
    };
 }
 
@@ -60,28 +62,28 @@ sub connect {
       return $self->log->verbose("connect: already connected");
    }
 
-   if (! defined($self->host)) {
-      return $self->log->info("set remote::ssh2 host <ip|hostname>");
+   if (! defined($self->hostname)) {
+      return $self->log->info($self->help_set('hostname'));
    }
 
    if (! defined($self->port)) {
-      return $self->log->info("set remote::ssh2 port <port>");
+      return $self->log->info($self->help_set('port'));
    }
 
    if (! defined($self->username)) {
-      return $self->log->info("set remote::ssh2 username <user>");
+      return $self->log->info($self->help_set('username'));
    }
 
    if (! defined($self->publickey)) {
-      return $self->log->info("set remote::ssh2 publickey <file>");
+      return $self->log->info($self->help_set('publickey'));
    }
 
    if (! defined($self->privatekey)) {
-      return $self->log->info("set remote::ssh2 privatekey <file>");
+      return $self->log->info($self->help_set('privatekey'));
    }
 
    my $ssh2 = Net::SSH2->new;
-   my $ret = $ssh2->connect($self->host, $self->port);
+   my $ret = $ssh2->connect($self->hostname, $self->port);
    if (! $ret) {
       return $self->log->error("connect: can't connect via SSH2: $!");
    }
@@ -95,7 +97,7 @@ sub connect {
       return $self->log->error("connect: can't authenticate via SSH2: $!");
    }
 
-   $self->log->verbose("connect: ssh2 connected to [".$self->host."]");
+   $self->log->verbose("connect: ssh2 connected to [".$self->hostname."]");
 
    return $self->ssh2($ssh2);
 }
@@ -106,7 +108,7 @@ sub disconnect {
    my $ssh2 = $self->ssh2;
 
    if (! defined($ssh2)) {
-      return $self->log->info("run remote::ssh2 connect");
+      return $self->log->info($self->help_run('connect'));
    }
 
    my $r = $ssh2->disconnect;
@@ -116,29 +118,29 @@ sub disconnect {
    return $r;
 }
 
-sub cmd {
+sub exec {
    my $self = shift;
    my ($cmd) = @_;
 
    my $ssh2 = $self->ssh2;
 
    if (! defined($ssh2)) {
-      return $self->log->info("run remote::ssh2 connect");
+      return $self->log->info($self->help_run('connect'));
    }
 
    if (! defined($cmd)) {
-      return $self->log->info("run remote::ssh2 cmd <cmd>");
+      return $self->log->info($self->help_run('exec'));
    }
 
-   $self->debug && $self->log->debug("cmd: cmd [$cmd]");
+   $self->debug && $self->log->debug("exec: cmd [$cmd]");
 
    my $chan = $ssh2->channel;
    if (! defined($chan)) {
-      return $self->log->error("cmd: channel creation error");
+      return $self->log->error("exec: channel creation error");
    }
 
    $chan->exec($cmd)
-      or return $self->log->error("cmd: can't execute command [$cmd]: $!");
+      or return $self->log->error("exec: can't execute command [$cmd]: $!");
 
    return $chan;
 }
@@ -149,7 +151,7 @@ sub readline {
    my $ssh2 = $self->ssh2;
 
    if (! defined($ssh2)) {
-      return $self->log->info("run remote::ssh2 connect");
+      return $self->log->info($self->help_run('connect'));
    }
 
    my $channel = $ssh2->channel;
@@ -176,7 +178,7 @@ sub readall {
    my $ssh2 = $self->ssh2;
 
    if (! defined($ssh2)) {
-      return $self->log->info("run remote::ssh2 connect");
+      return $self->log->info($self->help_run('connect'));
    }
 
    my $channel = $ssh2->channel;
@@ -199,9 +201,9 @@ sub listfiles {
    my $self = shift;
    my ($glob) = @_;
 
-   my $channel = $self->cmd("ls $glob 2> /dev/null");
+   my $channel = $self->exec("ls $glob 2> /dev/null");
    if (! defined($channel)) {
-      return $self->log->error("listfiles: cmd error");
+      return $self->log->error("listfiles: exec error");
    }
 
    my $all = $self->readall;
@@ -217,10 +219,10 @@ sub cat {
    my ($file) = @_;
 
    if (! defined($file)) {
-      return $self->log->info("run remote::ssh2 cat <file>");
+      return $self->log->info($self->run_help('cat'));
    }
 
-   return $self->cmd('cat '.$file);
+   return $self->exec('cat '.$file);
 }
 
 sub DESTROY {

@@ -26,14 +26,14 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set audit::dns nameserver <ip>',
-      'set audit::dns domainname <string>',
-      'run audit::dns version',
-      'run audit::dns recursion',
-      'run audit::dns axfr',
-      'run audit::dns all',
-   ];
+   return {
+      'set:nameserver' => '<ip>',
+      'set:domainname' => '<string>',
+      'run:version' => '',
+      'run:recursion' => '',
+      'run:axfr' => '',
+      'run:all' => '',
+   };
 }
 
 sub init {
@@ -50,7 +50,7 @@ sub version {
    my $self = shift;
 
    if (! defined($self->nameserver)) {
-      return $self->log->info("set audit::dns nameserver <ip>");
+      return $self->log->info($self->help_set('nameserver'));
    }
 
    my $nameserver = $self->nameserver;
@@ -80,7 +80,7 @@ sub recursion {
    my $self = shift;
 
    if (! defined($self->nameserver)) {
-      return $self->log->info("set audit::dns nameserver <ip>");
+      return $self->log->info($self->help_set('nameserver'));
    }
 
    my $nameserver = $self->nameserver;
@@ -107,11 +107,11 @@ sub axfr {
    my $self = shift;
 
    if (! defined($self->nameserver)) {
-      return $self->log->info("set audit::dns nameserver <ip>");
+      return $self->log->info($self->help_set('nameserver'));
    }
 
    if (! defined($self->domainname)) {
-      return $self->log->info("set audit::dns domainname <string>");
+      return $self->log->info($self->help_set('domainname'));
    }
 
    my $nameserver = $self->nameserver;

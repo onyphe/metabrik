@@ -241,37 +241,21 @@ sub ps_update_prompt {
    return 1;
 }
 
-my $jobs = {};
-
 sub ps_set_signals {
    my $self = shift;
 
-   my @signals = grep { substr($_, 0, 1) ne '_' } keys %SIG;
+   #my @signals = grep { substr($_, 0, 1) ne '_' } keys %SIG;
 
-   $SIG{TSTP} = sub {
-      if (defined($jobs->{current})) {
-         print "DEBUG SIGTSTP: ".$jobs->{current}->pid."\n";
-         $jobs->{current}->kill("SIGTSTP");
-         $jobs->{current}->kill("SIGINT");
-         return 1;
-      }
-   };
+   #$SIG{TSTP} = sub {
+      #return 1;
+   #};
 
-   $SIG{CONT} = sub {
-      if (defined($jobs->{current})) {
-         print "DEBUG SIGCONT: ".$jobs->{current}->pid."\n";
-         $jobs->{current}->kill("SIGCONT");
-         return 1;
-      }
-   };
+   #$SIG{CONT} = sub {
+      #return 1;
+   #};
 
    $SIG{INT} = sub {
-      if (defined($jobs->{current})) {
-         print "DEBUG SIGINT: ".$jobs->{current}->pid."\n";
-         $jobs->{current}->kill("SIGINT");
-         undef $jobs->{current};
-         return 1;
-      }
+      return 1;
    };
 
    return 1;
@@ -288,8 +272,10 @@ sub run_version {
    $context->call(sub {
       return $_ = $Metabricky::VERSION;
    }) or return;
+}
 
-   return 1;
+sub comp_version {
+   return ();
 }
 
 sub run_write_history {
@@ -307,6 +293,10 @@ sub run_write_history {
    return 1;
 }
 
+sub comp_write_history {
+   return ();
+}
+
 sub run_exit {
    my $self = shift;
 
@@ -315,10 +305,18 @@ sub run_exit {
    return $self->stoploop;
 }
 
+sub comp_exit {
+   return ();
+}
+
 # For shell commands that do not need a terminal
 sub run_shell {
    my $self = shift;
    my (@args) = @_;
+
+   if (@args == 0) {
+      return $self->log->info("shell <command> [ <arg1:arg2:..:argN> ]");
+   }
 
    my $context = $Bricks->{'core::context'};
 
@@ -341,12 +339,30 @@ sub run_shell {
    return 1;
 }
 
+sub comp_shell {
+   my $self = shift;
+
+   # XXX: use $ENV{PATH} to gather binaries
+
+   return ();
+}
+
 # For external commands that need a terminal (vi, for instance)
 sub run_system {
    my $self = shift;
    my (@args) = @_;
 
+   if (@args == 0) {
+      return $self->log->info("system <command> [ <arg1:arg2:..:argN> ]");
+   }
+
    return system(@args);
+}
+
+sub comp_system {
+   my $self = shift;
+
+   return $self->comp_shell(@_);
 }
 
 sub run_history {
@@ -360,12 +376,16 @@ sub run_history {
    else {
       my $c = 0;
       for (@history) {
-         print "[$c] $_\n";
+         $self->log->info("[$c] $_");
          $c++;
       }
    }
 
    return 1;
+}
+
+sub comp_history {
+   return ();
 }
 
 sub run_cd {
@@ -374,8 +394,7 @@ sub run_cd {
 
    if (defined($dir)) {
       if (! -d $dir) {
-         $self->log->error("cd: $dir: can't cd to this");
-         return;
+         return $self->log->error("cd: $dir: can't cd to this");
       }
       chdir($dir);
       $self->ps_update_path_cwd;
@@ -391,12 +410,22 @@ sub run_cd {
    return 1;
 }
 
+sub comp_cd {
+   my $self = shift;
+
+   return $self->catch_comp(@_);
+}
+
 sub run_pwd {
    my $self = shift;
 
-   print $self->path_cwd."\n";
+   $self->log->info($self->path_cwd);
 
    return 1;
+}
+
+sub comp_pwd {
+   return ();
 }
 
 sub run_pl {
@@ -424,6 +453,12 @@ sub run_pl {
    return $r;
 }
 
+sub comp_pl {
+   my $self = shift;
+
+   return $self->catch_comp(@_);
+}
+
 sub run_su {
    my $self = shift;
    my ($cmd, @args) = @_;
@@ -441,6 +476,10 @@ sub run_su {
    return 1;
 }
 
+sub comp_su {
+   return ();
+}
+
 sub run_reload {
    my $self = shift;
 
@@ -452,9 +491,17 @@ sub run_reload {
    return 1;
 }
 
+sub comp_reload {
+   return ();
+}
+
 sub run_load {
    my $self = shift;
    my ($brick) = @_;
+
+   if (! defined($brick)) {
+      return $self->log->info("load <brick>");
+   }
 
    my $context = $Bricks->{'core::context'};
 
@@ -463,11 +510,41 @@ sub run_load {
       $self->log->verbose("load: Brick [$brick] loaded");
    }
 
+   # XXX: add_handler for run_help to work
+
    return $r;
 }
 
 sub comp_load {
-   return shift->comp_run(@_);
+   my $self = shift;
+   my ($word, $line, $start) = @_;
+
+   my $context = $Bricks->{'core::context'};
+
+   my @words = $self->line_parsed($line);
+   my $count = scalar(@words);
+
+   if ($self->debug) {
+      $self->log->debug("word[$word] line[$line] start[$start] count[$count]");
+   }
+
+   my @comp = ();
+
+   # We want to find available bricks by using completion
+   if (($count == 1)
+   ||  ($count == 2 && length($word) > 0)) {
+      my $available = $context->available;
+      if ($self->debug && ! defined($available)) {
+         $self->log->debug("\ncomp_load: can't fetch available Bricks");
+         return ();
+      }
+
+      for my $a (keys %$available) {
+         push @comp, $a if $a =~ /^$word/;
+      }
+   }
+
+   return @comp;
 }
 
 sub run_show {
@@ -477,50 +554,67 @@ sub run_show {
 
    my $status = $context->status;
 
-   print "Available bricks:\n";
+   $self->log->info("Available bricks:");
 
    my $total = 0;
    my $count = 0;
-   print "   Loaded:\n";
+   $self->log->info("   Loaded:");
    for my $loaded (@{$status->{loaded}}) {
-      print "      $loaded\n";
+      $self->log->info("      $loaded");
       $count++;
       $total++;
    }
-   print "   Count: $count\n";
+   $self->log->info("   Count: $count");
 
    $count = 0;
-   print "   Not loaded:\n";
+   $self->log->info("   Not loaded:");
    for my $notloaded (@{$status->{notloaded}}) {
-      print "      $notloaded\n";
+      $self->log->info("      $notloaded");
       $count++;
       $total++;
    }
-   print "   Count: $count\n";
+   $self->log->info("   Count: $count");
 
-   print "Total: $total\n";
+   $self->log->info("Total: $total");
 
    return 1;
 }
 
+sub comp_show {
+   return ();
+}
+
 sub run_help {
    my $self = shift;
-   my ($command) = @_;
+   my ($cmd) = @_;
 
-   if (! defined($command)) {
+   if (! defined($cmd)) {
       return $self->SUPER::run_help;
    }
    else {
-      if (exists($Bricks->{$command})) {
-         my $help = $Bricks->{$command}->help;
+      if (exists($Bricks->{$cmd})) {
+         my $brick = $Bricks->{$cmd};
+         my $help = $brick->help;
 
-         for my $line (@$help) {
-            $self->log->info($line);
+         # We first print setable Attributes
+         for my $k (sort { $a cmp $b } keys %$help) {
+            my ($type, $command) = split(':', $k);
+            if ($type eq 'set') {
+               $self->log->info($brick->help_set($command));
+            }
+         }
+
+         # We then print runable Commands
+         for my $k (sort { $a cmp $b } keys %$help) {
+            my ($type, $command) = split(':', $k);
+            if ($type eq 'run') {
+               $self->log->info($brick->help_run($command));
+            }
          }
       }
       else {
          # We return to standard help() method
-         return $self->SUPER::run_help($command);
+         return $self->SUPER::run_help($cmd);
       }
    }
 
@@ -536,18 +630,24 @@ sub comp_help {
    my @words = $self->line_parsed($line);
    my $count = scalar(@words);
 
-   $self->debug && $self->log->debug("word[$word] line[$line] start[$start] count[$count]");
-
-   my $available = $context->available or return;
-   if (! defined($available)) {
-      $self->log->warning("comp_help: can't fetch available Bricks");
-      return ();
+   if ($self->debug) {
+      $self->log->debug("word[$word] line[$line] start[$start] count[$count]");
    }
 
    my @comp = ();
 
-   for my $a (keys %$available) {
-      push @comp, $a if $a =~ /^$word/;
+   # We want to find help for loaded bricks by using completion
+   if (($count == 1)
+   ||  ($count == 2 && length($word) > 0)) {
+      my $loaded = $context->loaded or return;
+      if ($self->debug && ! defined($loaded)) {
+         $self->log->debug("\ncomp_help: can't fetch loaded Bricks");
+         return ();
+      }
+
+      for my $a (keys %$loaded) {
+         push @comp, $a if $a =~ /^$word/;
+      }
    }
 
    return @comp;
@@ -559,79 +659,11 @@ sub run_set {
 
    my $context = $Bricks->{'core::context'};
 
-   # set is called without args, we display everything
-   if (! defined($brick)) {
-      my $attributes = $context->get or return;
-
-      print "Set attribute(s):\n";
-
-      my $count = 0;
-      for my $brick (sort { $a cmp $b } keys %$attributes) {
-         for my $k (sort { $a cmp $b } keys %{$attributes->{$brick}}) {
-            print "   $brick $k ".$attributes->{$brick}->{$k}."\n";
-            $count++;
-         }
-      }
-
-      print "Total: $count\n";
-
-      return 1;
-   }
-   # set is called with only a brick as an arg, we show its attributes
-   elsif (defined($brick) && ! defined($attribute)) {
-      my $available = $context->available or return;
-      my $attributes = $context->get or return;
-
-      if (! exists($available->{$brick})) {
-         $self->log->error("set: Brick [$brick] does not exist");
-         return;
-      }
-
-      print "Set attribute(s) for Brick [$brick]:\n";
-
-      my $count = 0;
-      for my $k (sort { $a cmp $b } keys %{$attributes->{$brick}}) {
-         print "   $brick $k ".$attributes->{$brick}->{$k}."\n";
-         $count++;
-      }
-
-      print "Total: $count\n";
-
-      return 1;
-   }
-   # set is called with is a brick and a key without value
-   elsif (defined($brick) && defined($attribute) && ! defined($value)) {
-      my $available = $context->available or return;
-      my $attributes = $context->get or return;
-
-      if (! exists($available->{$brick})) {
-         $self->log->error("set: Brick [$brick] does not exist");
-         return;
-      }
-
-      if (! exists($attributes->{$brick}->{$attribute})) {
-         $self->log->error("set: Attribute [$attribute] does not exist for Brick [$brick]");
-         return;
-      }
-
-      print "Set attribute [$attribute] for Brick [$brick]:\n";
-
-      print "   $brick $attribute ".$attributes->{$brick}->{$attribute}."\n";
-
-      return 1;
-   }
-   # set is called with all args (brick, key, value)
-   else {
-      my $r = $context->set($brick, $attribute, $value);
-      if (! defined($r)) {
-         $self->log->error("set: unable to set Brick [$brick] Attribute [$attribute] to Value [$value]");
-         return;
-      }
-
-      return $r;
+   if (! defined($brick) || ! defined($attribute) || ! defined($value)) {
+      return $self->log->info("set <brick> <attribute> <value>");
    }
 
-   return 1;
+   return $context->set($brick, $attribute, $value);
 }
 
 sub comp_set {
@@ -640,6 +672,13 @@ sub comp_set {
 
    my $context = $Bricks->{'core::context'};
 
+   # Completion is for loaded Bricks only
+   my $loaded = $context->loaded;
+   if (! defined($loaded)) {
+      $self->debug && $self->log->debug("comp_set: can't fetch loaded Bricks");
+      return ();
+   }
+
    my @words = $self->line_parsed($line);
    my $count = scalar(@words);
 
@@ -647,39 +686,39 @@ sub comp_set {
       $self->log->debug("word[$word] line[$line] start[$start] count[$count]");
    }
 
-   my $shell_command = defined($words[0]) ? $words[0] : undef;
    my $brick = defined($words[1]) ? $words[1] : undef;
-   my $brick_attribute = defined($words[2]) ? $words[2] : undef;
 
    my @comp = ();
 
-   if ($count == 1 || $count == 2 && length($word) > 0) {
-      my $available = $context->available or return;
-      if (! defined($available)) {
-         $self->log->warning("comp_set: can't fetch available Bricks");
-         return ();
-      }
-
-      for my $a (keys %$available) {
+   # We want completion for loaded Bricks
+   if (($count == 1)
+   ||  ($count == 2 && length($word) > 0)) {
+      for my $a (keys %$loaded) {
          push @comp, $a if $a =~ /^$word/;
       }
    }
+   # We fetch Brick Attributes
    elsif ($count == 2 && length($word) == 0) {
-      if (! exists($Bricks->{$brick})) {
-         $self->log->verbose("Brick [$brick] not loaded");
-         return;
+      if ($self->debug) {
+         if (! exists($loaded->{$brick})) {
+            $self->log->debug("comp_set: Brick [$brick] not loaded");
+            return ();
+         }
       }
 
-      my $attributes = $Bricks->{$brick}->attributes;
+      my $attributes = $loaded->{$brick}->attributes;
       push @comp, @$attributes;
    }
+   # We want to complete entered Attribute
    elsif ($count == 3 && length($word) > 0) {
-      if (! exists($Bricks->{$brick})) {
-         $self->log->verbose("Brick [$brick] not loaded");
-         return;
+      if ($self->debug) {
+         if (! exists($loaded->{$brick})) {
+            $self->log->debug("comp_set: Brick [$brick] not loaded");
+            return ();
+         }
       }
 
-      my $attributes = $Bricks->{$brick}->attributes;
+      my $attributes = $loaded->{$brick}->attributes;
 
       for my $a (@$attributes) {
          if ($a =~ /^$word/) {
@@ -687,31 +726,137 @@ sub comp_set {
          }
       }
    }
+   # Else, default completion method on remaining word
+   elsif ($count == 3 || $count == 4 && length($word) > 0) {
+      # Default completion method, we strip first three words "set <brick> <attribute>"
+      shift @words;
+      shift @words;
+      shift @words;
+      return $self->catch_comp($word, join(' ', @words), $start);
+   }
 
    return @comp;
 }
 
 sub run_get {
+   my $self = shift;
+   my ($brick, $attribute) = @_;
+
+   my $context = $Bricks->{'core::context'};
+
+   # get is called without args, we display everything
+   if (! defined($brick)) {
+      my $loaded = $context->loaded or return;
+
+      $self->log->info("Get attribute(s):");
+
+      my $count = 0;
+      for my $brick (sort { $a cmp $b } keys %$loaded) {
+         my $attributes = $loaded->{$brick}->attributes or next;
+         for my $attribute (sort { $a cmp $b } @$attributes) {
+            $self->log->info("   $brick $attribute ".$context->get($brick, $attribute));
+            $count++;
+         }
+      }
+
+      $self->log->info("Total: $count");
+   }
+   # get is called with only a Brick as an arg, we show its Attributes
+   elsif (defined($brick) && ! defined($attribute)) {
+      my $loaded = $context->loaded or return;
+
+      if (! exists($loaded->{$brick})) {
+         return $self->log->error("get: Brick [$brick] not loaded");
+      }
+
+      $self->log->info("Get attribute(s):");
+
+      my $count = 0;
+      my $attributes = $loaded->{$brick}->attributes or return;
+      for my $attribute (sort { $a cmp $b } @$attributes) {
+         $self->log->info("   $brick $attribute ".$context->get($brick, $attribute));
+         $count++;
+      }
+
+      $self->log->info("Total: $count");
+   }
+   # get is called with is a Brick and an Attribute
+   elsif (defined($brick) && defined($attribute)) {
+      my $loaded = $context->loaded or return;
+
+      if (! exists($loaded->{$brick})) {
+         return $self->log->error("get: Brick [$brick] not loaded");
+      }
+
+      my $attributes = $loaded->{$brick}->attributes or return;
+
+      if (! $loaded->{$brick}->can($attribute)) {
+         return $self->log->error("get: Attribute [$attribute] does not exist for Brick [$brick]");
+      }
+
+      $self->log->info("Get Attribute [$attribute] for Brick [$brick]:");
+
+      $self->log->info("   $brick $attribute ".$context->get($brick, $attribute));
+   }
+
+   return 1;
 }
 
 sub comp_get {
+   my $self = shift;
+
+   return $self->comp_set(@_);
 }
 
 sub run_run {
    my $self = shift;
    my ($brick, $command, @args) = @_;
 
-   if (! defined($brick) || ! defined($command)) {
-      $self->log->info("run [brick] [command] <[arg1 arg2 .. argN]>");
-      return;
-   }
-
    my $context = $Bricks->{'core::context'};
 
-   my $r = $context->run($brick, $command, @args);
-   if (! defined($r)) {
-      $self->log->error("run: unable to execute Command [$command] for Brick [$brick]");
-      return;
+   if (! defined($brick) || ! defined($command)) {
+      return $self->log->info("run <brick> <command> [ <arg1> <arg2> .. <argN> ]");
+   }
+
+   my $loaded = $context->loaded or return;
+   if (! exists($loaded->{$brick})) {
+      return $self->log->error("run: Brick [$brick] not loaded");
+   }
+
+   if (! $loaded->{$brick}->can($command)) {
+      return $self->log->error("run: Brick [$brick] don't have this Command or Attribute [$command]");
+   }
+
+   my $commands = $loaded->{$brick}->commands;
+
+   # We can run a Command or an Attribute, to gather its value
+   my $r;
+   my $run = 0;
+   for my $this (@$commands) {
+      if ($command eq $this) {
+         $r = $context->run($brick, $command, @args);
+         if (! defined($r)) {
+            return $self->log->error("run: unable to execute Command [$command] for Brick [$brick]");
+         }
+         $run++;
+         last;
+      }
+   }
+
+   # It wasn't a Command, it is an Attribute
+   if (! $run) {
+      my $attributes = $loaded->{$brick}->attributes;
+
+      for my $this (@$attributes) {
+         if ($command eq $this) {
+            $r = $context->get($brick, $command);
+            if (! defined($r)) {
+               return $self->log->error("run: unable to get Attribute [$command] for Brick [$brick]");
+            }
+            $run++;
+            last;
+         }
+      }
    }
 
    if ($self->echo) {
@@ -727,6 +872,13 @@ sub comp_run {
 
    my $context = $Bricks->{'core::context'};
 
+   # Completion is for loaded Bricks only
+   my $loaded = $context->loaded;
+   if (! defined($loaded)) {
+      $self->debug && $self->log->debug("comp_run: can't fetch loaded Bricks");
+      return ();
+   }
+
    my @words = $self->line_parsed($line);
    my $count = scalar(@words);
 
@@ -734,47 +886,56 @@ sub comp_run {
       $self->log->debug("word[$word] line[$line] start[$start] count[$count]");
    }
 
-   my $shell_command = defined($words[0]) ? $words[0] : undef;
    my $brick = defined($words[1]) ? $words[1] : undef;
-   my $brick_command = defined($words[2]) ? $words[2] : undef;
 
    my @comp = ();
 
-   # Two words or less entered on command line, we check the second one for completion
-   if ($count == 1 || $count <= 2 && length($word) > 0) {
-      my $available = $context->available or return;
-      if (! defined($available)) {
-         $self->log->warning("comp_run: can't fetch available Bricks");
-         return ();
-      }
-
-      for my $a (keys %$available) {
+   # We want completion for loaded Bricks
+   if (($count == 1)
+   ||  ($count == 2 && length($word) > 0)) {
+      for my $a (keys %$loaded) {
          push @comp, $a if $a =~ /^$word/;
       }
    }
-   # Second word found or third word started, we search against available Brick Commands
+   # We fetch Brick Commands
    elsif ($count == 2 && length($word) == 0) {
-      if (! exists($Bricks->{$brick})) {
-         $self->log->verbose("Brick [$brick] not loaded");
-         return;
-      }
-
-      my $commands = $Bricks->{$brick}->commands;
-      push @comp, @$commands;
-   }
-   elsif ($count == 3) {
-      if (! exists($Bricks->{$brick})) {
-         $self->log->verbose("Brick [$brick] not loaded");
-         return;
-      }
-
-      my $commands = $Bricks->{$brick}->commands;
-
-      for my $a (@$commands) {
-         if ($a =~ /^$word/) {
-            push @comp, $a; 
+      if ($self->debug) {
+         if (! exists($loaded->{$brick})) {
+            $self->log->debug("comp_run: Brick [$brick] not loaded");
+            return ();
          }
       }
+
+      my $commands = $loaded->{$brick}->commands;
+      my $attributes = $loaded->{$brick}->attributes;
+      push @comp, @$commands;
+      push @comp, @$attributes;
+   }
+   # We want to complete entered Command and Attributes
+   elsif ($count == 3 && length($word) > 0) {
+      if ($self->debug) {
+         if (! exists($loaded->{$brick})) {
+            $self->log->debug("comp_run: Brick [$brick] not loaded");
+            return ();
+         }
+      }
+
+      my $commands = $loaded->{$brick}->commands;
+      my $attributes = $loaded->{$brick}->attributes;
+
+      for my $a (@$commands, @$attributes) {
+         if ($a =~ /^$word/) {
+            push @comp, $a;
+         }
+      }
+   }
+   # Else, default completion method on remaining word
+   elsif ($count == 3 || $count == 4 && length($word) > 0) {
+      # Default completion method, we strip first three words "run <brick> <command>"
+      shift @words;
+      shift @words;
+      shift @words;
+      return $self->catch_comp($word, join(' ', @words), $start);
    }
 
    return @comp;
@@ -784,9 +945,17 @@ sub run_title {
    my $self = shift;
    my ($title) = @_;
 
+   if (! defined($title)) {
+      return $self->log->info("title <title>");
+   }
+
    $self->ps_set_title($title);
 
    return 1;
+}
+
+sub comp_title {
+   return ();
 }
 
 sub run_script {
@@ -794,13 +963,11 @@ sub run_script {
    my ($script) = @_;
 
    if (! defined($script)) {
-      $self->log->error("script: you must provide a script to run");
-      return;
+      return $self->log->info("script <file>");
    }
 
    if (! -f $script) {
-      $self->log->error("script: script [$script] is not a file");
-      return;
+      return $self->log->error("script: script [$script] is not a file");
    }
 
    open(my $in, '<', $script)
@@ -815,14 +982,10 @@ sub run_script {
    return 1;
 }
 
-sub help_script {
-   <<'END';
-execute Metabricky commands as contained in the specified script
-END
-}
+sub comp_script {
+   my $self = shift;
 
-sub smry_script {
-   "execute Metabricky commands as contained in the specified script"
+   return $self->catch_comp(@_);
 }
 
 #
@@ -832,25 +995,12 @@ sub catch_run {
    my $self = shift;
    my (@args) = @_;
 
-   my $context = $Bricks->{'core::context'};
-
    my $line = $self->line;
 
+   # Line starts with a `!' char, we want to launch a shell command
    if ($line =~ /^!/) {
       $line =~ s/^!\s*//;
       return $self->run_shell(split(/\s+/, $line));
-   }
-
-   my $available = $context->available or return;
-   if (defined($available)) {
-      for my $brick (keys %$available) {
-         if ($args[0] eq $brick) {
-            print "DEBUG match[$brick]\n";
-            #$self->ps_update_prompt("[$brick]> ");
-            #$self->ps_update_prompt;
-            #return $self->run_shell(@args);
-         }
-      }
    }
 
    # Default to execute Perl commands
@@ -869,8 +1019,10 @@ sub _ioa_dirsfiles {
       @dirs = io($dir)->all_dirs;
    };
    if ($@) {
-      chomp($@);
-      $self->log->error("$dir: dirs: $@");
+      if ($self->debug) {
+         chomp($@);
+         $self->log->debug("$dir: dirs: $@");
+      }
       return [], [];
    }
 
@@ -879,8 +1031,10 @@ sub _ioa_dirsfiles {
       @files = io($dir)->all_files;
    };
    if ($@) {
-      chomp($@);
-      $self->log->error("$dir: files: $@");
+      if ($self->debug) {
+         chomp($@);
+         $self->log->debug("$dir: files: $@");
+      }
       return [], [];
    }
 
@@ -907,6 +1061,9 @@ sub catch_comp {
    my ($word, $line, $start) = @_;
 
    $self->debug && $self->log->debug("catch_comp: word[$word] line[$line] start[$start]");
+
+   my @words = $self->line_parsed($line);
+   my $count = scalar(@words);
 
    my $dir = '.';
    if (defined($line)) {

@@ -14,14 +14,17 @@ sub revision {
 }
 
 sub require_modules {
-   return [ 'Crypt::CBC', 'Crypt::OpenSSL::AES' ];
+   return [
+      'Crypt::CBC',
+      'Crypt::OpenSSL::AES',
+   ];
 }
 
 sub help {
-   return [
-      'run crypto::aes encrypt <data>',
-      'run crypto::aes decrypt <data>',
-   ];
+   return {
+      'run:encrypt' => '<data>',
+      'run:decrypt' => '<data>',
+   };
 }
 
 sub encrypt {
@@ -29,7 +32,7 @@ sub encrypt {
    my ($data) = @_;
 
    if (! defined($data)) {
-      return $self->log->info("run crypto::aes encrypt <data>");
+      return $self->log->info($self->help_run('encrypt'));
    }
 
    #my $key = 'key';
@@ -52,7 +55,7 @@ sub decrypt {
    my ($data) = @_;
 
    if (! defined($data)) {
-      return $self->log->info("run crypto::aes decrypt <data>");
+      return $self->log->info($self->help_run('decrypt'));
    }
 
    #my $key = 'key';

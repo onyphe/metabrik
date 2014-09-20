@@ -28,12 +28,12 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set database::vfeed db <sqlite>',
-      'run database::vfeed version',
-      'run database::vfeed update',
-      'run database::vfeed cve <id>',
-   ];
+   return {
+      'set:db' => '<sqlite>',
+      'run:version' => '',
+      'run:update' => '',
+      'run:cve' => '<id>',
+   };
 }
 
 sub init {
@@ -42,7 +42,7 @@ sub init {
    ) or return 1; # Init already done
 
    if (! defined($self->db)) {
-      return $self->log->info("set database::vfeed db <sqlite>");
+      return $self->log->info($self->help_set('db'));
    }
 
    my $log = vFeed::Log->new;

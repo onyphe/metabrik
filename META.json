@@ -38,7 +38,7 @@
    "provides" : {
       "Metabricky" : {
          "file" : "lib/Metabricky.pm",
-         "version" : "0.83"
+         "version" : "0.90"
       },
       "Metabricky::Brick" : {
          "file" : "lib/Metabricky/Brick.pm"
@@ -155,5 +155,5 @@
          "http://www.perlfoundation.org/artistic_license_1_0"
       ]
    },
-   "version" : "0.83"
+   "version" : "0.90"
 }

@@ -25,10 +25,10 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set server::agent port <number>',
-      'run server::agent listen',
-   ];
+   return {
+      'set:port' => '<number>',
+      'run:listen' => '',
+   };
 }
 
 sub default_values {

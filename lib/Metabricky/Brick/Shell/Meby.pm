@@ -62,11 +62,11 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set shell::meby echo <0|1>',
-      'run shell::meby cmdloop',
-      'run shell::meby script <script>',
-   ];
+   return {
+      'set:echo' => '<0|1>',
+      'run:cmdloop' => '',
+      'run:script' => '<script>',
+   };
 }
 
 sub default_values {

@@ -25,9 +25,9 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'run system::arp cache',
-   ];
+   return {
+      'run:cache' => '',
+   };
 }
 
 sub init {

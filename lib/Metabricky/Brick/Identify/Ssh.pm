@@ -19,17 +19,17 @@ sub revision {
 }
 
 sub help {
-   return [
-      'set identify::ssh banner <string>',
-      'run identify::ssh parsebanner',
-   ];
+   return {
+      'set:banner' => '<string>',
+      'run:parsebanner' => '',
+   };
 }
 
 sub parsebanner {
    my $self = shift;
 
    if (! defined($self->banner)) {
-      return $self->log->info("set identify::ssh banner <string>");
+      return $self->log->info($self->help_set('banner'));
    }
 
    my $banner = $self->banner;

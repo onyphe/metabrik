@@ -29,11 +29,11 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'run database::cwe update',
-      'run database::cwe load',
-      'run database::cwe search <pattern>',
-   ];
+   return {
+      'run:update' => '',
+      'run:load' => '',
+      'run:search' => '<pattern>',
+   };
 }
 
 sub default_values {
@@ -73,7 +73,7 @@ sub load {
    my $file = $self->file;
 
    if (! -f $file) {
-      return $self->log->info("run database::cwe update");
+      return $self->log->info($self->help_run('update'));
    }
 
    my $slurp = Metabricky::Brick::File::Slurp->new(
@@ -163,11 +163,11 @@ sub search {
    my ($pattern) = @_;
 
    if (! defined($self->xml)) {
-      return $self->log->info("run database::cwe load");
+      return $self->log->info($self->help_run('load'));
    }
 
    if (! defined($pattern)) {
-      return $self->log->info("run database::cwe search <pattern>");
+      return $self->log->info($self->help_run('search'));
    }
 
    my $xml = $self->xml;

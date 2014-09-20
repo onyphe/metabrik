@@ -29,17 +29,17 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'run http::www get <url>',
-      'run http::www post <url> <data>',
-      'run http::www self',
-      'run http::www info',
-      'run http::www forms',
-      'run http::www links',
-      'run http::www headers',
-      'run http::www status',
-      'run http::www getcertificate <url> | []',
-   ];
+   return {
+      'run:get' => '<url>',
+      'run:post' => '<url> <data>',
+      'run:self' => '',
+      'run:info' => '',
+      'run:forms' => '',
+      'run:links' => '',
+      'run:headers' => '',
+      'run:status' => '',
+      'run:getcertificate' => '[ <url> ]',
+   };
 }
 
 sub get {
@@ -47,12 +47,10 @@ sub get {
    my ($url) = @_;
 
    if (! defined($url)) {
-      return $self->log->info("run http::www get <url>");
+      return $self->log->info($self->help_run('get'));
    }
 
-   if ($self->debug) {
-      $self->log->debug("url[$url]");
-   }
+   $self->debug && $self->log->debug("get: url[$url]");
 
    $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
 
@@ -62,7 +60,7 @@ sub get {
    #$mech->ssl_opts(verify_hostname => 0);
 
    $mech->get($url);
-   $self->log->info("GET $url");
+   $self->log->verbose("get: GET $url");
 
    $self->mechanize($mech);
 
@@ -74,12 +72,12 @@ sub post {
    my ($url, $data) = @_;
 
    if (! defined($data)) {
-      return $self->log->info("run http::www post <url> <data>");
+      return $self->log->info($self->help_run('post'));
    }
 
    if ($self->debug) {
-      $self->log->debug("url[$url]");
-      $self->log->debug("DEBUG data[$data]");
+      $self->log->debug("post: url[$url]");
+      $self->log->debug("post: data[$data]");
    }
 
    #$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
@@ -97,7 +95,7 @@ sub info {
    my $self = shift;
 
    if (! defined($self->mechanize)) {
-      return $self->log->info("run http::www <get|post> <url>");
+      return $self->log->error("No WWW::Mechanize object found");
    }
 
    my $mech = $self->mechanize;
@@ -252,11 +250,11 @@ sub getcertificate {
    my ($url) = @_;
 
    if (! defined($url)) {
-      return $self->log->info("run http::www getcertificate <url>");
+      return $self->log->info($self->help_run('getcertificate'));
    }
 
    if ($url !~ /^https:\/\//) {
-      return $self->log->info("must use https to get a certificate");
+      return $self->log->error("must use https to get a certificate");
    }
 
    my $ua = LWP::UserAgent->new(
@@ -466,7 +464,7 @@ sub getcertificate2 {
    my ($host, $port) = @_;
 
    if (! defined($port)) {
-      return $self->log->info("run http::www getcertificate2 <hostname> <port>");
+      return $self->log->info($self->help_run('getcertificate2'));
    }
 
    use Net::SSLeay qw(print_errs set_fd);

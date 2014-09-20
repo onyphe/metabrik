@@ -29,13 +29,13 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set http::proxy port <port> (default: 3128)',
-      'set http::proxy truncate_response <characters> (default: 0, do not truncate)',
-      'set http::proxy truncate_request <characters> (default: 512 characters)',
-      'run http::proxy requests - simply display browser requests',
-      'run http::proxy requests_responses - simply display browser requests and server responses',
-   ];
+   return {
+      'set:port' => '<port> (default: 3128)',
+      'set:truncate_response' => '<characters> (default: 0, do not truncate)',
+      'set:truncate_request' => '<characters> (default: 512 characters)',
+      'run:requests' => '- simply display browser requests',
+      'run:requests_responses' => '- simply display browser requests and server responses',
+   };
 }
 
 sub default_values {

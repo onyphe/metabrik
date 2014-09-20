@@ -25,17 +25,17 @@ sub require_modules {
 }
 
 sub help {
-   return [
-      'set ssdp::ssdp device <device>',
-      'run ssdp::ssdp discover',
-   ];
+   return {
+      'set:device' => '<device>',
+      'run:discover' => '',
+   };
 }
 
 sub discover {
    my $self = shift;
 
    if (! defined($self->device)) {
-      return $self->log->info("set ssdp::ssdp device <device>");
+      return $self->log->info($self->help_set('device'));
    }
 
    my $device = $self->device;
