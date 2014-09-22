@@ -59,7 +59,7 @@ sub files {
    };
 
    {
-      no warnings 'File::Find';
+      no warnings;
       find($sub, @path_list);
    };
 

@@ -98,6 +98,11 @@ sub init {
       }
    }
 
+   # They are loaded when core::context init is performed
+   $self->add_handler('run_core::log');
+   $self->add_handler('run_core::context');
+   $self->add_handler('run_core::global');
+
    return $self;
 }
 
@@ -105,6 +110,94 @@ sub prompt_str {
    my $self = shift;
 
    return $self->ps1;
+}
+
+sub cmd_tmp {
+   my $self = shift;
+   my ($line) = @_;
+
+   if (! defined($self->{line})) {
+      $self->{line} = $line;
+   }
+   else {
+      $self->{line} .= $line;
+   }
+
+   if ($line =~ /\\\s*$/) {
+      return 1; # Continue, we are in multiline edition
+   }
+
+   # If we are here, multiline edition is finished, we rebuild cmd
+   my @lines = split(/\n/, $self->line);
+   for (@lines) {
+      s/\\\s*$//;
+   }
+
+   $self->{line} = join('', @lines);
+
+   if ($self->line =~ /\S/) {
+      my ($cmd, @args) = $self->line_parsed;
+      $self->run($cmd, @args);
+      unless ($self->{command}{run}{found}) {
+         my @c = sort $self->possible_actions($cmd, 'run');
+         if (@c and $self->{API}{match_uniq}) {
+            print $self->msg_ambiguous_cmd($cmd, @c);
+         }
+         else {
+            print $self->msg_unknown_cmd($cmd);
+         }
+      }
+   }
+   else {
+      $self->run('');
+      return 2;
+   }
+
+   return;
+}
+
+sub cmdloop2 {
+   my $self = shift;
+
+   $self->{stop} = 0;
+   $self->preloop;
+
+   my @lines = ();
+   while (defined(my $line = $self->readline($self->prompt_str))) {
+      #$line = $self->ps_lookup_vars_in_line($line);
+      #push @lines, $line;
+
+      #if ($line =~ /\\\s*$/) {
+         #$self->ps_update_prompt('.. ');
+         #next;
+      #}
+
+      ## Multiline edition finished, we can remove the `\' char before joining
+      #for (@lines) {
+         #s/\\\s*$//;
+      #}
+
+      #$self->debug && $self->log->debug("cmdloop: lines[@lines]");
+
+      #$self->cmd(join('', @lines));
+      #@lines = ();
+      #$self->ps_update_prompt;
+
+      $line = $self->ps_lookup_vars_in_line($line);
+      #push @lines, $line;
+
+      my $r = $self->cmd($line);
+      if ($r == 1) {
+         $self->ps_update_prompt('.. ');
+         next;
+      }
+
+      last if $self->{stop};
+   }
+
+   $self->run_exit;
+
+   return $self->postloop;
 }
 
 sub cmdloop {
@@ -425,10 +518,8 @@ sub run_cd {
    return 1;
 }
 
+# off: use catch_comp()
 #sub comp_cd {
-   #my $self = shift;
-#
-   #return $self->catch_comp(@_);
 #}
 
 sub run_pwd {
@@ -468,11 +559,9 @@ sub run_pl {
    return $r;
 }
 
-sub comp_pl {
-   my $self = shift;
-
-   return $self->catch_comp(@_);
-}
+# off: use catch_comp()
+#sub comp_pl {
+#}
 
 sub run_su {
    my $self = shift;
@@ -601,21 +690,20 @@ sub comp_show {
 
 sub run_help {
    my $self = shift;
-   my ($cmd) = @_;
+   my ($brick) = @_;
 
-   if (! defined($cmd)) {
+   if (! defined($brick)) {
       return $self->SUPER::run_help;
    }
    else {
-      if (exists($Bricks->{$cmd})) {
-         my $brick = $Bricks->{$cmd};
-         my $help = $brick->help;
+      if (exists($Bricks->{$brick})) {
+         my $help = $Bricks->{$brick}->help;
 
          # We first print setable Attributes
          for my $k (sort { $a cmp $b } keys %$help) {
             my ($type, $command) = split(':', $k);
             if ($type eq 'set') {
-               $self->log->info($brick->help_set($command));
+               $self->log->info($Bricks->{$brick}->help_set($command));
             }
          }
 
@@ -623,13 +711,13 @@ sub run_help {
          for my $k (sort { $a cmp $b } keys %$help) {
             my ($type, $command) = split(':', $k);
             if ($type eq 'run') {
-               $self->log->info($brick->help_run($command));
+               $self->log->info($Bricks->{$brick}->help_run($command));
             }
          }
       }
       else {
          # We return to standard help() method
-         return $self->SUPER::run_help($cmd);
+         return $self->SUPER::run_help($brick);
       }
    }
 
@@ -993,11 +1081,9 @@ sub run_script {
    return 1;
 }
 
-sub comp_script {
-   my $self = shift;
-
-   return $self->catch_comp(@_);
-}
+# off: use catch_comp()
+#sub comp_script {
+#}
 
 #
 # Term::Shell::catch stuff

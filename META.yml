@@ -48,8 +48,8 @@ provides:
     file: lib/Metabricky/Brick/File/Fetch.pm
   Metabricky::Brick::File::Find:
     file: lib/Metabricky/Brick/File/Find.pm
-  Metabricky::Brick::File::Slurp:
-    file: lib/Metabricky/Brick/File/Slurp.pm
+  Metabricky::Brick::File::Read:
+    file: lib/Metabricky/Brick/File/Read.pm
   Metabricky::Brick::File::Write:
     file: lib/Metabricky/Brick/File/Write.pm
   Metabricky::Brick::File::Zip:
@@ -84,8 +84,6 @@ provides:
     file: lib/Metabricky/Brick/System/Os.pm
   Metabricky::Brick::System::Route:
     file: lib/Metabricky/Brick/System/Route.pm
-  Metabricky::Ext::Log:
-    file: lib/Metabricky/Ext/Log.pm
   Metabricky::Ext::Shell:
     file: lib/Metabricky/Ext/Shell.pm
   Metabricky::Ext::Utils:

@@ -1,16 +1,16 @@
 #
 # $Id: Slurp.pm 94 2014-09-19 05:24:06Z gomor $
 #
-# Slurp brick
+# file::read Brick
 #
-package Metabricky::Brick::File::Slurp;
+package Metabricky::Brick::File::Read;
 use strict;
 use warnings;
 
 use base qw(Metabricky::Brick);
 
 our @AS = qw(
-   file
+   input
    csv_has_header
    csv_format
    csv_separator
@@ -33,7 +33,7 @@ sub require_modules {
 
 sub help {
    return {
-      'set:file' => '<file>',
+      'set:input' => '<file>',
       'set:csv_has_header' => '<0|1>',
       'set:csv_header' => '<header1:header2:..:headerN>',
       'set:csv_format' => '<aoh|..> (default: aoh)',
@@ -48,7 +48,10 @@ sub help {
 }
 
 sub default_values {
+   my $self = shift;
+
    return {
+      input => $self->bricks->{'core::global'}->input || '/tmp/input.txt',
       csv_has_header => 0,
       csv_header => [ ],
       csv_format => 'aoh',
@@ -59,12 +62,12 @@ sub default_values {
 sub text {
    my $self = shift;
 
-   if (! defined($self->file)) {
-      return $self->log->info($self->help_set('file'));
+   if (! defined($self->input)) {
+      return $self->log->info($self->help_set('input'));
    }
 
-   my $text = File::Slurp::read_file($self->file)
-      or return $self->log->verbose("nothing to read from file [".$self->file."]");
+   my $text = File::Slurp::read_file($self->input)
+      or return $self->log->verbose("nothing to read from input [".$self->file."]");
 
    return $text;
 }
@@ -72,8 +75,8 @@ sub text {
 sub json {
    my $self = shift;
 
-   if (! defined($self->file)) {
-      return $self->log->info($self->help_set('file'));
+   if (! defined($self->input)) {
+      return $self->log->info($self->help_set('input'));
    }
 
    return JSON::XS::decode_json($self->text);
@@ -82,8 +85,8 @@ sub json {
 sub xml {
    my $self = shift;
 
-   if (! defined($self->file)) {
-      return $self->log->info($self->help_set('file'));
+   if (! defined($self->input)) {
+      return $self->log->info($self->help_set('input'));
    }
 
    my $xs = XML::Simple->new;
@@ -94,8 +97,8 @@ sub xml {
 sub csv {
    my $self = shift;
 
-   if (! defined($self->file)) {
-      return $self->log->info($self->help_set('file'));
+   if (! defined($self->input)) {
+      return $self->log->info($self->help_set('input'));
    }
 
    if (! defined($self->csv_separator)) {
@@ -112,7 +115,7 @@ sub csv {
    }
 
    my $data = Text::CSV::Hashify->new({
-      file => $self->file,
+      file => $self->input,
       format => $format,
       sep_char => $self->csv_separator,
    }) or return $self->log->error("Text::CSV::Hashify: new");

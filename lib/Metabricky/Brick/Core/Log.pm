@@ -5,9 +5,18 @@ package Metabricky::Brick::Core::Log;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick Metabricky::Ext::Log);
+use base qw(Metabricky::Brick);
 
-use Term::ANSIColor qw(:constants);
+our @AS = qw(
+   level
+);
+__PACKAGE__->cgBuildAccessorsScalar(\@AS);
+
+sub require_modules {
+   return [
+      'Term::ANSIColor',
+   ];
+}
 
 sub revision {
    return '$Revision$';
@@ -32,7 +41,7 @@ sub error {
    my ($msg) = @_;
    my ($package) = lc(caller());
    $package =~ s/^metabricky::brick:://;
-   print RED, "[-] ", RESET;
+   print Term::ANSIColor::RED(), "[-] ", Term::ANSIColor::RESET();
    print("$package: $msg\n");
    return;
 }
@@ -42,7 +51,7 @@ sub fatal {
    my ($msg) = @_;
    my ($package) = lc(caller());
    $package =~ s/^metabricky::brick:://;
-   print RED, "[FATAL] ", RESET;
+   print Term::ANSIColor::RED(), "[FATAL] ", Term::ANSIColor::RESET();
    die("$package: $msg\n");
 }
 
@@ -50,7 +59,7 @@ sub info {
    my $self = shift;
    my ($msg) = @_;
    return unless $self->level > 0;
-   print GREEN, "[*] ", RESET;
+   print Term::ANSIColor::GREEN(), "[*] ", Term::ANSIColor::RESET();
    print("$msg\n");
    return 1;
 }
@@ -61,7 +70,7 @@ sub verbose {
    return unless $self->level > 1;
    my ($package) = lc(caller());
    $package =~ s/^metabricky::brick:://;
-   print YELLOW, "[+] ", RESET;
+   print Term::ANSIColor::YELLOW(), "[+] ", Term::ANSIColor::RESET();
    print("$package: $msg\n");
    return 1;
 }
@@ -72,7 +81,7 @@ sub debug {
    return unless $self->level > 2;
    my ($package) = lc(caller());
    $package =~ s/^metabricky::brick:://;
-   print BLUE, "[DEBUG] ", RESET;
+   print Term::ANSIColor::BLUE(), "[DEBUG] ", Term::ANSIColor::RESET();
    print("$package: $msg\n");
    return 1;
 }

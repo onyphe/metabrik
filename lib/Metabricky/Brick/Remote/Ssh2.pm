@@ -51,7 +51,7 @@ sub default_values {
 
    return {
       hostname => $self->bricks->{'core::global'}->hostname || 'localhost',
-      port => $self->bricks->{'core::global'}->port || 22,
+      port => 22,
       username => $self->bricks->{'core::global'}->username || 'root',
    };
 }

@@ -20,7 +20,7 @@ lib/Metabricky/Brick/Encode/Base64.pm
 lib/Metabricky/Brick/Example/Template.pm
 lib/Metabricky/Brick/File/Fetch.pm
 lib/Metabricky/Brick/File/Find.pm
-lib/Metabricky/Brick/File/Slurp.pm
+lib/Metabricky/Brick/File/Read.pm
 lib/Metabricky/Brick/File/Write.pm
 lib/Metabricky/Brick/File/Zip.pm
 lib/Metabricky/Brick/Http/Proxy.pm
@@ -37,7 +37,6 @@ lib/Metabricky/Brick/Ssdp/Ssdp.pm
 lib/Metabricky/Brick/System/Arp.pm
 lib/Metabricky/Brick/System/Os.pm
 lib/Metabricky/Brick/System/Route.pm
-lib/Metabricky/Ext/Log.pm
 lib/Metabricky/Ext/Shell.pm
 lib/Metabricky/Ext/Utils.pm
 Makefile.PL

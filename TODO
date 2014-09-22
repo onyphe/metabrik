@@ -3,63 +3,35 @@
 Prio:
 -> alias support. example: alias ls "!ls -lF"
 
--> update: use help() to fetch canable Attributes and Commands
-
 -> new: possibility to loop on run() or get() or set() in a multiline code
+=> bug: script cannot handle multiline with \ char
+=> bug: ps_lookup_var* cannot handle \n char (multiline does not work), may be a limitation of Term::Shell?
+==> cmd() to reassemble line and call eval?
 
 -> update: when calling a script from meby binary, do not process .mebyrc by default
 
 -> update: remove do() and use call() everywhere
 
--> bug: script cannot handle multiline with \ char
-
--> bug: ps_lookup_var* cannot handle \n char (multiline does not work), may be a limitation of Term::Shell?
-
 -> rename: file::slurp => file::read
 => move $_->{a} stuff to string::parse?
 => rename file Attribute to input (use global input)
-
--> ext::log: to be removed. Only Core::Log should remain. Other bricks can inherite from there.
 
 -> update: bricks using bricks should call is_loaded and die if not i/o using from Perl itself
 => if not loaded, feature is disabled
 => example: database::keystore
 
--> bug: cd <completion> does not work because of comp_cd()
-=> shell::history, shell::builtins
-
--> bug: get should not set $_!!!! it is the role of run() only.
-
--> bug: remote::tcpdump: can Command and Attribute does not work when subclassing (see obssi::pandore)
-
--> bug: on doing multiline Perl code, it overwrites $_
+-> new: shell::history, shell::builtins
 
 -> use SUPER::default_values()
 -> use SUPER::help*() for info
 
--> write ->info help for metabricky::brick class
-
 -> core::context: to remove check for internal variable gathering: no reason we cannot read a variable ...
 
--> rename remote::ssh2 to remote::ssh and rename Commands to match Net::SSH2 module
 -> remote::ssh, check for exit_status when exec()
-
--> add <brick> in help command menu
-
--> all shell commands writes $_, $!, $? and $@ (including !, which is an alias)
-=> version() does not comply, check every shell command
--> $_ is a string, @_ is strings splitted by "\n"
-=> example: !w returns result in $_, and lines in @_
-=> %_ => line numbered avec arrayref for each word
 
 -> decide which Brick will be in main repository and which ones are private
 
 -> make shell::meby Brick to depend on the fewest module as possible
-
--> add repository capacity
-=> example: main::system::os, obssi::remote::serenade
-=> force repository main?
-=> Done, to test
 
 -> cleanup for shell::meby  ps_* functions
 

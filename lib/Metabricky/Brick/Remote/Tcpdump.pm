@@ -33,8 +33,9 @@ sub require_modules {
 
 sub help {
    return {
-      'set:hostname' => '<ip|hostname>',
-      'set:username' => '<user>',
+      'set:hostname' => '<ip|hostname> (default: localhost)',
+      'set:port' => '<port> (default: 22)',
+      'set:username' => '<user> (default: root)',
       'set:publickey' => '<file>',
       'set:privatekey' => '<file>',
       'run:start' => '',
@@ -49,6 +50,7 @@ sub default_values {
    return {
       username => 'root',
       hostname => 'localhost',
+      port => 22,
       _started => 0,
       _channel => undef,
    };
@@ -78,7 +80,7 @@ sub start {
    select($old);
    $self->_out($out);
 
-   my $channel = $self->cmd("tcpdump -U -w - 2> /dev/null") or return;
+   my $channel = $self->exec("tcpdump -U -w - 2> /dev/null") or return;
 
    $self->debug && $self->log->debug("tcpdump started");
 

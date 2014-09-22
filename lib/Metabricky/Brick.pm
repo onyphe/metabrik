@@ -16,7 +16,24 @@ our @AS = qw(
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 sub help {
-   return { };
+   return {
+      'run:help' => '',
+      'run:help_set' => '<attribute>',
+      'run:help_run' => '<command>',
+      'run:commands' => '',
+      'run:attributes' => '',
+      'run:revision' => '',
+      'run:version' => '',
+      'run:default_values' => '',
+      'run:name' => '',
+      'run:repository' => '',
+      'run:category' => '',
+      'run:commands' => '',
+      'run:has_command' => '',
+      'run:attributes' => '',
+      'run:has_attribute' => '',
+      'run:self' => '',
+   };
 }
 
 sub help_set {
@@ -26,8 +43,7 @@ sub help_set {
    my $name = $self->name;
 
    if (! defined($attribute)) {
-      $self->log->warning("help_set: no Attribute given");
-      return '';
+      return $self->log->info("run $name help_set <attribute>");
    }
 
    if (exists($self->help->{"set:$attribute"})) {
@@ -35,7 +51,7 @@ sub help_set {
       return "set $name $attribute $help";
    }
 
-   $self->log->warning("help_set: no help for Attribute [$attribute]");
+   $self->log->info("help_set: no help for Brick [$name] with Attribute [$attribute]");
    return '';
 }
 
@@ -46,18 +62,15 @@ sub help_run {
    my $name = $self->name;
 
    if (! defined($command)) {
-      $self->log->warning("help_run: no Command given");
-      return '';
+      return $self->log->info("run $name help_run <command>");
    }
-
-   $self->debug && $self->log->debug("help_run: help [".Dumper($self->help)."]");
 
    if (exists($self->help->{"run:$command"})) {
       my $help = $self->help->{"run:$command"};
       return "run $name $command $help";
    }
 
-   $self->log->warning("help_run: no help for Command [$command]");
+   $self->log->info("help_run: no help for Brick [$name] with Command [$command]");
    return '';
 }
 
@@ -159,32 +172,32 @@ sub category {
 sub commands {
    my $self = shift;
 
-   my @commands = ();
-   {
-      no strict 'refs';
+   my $object = ref($self);
+   my $ary = [ $object ];
+   $object->cgGetIsaTree($ary);
 
-      my @list = ( keys %{ref($self).'::'}, keys %{'Metabricky::Brick::'} );
-      my $attributes = $self->attributes;
+   my %commands = ();
 
-      for (@list) {
-         next unless /^[a-z]/; # Brick Commands always begin with a minuscule
-         next if /^cg[A-Z]/; # Class::Gomor stuff
-         next if /^_/; # Internal stuff
-         next if /^(?:a|b|import|init|new|SUPER::|BEGIN|isa|can|EXPORT|AA|AS|ISA|DESTROY|__ANON__)$/; # Perl stuff
-         my $is_attribute = 0;
-         for my $attribute (@$attributes) {
-            #print "_[$_] vs attr[$attribute]\n";
-            if ($_ eq $attribute) {
-               $is_attribute++;
-               last;
-            }
+   for my $class (@$ary) {
+      next if ($class !~ /^Metabricky::Brick/ || ! $class->can('help'));
+
+      my $help = $class->help;
+
+      for my $this (keys %$help) {
+         my ($command, $name) = split(':', $this);
+
+         next unless $name =~ /^[a-z]/; # Brick Commands always begin with a minuscule
+         next if $name =~ /^cg[A-Z]/; # Class::Gomor stuff
+         next if $name =~ /^_/; # Internal stuff
+         next if $name =~ /^(?:a|b|import|init|new|SUPER::|BEGIN|isa|can|EXPORT|AA|AS|ISA|DESTROY|__ANON__)$/; # Perl stuff
+
+         if ($command eq 'set' || $command eq 'run') {
+            $commands{$name}++;
          }
-         next if $is_attribute;
-         push @commands, $_;
       }
-   };
+   }
 
-   return \@commands;
+   return [ sort { $a cmp $b } keys %commands ];
 }
 
 sub has_command {
@@ -205,19 +218,30 @@ sub has_command {
 sub attributes {
    my $self = shift;
 
-   my @attributes = ();
-   {
-      no strict 'refs';
+   my $object = ref($self);
+   my $ary = [ $object ];
+   $object->cgGetIsaTree($ary);
 
-      my @as = ( @{ref($self).'::AS'}, @{'Metabricky::Brick::AS'} );
-      my %h = map { $_ => 1 } @as;
-      for (sort { $a cmp $b } keys %h) {
-         next if /^_/; # Internal stuff
-         push @attributes, $_;
+   my %attributes = ();
+
+   for my $class (@$ary) {
+      next if ($class !~ /^Metabricky::Brick/ || ! $class->can('help'));
+
+      my $help = $class->help;
+
+      for my $this (keys %$help) {
+         my ($command, $name) = split(':', $this);
+
+         next unless $name =~ /^[a-z]/; # Brick Attributes always begin with a minuscule
+         next if $name =~ /^_/; # Internal stuff
+
+         if ($command eq 'set') {
+            $attributes{$name}++;
+         }
       }
-   };
+   }
 
-   return \@attributes;
+   return [ sort { $a cmp $b } keys %attributes ];
 }
 
 sub has_attribute {
