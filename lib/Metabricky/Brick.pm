@@ -183,6 +183,21 @@ sub commands {
    return \@commands;
 }
 
+sub has_command {
+   my $self = shift;
+   my ($command) = @_;
+
+   if (! defined($command)) {
+      return $self->log->info("run ".ref($self)." has_command <command>");
+   }
+
+   if ($self->can($command)) {
+      return 1;
+   }
+
+   return;
+}
+
 sub attributes {
    my $self = shift;
 
@@ -199,6 +214,21 @@ sub attributes {
    };
 
    return \@attributes;
+}
+
+sub has_attribute {
+   my $self = shift; 
+   my ($attribute) = @_;
+
+   if (! defined($attribute)) {
+      return $self->log->info("run ".ref($self)." has_attribute <command>");
+   }
+
+   if ($self->can($attribute)) {
+      return 1;
+   }
+
+   return;
 }
 
 sub init {

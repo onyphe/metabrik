@@ -276,12 +276,7 @@ sub load {
 
    $self->log->debug("module2[$module]");
 
-   my $loaded = $self->loaded;
-   if (! defined($loaded)) {
-      $self->debug && $self->log->debug("load: unable to get loaded Bricks");
-      return;
-   }
-   if (exists($loaded->{$brick})) {
+   if ($self->is_loaded($brick)) {
       return $self->log->error("load: Brick [$brick] already loaded");
    }
 
@@ -332,6 +327,18 @@ sub available {
    return $r;
 }
 
+sub is_available {
+   my $self = shift;
+   my ($brick) = @_;
+
+   my $available = $self->available;
+   if (exists($available->{$brick})) {
+      return 1;
+   }
+
+   return;
+}
+
 sub loaded {
    my $self = shift;
 
@@ -345,20 +352,23 @@ sub loaded {
    return $r;
 }
 
+sub is_loaded {
+   my $self = shift;
+   my ($brick) = @_;
+
+   my $loaded = $self->loaded;
+   if (exists($loaded->{$brick})) {
+      return 1;
+   }
+
+   return;
+}
+
 sub status {
    my $self = shift;
 
    my $available = $self->available;
-   if (! defined($available)) {
-      $self->debug && $self->log->debug("status: unable to get available Bricks");
-      return { loaded => [], notloaded => [] };
-   }
-
    my $loaded = $self->loaded;
-   if (! defined($loaded)) {
-      $self->debug && $self->log->debug("status: unable to get loaded Bricks");
-      return { loaded => [], notloaded => [] };
-   }
 
    my @loaded = ();
    my @notloaded = ();

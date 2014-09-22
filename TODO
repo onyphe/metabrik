@@ -3,6 +3,10 @@
 Prio:
 -> alias support. example: alias ls "!ls -lF"
 
+-> write ->info help for metabricky::brick class
+
+-> core::context: to remove check for internal variable gathering: no reason we cannot read a variable ...
+
 -> rename remote::ssh2 to remote::ssh and rename Commands to match Net::SSH2 module
 -> remote::ssh, check for exit_status when exec()
 
