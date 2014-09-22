@@ -269,9 +269,11 @@ sub run_version {
 
    my $context = $Bricks->{'core::context'};
 
-   $context->call(sub {
+   my $r = $context->call(sub {
       return $_ = $Metabricky::VERSION;
-   }) or return;
+   });
+
+   return $r;
 }
 
 sub comp_version {
@@ -331,8 +333,21 @@ sub run_shell {
    $context->call(sub {
       my %h = @_;
 
-      return $_ = $h{out};
-   }, out => $out) or return;
+      my $__lp_result = {
+         r => $h{out},
+         a => [ split(/\n/, $h{out}) ],
+      };
+
+      for my $__lp_this (@{$__lp_result->{a}}) {
+         push @{$__lp_result->{m}}, [ split(/\s+/, $__lp_this) ];
+      }
+
+      $? = 0;
+      $@ = '';
+      $_ = $__lp_result;
+
+      return $_;
+   }, out => $out);
 
    print $out;
 
@@ -510,7 +525,7 @@ sub run_load {
       $self->log->verbose("load: Brick [$brick] loaded");
    }
 
-   # XXX: add_handler for run_help to work
+   $self->add_handler("run_$brick");
 
    return $r;
 }
@@ -639,13 +654,8 @@ sub comp_help {
    # We want to find help for loaded bricks by using completion
    if (($count == 1)
    ||  ($count == 2 && length($word) > 0)) {
-      my $loaded = $context->loaded or return;
-      if ($self->debug && ! defined($loaded)) {
-         $self->log->debug("\ncomp_help: can't fetch loaded Bricks");
-         return ();
-      }
-
-      for my $a (keys %$loaded) {
+      for my $a (keys %{$self->{handlers}}) {
+         next unless length($a);
          push @comp, $a if $a =~ /^$word/;
       }
    }
@@ -823,40 +833,41 @@ sub run_run {
       return $self->log->error("run: Brick [$brick] not loaded");
    }
 
-   if (! $loaded->{$brick}->can($command)) {
-      return $self->log->error("run: Brick [$brick] don't have this Command or Attribute [$command]");
-   }
-
-   my $commands = $loaded->{$brick}->commands;
+   my $commands = $loaded->{$brick}->commands or return;
 
    # We can run a Command or an Attribute, to gather its value
    my $r;
-   my $run = 0;
+   my $found = 0;
    for my $this (@$commands) {
       if ($command eq $this) {
          $r = $context->run($brick, $command, @args);
-         if (! defined($r)) {
+         if ($?) {
             return $self->log->error("run: unable to execute Command [$command] for Brick [$brick]");
          }
-         $run++;
+         $found++;
          last;
       }
    }
 
    # It wasn't a Command, it is an Attribute
-   if (! $run) {
+   if (! $found) {
       my $attributes = $loaded->{$brick}->attributes;
 
       for my $this (@$attributes) {
          if ($command eq $this) {
             $r = $context->get($brick, $command);
-            if (! defined($r)) {
+            if ($?) {
                return $self->log->error("run: unable to get Attribute [$command] for Brick [$brick]");
             }
-            $run++;
+            $found++;
             last;
          }
       }
+   }
+
+   # Still not found, it was an error
+   if (! $found) {
+      return $self->log->error("run: unable to get Attribute or execute Command [$command] for Brick [$brick]");
    }
 
    if ($self->echo) {

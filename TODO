@@ -85,8 +85,8 @@ Bricko
 Bricko Depo
 
 Design rules:
-1. Only shell `run' command can overwrite $_
-=> all shell `run' commands writes $_, $!, $? and $@ (including !, which is an alias)
+1. Only shell `run' and `get' commands can overwrite $_
+=> all shell `run' and `get' commands writes $_, $? and $@ (including !, which is an alias)
 2. Must be quick and easy to develop bricks
 3. Must be quick and easy to USE bricks
 4. Do simple functions

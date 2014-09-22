@@ -106,6 +106,9 @@ sub new {
          $__ctx->{loaded}->{'core::context'}->{log} = $__ctx->{log};
          $__ctx->{loaded}->{'core::global'}->{log} = $__ctx->{log};
 
+         $? = 0;
+         $@ = '';
+
          return 1;
       }, self => $self);
       $self->_lp($lp);
@@ -114,7 +117,7 @@ sub new {
       chomp($@);
       die("[FATAL] core::context: new: unable to create context: $@\n");
    }
-   
+
    return $self;
 }
 
@@ -124,8 +127,8 @@ sub init {
    ) or return 1; # Init already done
 
    my $r = $self->update_available;
-   if (! defined($r)) {
-      return $self->log->fatal("init: unable to init Brick [core::context]");
+   if ($?) {
+      return $self->log->error("init: unable to init Brick [core::context]: $@");
    }
 
    return $self;
@@ -230,11 +233,13 @@ sub update_available {
    my $r = $self->call(sub {
       my %args = @_;
 
-      return $__ctx->{available} = $args{available};
+      $__ctx->{available} = $args{available};
+
+      $? = 0;
+      $@ = '';
+
+      return $__ctx->{available};
    }, available => $h);
-   if (! defined($r)) {
-      return $self->log->error("update_available: unable to get available Bricks");
-   }
 
    return $r;
 }
@@ -289,7 +294,9 @@ sub load {
       eval("use $__lp_module;");
       if ($@) {
          chomp($@);
-         die("load: unable to load Brick [$__lp_brick]: $@\n");
+         $? = 1;
+         $@ = "load: unable to load Brick [$__lp_brick]: $@";
+         die("$@\n");
       }
 
       my $__lp_new = $__lp_module->new(
@@ -298,14 +305,16 @@ sub load {
       );
       #$__lp_new->init; # No init now. We wait first run()
       if (! defined($__lp_new)) {
-         die("load: unable to create Brick [$__lp_brick]\n");
+         $? = 1;
+         $@ = "load: unable to create Brick [$__lp_brick]";
+         die("$@\n");
       }
+
+      $? = 0;
+      $@ = '';
 
       return $__ctx->{loaded}->{$__lp_brick} = $__lp_new;
    }, module => $module, brick => $brick);
-   if (! defined($r)) {
-      return $self->log->error("load: unable to load Brick [$brick]");
-   }
 
    return $r;
 }
@@ -314,11 +323,11 @@ sub available {
    my $self = shift;
 
    my $r = $self->call(sub {
+      $? = 0;
+      $@ = '';
+
       return $__ctx->{available};
    });
-   if (! defined($r)) {
-      return $self->log->error("available: unable to get available Bricks");
-   }
 
    return $r;
 }
@@ -327,11 +336,11 @@ sub loaded {
    my $self = shift;
 
    my $r = $self->call(sub {
+      $? = 0;
+      $@ = '';
+
       return $__ctx->{loaded};
    });
-   if (! defined($r)) {
-      return $self->log->error("loaded: unable to get loaded Bricks");
-   }
 
    return $r;
 }
@@ -380,21 +389,25 @@ sub set {
       my $__lp_value = $args{value};
 
       if (! exists($__ctx->{loaded}->{$__lp_brick})) {
-         die("set: Brick [$__lp_brick] not loaded\n");
+         $? = 1;
+         $@ = "set: Brick [$__lp_brick] not loaded";
+         die("$@\n");
       }
 
       if (! $__ctx->{loaded}->{$__lp_brick}->can($__lp_attribute)) {
-         die("set: Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
+         $? = 1;
+         $@ = "set: Brick [$__lp_brick] has no Attribute [$__lp_attribute]";
+         die("$@\n");
       }
 
       $__ctx->{loaded}->{$__lp_brick}->$__lp_attribute($__lp_value);
       $__ctx->{set}->{$__lp_brick}->{$__lp_attribute} = $__lp_value;
 
+      $? = 0;
+      $@ = '';
+
       return $__lp_value;
    }, brick => $brick, attribute => $attribute, value => $value);
-   if (! defined($r)) {
-      return $self->log->error("set: unable to set Attribute");
-   }
 
    return $r;
 }
@@ -414,20 +427,25 @@ sub get {
       my $__lp_attribute = $args{attribute};
 
       if (! exists($__ctx->{loaded}->{$__lp_brick})) {
-         die("get: Brick [$__lp_brick] not loaded\n");
+         $? = 1;
+         $@ = "get: Brick [$__lp_brick] not loaded";
+         die("$@\n");
       }
 
       if (! $__ctx->{loaded}->{$__lp_brick}->can($__lp_attribute)) {
-         die("get: Brick [$__lp_brick] has no Attribute [$__lp_attribute]\n");
+         $? = 1;
+         $@ = "get: Brick [$__lp_brick] has no Attribute [$__lp_attribute]";
+         die("$@\n");
       }
 
       my $__lp_value = $__ctx->{loaded}->{$__lp_brick}->$__lp_attribute || 'undef';
 
+      $? = 0;
+      $@ = '';
+      $_ = $__lp_value;
+
       return $__lp_value;
    }, brick => $brick, attribute => $attribute);
-   if (! defined($r)) {
-      return $self->log->error("get: unable to get Attribute");
-   }
 
    return $r;
 }
@@ -448,25 +466,39 @@ sub run {
       my @__lp_args = @{$args{args}};
 
       if (! exists($__ctx->{loaded}->{$__lp_brick})) {
-         die("run: Brick [$__lp_brick] not loaded\n");
+         $? = 1;
+         $@ = "run: Brick [$__lp_brick] not loaded";
+         die("$@\n");
       }
 
       my $__lp_run = $__ctx->{loaded}->{$__lp_brick};
       if (! defined($__lp_run)) {
-         die("run: Brick [$__lp_brick] not defined\n");
+         $? = 1;
+         $@ = "run: Brick [$__lp_brick] not defined";
+         die("$@\n");
       }
 
       if (! $__ctx->{loaded}->{$__lp_brick}->can($__lp_command)) {
-         die("run: Brick [$__lp_brick] has no Command [$__lp_command]\n");
+         $? = 1;
+         $@ = "run: Brick [$__lp_brick] has no Command [$__lp_command]";
+         die("$@\n");
       }
 
       $__lp_run->init; # Will init() only if not already done
 
-      return $_ = $__lp_run->$__lp_command(@__lp_args);
+      my $__lp_result = $__lp_run->$__lp_command(@__lp_args);
+      if (! defined($__lp_result)) {
+         $? = 1;
+         $@ = "run: unable to run Command [$__lp_command] for Brick [$__lp_brick]";
+         die("$@\n");
+      }
+
+      $? = 0;
+      $@ = '';
+      $_ = $__lp_result;
+
+      return $__lp_result;
    }, brick => $brick, command => $command, args => \@args);
-   if (! defined($r)) {
-      return $self->log->error("run: unable to run Command");
-   }
 
    return $r;
 }
