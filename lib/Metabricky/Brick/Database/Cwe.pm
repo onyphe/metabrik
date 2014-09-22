@@ -23,7 +23,7 @@ sub require_modules {
    return [
       'Metabricky::Brick::Database::Sqlite',
       'Metabricky::Brick::File::Fetch',
-      'Metabricky::Brick::File::Slurp',
+      'Metabricky::Brick::File::Read',
       'Metabricky::Brick::File::Zip',
    ];
 }
@@ -76,11 +76,11 @@ sub load {
       return $self->log->info($self->help_run('update'));
    }
 
-   my $slurp = Metabricky::Brick::File::Slurp->new(
-      file => $file,
+   my $read = Metabricky::Brick::File::Read->new(
+      input => $file,
    );
 
-   my $xml = $slurp->xml;
+   my $xml = $read->xml;
 
    return $self->xml($xml);
 }

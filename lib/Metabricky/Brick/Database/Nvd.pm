@@ -27,7 +27,7 @@ sub revision {
 sub require_modules {
    return [
       'Metabricky::Brick::File::Fetch',
-      'Metabricky::Brick::File::Slurp',
+      'Metabricky::Brick::File::Read',
    ];
 }
 
@@ -145,11 +145,11 @@ sub load {
       if (defined($pattern) && $file !~ /$pattern/) {
          next;
       }
-      my $slurp = Metabricky::Brick::File::Slurp->new(
-         file => $file,
+      my $read = Metabricky::Brick::File::Read->new(
+         input => $file,
       );
-      print "DEBUG Slurping file: ".$xml_files->[$c]."\n";
-      my $xml = $slurp->xml or return $self->log->error("load::slurp::xml");
+      print "DEBUG Reading file: ".$xml_files->[$c]."\n";
+      my $xml = $read->xml or return $self->log->error("load::read::xml");
 
       # Merge XML data
       if (defined($old_xml)) {

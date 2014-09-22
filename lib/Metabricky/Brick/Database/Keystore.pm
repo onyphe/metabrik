@@ -21,7 +21,7 @@ sub revision {
 sub require_modules {
    return [
       'Metabricky::Brick::Crypto::Aes',
-      'Metabricky::Brick::File::Slurp',
+      'Metabricky::Brick::File::Read',
    ];
 }
 
@@ -46,13 +46,13 @@ sub search {
       return $self->log->info($self->help_run('search'));
    }
 
-   my $slurp = Metabricky::Brick::File::Slurp->new(
-      file => $self->file,
+   my $read = Metabricky::Brick::File::Read->new(
+      input => $self->file,
       bricks => $self->bricks,
    );
 
-   my $data = $slurp->text
-      or return $self->log->error("can't slurp");
+   my $data = $read->text
+      or return $self->log->error("can't read");
 
    my $aes = Metabricky::Brick::Crypto::Aes->new(
       bricks => $self->bricks,
