@@ -100,7 +100,11 @@ sub version {
 }
 
 sub default_values {
-   return {};
+   return {
+      debug => 0,
+      inited => 0,
+      bricks => {},
+   };
 }
 
 sub name {

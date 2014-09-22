@@ -21,6 +21,7 @@ lib/Metabricky/Brick/Example/Template.pm
 lib/Metabricky/Brick/File/Fetch.pm
 lib/Metabricky/Brick/File/Find.pm
 lib/Metabricky/Brick/File/Slurp.pm
+lib/Metabricky/Brick/File/Write.pm
 lib/Metabricky/Brick/File/Zip.pm
 lib/Metabricky/Brick/Http/Proxy.pm
 lib/Metabricky/Brick/Http/Www.pm

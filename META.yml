@@ -15,7 +15,7 @@ name: Metabricky
 provides:
   Metabricky:
     file: lib/Metabricky.pm
-    version: 0.90
+    version: 0.92
   Metabricky::Brick:
     file: lib/Metabricky/Brick.pm
   Metabricky::Brick::Address::Netmask:
@@ -50,6 +50,8 @@ provides:
     file: lib/Metabricky/Brick/File/Find.pm
   Metabricky::Brick::File::Slurp:
     file: lib/Metabricky/Brick/File/Slurp.pm
+  Metabricky::Brick::File::Write:
+    file: lib/Metabricky/Brick/File/Write.pm
   Metabricky::Brick::File::Zip:
     file: lib/Metabricky/Brick/File/Zip.pm
   Metabricky::Brick::Http::Proxy:
@@ -102,4 +104,4 @@ requires:
   Term::ANSIColor: 0
 resources:
   license: http://www.perlfoundation.org/artistic_license_1_0
-version: 0.90
+version: 0.92

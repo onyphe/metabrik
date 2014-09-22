@@ -452,7 +452,6 @@ sub get {
 
       $? = 0;
       $@ = '';
-      $_ = $__lp_value;
 
       return $__lp_value;
    }, brick => $brick, attribute => $attribute);

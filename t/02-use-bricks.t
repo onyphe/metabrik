@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 28) }
+BEGIN { plan(tests => 29) }
 
 ok(sub { eval("Metabricky::Brick::Address::Netmask");     $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Audit::Dns");           $@ ? 0 : 1 }, 1, $@);
@@ -14,6 +14,7 @@ ok(sub { eval("Metabricky::Brick::Example::Template");    $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::File::Fetch");          $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::File::Find");           $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::File::Slurp");          $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("Metabricky::Brick::File::Write");          $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::File::Zip");            $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Http::Proxy");          $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("Metabricky::Brick::Http::Www");            $@ ? 0 : 1 }, 1, $@);

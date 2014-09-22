@@ -10,6 +10,10 @@ use warnings;
 use base qw(Metabricky::Brick::Remote::Ssh2);
 
 our @AS = qw(
+   hostname
+   username
+   publickey
+   privatekey
    _started
    _channel
    _out
@@ -29,7 +33,7 @@ sub require_modules {
 
 sub help {
    return {
-      'set:host' => '<ip|hostname>',
+      'set:hostname' => '<ip|hostname>',
       'set:username' => '<user>',
       'set:publickey' => '<file>',
       'set:privatekey' => '<file>',
@@ -43,10 +47,10 @@ sub help {
 
 sub default_values {
    return {
+      username => 'root',
+      hostname => 'localhost',
       _started => 0,
       _channel => undef,
-      username => 'root',
-      host => 'localhost',
    };
 }
 

@@ -425,11 +425,11 @@ sub run_cd {
    return 1;
 }
 
-sub comp_cd {
-   my $self = shift;
-
-   return $self->catch_comp(@_);
-}
+#sub comp_cd {
+   #my $self = shift;
+#
+   #return $self->catch_comp(@_);
+#}
 
 sub run_pwd {
    my $self = shift;
@@ -855,9 +855,9 @@ sub run_run {
 
       for my $this (@$attributes) {
          if ($command eq $this) {
-            $r = $context->get($brick, $command);
+            $r = $context->run($brick, $command);
             if ($?) {
-               return $self->log->error("run: unable to get Attribute [$command] for Brick [$brick]");
+               return $self->log->error("run: unable to execute Attribute [$command] for Brick [$brick]");
             }
             $found++;
             last;
@@ -867,7 +867,7 @@ sub run_run {
 
    # Still not found, it was an error
    if (! $found) {
-      return $self->log->error("run: unable to get Attribute or execute Command [$command] for Brick [$brick]");
+      return $self->log->error("run: unable to execute Attribute or Command [$command] for Brick [$brick]");
    }
 
    if ($self->echo) {

@@ -39,7 +39,8 @@ sub help {
       'run:connect' => '',
       'run:cat' => '<file>',
       'run:exec' => '<command>',
-      'run:readline' => '',
+      'run:readall' => '<channel>',
+      'run:readline' => '<channel>',
       'run:listfiles' => '<glob>',
       'run:disconnect' => '',
    };
@@ -147,21 +148,20 @@ sub exec {
 
 sub readline {
    my $self = shift;
+   my ($channel) = @_;
 
    my $ssh2 = $self->ssh2;
-
    if (! defined($ssh2)) {
       return $self->log->info($self->help_run('connect'));
    }
 
-   my $channel = $ssh2->channel;
    if (! defined($channel)) {
-      return $self->log->error("readline: channel creation error");
+      return $self->log->info($self->help_run('readline'));
    }
 
    my @lines = ();
    while (! $channel->eof) {
-      if (defined(my $line = <$channel>)) {
+      while (defined(my $line = <$channel>)) {
          chomp($line);
          push @lines, $line;
          # We only want one line
@@ -174,21 +174,20 @@ sub readline {
 
 sub readall {
    my $self = shift;
+   my ($channel) = @_;
 
    my $ssh2 = $self->ssh2;
-
    if (! defined($ssh2)) {
       return $self->log->info($self->help_run('connect'));
    }
 
-   my $channel = $ssh2->channel;
    if (! defined($channel)) {
-      return $self->log->error("readall: channel creation error");
+      return $self->log->info($self->help_run('readall'));
    }
 
    my @lines = ();
    while (! $channel->eof) {
-      if (defined(my $line = <$channel>)) {
+      while (defined(my $line = <$channel>)) {
          chomp($line);
          push @lines, $line;
       }

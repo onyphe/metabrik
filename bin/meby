@@ -8,7 +8,7 @@ use warnings;
 BEGIN {
    use File::HomeDir;
 
-   my $lib = File::HomeDir->my_home."/Metabricky/lib";
+   my $lib = File::HomeDir->my_home."/perl5/lib/perl5";
    $lib =~ s/\\/\//g; # Converts Windows path
 
    eval("use lib \"$lib\";");
