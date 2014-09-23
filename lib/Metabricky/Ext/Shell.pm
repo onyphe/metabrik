@@ -751,13 +751,18 @@ sub run_set {
    my $self = shift;
    my ($brick, $attribute, $value) = @_;
 
-   my $context = $Bricks->{'core::context'};
-
    if (! defined($brick) || ! defined($attribute) || ! defined($value)) {
       return $self->log->info("set <brick> <attribute> <value>");
    }
 
-   return $context->set($brick, $attribute, $value);
+   my $context = $Bricks->{'core::context'};
+
+   my $r = $context->set($brick, $attribute, $value);
+   if (! defined($r)) {
+      return $self->log->error("set: unable to set Attribute [$attribute] for Brick [$brick]");
+   }
+
+   return $r;
 }
 
 sub comp_set {
@@ -901,52 +906,15 @@ sub run_run {
    my $self = shift;
    my ($brick, $command, @args) = @_;
 
-   my $context = $Bricks->{'core::context'};
-
    if (! defined($brick) || ! defined($command)) {
       return $self->log->info("run <brick> <command> [ <arg1> <arg2> .. <argN> ]");
    }
 
-   my $loaded = $context->loaded or return;
-   if (! exists($loaded->{$brick})) {
-      return $self->log->error("run: Brick [$brick] not loaded");
-   }
+   my $context = $Bricks->{'core::context'};
 
-   my $commands = $loaded->{$brick}->commands or return;
-
-   # We can run a Command or an Attribute, to gather its value
-   my $r;
-   my $found = 0;
-   for my $this (@$commands) {
-      if ($command eq $this) {
-         $r = $context->run($brick, $command, @args);
-         if ($?) {
-            return $self->log->error("run: unable to execute Command [$command] for Brick [$brick]");
-         }
-         $found++;
-         last;
-      }
-   }
-
-   # It wasn't a Command, it is an Attribute
-   if (! $found) {
-      my $attributes = $loaded->{$brick}->attributes;
-
-      for my $this (@$attributes) {
-         if ($command eq $this) {
-            $r = $context->run($brick, $command);
-            if ($?) {
-               return $self->log->error("run: unable to execute Attribute [$command] for Brick [$brick]");
-            }
-            $found++;
-            last;
-         }
-      }
-   }
-
-   # Still not found, it was an error
-   if (! $found) {
-      return $self->log->error("run: unable to execute Attribute or Command [$command] for Brick [$brick]");
+   my $r = $context->run($brick, $command, @args);
+   if (! defined($r)) {
+      return $self->log->error("run: unable to execute Command [$command] for Brick [$brick]");
    }
 
    if ($self->echo) {

@@ -11,12 +11,15 @@ our @AS = qw(
    debug
    inited
    bricks
+   context
    log
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 sub help {
    return {
+      'set:debug' => '<0|1>',
+      'set:context' => '<context>',
       'run:help' => '',
       'run:help_set' => '<attribute>',
       'run:help_run' => '<command>',
@@ -34,6 +37,7 @@ sub help {
       'run:has_command' => '',
       'run:attributes' => '',
       'run:has_attribute' => '',
+      'run:bricks' => '',
       'run:self' => '',
    };
 }
@@ -104,6 +108,24 @@ sub new {
       if ($@) {
          chomp($@);
          return $self->log->error("new: you have to install Module [$module]");
+      }
+   }
+
+   # Not all modules are capable of checking context against loaded bricks
+   # For instance, core::context Brick itselves.
+   if (defined($self->context) && $self->context->can('loaded')) {
+      my $error = 0;
+      my $loaded = $self->context->loaded;
+      my $require_loaded = $self->require_loaded;
+      for my $brick (@$require_loaded) {
+         if (! $self->context->is_loaded($brick)) {
+            $self->log->error("new: you must load Brick [$brick] first");
+            $error++;
+         }
+      }
+
+      if ($error) {
+         return;
       }
    }
 
@@ -245,7 +267,7 @@ sub has_command {
       return 1;
    }
 
-   return;
+   return 0;
 }
 
 sub attributes {
@@ -287,7 +309,7 @@ sub has_attribute {
       return 1;
    }
 
-   return;
+   return 0;
 }
 
 sub init {
@@ -300,6 +322,10 @@ sub init {
    $self->inited(1);
 
    return $self;
+}
+
+sub require_loaded {
+   return [];
 }
 
 sub require_modules {

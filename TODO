@@ -3,6 +3,10 @@
 Prio:
 -> alias support. example: alias ls "!ls -lF"
 
+-> rename: $Context to $CONTEXT
+
+-> update: to remove bricks() from main Brick.pm class and all bricks
+
 -> new: possibility to loop on run() or get() or set() in a multiline code
 => bug: ps_lookup_var* cannot handle \n char (multiline does not work), may be a limitation of Term::Shell?
 ==> cmd() to reassemble line and call eval?

@@ -37,10 +37,8 @@ sub help {
 }
 
 sub default_values {
-   my $self = shift;
-
    return {
-      file => $self->bricks->{'core::global'}->datadir."/2000.xml",
+      file => "/tmp/2000.xml",
    };
 }
 

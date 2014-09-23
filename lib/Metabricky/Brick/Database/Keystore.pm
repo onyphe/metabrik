@@ -10,7 +10,7 @@ use warnings;
 use base qw(Metabricky::Brick);
 
 our @AS = qw(
-   file
+   db
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
@@ -18,48 +18,38 @@ sub revision {
    return '$Revision$';
 }
 
-sub require_modules {
+sub require_loaded {
    return [
-      'Metabricky::Brick::Crypto::Aes',
-      'Metabricky::Brick::File::Read',
+      'crypto::aes',
+      'file::read',
    ];
 }
 
 sub help {
    return {
-      'set:file' => '<file>',
+      'set:db' => '<file>',
       'run:search' => '<pattern>',
    };
+}
       #'run:add' => '<data>',
       #'run:remove' => '<data>',
-}
 
 sub search {
    my $self = shift;
    my ($pattern) = @_;
 
-   if (! defined($self->file)) {
-      return $self->log->info($self->help_set('file'));
+   if (! defined($self->db)) {
+      return $self->log->info($self->help_set('db'));
    }
 
    if (! defined($pattern)) {
       return $self->log->info($self->help_run('search'));
    }
 
-   my $read = Metabricky::Brick::File::Read->new(
-      input => $self->file,
-      bricks => $self->bricks,
-   );
+   $self->context->set('file::read', 'input', $self->db) or return;
+   my $read = $self->context->run('file::read', 'text') or return;
 
-   my $data = $read->text
-      or return $self->log->error("can't read");
-
-   my $aes = Metabricky::Brick::Crypto::Aes->new(
-      bricks => $self->bricks,
-   );
-
-   my $decrypted = $aes->decrypt($data)
-      or return $self->log->error("can't decrypt");
+   my $decrypted = $self->context->run('crypto::aes', 'decrypt', $read) or return;
 
    my @lines = split(/\n/, $decrypted);
    for (@lines) {

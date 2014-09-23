@@ -66,9 +66,11 @@ sub help {
       'run:get' => '<brick> <attribute>',
       'run:run' => '<brick> <command> [ <arg1 arg2 .. argN> ]',
       'run:loaded' => '',
+      'run:is_loaded' => '<brick>',
       'run:find_available' => '',
       'run:update_available' => '',
       'run:available' => '',
+      'run:is_available' => '<brick>',
       'run:status' => '',
       'run:do' => '<perl_code>',
       'run:call' => '<perl_sub>',
@@ -92,6 +94,8 @@ sub new {
          eval("use strict;");
          eval("use warnings;");
 
+         $__ctx->{context} = $args{self};
+
          $__ctx->{loaded} = {
             'core::context' => $args{self},
             'core::global' => Metabricky::Brick::Core::Global->new->init,
@@ -105,6 +109,15 @@ sub new {
          # our own log accessor.
          $__ctx->{loaded}->{'core::context'}->{log} = $__ctx->{log};
          $__ctx->{loaded}->{'core::global'}->{log} = $__ctx->{log};
+
+         # When new() was done, bricks was empty. We fix that here.
+         # No need for bricks, we can use context
+         #$__ctx->{loaded}->{'core::context'}->{bricks} = $__ctx->{loaded};
+         #$__ctx->{loaded}->{'core::global'}->{bricks} = $__ctx->{loaded};
+         #$__ctx->{loaded}->{'core::log'}->{bricks} = $__ctx->{loaded};
+         $__ctx->{loaded}->{'core::context'}->{context} = $__ctx->{context};
+         $__ctx->{loaded}->{'core::global'}->{context} = $__ctx->{context};
+         $__ctx->{loaded}->{'core::log'}->{context} = $__ctx->{context};
 
          $? = 0;
          $@ = '';
@@ -297,6 +310,7 @@ sub load {
       }
 
       my $__lp_new = $__lp_module->new(
+         context => $__ctx->{context},
          bricks => $__ctx->{loaded},
          log => $__ctx->{log},
       );
@@ -333,12 +347,16 @@ sub is_available {
    my $self = shift;
    my ($brick) = @_;
 
+   if (! defined($brick)) {
+      return $self->log->info($self->help_run('is_available'));
+   }
+
    my $available = $self->available;
    if (exists($available->{$brick})) {
       return 1;
    }
 
-   return;
+   return 0;
 }
 
 sub loaded {
@@ -358,12 +376,16 @@ sub is_loaded {
    my $self = shift;
    my ($brick) = @_;
 
+   if (! defined($brick)) {
+      return $self->log->info($self->help_run('is_loaded'));
+   }
+
    my $loaded = $self->loaded;
    if (exists($loaded->{$brick})) {
       return 1;
    }
 
-   return;
+   return 0;
 }
 
 sub status {
@@ -392,6 +414,8 @@ sub set {
    if (! defined($brick) || ! defined($attribute) || ! defined($value)) {
       return $self->log->info($self->help_run('set'));
    }
+
+   # XXX: move loaded checks here, like in run()
 
    my $r = $self->call(sub {
       my %args = @_;
@@ -432,6 +456,8 @@ sub get {
       return $self->log->info($self->help_run('get'));
    }
 
+   # XXX: move loaded check here; like in run()
+
    my $r = $self->call(sub {
       my %args = @_;
 
@@ -469,6 +495,14 @@ sub run {
       return $self->log->info($self->help_run('run'));
    }
 
+   if (! $self->is_loaded($brick)) {
+      return $self->log->error("run: Brick [$brick] not loaded");
+   }
+
+   if (! $self->loaded->{$brick}->has_command($command)) {
+      return $self->log->error("run: Brick [$brick] has no Command [$command]");
+   }
+
    my $r = $self->call(sub {
       my %args = @_;
 
@@ -476,39 +510,11 @@ sub run {
       my $__lp_command = $args{command};
       my @__lp_args = @{$args{args}};
 
-      if (! exists($__ctx->{loaded}->{$__lp_brick})) {
-         $? = 1;
-         $@ = "run: Brick [$__lp_brick] not loaded";
-         die("$@\n");
-      }
-
       my $__lp_run = $__ctx->{loaded}->{$__lp_brick};
-      if (! defined($__lp_run)) {
-         $? = 1;
-         $@ = "run: Brick [$__lp_brick] not defined";
-         die("$@\n");
-      }
-
-      if (! $__ctx->{loaded}->{$__lp_brick}->can($__lp_command)) {
-         $? = 1;
-         $@ = "run: Brick [$__lp_brick] has no Command [$__lp_command]";
-         die("$@\n");
-      }
 
       $__lp_run->init; # Will init() only if not already done
 
-      my $__lp_result = $__lp_run->$__lp_command(@__lp_args);
-      if (! defined($__lp_result)) {
-         $? = 1;
-         $@ = "run: unable to run Command [$__lp_command] for Brick [$__lp_brick]";
-         die("$@\n");
-      }
-
-      $? = 0;
-      $@ = '';
-      $_ = $__lp_result;
-
-      return $__lp_result;
+      return $_ = $__lp_run->$__lp_command(@__lp_args);
    }, brick => $brick, command => $command, args => \@args);
 
    return $r;
