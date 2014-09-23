@@ -20,6 +20,8 @@ sub help {
       'run:help' => '',
       'run:help_set' => '<attribute>',
       'run:help_run' => '<command>',
+      'run:class' => '',
+      'run:classes' => '',
       'run:commands' => '',
       'run:attributes' => '',
       'run:revision' => '',
@@ -46,13 +48,18 @@ sub help_set {
       return $self->log->info("run $name help_set <attribute>");
    }
 
-   if (exists($self->help->{"set:$attribute"})) {
-      my $help = $self->help->{"set:$attribute"};
-      return "set $name $attribute $help";
+   my $classes = $self->classes;
+
+   for my $class (@$classes) {
+      last if $class eq 'Metabricky::Brick';
+
+      if (exists($class->help->{"set:$attribute"})) {
+         my $help = $class->help->{"set:$attribute"};
+         return "set $name $attribute $help";
+      }
    }
 
-   $self->log->info("help_set: no help for Brick [$name] with Attribute [$attribute]");
-   return '';
+   return;
 }
 
 sub help_run {
@@ -65,13 +72,18 @@ sub help_run {
       return $self->log->info("run $name help_run <command>");
    }
 
-   if (exists($self->help->{"run:$command"})) {
-      my $help = $self->help->{"run:$command"};
-      return "run $name $command $help";
+   my $classes = $self->classes;
+
+   for my $class (@$classes) {
+      last if $class eq 'Metabricky::Brick';
+
+      if (exists($class->help->{"run:$command"})) {
+         my $help = $class->help->{"run:$command"};
+         return "run $name $command $help";
+      }
    }
 
-   $self->log->info("help_run: no help for Brick [$name] with Command [$command]");
-   return '';
+   return;
 }
 
 sub new {
@@ -123,7 +135,7 @@ sub default_values {
 sub name {
    my $self = shift;
 
-   my $module = lc(ref($self));
+   my $module = lc($self->class);
    $module =~ s/^metabricky::brick:://;
 
    return $module;
@@ -169,17 +181,38 @@ sub category {
    return $self->log->fatal("category: no Category found");
 }
 
+sub class {
+   my $self = shift;
+
+   return ref($self) || $self;
+}
+
+sub classes {
+   my $self = shift;
+
+   my $class = $self->class;
+   my $ary = [ $class ];
+   $class->cgGetIsaTree($ary);
+
+   my @classes = ();
+
+   for my $class (@$ary) {
+      next if ($class !~ /^Metabricky::Brick/);
+      push @classes, $class;
+   }
+
+   return \@classes;
+}
+
 sub commands {
    my $self = shift;
 
-   my $object = ref($self);
-   my $ary = [ $object ];
-   $object->cgGetIsaTree($ary);
-
    my %commands = ();
 
-   for my $class (@$ary) {
-      next if ($class !~ /^Metabricky::Brick/ || ! $class->can('help'));
+   my $classes = $self->classes;
+
+   for my $class (@$classes) {
+      next if (! $class->can('help'));
 
       my $help = $class->help;
 
@@ -205,7 +238,7 @@ sub has_command {
    my ($command) = @_;
 
    if (! defined($command)) {
-      return $self->log->info("run ".ref($self)." has_command <command>");
+      return $self->log->info("run ".$self->name." has_command <command>");
    }
 
    if ($self->can($command)) {
@@ -218,14 +251,12 @@ sub has_command {
 sub attributes {
    my $self = shift;
 
-   my $object = ref($self);
-   my $ary = [ $object ];
-   $object->cgGetIsaTree($ary);
-
    my %attributes = ();
 
-   for my $class (@$ary) {
-      next if ($class !~ /^Metabricky::Brick/ || ! $class->can('help'));
+   my $classes = $self->classes;
+
+   for my $class (@$classes) {
+      next if (! $class->can('help'));
 
       my $help = $class->help;
 
@@ -249,7 +280,7 @@ sub has_attribute {
    my ($attribute) = @_;
 
    if (! defined($attribute)) {
-      return $self->log->info("run ".ref($self)." has_attribute <command>");
+      return $self->log->info("run ".$self->name." has_attribute <command>");
    }
 
    if ($self->can($attribute)) {

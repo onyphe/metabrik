@@ -4,7 +4,6 @@ Prio:
 -> alias support. example: alias ls "!ls -lF"
 
 -> new: possibility to loop on run() or get() or set() in a multiline code
-=> bug: script cannot handle multiline with \ char
 => bug: ps_lookup_var* cannot handle \n char (multiline does not work), may be a limitation of Term::Shell?
 ==> cmd() to reassemble line and call eval?
 
@@ -12,18 +11,11 @@ Prio:
 
 -> update: remove do() and use call() everywhere
 
--> rename: file::slurp => file::read
-=> move $_->{a} stuff to string::parse?
-=> rename file Attribute to input (use global input)
-
 -> update: bricks using bricks should call is_loaded and die if not i/o using from Perl itself
 => if not loaded, feature is disabled
 => example: database::keystore
 
 -> new: shell::history, shell::builtins
-
--> use SUPER::default_values()
--> use SUPER::help*() for info
 
 -> core::context: to remove check for internal variable gathering: no reason we cannot read a variable ...
 

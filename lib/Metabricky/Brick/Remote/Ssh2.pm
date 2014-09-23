@@ -16,6 +16,7 @@ our @AS = qw(
    publickey
    privatekey
    ssh2
+   _channel
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
@@ -25,6 +26,7 @@ sub revision {
 
 sub require_modules {
    return [
+      'IO::Scalar',
       'Net::SSH2',
    ];
 }
@@ -39,8 +41,10 @@ sub help {
       'run:connect' => '',
       'run:cat' => '<file>',
       'run:exec' => '<command>',
-      'run:readall' => '<channel>',
-      'run:readline' => '<channel>',
+      'run:readall' => '',
+      'run:readline' => '',
+      'run:readlineall' => '',
+      'run:load' => '<file>',
       'run:listfiles' => '<glob>',
       'run:disconnect' => '',
    };
@@ -115,6 +119,7 @@ sub disconnect {
    my $r = $ssh2->disconnect;
 
    $self->ssh2(undef);
+   $self->_channel(undef);
 
    return $r;
 }
@@ -135,65 +140,110 @@ sub exec {
 
    $self->debug && $self->log->debug("exec: cmd [$cmd]");
 
-   my $chan = $ssh2->channel;
-   if (! defined($chan)) {
+   my $channel = $ssh2->channel;
+   if (! defined($channel)) {
       return $self->log->error("exec: channel creation error");
    }
 
-   $chan->exec($cmd)
+   $channel->exec($cmd)
       or return $self->log->error("exec: can't execute command [$cmd]: $!");
 
-   return $chan;
+   return $self->_channel($channel);
 }
 
 sub readline {
    my $self = shift;
-   my ($channel) = @_;
 
    my $ssh2 = $self->ssh2;
    if (! defined($ssh2)) {
       return $self->log->info($self->help_run('connect'));
    }
 
+   my $channel = $self->_channel;
    if (! defined($channel)) {
-      return $self->log->info($self->help_run('readline'));
+      return $self->log->info("readline: create a channel first");
    }
 
-   my @lines = ();
-   while (! $channel->eof) {
-      while (defined(my $line = <$channel>)) {
-         chomp($line);
-         push @lines, $line;
-         # We only want one line
+   my $read = '';
+   my $count = 1;
+   while (1) {
+      my $char = '';
+      my $rc = $channel->read($char, $count);
+      if ($rc > 0) {
+         #print "read[$char]\n";
+         #print "returned[$c]\n";
+         $read .= $char;
+
+         last if $char eq "\n";
+      }
+      elsif ($rc < 0) {
+         return $self->log->error("read: error [$rc]");
+      }
+      else {
          last;
       }
    }
+
+   return $read;
+}
+
+sub readlineall {
+   my $self = shift;
+
+   my $ssh2 = $self->ssh2;
+   if (! defined($ssh2)) {
+      return $self->log->info($self->help_run('connect'));
+   }
+
+   my $channel = $self->_channel;
+   if (! defined($channel)) {
+      return $self->log->info("readlineall: create a channel first");
+   }
+
+   my $read = $self->readall;
+   if (! defined($read)) {
+      return $self->log->error("readlineall: readall error");
+   }
+
+   my @lines = split(/\n/, $read);
 
    return \@lines;
 }
 
 sub readall {
    my $self = shift;
-   my ($channel) = @_;
 
    my $ssh2 = $self->ssh2;
    if (! defined($ssh2)) {
       return $self->log->info($self->help_run('connect'));
    }
 
+   my $channel = $self->_channel;
    if (! defined($channel)) {
-      return $self->log->info($self->help_run('readall'));
+      return $self->log->info("readall: create a channel first");
    }
 
-   my @lines = ();
-   while (! $channel->eof) {
-      while (defined(my $line = <$channel>)) {
-         chomp($line);
-         push @lines, $line;
+   my $read = '';
+   my $count = 1024;
+   while (1) {
+      my $buf = '';
+      my $rc = $channel->read($buf, $count);
+      if ($rc > 0) {
+         #print "read[$buf]\n";
+         #print "returned[$c]\n";
+         $read .= $buf;
+
+         last if $rc < $count;
+      }
+      elsif ($rc < 0) {
+         return $self->log->error("read: error [$rc]");
+      }
+      else {
+         last;
       }
    }
 
-   return \@lines;
+   return $read;
 }
 
 sub listfiles {
@@ -205,23 +255,63 @@ sub listfiles {
       return $self->log->error("listfiles: exec error");
    }
 
-   my $all = $self->readall;
-   if (! defined($all)) {
+   my $read = $self->readall;
+   if (! defined($read)) {
       return $self->log->error("listfiles: readall error");
    }
 
-   return $all;
+   my @files = split(/\n/, $read);
+
+   return \@files;
 }
 
 sub cat {
    my $self = shift;
    my ($file) = @_;
 
-   if (! defined($file)) {
-      return $self->log->info($self->run_help('cat'));
+   if (! defined($self->ssh2)) {
+      return $self->log->info($self->help_run('connect'));
    }
 
-   return $self->exec('cat '.$file);
+   if (! defined($file)) {
+      return $self->log->info($self->help_run('cat'));
+   }
+
+   my $channel = $self->exec('cat '.$file);
+   if (! defined($channel)) {
+      return $self->log->error("cat: channel for file [$file]");
+   }
+
+   return $self->_channel($channel);
+}
+
+sub load {
+   my $self = shift;
+   my ($file) = @_;
+
+   if (! defined($self->ssh2)) {
+      return $self->log->info($self->help_run('connect'));
+   }
+
+   if (! defined($file)) {
+      return $self->log->info($self->help_run('load'));
+   }
+
+   my $ssh2 = $self->ssh2;
+
+   my $io = IO::Scalar->new;
+
+   $ssh2->scp_get($file, $io)
+      or return $self->log->error("load: scp_get: $file");
+
+   $io->seek(0, 0);
+
+   my $buf = '';
+   while (<$io>) {
+      $buf .= $_;
+   }
+
+   return $buf;
 }
 
 sub DESTROY {
@@ -233,6 +323,7 @@ sub DESTROY {
    if (defined($ssh2)) {
       $ssh2->disconnect;
       $self->ssh2(undef);
+      $self->_channel(undef);
    }
 
    return 1;

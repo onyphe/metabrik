@@ -99,6 +99,7 @@ sub init {
    }
 
    # They are loaded when core::context init is performed
+   # Should be placed in core::context Brick instead of here
    $self->add_handler('run_core::log');
    $self->add_handler('run_core::context');
    $self->add_handler('run_core::global');
@@ -697,22 +698,17 @@ sub run_help {
    }
    else {
       if (exists($Bricks->{$brick})) {
-         my $help = $Bricks->{$brick}->help;
+         my $attributes = $Bricks->{$brick}->attributes;
+         my $commands = $Bricks->{$brick}->commands;
 
-         # We first print setable Attributes
-         for my $k (sort { $a cmp $b } keys %$help) {
-            my ($type, $command) = split(':', $k);
-            if ($type eq 'set') {
-               $self->log->info($Bricks->{$brick}->help_set($command));
-            }
+         for my $attribute (@$attributes) {
+            my $help = $Bricks->{$brick}->help_set($attribute);
+            $self->log->info($help) if defined($help);
          }
 
-         # We then print runable Commands
-         for my $k (sort { $a cmp $b } keys %$help) {
-            my ($type, $command) = split(':', $k);
-            if ($type eq 'run') {
-               $self->log->info($Bricks->{$brick}->help_run($command));
-            }
+         for my $command (@$commands) {
+            my $help = $Bricks->{$brick}->help_run($command);
+            $self->log->info($help) if defined($help);
          }
       }
       else {
@@ -848,16 +844,12 @@ sub run_get {
 
       $self->log->info("Get attribute(s):");
 
-      my $count = 0;
       for my $brick (sort { $a cmp $b } keys %$loaded) {
          my $attributes = $loaded->{$brick}->attributes or next;
          for my $attribute (sort { $a cmp $b } @$attributes) {
             $self->log->info("   $brick $attribute ".$context->get($brick, $attribute));
-            $count++;
          }
       }
-
-      $self->log->info("Total: $count");
    }
    # get is called with only a Brick as an arg, we show its Attributes
    elsif (defined($brick) && ! defined($attribute)) {
@@ -869,14 +861,13 @@ sub run_get {
 
       $self->log->info("Get attribute(s):");
 
-      my $count = 0;
-      my $attributes = $loaded->{$brick}->attributes or return;
+      my %printed = ();
+      my $attributes = $loaded->{$brick}->attributes;
       for my $attribute (sort { $a cmp $b } @$attributes) {
-         $self->log->info("   $brick $attribute ".$context->get($brick, $attribute));
-         $count++;
+         my $print = "   $brick $attribute ".$context->get($brick, $attribute);
+         $self->log->info($print) if ! exists($printed{$print});
+         $printed{$print}++;
       }
-
-      $self->log->info("Total: $count");
    }
    # get is called with is a Brick and an Attribute
    elsif (defined($brick) && defined($attribute)) {
@@ -1071,11 +1062,30 @@ sub run_script {
 
    open(my $in, '<', $script)
       or return $self->log->error("run_script: can't open file [$script]: $!");
+
+   my @lines = ();
    while (defined(my $line = <$in>)) {
       next if ($line =~ /^\s*#/);  # Skip comments
       chomp($line);
-      $self->cmd($self->ps_lookup_vars_in_line($line));
+
+      $line = $self->ps_lookup_vars_in_line($line);
+      push @lines, $line;
+
+      if ($line =~ /\\\s*$/) {
+         next;
+      }
+
+      # Multiline edition finished, we can remove the `\' char before joining
+      for (@lines) {
+         s/\\\s*$//;
+      }
+
+      $self->debug && $self->log->debug("run_script: lines[@lines]");
+
+      $self->cmd(join('', @lines));
+      @lines = ();
    }
+
    close($in);
 
    return 1;
