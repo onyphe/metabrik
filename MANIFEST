@@ -16,7 +16,7 @@ lib/Metabricky/Brick/Database/Keystore.pm
 lib/Metabricky/Brick/Database/Nvd.pm
 lib/Metabricky/Brick/Database/Sqlite.pm
 lib/Metabricky/Brick/Database/Vfeed.pm
-lib/Metabricky/Brick/Encode/Base64.pm
+lib/Metabricky/Brick/Encoding/Base64.pm
 lib/Metabricky/Brick/Example/Template.pm
 lib/Metabricky/Brick/File/Fetch.pm
 lib/Metabricky/Brick/File/Find.pm

@@ -1,9 +1,9 @@
 #
 # $Id: Base64.pm 89 2014-09-17 20:29:29Z gomor $
 #
-# Base64 brick
+# encoding::base64 Brick
 #
-package Metabricky::Brick::Encode::Base64;
+package Metabricky::Brick::Encoding::Base64;
 use strict;
 use warnings;
 

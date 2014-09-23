@@ -9,7 +9,7 @@ ok(sub { eval("use Metabricky::Brick::Database::Keystore");   $@ ? 0 : 1 }, 1, $
 ok(sub { eval("use Metabricky::Brick::Database::Nvd");        $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::Database::Sqlite");     $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::Database::Vfeed");      $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabricky::Brick::Encode::Base64");       $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabricky::Brick::Encoding::Base64");     $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::Example::Template");    $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::File::Fetch");          $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::File::Find");           $@ ? 0 : 1 }, 1, $@);

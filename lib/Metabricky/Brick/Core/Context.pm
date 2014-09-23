@@ -270,9 +270,11 @@ sub load {
    $self->log->debug("category[$category]");
    $self->log->debug("module[$module]");
 
+   $repository = ucfirst($repository);
    $category = ucfirst($category);
    $module = ucfirst($module);
-   $module = 'Metabricky::Brick::'.$category.'::'.$module;
+
+   $module = 'Metabricky::Brick::'.(length($repository) ? $repository.'::' : '').$category.'::'.$module;
 
    $self->log->debug("module2[$module]");
 
