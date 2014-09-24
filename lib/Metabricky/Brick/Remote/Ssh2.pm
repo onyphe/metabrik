@@ -54,9 +54,9 @@ sub default_values {
    my $self = shift;
 
    return {
-      hostname => $self->bricks->{'core::global'}->hostname || 'localhost',
+      hostname => $self->global->hostname || 'localhost',
       port => 22,
-      username => $self->bricks->{'core::global'}->username || 'root',
+      username => $self->global->username || 'root',
    };
 }
 

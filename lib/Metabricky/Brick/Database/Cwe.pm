@@ -45,7 +45,7 @@ sub default_values {
 sub update {
    my $self = shift;
 
-   my $datadir = $self->bricks->{'core::global'}->datadir;
+   my $datadir = $self->global->datadir;
 
    my $fetch = Metabricky::Brick::File::Fetch->new(
       output => "$datadir/2000.xml.zip",
@@ -57,7 +57,6 @@ sub update {
    my $zip = Metabricky::Brick::File::Zip->new(
       input => "$datadir/2000.xml.zip",
       destdir => $datadir,
-      bricks => $self->bricks,
    );
 
    $zip->uncompress or return $self->log->error("can't unzip file");

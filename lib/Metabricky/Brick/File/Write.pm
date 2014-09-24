@@ -41,7 +41,7 @@ sub default_values {
    my $self = shift;
 
    return {
-      output => $self->bricks->{'core::global'}->output || '/tmp/output.txt',
+      output => $self->global->output || '/tmp/output.txt',
       append => 1,
       overwrite => 0,
    };

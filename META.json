@@ -38,7 +38,7 @@
    "provides" : {
       "Metabricky" : {
          "file" : "lib/Metabricky.pm",
-         "version" : "0.92"
+         "version" : "0.93"
       },
       "Metabricky::Brick" : {
          "file" : "lib/Metabricky/Brick.pm"
@@ -76,8 +76,8 @@
       "Metabricky::Brick::Database::Vfeed" : {
          "file" : "lib/Metabricky/Brick/Database/Vfeed.pm"
       },
-      "Metabricky::Brick::Encode::Base64" : {
-         "file" : "lib/Metabricky/Brick/Encode/Base64.pm"
+      "Metabricky::Brick::Encoding::Base64" : {
+         "file" : "lib/Metabricky/Brick/Encoding/Base64.pm"
       },
       "Metabricky::Brick::Example::Template" : {
          "file" : "lib/Metabricky/Brick/Example/Template.pm"
@@ -155,5 +155,5 @@
          "http://www.perlfoundation.org/artistic_license_1_0"
       ]
    },
-   "version" : "0.92"
+   "version" : "0.93"
 }

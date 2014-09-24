@@ -45,7 +45,6 @@ sub listen {
    return Metabricky::Brick::Server::Agent::Server->run(
       port => $port,
       ipv => '*',
-      bricks => $self->bricks,
    );
 }
 
@@ -62,15 +61,15 @@ sub options {
 
    $self->SUPER::options($template);
 
-   $prop->{'bricks'} ||= undef;
-   $template->{'bricks'} = \ $prop->{'bricks'};
+   $prop->{'context'} ||= undef;
+   $template->{'context'} = \ $prop->{'context'};
 }
 
 sub process_request {
    my $self = shift;
 
-   my $bricks = $self->{server}->{bricks};
-   my $meby = $bricks->{'shell::meby'};
+   my $context = $self->{server}->{context};
+   my $meby = $context->loaded->{'shell::meby'};
 
    while (<STDIN>) {
       s/[\r\n]+$//;

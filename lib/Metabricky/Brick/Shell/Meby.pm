@@ -98,7 +98,7 @@ sub init {
       @_,
    ) or return 1; # Init already done
 
-   $Metabricky::Ext::Shell::Bricks = $self->bricks;
+   $Metabricky::Ext::Shell::CONTEXT = $self->context;
 
    my $shell = Metabricky::Ext::Shell->new;
    $shell->echo($self->echo);
@@ -270,7 +270,7 @@ Interactive use of the Metabricky shell.
 
 =head2 GLOBAL VARIABLES
 
-=head3 B<$Metabricky::Brick::Shell::Meby::Bricks>
+=head3 B<$Metabricky::Brick::Shell::Meby::CONTEXT>
 
 Specify a log object. Must be an object inherited from L<Metabricky::Log>.
 

@@ -18,6 +18,7 @@ Prio:
 -> update: bricks using bricks should call is_loaded and die if not i/o using from Perl itself
 => if not loaded, feature is disabled
 => example: database::keystore
+=> add require_brick|loaded() to Brick.pm
 
 -> new: shell::history, shell::builtins
 

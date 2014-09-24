@@ -10,8 +10,8 @@ use base qw(Class::Gomor::Hash);
 our @AS = qw(
    debug
    inited
-   bricks
    context
+   global
    log
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
@@ -19,7 +19,6 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 sub help {
    return {
       'set:debug' => '<0|1>',
-      'set:context' => '<context>',
       'run:help' => '',
       'run:help_set' => '<attribute>',
       'run:help_run' => '<command>',
@@ -37,7 +36,6 @@ sub help {
       'run:has_command' => '',
       'run:attributes' => '',
       'run:has_attribute' => '',
-      'run:bricks' => '',
       'run:self' => '',
    };
 }
@@ -150,7 +148,6 @@ sub default_values {
    return {
       debug => 0,
       inited => 0,
-      bricks => {},
    };
 }
 
