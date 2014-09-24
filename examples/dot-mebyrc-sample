@@ -14,7 +14,7 @@ title "meby Metabricky shell"
 my $home = $ENV{HOME}
 my $user = $ENV{USER}
 
-set core::global datadir $home."/metabricky/data"
+set core::global datadir $home/metabricky/data
 set core::global ctimeout 20
 set core::global rtimeout 20
 
@@ -28,11 +28,11 @@ load remote::ssh2
 set remote::ssh2 debug 1
 set remote::ssh2 host localhost
 set remote::ssh2 username $user
-set remote::ssh2 publickey $user."/.ssh/id_rsa.pub"
-set remote::ssh2 privatekey $user."/.ssh/id_rsa"
+set remote::ssh2 publickey $user/.ssh/id_rsa.pub
+set remote::ssh2 privatekey $user/.ssh/id_rsa
 
 load database::vfeed
-set database::vfeed db $home."/metabricky/data/vfeed.db"
+set database::vfeed db $home/metabricky/data/vfeed.db
 
 # Use your own private bricks
 use lib "$ENV{HOME}/path/to/lib"
