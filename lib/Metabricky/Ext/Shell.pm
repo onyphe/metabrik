@@ -113,94 +113,6 @@ sub prompt_str {
    return $self->ps1;
 }
 
-sub cmd_tmp {
-   my $self = shift;
-   my ($line) = @_;
-
-   if (! defined($self->{line})) {
-      $self->{line} = $line;
-   }
-   else {
-      $self->{line} .= $line;
-   }
-
-   if ($line =~ /\\\s*$/) {
-      return 1; # Continue, we are in multiline edition
-   }
-
-   # If we are here, multiline edition is finished, we rebuild cmd
-   my @lines = split(/\n/, $self->line);
-   for (@lines) {
-      s/\\\s*$//;
-   }
-
-   $self->{line} = join('', @lines);
-
-   if ($self->line =~ /\S/) {
-      my ($cmd, @args) = $self->line_parsed;
-      $self->run($cmd, @args);
-      unless ($self->{command}{run}{found}) {
-         my @c = sort $self->possible_actions($cmd, 'run');
-         if (@c and $self->{API}{match_uniq}) {
-            print $self->msg_ambiguous_cmd($cmd, @c);
-         }
-         else {
-            print $self->msg_unknown_cmd($cmd);
-         }
-      }
-   }
-   else {
-      $self->run('');
-      return 2;
-   }
-
-   return;
-}
-
-sub cmdloop2 {
-   my $self = shift;
-
-   $self->{stop} = 0;
-   $self->preloop;
-
-   my @lines = ();
-   while (defined(my $line = $self->readline($self->prompt_str))) {
-      #$line = $self->ps_lookup_vars_in_line($line);
-      #push @lines, $line;
-
-      #if ($line =~ /\\\s*$/) {
-         #$self->ps_update_prompt('.. ');
-         #next;
-      #}
-
-      ## Multiline edition finished, we can remove the `\' char before joining
-      #for (@lines) {
-         #s/\\\s*$//;
-      #}
-
-      #$self->debug && $self->log->debug("cmdloop: lines[@lines]");
-
-      #$self->cmd(join('', @lines));
-      #@lines = ();
-      #$self->ps_update_prompt;
-
-      $line = $self->ps_lookup_vars_in_line($line);
-      #push @lines, $line;
-
-      my $r = $self->cmd($line);
-      if ($r == 1) {
-         $self->ps_update_prompt('.. ');
-         next;
-      }
-
-      last if $self->{stop};
-   }
-
-   $self->run_exit;
-
-   return $self->postloop;
-}
-
 sub cmdloop {
    my $self = shift;
 
@@ -248,23 +160,6 @@ sub ps_set_title {
    return $self->title($title);
 }
 
-sub ps_lookup_var {
-   my $self = shift;
-   my ($var) = @_;
-
-   if ($var =~ /^\$(\S+)/) {
-      if (my $res = $CONTEXT->do($var)) {
-         $var =~ s/\$${1}/$res/;
-      }
-      else {
-         $self->log->debug("ps_lookup_var: unable to lookup variable [$var]");
-         last;
-      }
-   }
-
-   return $var;
-}
-
 sub ps_lookup_vars_in_line {
    my $self = shift;
    my ($line) = @_;
@@ -272,14 +167,14 @@ sub ps_lookup_vars_in_line {
    if ($line =~ /^\s*(?:run|set)\s+/) {
       my @t = split(/\s+/, $line);
       for my $a (@t) {
-         if ($a =~ /^\$(\S+)/) {
-            if (my $res = $CONTEXT->do($a)) {
-               $line =~ s/\$${1}/$res/;
-            }
-            else {
-               $self->log->debug("ps_lookup_vars_in_line: unable to lookup variable [$a]");
-               last;
-            }
+         if ($a =~ /\$([a-zA-Z0-9_]+)/) {
+            my $varname = '$'.$1;
+            #print "DEBUG varname[$varname]\n";
+
+            my $result = $CONTEXT->lookup($varname) || 'undef';
+            #print "result1[$line]\n";
+            $line =~ s/\$${1}/$result/m;
+            #print "result2[$line]\n";
          }
       }
    }
@@ -819,12 +714,10 @@ sub run_get {
    if (! defined($brick)) {
       my $loaded = $CONTEXT->loaded or return;
 
-      $self->log->info("Get attribute(s):");
-
       for my $brick (sort { $a cmp $b } keys %$loaded) {
          my $attributes = $loaded->{$brick}->attributes or next;
          for my $attribute (sort { $a cmp $b } @$attributes) {
-            $self->log->info("   $brick $attribute ".$CONTEXT->get($brick, $attribute));
+            $self->log->info("$brick $attribute ".$CONTEXT->get($brick, $attribute));
          }
       }
    }
@@ -836,12 +729,10 @@ sub run_get {
          return $self->log->error("get: Brick [$brick] not loaded");
       }
 
-      $self->log->info("Get attribute(s):");
-
       my %printed = ();
       my $attributes = $loaded->{$brick}->attributes;
       for my $attribute (sort { $a cmp $b } @$attributes) {
-         my $print = "   $brick $attribute ".$CONTEXT->get($brick, $attribute);
+         my $print = "$brick $attribute ".$CONTEXT->get($brick, $attribute);
          $self->log->info($print) if ! exists($printed{$print});
          $printed{$print}++;
       }
@@ -860,9 +751,7 @@ sub run_get {
          return $self->log->error("get: Attribute [$attribute] does not exist for Brick [$brick]");
       }
 
-      $self->log->info("Get Attribute [$attribute] for Brick [$brick]:");
-
-      $self->log->info("   $brick $attribute ".$CONTEXT->get($brick, $attribute));
+      $self->log->info("$brick $attribute ".$CONTEXT->get($brick, $attribute));
    }
 
    return 1;
@@ -1088,6 +977,8 @@ sub _ioa_dirsfiles {
 
    #print "before[@dirs|@files]\n";
 
+   #print "grep[$grep]\n";
+
    if (defined($grep)) {
       @dirs = grep(/^$grep/, @dirs);
       @files = grep(/^$grep/, @files);
@@ -1108,20 +999,47 @@ sub catch_comp {
    my @words = $self->line_parsed($line);
    my $count = scalar(@words);
 
-   my $dir = '.';
-   if (defined($line)) {
-      my $home = $self->path_home;
-      $line =~ s/^~/$home/;
-      if ($line =~ /^(.*)\/.*$/) {
-         $dir = $1 || '/';
+   #print "last[$words[-1]]\n";
+
+   if ($words[-1] =~ /^\$/) {
+
+      my $variables = $CONTEXT->variables;
+      #print "variables1[@$variables]\n";
+
+      my @tmp = @$variables;
+      # Remove leading '$'
+      for (@tmp) {
+         s/^\$//;
       }
+      #print "tmp[@tmp]\n";
+
+      #my $this = $words[-1];
+      $words[-1] =~ s/^\$//;
+
+      #print "word[$word]\n";
+      my @variables = grep(/^$words[-1]/, @tmp);
+      #print "variables2[@variables]\n";
+
+      return @variables;
+   }
+   else {
+      my $dir = '.';
+      if (defined($line)) {
+         my $home = $self->path_home;
+         $line =~ s/^~/$home/;
+         if ($line =~ /^(.*)\/.*$/) {
+            $dir = $1 || '/';
+         }
+      }
+
+      $self->debug && $self->log->debug("catch_comp: DIR[$dir]");
+
+      my ($dirs, $files) = $self->_ioa_dirsfiles($dir, $line);
+
+      return @$dirs, @$files;
    }
 
-   $self->debug && $self->log->debug("catch_comp: DIR[$dir]");
-
-   my ($dirs, $files) = $self->_ioa_dirsfiles($dir, $line);
-
-   return @$dirs, @$files;
+   return ();
 }
 
 1;

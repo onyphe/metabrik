@@ -3,13 +3,13 @@
 Prio:
 -> alias support. example: alias ls "!ls -lF"
 
--> rename: $Context to $CONTEXT
+-> bug: conflict between debug Attribute and debug Command in core::log
+-> bug: Attributes are not defaulted from Brick.pm when newing a Brick
 
--> update: to remove bricks() from main Brick.pm class and all bricks
+-> context variables completion? like 'my $test = "me"', run ... $t<tab>
+=> review catch_comp() from ext::shell
 
 -> new: possibility to loop on run() or get() or set() in a multiline code
-=> bug: ps_lookup_var* cannot handle \n char (multiline does not work), may be a limitation of Term::Shell?
-==> cmd() to reassemble line and call eval?
 
 -> update: when calling a script from meby binary, do not process .mebyrc by default
 
@@ -21,8 +21,6 @@ Prio:
 => add require_brick|loaded() to Brick.pm
 
 -> new: shell::history, shell::builtins
-
--> core::context: to remove check for internal variable gathering: no reason we cannot read a variable ...
 
 -> remote::ssh, check for exit_status when exec()
 

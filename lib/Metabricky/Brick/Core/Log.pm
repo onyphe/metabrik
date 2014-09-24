@@ -22,6 +22,18 @@ sub revision {
    return '$Revision$';
 }
 
+sub help {
+   return {
+      'set:level' => '<0|1|2|3>',
+      'run:info' => '<message>',
+      'run:verbose' => '<message>',
+      'run:warning' => '<message>',
+      'run:error' => '<message>',
+      'run:fatal' => '<message>',
+      'run:debug' => '<message>',
+   };
+}
+
 sub default_values {
    return {
       level => 1,
@@ -31,6 +43,7 @@ sub default_values {
 sub warning {
    my $self = shift;
    my ($msg) = @_;
+   $msg ||= 'undef';
    my ($package) = lc(caller());
    $package =~ s/^metabricky::brick:://;
    print("[!] $package: $msg\n");
@@ -39,6 +52,7 @@ sub warning {
 sub error {
    my $self = shift;
    my ($msg) = @_;
+   $msg ||= 'undef';
    my ($package) = lc(caller());
    $package =~ s/^metabricky::brick:://;
    print Term::ANSIColor::RED(), "[-] ", Term::ANSIColor::RESET();
@@ -49,6 +63,7 @@ sub error {
 sub fatal {
    my $self = shift;
    my ($msg) = @_;
+   $msg ||= 'undef';
    my ($package) = lc(caller());
    $package =~ s/^metabricky::brick:://;
    print Term::ANSIColor::RED(), "[FATAL] ", Term::ANSIColor::RESET();
@@ -58,6 +73,7 @@ sub fatal {
 sub info {
    my $self = shift;
    my ($msg) = @_;
+   $msg ||= 'undef';
    return unless $self->level > 0;
    print Term::ANSIColor::GREEN(), "[*] ", Term::ANSIColor::RESET();
    print("$msg\n");
@@ -67,6 +83,7 @@ sub info {
 sub verbose {
    my $self = shift;
    my ($msg) = @_;
+   $msg ||= 'undef';
    return unless $self->level > 1;
    my ($package) = lc(caller());
    $package =~ s/^metabricky::brick:://;
@@ -78,10 +95,11 @@ sub verbose {
 sub debug {
    my $self = shift;
    my ($msg) = @_;
+   $msg ||= 'undef';
    return unless $self->level > 2;
    my ($package) = lc(caller());
    $package =~ s/^metabricky::brick:://;
-   print Term::ANSIColor::BLUE(), "[DEBUG] ", Term::ANSIColor::RESET();
+   print Term::ANSIColor::BLUE(), "[D] ", Term::ANSIColor::RESET();
    print("$package: $msg\n");
    return 1;
 }

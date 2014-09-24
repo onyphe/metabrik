@@ -19,6 +19,12 @@ sub revision {
    return '$Revision$';
 }
 
+sub require_loaded {
+   return [
+      'some::brick',
+   ];
+}
+
 sub require_modules {
    return [
       'Template::Some::Module',

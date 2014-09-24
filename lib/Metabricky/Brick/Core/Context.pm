@@ -71,8 +71,7 @@ sub help {
       'run:available' => '',
       'run:is_available' => '<brick>',
       'run:status' => '',
-      'run:do' => '<perl_code>',
-      'run:call' => '<perl_sub>',
+      'run:variables' => '',
    };
 }
 
@@ -196,6 +195,45 @@ sub call {
    return $res;
 }
 
+sub lookup {
+   my $self = shift;
+   my ($varname) = @_;
+
+   if (! defined($varname)) {
+      return $self->log->error($self->help_run('lookup'));
+   }
+
+   my $res = $self->call(sub {
+      my %args = @_;
+
+      my $__lp_varname = $args{varname};
+
+      return $__CTX->{context}->_lp->{context}->{_}->{$__lp_varname};
+   }, varname => $varname);
+
+   $self->debug && $self->log->debug("lookup: [$varname] = [$res]");
+
+   return $res;
+}
+
+sub variables {
+   my $self = shift;
+
+   my $res = $self->call(sub {
+      my @__lp_variables = ();
+
+      for my $__lp_variable (keys %{$__CTX->{context}->_lp->{context}->{_}}) {
+         next if $__lp_variable !~ /^\$/;
+         next if $__lp_variable =~ /^\$_/;
+
+         push @__lp_variables, $__lp_variable;
+      }
+
+      return \@__lp_variables;
+   });
+
+   return $res;
+}
 
 # XXX: to replace with Brick::Find
 my @available = ();
