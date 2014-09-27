@@ -21,11 +21,11 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'HTTP::Proxy',
-      'HTTP::Proxy::HeaderFilter::simple',
-      'LWP::Protocol::connect',
-   ];
+   return {
+      'HTTP::Proxy' => [],
+      'HTTP::Proxy::HeaderFilter::simple' => [],
+      'LWP::Protocol::connect' => [],
+   };
 }
 
 sub help {

@@ -19,9 +19,9 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'IO::Socket::Multicast',
-   ];
+   return {
+      'IO::Socket::Multicast' => [],
+   };
 }
 
 sub help {

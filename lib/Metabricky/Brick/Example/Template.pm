@@ -26,9 +26,9 @@ sub require_loaded {
 }
 
 sub require_modules {
-   return [
-      'Template::Some::Module',
-   ];
+   return {
+      'Template::Some::Module' => [],
+   };
 }
 
 sub help {

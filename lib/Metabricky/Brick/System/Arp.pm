@@ -19,9 +19,9 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Net::Libdnet::Arp',
-   ];
+   return {
+      'Net::Libdnet::Arp' => [],
+   };
 }
 
 sub help {

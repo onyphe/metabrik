@@ -19,9 +19,9 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Net::Server',
-   ];
+   return {
+      'Net::Server' => [],
+   };
 }
 
 sub help {

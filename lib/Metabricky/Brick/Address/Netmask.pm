@@ -19,9 +19,9 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Net::Netmask',
-   ];
+   return {
+      'Net::Netmask' => [],
+   };
 }
 
 sub help {

@@ -24,8 +24,8 @@ sub require_loaded {
 }
 
 sub require_modules {
-   return [
-   ];
+   return {
+   };
 }
 
 sub help {

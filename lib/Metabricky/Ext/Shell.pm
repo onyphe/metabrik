@@ -30,6 +30,7 @@ use IPC::Run;
 
 use Metabricky;
 use Metabricky::Ext::Utils qw(peu_convert_path);
+use Metabricky::Brick::File::Find;
 
 # Exists because we cannot give an argument to Term::Shell::new()
 # Or I didn't found how to do it.
@@ -385,6 +386,9 @@ sub run_cd {
    my ($dir, @args) = @_;
 
    if (defined($dir)) {
+      if ($dir =~ /^~$/) {
+         $dir = $self->path_home;
+      }
       if (! -d $dir) {
          return $self->log->error("cd: $dir: can't cd to this");
       }
@@ -939,107 +943,69 @@ sub catch_run {
    return $self->run_pl(@args);
 }
 
-# XXX: move in Metabricky::Ext
-sub _ioa_dirsfiles {
-   my $self = shift;
-   my ($dir, $grep) = @_;
-
-   #print "\nDIR[$dir]\n";
-
-   my @dirs = ();
-   eval {
-      @dirs = io($dir)->all_dirs;
-   };
-   if ($@) {
-      if ($self->debug) {
-         chomp($@);
-         $self->log->debug("$dir: dirs: $@");
-      }
-      return [], [];
-   }
-
-   my @files = ();
-   eval {
-      @files = io($dir)->all_files;
-   };
-   if ($@) {
-      if ($self->debug) {
-         chomp($@);
-         $self->log->debug("$dir: files: $@");
-      }
-      return [], [];
-   }
-
-   #@dirs = map { $_ =~ s/^\///; $_ } @dirs;  # Remove leading slash
-   #@files = map { $_ =~ s/^\///; $_ } @files;  # Remove leading slash
-   @dirs = map { s/^\.\///; s/$/\//; $_ } @dirs;  # Remove leading slash, add a trailing /
-   @files = map { s/^\.\///; $_ } @files;  # Remove leading slash
-
-   #print "before[@dirs|@files]\n";
-
-   #print "grep[$grep]\n";
-
-   if (defined($grep)) {
-      @dirs = grep(/^$grep/, @dirs);
-      @files = grep(/^$grep/, @files);
-   }
-
-   #print "after[@dirs|@files]\n";
-
-   return \@dirs, \@files;
-}
-
 # Default to check for global completion value
 sub catch_comp {
    my $self = shift;
-   my ($word, $line, $start) = @_;
-
-   $self->debug && $self->log->debug("catch_comp: word[$word] line[$line] start[$start]");
+   # Strange, we had to reverse order for $start and $line only for catch_comp() method.
+   my ($word, $start, $line) = @_;
 
    my @words = $self->line_parsed($line);
    my $count = scalar(@words);
+   my $last_word = $start;
 
-   #print "last[$words[-1]]\n";
+   #if (! length($last_word)) {
+      #$last_word = '.';
+   #}
 
-   if ($words[-1] =~ /^\$/) {
+   $self->debug && $self->log->debug("catch_comp: word[$word] line[$line] start[$start] count[$count] last_word[$last_word]");
 
+   my @comp = ();
+
+   if ($last_word =~ /^\$/ || $words[-1] =~ /^\$/) {
       my $variables = $CONTEXT->variables;
-      #print "variables1[@$variables]\n";
 
-      my @tmp = @$variables;
-      # Remove leading '$'
-      for (@tmp) {
-         s/^\$//;
+      (my $name = $last_word) =~ s/^\$//;
+
+      for my $this (@$variables) {
+         $this =~ s/^\$//;
+         #$self->debug && $self->log->debug("variable[$this] last_word[$last_word]");
+         if ($this =~ /^$name/) {
+            push @comp, $this;
+         }
       }
-      #print "tmp[@tmp]\n";
-
-      #my $this = $words[-1];
-      $words[-1] =~ s/^\$//;
-
-      #print "word[$word]\n";
-      my @variables = grep(/^$words[-1]/, @tmp);
-      #print "variables2[@variables]\n";
-
-      return @variables;
    }
    else {
-      my $dir = '.';
-      if (defined($line)) {
+      if ($count == 1) {
+         $last_word = '.';
+      }
+
+      my $path = '.';
+      if (length($last_word)) {
          my $home = $self->path_home;
-         $line =~ s/^~/$home/;
-         if ($line =~ /^(.*)\/.*$/) {
-            $dir = $1 || '/';
+         $last_word =~ s/^~/$home/;
+         if ($last_word =~ /^(.*)\/.*$/) {
+            $path = $1 || '/';
          }
       }
 
-      $self->debug && $self->log->debug("catch_comp: DIR[$dir]");
+      $self->debug && $self->log->debug("path[$path]");
 
-      my ($dirs, $files) = $self->_ioa_dirsfiles($dir, $line);
+      my $find = Metabricky::Brick::File::Find->new or return $self->log->error("file::fine: new");
+      $find->init;
+      $find->path($path);
+      $find->recursive(0);
 
-      return @$dirs, @$files;
+      my $found = $find->all('.*', '.*');
+
+      for my $this (@{$found->{files}}, @{$found->{directories}}) {
+         #$self->debug && $self->log->debug("check[$this]");
+         if ($this =~ /^$last_word/) {
+            push @comp, $this;
+         }
+      }
    }
 
-   return ();
+   return @comp;
 }
 
 1;
@@ -1048,27 +1014,7 @@ __END__
 
 =head1 NAME
 
-Metabricky::Ext::Shell - Term::Shell extention
-
-=head1 SYNOPSIS
-
-   XXX: TODO
-
-=head1 DESCRIPTION
-
-Interactive use of the Metabricky shell.
-
-=head2 GLOBAL VARIABLES
-
-=head3 B<$Metabricky::Ext::Shell::CONTEXT>
-
-=head2 COMMANDS
-
-=head3 B<new>
-
-=head1 SEE ALSO
-
-L<Metabricky::Log>
+Metabricky::Ext::Shell - extension using Term::Shell as a base class
 
 =head1 COPYRIGHT AND LICENSE
 

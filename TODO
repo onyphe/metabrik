@@ -9,6 +9,8 @@ Prio:
 -> make shell::meby Brick to depend on the fewest module as possible
 -> cleanup for shell::meby  ps_* functions
 
+-> integrate cpanm into Metabricky
+
 -> update: when calling a script from meby binary, do not process .mebyrc by default
 
 -> update: bricks using bricks should call is_loaded and die if not i/o using from Perl itself
@@ -26,6 +28,7 @@ Prio:
 -> use page() and pager_internal() from Term::Shell
 -> shell::meby: require_bricks { 'core::context' => 1 }
 -> new: shell::history, shell::builtins
+-> new: history: recall a range: history 10-13, will rerun lines 10 to 13
 
 Bricks API: See remote::ssh2
 -> require_arg() to check for a method invocation

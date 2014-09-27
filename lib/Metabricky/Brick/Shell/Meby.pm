@@ -56,9 +56,9 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Metabricky::Ext::Shell',
-   ];
+   return {
+      'Metabricky::Ext::Shell' => [],
+   };
 }
 
 sub help {

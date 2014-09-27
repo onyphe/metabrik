@@ -19,13 +19,13 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Data::Dumper',
-      'IO::Socket::SSL',
-      'LWP::UserAgent',
-      'URI',
-      'WWW::Mechanize',
-   ];
+   return {
+      'Data::Dumper' => [],
+      'IO::Socket::SSL' => [],
+      'LWP::UserAgent' => [],
+      'URI' => [],
+      'WWW::Mechanize' => [],
+   };
 }
 
 sub help {

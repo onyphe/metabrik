@@ -21,10 +21,10 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'DBI',
-      'DBD::SQLite',
-   ];
+   return {
+      'DBI' => [],
+      'DBD::SQLite' => [],
+   };
 }
 
 sub help {

@@ -9,7 +9,7 @@ use Module::Build;
 my $builder = Module::Build->new(
    module_name => 'Metabricky',
    license => 'artistic',
-   dist_author => 'GomoR <gomor-cpan_at_gomor.org>',
+   dist_author => 'GomoR <gomor_at_metabricky.org>',
    dist_version_from => 'lib/Metabricky.pm',
    requires => {
       'Class::Gomor' => '1.00',

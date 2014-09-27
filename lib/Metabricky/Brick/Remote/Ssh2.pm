@@ -25,10 +25,10 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'IO::Scalar',
-      'Net::SSH2',
-   ];
+   return {
+      'IO::Scalar' => [],
+      'Net::SSH2' => [],
+   };
 }
 
 sub help {

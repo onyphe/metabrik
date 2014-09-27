@@ -14,10 +14,10 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Crypt::CBC',
-      'Crypt::OpenSSL::AES',
-   ];
+   return {
+      'Crypt::CBC' => [],
+      'Crypt::OpenSSL::AES' => [],
+   };
 }
 
 sub help {

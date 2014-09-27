@@ -19,9 +19,9 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'POSIX',
-   ];
+   return {
+      'POSIX' => [],
+   };
 }
 
 sub help {

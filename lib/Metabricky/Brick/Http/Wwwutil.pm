@@ -14,10 +14,10 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Data::Dumper',
-      'WWW::Mechanize',
-   ];
+   return {
+      'Data::Dumper' => [],
+      'WWW::Mechanize' => [],
+   };
 }
 
 sub help {

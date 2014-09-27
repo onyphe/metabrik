@@ -13,9 +13,9 @@ our @AS = qw(
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 sub require_modules {
-   return [
-      'Term::ANSIColor',
-   ];
+   return {
+      'Term::ANSIColor' => [],
+   };
 }
 
 sub revision {

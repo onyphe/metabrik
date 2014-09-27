@@ -20,9 +20,9 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Net::DNS::Resolver',
-   ];
+   return {
+      'Net::DNS::Resolver' => [],
+   };
 }
 
 sub help {

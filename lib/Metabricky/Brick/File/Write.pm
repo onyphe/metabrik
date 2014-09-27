@@ -21,11 +21,11 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'JSON::XS',
-      'XML::Simple',
-      'Text::CSV::Hashify',
-   ];
+   return {
+      'JSON::XS' => [],
+      'XML::Simple' => [],
+      'Text::CSV::Hashify' => [],
+   };
 }
 
 sub help {

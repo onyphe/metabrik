@@ -113,11 +113,20 @@ sub new {
    }
 
    my $modules = $self->require_modules;
-   for my $module (@$modules) {
-      eval("use $module");
+   for my $module (keys %$modules) {
+      eval("require $module;");
       if ($@) {
          chomp($@);
-         return $self->log->error("new: you have to install Module [$module]");
+         return $self->log->error("new: you have to install Module [$module]: $@");
+      }
+
+      my @imports = @{$modules->{$module}};
+      if (@imports > 0) {
+         eval("import $module qw(@imports);");
+         if ($@) {
+            chomp($@);
+            return $self->log->error("new: unable to import Functions [@imports] from Module [$module]: $@");
+         }
       }
    }
 
@@ -331,7 +340,7 @@ sub require_loaded {
 }
 
 sub require_modules {
-   return [];
+   return { };
 }
 
 sub self {

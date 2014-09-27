@@ -20,11 +20,11 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Data::Dumper',
-      'vFeed::DB',
-      'vFeed::Log',
-   ];
+   return {
+      'Data::Dumper' => [],
+      'vFeed::DB' => [],
+      'vFeed::Log' => [],
+   };
 }
 
 sub help {

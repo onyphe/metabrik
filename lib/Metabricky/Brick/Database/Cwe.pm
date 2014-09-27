@@ -20,12 +20,12 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Metabricky::Brick::Database::Sqlite',
-      'Metabricky::Brick::File::Fetch',
-      'Metabricky::Brick::File::Read',
-      'Metabricky::Brick::File::Zip',
-   ];
+   return {
+      'Metabricky::Brick::Database::Sqlite' => [],
+      'Metabricky::Brick::File::Fetch' => [],
+      'Metabricky::Brick::File::Read' => [],
+      'Metabricky::Brick::File::Zip' => [],
+   };
 }
 
 sub help {

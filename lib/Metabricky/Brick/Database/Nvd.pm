@@ -25,10 +25,10 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Metabricky::Brick::File::Fetch',
-      'Metabricky::Brick::File::Read',
-   ];
+   return {
+      'Metabricky::Brick::File::Fetch' => [],
+      'Metabricky::Brick::File::Read' => [],
+   };
 }
 
 sub help {

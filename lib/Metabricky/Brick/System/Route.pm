@@ -19,9 +19,9 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Net::Libdnet::Route',
-   ];
+   return {
+      'Net::Libdnet::Route' => [],
+   };
 }
 
 sub help {

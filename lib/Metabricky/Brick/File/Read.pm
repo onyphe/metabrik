@@ -23,12 +23,12 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'File::Slurp',
-      'JSON::XS',
-      'XML::Simple',
-      'Text::CSV::Hashify',
-   ];
+   return {
+      'File::Slurp' => [],
+      'JSON::XS' => [],
+      'XML::Simple' => [],
+      'Text::CSV::Hashify' => [],
+   };
 }
 
 sub help {

@@ -14,9 +14,9 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'MIME::Base64',
-   ];
+   return {
+      'MIME::Base64' => [],
+   };
 }
 
 sub help {

@@ -10,7 +10,7 @@ WriteMakefile(
    VERSION_FROM => 'lib/Metabricky.pm',
    LICENSE => 'artistic',
    ABSTRACT_FROM => 'lib/Metabricky.pm',
-   AUTHOR => 'GomoR <gomor-cpan_at_gomor.org>',
+   AUTHOR => 'GomoR <gomor_at_metabricky.org>',
    PREREQ_PM => {
       'Class::Gomor' => '1.00',
       'Cwd' => 0,

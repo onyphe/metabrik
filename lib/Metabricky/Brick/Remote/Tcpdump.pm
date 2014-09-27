@@ -22,9 +22,9 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Net::Frame::Dump::Offline',
-   ];
+   return {
+      'Net::Frame::Dump::Offline' => [],
+   };
 }
 
 sub help {

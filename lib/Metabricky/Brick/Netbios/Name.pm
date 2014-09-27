@@ -14,9 +14,9 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Net::NBName',
-   ];
+   return {
+      'Net::NBName' => [],
+   };
 }
 
 sub help {

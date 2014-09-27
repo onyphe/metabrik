@@ -16,17 +16,17 @@ sub revision {
 }
 
 sub require_modules {
-   return [
-      'Net::Frame',
-      'Net::Frame::Device',
-      'Net::Frame::Layer::ETH',
-      'Net::Frame::Layer::IPv4',
-      'Net::Frame::Layer::IPv6',
-      'Net::Frame::Layer::TCP',
-      'Net::Frame::Layer::UDP',
-      'Net::Frame::Layer::ICMPv4',
-      'Net::Frame::Layer::ICMPv6',
-   ];
+   return {
+      'Net::Frame' => [],
+      'Net::Frame::Device' => [],
+      'Net::Frame::Layer::ETH' => [],
+      'Net::Frame::Layer::IPv4' => [],
+      'Net::Frame::Layer::IPv6' => [],
+      'Net::Frame::Layer::TCP' => [],
+      'Net::Frame::Layer::UDP' => [],
+      'Net::Frame::Layer::ICMPv4' => [],
+      'Net::Frame::Layer::ICMPv6' => [],
+   };
 }
 
 sub help {
