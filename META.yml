@@ -1,7 +1,7 @@
 ---
 abstract: 'formerly PerL Awesome SHell, Yeeeeaaaaaa!'
 author:
-  - 'GomoR <gomor-cpan_at_gomor.org>'
+  - 'GomoR <gomor_at_metabricky.org>'
 build_requires: {}
 configure_requires:
   Module::Build: 0.40

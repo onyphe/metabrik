@@ -3,15 +3,9 @@
 Prio:
 -> alias support. example: alias ls "!ls -lF"
 
--> context variables completion? like 'my $test = "me"', run ... $t<tab>
-=> review catch_comp() from ext::shell
-
 -> make shell::meby Brick to depend on the fewest module as possible
--> cleanup for shell::meby  ps_* functions
 
 -> integrate cpanm into Metabricky
-
--> update: when calling a script from meby binary, do not process .mebyrc by default
 
 -> update: bricks using bricks should call is_loaded and die if not i/o using from Perl itself
 => if not loaded, feature is disabled

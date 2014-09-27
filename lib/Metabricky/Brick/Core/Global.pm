@@ -25,6 +25,12 @@ our @AS = qw(
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
+sub require_modules {
+   return {
+      'Metabricky' => [],
+   };
+}
+
 sub revision {
    return '$Revision$';
 }
@@ -60,7 +66,14 @@ sub help {
       'set:username' => '<username>',
       'set:hostname' => '<hostname>',
       'set:port' => '<port>',
+      'run:metabricky_version' => '',
    };
+}
+
+sub metabricky_version {
+   my $self = shift;
+
+   return $Metabricky::VERSION;
 }
 
 1;

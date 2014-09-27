@@ -1,7 +1,7 @@
 {
    "abstract" : "formerly PerL Awesome SHell, Yeeeeaaaaaa!",
    "author" : [
-      "GomoR <gomor-cpan_at_gomor.org>"
+      "GomoR <gomor_at_metabricky.org>"
    ],
    "dynamic_config" : 1,
    "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.132510",

@@ -11,9 +11,8 @@ our @AS = qw(
    path_home
    path_cwd
    prompt
-   mebyrc
-   meby_history
-   ps1
+   rc_file
+   history_file
    title
 
    echo
@@ -34,8 +33,11 @@ use Metabricky::Brick::File::Find;
 
 # Exists because we cannot give an argument to Term::Shell::new()
 # Or I didn't found how to do it.
-our $CONTEXT;
+our $CONTEXT = {};
+our $LoadRcFile = 1;
+our $LoadHistoryFile = 1;
 
+# XXX: to be used to create aliases
 #use vars qw{$AUTOLOAD};
 
 #sub AUTOLOAD {
@@ -44,9 +46,9 @@ our $CONTEXT;
 #   $self->log->debug("autoload[$AUTOLOAD]");
 #   $self->log->debug("self[$self]");
 
-#   $self->ps_update_prompt('xxx $AUTOLOAD ');
-#   #$self->ps1('$AUTOLOAD ');
-#   $self->ps_update_prompt;
+#   $self->_update_prompt('xxx $AUTOLOAD ');
+#   #$self->prompt('$AUTOLOAD ');
+#   $self->_update_prompt;
 
 #   return 1;
 #}
@@ -56,33 +58,107 @@ our $CONTEXT;
 
    # We rewrite the log accessor
    *log = sub {
-      return $CONTEXT->loaded->{'core::context'}->log;
+      return $CONTEXT->log;
    };
 }
 
 #
 # Term::Shell::main stuff
 #
+sub _update_path_home {
+   my $self = shift;
+
+   $self->path_home(peu_convert_path(home()));
+
+   return 1;
+}
+
+sub _update_path_cwd {
+   my $self = shift;
+
+   my $cwd = peu_convert_path(getcwd());
+   my $home = $self->path_home;
+   $cwd =~ s/^$home/~/;
+
+   $self->path_cwd($cwd);
+
+   return 1;
+}
+
+sub _update_prompt {
+   my $self = shift;
+   my ($prompt) = @_;
+
+   if (defined($prompt)) {
+      $self->prompt($prompt);
+   }
+   else {
+      my $cwd = $self->path_cwd;
+
+      my $prompt = "meby $cwd> ";
+      if ($^O =~ /win32/i) {
+         $prompt =~ s/> /\$ /;
+      }
+      elsif ($< == 0) {
+         $prompt =~ s/> /# /;
+      }
+
+      $self->prompt($prompt);
+   }
+
+   return 1;
+}
+
+sub _lookup_variables {
+   my $self = shift;
+   my ($line) = @_;
+
+   my @words = $self->line_parsed($line);
+   my $word = $words[0];
+
+   # We lookup variables only for run and set shell Commands
+   if (defined($word) && $word =~ /^(?:run|set)$/) {
+      for my $this (@words) {
+         if ($this =~ /\$([a-zA-Z0-9_]+)/) {
+            my $varname = '$'.$1;
+            $self->debug && $self->log->debug("lookup: varname[$varname]");
+
+            my $result = $CONTEXT->lookup($varname) || 'undef';
+            $self->debug && $self->log->debug("lookup: result1[$line]");
+            $line =~ s/\$${1}/$result/;
+            $self->debug && $self->log->debug("lookup: result2[$line]");
+         }
+      }
+   }
+
+   return $line;
+}
+
 sub init {
    my $self = shift;
 
    $|++;
 
-   $self->ps_set_path_home;
-   $self->ps_set_signals;
-   $self->ps_update_path_cwd;
-   $self->ps_update_prompt;
+   $SIG{INT} = sub {
+      $self->debug && $self->log->debug("signal: INT caught");
+      $self->run_exit;
+      return 1;
+   };
 
-   my $rc = $self->mebyrc($self->path_home."/.mebyrc");
-   my $history = $self->meby_history($self->path_home."/.meby_history");
+   $self->_update_path_home;
+   $self->_update_path_cwd;
+   $self->_update_prompt;
 
-   if (-f $rc) {
-      open(my $in, '<', $rc)
-         or $self->log->fatal("init: can't open rc file [$rc]: $!");
+   my $rc_file = $self->rc_file($self->path_home."/.meby_rc");
+   my $history_file = $self->history_file($self->path_home."/.meby_history");
+
+   if ($LoadRcFile && -f $rc_file) {
+      open(my $in, '<', $rc_file)
+         or $self->log->fatal("init: can't open rc file [$rc_file]: $!");
       while (defined(my $line = <$in>)) {
          next if ($line =~ /^\s*#/);  # Skip comments
          chomp($line);
-         $self->cmd($self->ps_lookup_vars_in_line($line));
+         $self->cmd($self->_lookup_variables($line));
       }
       close($in);
    }
@@ -91,11 +167,11 @@ sub init {
    # See also Term::ReadLine LoadTermCap() and ornaments() subs.
    $self->term->ornaments('md,me');
 
-   if ($self->term->can('ReadHistory')) {
-      if (-f $history) {
+   if ($LoadHistoryFile && $self->term->can('ReadHistory')) {
+      if (-f $history_file) {
          #print "DEBUG: ReadHistory\n";
-         $self->term->ReadHistory($history)
-            or $self->log->fatal("init: can't read history file [$history]: $!");
+         $self->term->ReadHistory($history_file)
+            or $self->log->fatal("init: can't read history file [$history_file]: $!");
       }
    }
 
@@ -111,7 +187,7 @@ sub init {
 sub prompt_str {
    my $self = shift;
 
-   return $self->ps1;
+   return $self->prompt;
 }
 
 sub cmdloop {
@@ -122,11 +198,11 @@ sub cmdloop {
 
    my @lines = ();
    while (defined(my $line = $self->readline($self->prompt_str))) {
-      $line = $self->ps_lookup_vars_in_line($line);
+      $line = $self->_lookup_variables($line);
       push @lines, $line;
 
       if ($line =~ /\\\s*$/) {
-         $self->ps_update_prompt('.. ');
+         $self->_update_prompt('.. ');
          next;
       }
 
@@ -139,7 +215,7 @@ sub cmdloop {
 
       $self->cmd(join('', @lines));
       @lines = ();
-      $self->ps_update_prompt;
+      $self->_update_prompt;
 
       last if $self->{stop};
    }
@@ -150,125 +226,13 @@ sub cmdloop {
 }
 
 #
-# Metabricky::Brick::Shell::Meby stuff
-#
-sub ps_set_title {
-   my $self = shift;
-   my ($title) = @_;
-
-   print "\c[];$title\a";
-
-   return $self->title($title);
-}
-
-sub ps_lookup_vars_in_line {
-   my $self = shift;
-   my ($line) = @_;
-
-   if ($line =~ /^\s*(?:run|set)\s+/) {
-      my @t = split(/\s+/, $line);
-      for my $a (@t) {
-         if ($a =~ /\$([a-zA-Z0-9_]+)/) {
-            my $varname = '$'.$1;
-            #print "DEBUG varname[$varname]\n";
-
-            my $result = $CONTEXT->lookup($varname) || 'undef';
-            #print "result1[$line]\n";
-            $line =~ s/\$${1}/$result/m;
-            #print "result2[$line]\n";
-         }
-      }
-   }
-
-   return $line;
-}
-
-sub ps_update_path_cwd {
-   my $self = shift;
-
-   my $cwd = peu_convert_path(getcwd());
-   $self->path_cwd($cwd);
-
-   return 1;
-}
-
-sub ps_set_path_home {
-   my $self = shift;
-
-   my $home = peu_convert_path(home());
-   $self->path_home($home);
-
-   return 1;
-}
-
-sub ps_update_prompt {
-   my $self = shift;
-   my ($str) = @_;
-
-   if (! defined($str)) {
-      my $cwd = $self->path_cwd;
-      my $home = $self->path_home;
-      $cwd =~ s/$home/~/;
-
-      my $ps1 = "meby $cwd> ";
-      if ($^O =~ /win32/i) {
-         $ps1 =~ s/> /\$ /;
-      }
-      elsif ($< == 0) {
-         $ps1 =~ s/> /# /;
-      }
-
-      $self->ps1($ps1);
-   }
-   else {
-      $self->ps1($str);
-   }
-
-   return 1;
-}
-
-sub ps_set_signals {
-   my $self = shift;
-
-   #my @signals = grep { substr($_, 0, 1) ne '_' } keys %SIG;
-
-   #$SIG{TSTP} = sub {
-      #return 1;
-   #};
-
-   #$SIG{CONT} = sub {
-      #return 1;
-   #};
-
-   $SIG{INT} = sub {
-      return 1;
-   };
-
-   return 1;
-}
-
-#
 # Term::Shell::run stuff
 #
-sub run_version {
-   my $self = shift;
-
-   my $r = $CONTEXT->call(sub {
-      return $_ = $Metabricky::VERSION;
-   });
-
-   return $r;
-}
-
-sub comp_version {
-   return ();
-}
-
 sub run_write_history {
    my $self = shift;
 
-   if ($self->term->can('WriteHistory') && defined($self->meby_history)) {
-      my $r = $self->term->WriteHistory($self->meby_history);
+   if ($self->term->can('WriteHistory') && defined($self->history_file)) {
+      my $r = $self->term->WriteHistory($self->history_file);
       if (! defined($r)) {
          $self->log->error("write_history: unable to write history file");
          return;
@@ -364,7 +328,7 @@ sub run_history {
 
    my @history = $self->term->GetHistory;
    if (defined($c)) {
-      return $self->cmd($self->ps_lookup_vars_in_line($history[$c]));
+      return $self->cmd($self->_lookup_variables($history[$c]));
    }
    else {
       my $c = 0;
@@ -393,15 +357,14 @@ sub run_cd {
          return $self->log->error("cd: $dir: can't cd to this");
       }
       chdir($dir);
-      $self->ps_update_path_cwd;
+      $self->_update_path_cwd;
    }
    else {
       chdir($self->path_home);
-      $self->ps_update_path_cwd;
-      #$self->path_cwd($self->path_home);
+      $self->_update_path_cwd;
    }
 
-   $self->ps_update_prompt;
+   $self->_update_prompt;
 
    return 1;
 }
@@ -409,18 +372,6 @@ sub run_cd {
 # off: use catch_comp()
 #sub comp_cd {
 #}
-
-sub run_pwd {
-   my $self = shift;
-
-   $self->log->info($self->path_cwd);
-
-   return 1;
-}
-
-sub comp_pwd {
-   return ();
-}
 
 sub run_pl {
    my $self = shift;
@@ -868,9 +819,9 @@ sub run_title {
       return $self->log->info("title <title>");
    }
 
-   $self->ps_set_title($title);
+   print "\c[];$title\a";
 
-   return 1;
+   return $self->title($title);
 }
 
 sub comp_title {
@@ -897,7 +848,7 @@ sub run_script {
       next if ($line =~ /^\s*#/);  # Skip comments
       chomp($line);
 
-      $line = $self->ps_lookup_vars_in_line($line);
+      $line = $self->_lookup_variables($line);
       push @lines, $line;
 
       if ($line =~ /\\\s*$/) {
@@ -951,41 +902,38 @@ sub catch_comp {
 
    my @words = $self->line_parsed($line);
    my $count = scalar(@words);
-   my $last_word = $start;
+   my $last = $words[-1];
 
-   #if (! length($last_word)) {
-      #$last_word = '.';
-   #}
+   # Be default, we will read the current directory
+   if (! length($start)) {
+      $start = '.';
+   }
 
-   $self->debug && $self->log->debug("catch_comp: word[$word] line[$line] start[$start] count[$count] last_word[$last_word]");
+   $self->debug && $self->log->debug("catch_comp: word[$word] line[$line] start[$start] count[$count]");
 
    my @comp = ();
 
-   if ($last_word =~ /^\$/ || $words[-1] =~ /^\$/) {
+   # We don't use $start here, because the $ is stripped. We have to use $word[-1]
+   # We also check against $line, if we have a trailing space, the word was complete.
+   if ($last =~ /^\$/ && $line !~ /\s+$/) {
       my $variables = $CONTEXT->variables;
-
-      (my $name = $last_word) =~ s/^\$//;
 
       for my $this (@$variables) {
          $this =~ s/^\$//;
-         #$self->debug && $self->log->debug("variable[$this] last_word[$last_word]");
-         if ($this =~ /^$name/) {
+         #$self->debug && $self->log->debug("variable[$this] start[$start]");
+         if ($this =~ /^$start/) {
             push @comp, $this;
          }
       }
    }
    else {
-      if ($count == 1) {
-         $last_word = '.';
-      }
-
       my $path = '.';
-      if (length($last_word)) {
-         my $home = $self->path_home;
-         $last_word =~ s/^~/$home/;
-         if ($last_word =~ /^(.*)\/.*$/) {
-            $path = $1 || '/';
-         }
+
+      my $home = $self->path_home;
+      $start =~ s/^~/$home/;
+
+      if ($start =~ /^(.*)\/.*$/) {
+         $path = $1 || '/';
       }
 
       $self->debug && $self->log->debug("path[$path]");
@@ -999,7 +947,7 @@ sub catch_comp {
 
       for my $this (@{$found->{files}}, @{$found->{directories}}) {
          #$self->debug && $self->log->debug("check[$this]");
-         if ($this =~ /^$last_word/) {
+         if ($this =~ /^$start/) {
             push @comp, $this;
          }
       }

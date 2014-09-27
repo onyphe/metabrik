@@ -9,7 +9,9 @@ use base qw(Metabricky::Brick);
 
 our @AS = qw(
    echo
-   shell
+   load_rc_file
+   load_history_file
+   _shell
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
@@ -24,8 +26,8 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
       if (defined($value)) {
          # set shell echo attribute only when is has been populated
-         if (defined($self->shell)) {
-            return $self->shell->echo($self->{echo} = $value);
+         if (defined($self->_shell)) {
+            return $self->_shell->echo($self->{echo} = $value);
          }
 
          return $self->{echo} = $value;
@@ -40,8 +42,8 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
       if (defined($value)) {
          # set shell debug attribute only when is has been populated
-         if (defined($self->shell)) {
-            return $self->shell->debug($self->{debug} = $value);
+         if (defined($self->_shell)) {
+            return $self->_shell->debug($self->{debug} = $value);
          }
 
          return $self->{debug} = $value;
@@ -64,6 +66,8 @@ sub require_modules {
 sub help {
    return {
       'set:echo' => '<0|1>',
+      'set:load_rc_file' => '<0|1>',
+      'set:load_history_file' => '<0|1>',
       'run:version' => '',
       'run:title' => '<title>',
       'run:cmd' => '<cmd>',
@@ -90,6 +94,8 @@ sub help {
 sub default_values {
    return {
       echo => 1,
+      load_rc_file => 1,
+      load_history_file => 1,
    };
 }
 
@@ -99,28 +105,22 @@ sub init {
    ) or return 1; # Init already done
 
    $Metabricky::Ext::Shell::CONTEXT = $self->context;
+   $Metabricky::Ext::Shell::LoadRcFile = $self->load_rc_file;
+   $Metabricky::Ext::Shell::LoadHistoryFile = $self->load_history_file;
 
    my $shell = Metabricky::Ext::Shell->new;
    $shell->echo($self->echo);
    $shell->debug($self->debug);
 
-   $self->shell($shell);
+   $self->_shell($shell);
 
    return $self;
-}
-
-sub version {
-   my $self = shift;
-
-   $self->shell->run_version(@_);
-
-   return 1;
 }
 
 sub title {
    my $self = shift;
 
-   $self->shell->run_title(@_);
+   $self->_shell->run_title(@_);
 
    return 1;
 }
@@ -128,7 +128,7 @@ sub title {
 sub system {
    my $self = shift;
 
-   $self->shell->run_system(@_);
+   $self->_shell->run_system(@_);
 
    return 1;
 }
@@ -136,7 +136,7 @@ sub system {
 sub history {
    my $self = shift;
 
-   $self->shell->run_history(@_);
+   $self->_shell->run_history(@_);
 
    return 1;
 }
@@ -144,7 +144,7 @@ sub history {
 sub write_history {
    my $self = shift;
 
-   $self->shell->run_write_history(@_);
+   $self->_shell->run_write_history(@_);
 
    return 1;
 }
@@ -152,15 +152,7 @@ sub write_history {
 sub cd {
    my $self = shift;
 
-   $self->shell->run_cd(@_);
-
-   return 1;
-}
-
-sub pwd {
-   my $self = shift;
-
-   $self->shell->run_pwd(@_);
+   $self->_shell->run_cd(@_);
 
    return 1;
 }
@@ -168,7 +160,7 @@ sub pwd {
 sub pl {
    my $self = shift;
 
-   $self->shell->run_pl(@_);
+   $self->_shell->run_pl(@_);
 
    return 1;
 }
@@ -176,7 +168,7 @@ sub pl {
 sub su {
    my $self = shift;
 
-   $self->shell->run_su(@_);
+   $self->_shell->run_su(@_);
 
    return 1;
 }
@@ -184,7 +176,7 @@ sub su {
 sub show {
    my $self = shift;
 
-   $self->shell->run_show(@_);
+   $self->_shell->run_show(@_);
 
    return 1;
 }
@@ -192,7 +184,7 @@ sub show {
 sub load {
    my $self = shift;
 
-   $self->shell->run_load(@_);
+   $self->_shell->run_load(@_);
 
    return 1;
 }
@@ -200,7 +192,7 @@ sub load {
 sub set {
    my $self = shift;
 
-   $self->shell->run_set(@_);
+   $self->_shell->run_set(@_);
 
    return 1;
 }
@@ -208,7 +200,7 @@ sub set {
 sub get {
    my $self = shift;
 
-   $self->shell->run_get(@_);
+   $self->_shell->run_get(@_);
 
    return 1;
 }
@@ -216,7 +208,7 @@ sub get {
 sub run {
    my $self = shift;
 
-   $self->shell->run_run(@_);
+   $self->_shell->run_run(@_);
 
    return 1;
 }
@@ -224,14 +216,14 @@ sub run {
 sub exit {
    my $self = shift;
 
-   $self->shell->run_exit(@_);
+   $self->_shell->run_exit(@_);
 
    return 1;
 }
 sub cmd {
    my $self = shift;
 
-   $self->shell->cmd(@_);
+   $self->_shell->cmd(@_);
 
    return 1;
 }
@@ -239,7 +231,7 @@ sub cmd {
 sub cmdloop {
    my $self = shift;
 
-   $self->shell->cmdloop(@_);
+   $self->_shell->cmdloop(@_);
 
    return 1;
 }
@@ -247,7 +239,7 @@ sub cmdloop {
 sub script {
    my $self = shift;
 
-   $self->shell->run_script(@_);
+   $self->_shell->run_script(@_);
 
    return 1;
 }
@@ -259,28 +251,6 @@ __END__
 =head1 NAME
 
 Metabricky::Brick::Shell::Meby - the Metabricky shell
-
-=head1 SYNOPSIS
-
-   # XXX: TODO
-
-=head1 DESCRIPTION
-
-Interactive use of the Metabricky shell.
-
-=head2 GLOBAL VARIABLES
-
-=head3 B<$Metabricky::Brick::Shell::Meby::CONTEXT>
-
-Specify a log object. Must be an object inherited from L<Metabricky::Log>.
-
-=head2 COMMANDS
-
-=head3 B<new>
-
-=head1 SEE ALSO
-
-L<Metabricky::Log>
 
 =head1 COPYRIGHT AND LICENSE
 
