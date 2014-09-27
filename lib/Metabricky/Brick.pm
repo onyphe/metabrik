@@ -88,13 +88,25 @@ sub help_run {
    return;
 }
 
-sub new {
-   my $self = shift->SUPER::new(
+sub default_values {
+   return {
       debug => 0,
       inited => 0,
+   };
+}
+
+sub new {
+   my $self = shift->SUPER::new(
       @_,
    );
 
+   # Set default values for main Brick class
+   my $this_default = __PACKAGE__->default_values;
+   for my $k (keys %$this_default) {
+      $self->$k($this_default->{$k});
+   }
+
+   # Set default values for loaded Brick
    my $default_values = $self->default_values;
    for my $k (keys %$default_values) {
       $self->$k($default_values->{$k});
@@ -142,13 +154,6 @@ sub version {
 
    # Version 1 of the API
    return "1.$version";
-}
-
-sub default_values {
-   return {
-      debug => 0,
-      inited => 0,
-   };
 }
 
 sub name {

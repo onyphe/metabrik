@@ -478,7 +478,11 @@ sub get {
       my $__lp_brick = $args{brick};
       my $__lp_attribute = $args{attribute};
 
-      return $__CTX->{loaded}->{$__lp_brick}->$__lp_attribute || 'undef';
+      if (! defined($__CTX->{loaded}->{$__lp_brick}->$__lp_attribute)) {
+         return 'undef';
+      }
+
+      return $__CTX->{loaded}->{$__lp_brick}->$__lp_attribute;
    }, brick => $brick, attribute => $attribute);
 
    return $r;

@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 29) }
+BEGIN { plan(tests => 30) }
 
 ok(sub { eval("use Metabricky::Brick::Address::Netmask");     $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::Audit::Dns");           $@ ? 0 : 1 }, 1, $@);
@@ -11,6 +11,7 @@ ok(sub { eval("use Metabricky::Brick::Database::Sqlite");     $@ ? 0 : 1 }, 1, $
 ok(sub { eval("use Metabricky::Brick::Database::Vfeed");      $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::Encoding::Base64");     $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::Example::Template");    $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabricky::Brick::File::Create");         $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::File::Fetch");          $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::File::Find");           $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::File::Read");           $@ ? 0 : 1 }, 1, $@);

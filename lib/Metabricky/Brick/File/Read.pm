@@ -48,10 +48,8 @@ sub help {
 }
 
 sub default_values {
-   my $self = shift;
-
    return {
-      input => $self->global->input || '/tmp/input.txt',
+      input => $_[0]->global->input || '/tmp/input.txt',
       csv_has_header => 0,
       csv_header => [ ],
       csv_format => 'aoh',

@@ -18,6 +18,7 @@ lib/Metabricky/Brick/Database/Sqlite.pm
 lib/Metabricky/Brick/Database/Vfeed.pm
 lib/Metabricky/Brick/Encoding/Base64.pm
 lib/Metabricky/Brick/Example/Template.pm
+lib/Metabricky/Brick/File/Create.pm
 lib/Metabricky/Brick/File/Fetch.pm
 lib/Metabricky/Brick/File/Find.pm
 lib/Metabricky/Brick/File/Read.pm

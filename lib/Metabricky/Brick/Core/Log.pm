@@ -95,12 +95,28 @@ sub verbose {
 sub debug {
    my $self = shift;
    my ($msg) = @_;
-   $msg ||= 'undef';
-   return unless $self->level > 2;
-   my ($package) = lc(caller());
-   $package =~ s/^metabricky::brick:://;
-   print Term::ANSIColor::BLUE(), "[D] ", Term::ANSIColor::RESET();
-   print("$package: $msg\n");
+
+   # We have a conflict between the method and the accessor,
+   # we have to identify which one is accessed.
+
+   # If no message defined, we want to access the Attribute
+   if (! defined($msg)) {
+      return $self->{debug};
+   }
+   else {
+      # If $msg is either 1 or 0, we want to set the Attribute
+      if ($msg =~ /^(?:1|0)$/) {
+         return $self->{debug} = $msg;
+      }
+      else {
+         return unless $self->level > 2;
+         my ($package) = lc(caller());
+         $package =~ s/^metabricky::brick:://;
+         print Term::ANSIColor::BLUE(), "[D] ", Term::ANSIColor::RESET();
+         print("$package: $msg\n");
+      }
+   }
+
    return 1;
 }
 

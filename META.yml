@@ -44,6 +44,8 @@ provides:
     file: lib/Metabricky/Brick/Encoding/Base64.pm
   Metabricky::Brick::Example::Template:
     file: lib/Metabricky/Brick/Example/Template.pm
+  Metabricky::Brick::File::Create:
+    file: lib/Metabricky/Brick/File/Create.pm
   Metabricky::Brick::File::Fetch:
     file: lib/Metabricky/Brick/File/Fetch.pm
   Metabricky::Brick::File::Find:
