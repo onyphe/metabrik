@@ -1,7 +1,7 @@
 #
 # $Id: Dns.pm 89 2014-09-17 20:29:29Z gomor $
 #
-# Audit DNS brick
+# audit::dns Brick
 #
 package Metabricky::Brick::Audit::Dns;
 use strict;
@@ -36,16 +36,6 @@ sub help {
    };
 }
 
-sub init {
-   my $self = shift->SUPER::init(
-      @_,
-   ) or return 1; # Init already done
-
-   # Do your init here
-
-   return $self;
-}
-
 sub version {
    my $self = shift;
 
@@ -71,9 +61,9 @@ sub version {
       }
    }
 
-   print "dns_version_bind: $version\n";
-
-   return $version;
+   return {
+      dns_version_bind => $version,
+   };
 }
 
 sub recursion {
@@ -98,9 +88,9 @@ sub recursion {
       $recursion_allowed = 1;
    }
 
-   print "dns_recursion_allowed: $recursion_allowed\n";
-
-   return $recursion_allowed;
+   return {
+      dns_recursion_allowed => $recursion_allowed,
+   };
 }
 
 sub axfr {
@@ -130,19 +120,24 @@ sub axfr {
       $axfr_allowed = 1;
    }
 
-   print "dns_axfr_allowed: $axfr_allowed\n";
-
-   return $axfr_allowed;
+   return {
+      dns_axfr_allowed => $axfr_allowed,
+   };
 }
 
 sub all {
    my $self = shift;
 
-   $self->version;
-   $self->recursion;
-   $self->axfr;
+   my $hash = {};
 
-   return 1;
+   my $version = $self->version;
+   for (keys %$version) { $hash->{$_} = $version->{$_} }
+   my $recursion = $self->recursion;
+   for (keys %$recursion) { $hash->{$_} = $recursion->{$_} }
+   my $axfr = $self->axfr;
+   for (keys %$axfr) { $hash->{$_} = $axfr->{$_} }
+
+   return $hash;
 }
 
 1;
