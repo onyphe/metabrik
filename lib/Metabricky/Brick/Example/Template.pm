@@ -1,7 +1,7 @@
 #
 # $Id: Template.pm 89 2014-09-17 20:29:29Z gomor $
 #
-# Template brick
+# example::template Brick
 #
 package Metabricky::Brick::Example::Template;
 use strict;

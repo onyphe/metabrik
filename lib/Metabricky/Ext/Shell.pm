@@ -781,9 +781,10 @@ sub comp_run {
 
    my @words = $self->line_parsed($line);
    my $count = scalar(@words);
+   my $last = $words[-1];
 
    if ($self->debug) {
-      $self->log->debug("word[$word] line[$line] start[$start] count[$count]");
+      $self->log->debug("comp_run: word[$word] line[$line] start[$start] count[$count] last[$last]");
    }
 
    my $brick = defined($words[1]) ? $words[1] : undef;
@@ -835,7 +836,12 @@ sub comp_run {
       shift @words;
       shift @words;
       shift @words;
-      return $self->catch_comp($word, join(' ', @words), $start);
+      my $line = join(' ', @words);
+      #$self->log->verbose("word[$word] line[$line] start[$start] last[$last]");
+      #my @new = $self->line_parsed($line);
+      #$self->log->verbose("new[@new]");
+      #return $self->catch_comp($word, $start, $line); #$line, $start);
+      return $self->catch_comp($word, $line, $start);
    }
 
    return @comp;
@@ -947,7 +953,7 @@ sub catch_comp {
 
       for my $this (@$variables) {
          $this =~ s/^\$//;
-         #$self->debug && $self->log->debug("variable[$this] start[$start]");
+         $self->debug && $self->log->debug("variable[$this] start[$start]");
          if ($this =~ /^$start/) {
             push @comp, $this;
          }
