@@ -119,7 +119,7 @@ sub _update_prompt {
    return 1;
 }
 
-sub _lookup_variables {
+sub _off_lookup_variables {
    my $self = shift;
    my ($line) = @_;
 
@@ -134,9 +134,11 @@ sub _lookup_variables {
             $self->debug && $self->log->debug("lookup: varname[$varname]");
 
             my $result = $CONTEXT->lookup($varname) || 'undef';
-            $self->debug && $self->log->debug("lookup: result1[$line]");
+            #$self->debug && $self->log->debug("lookup: result1[$line]");
+            $self->debug && $self->log->debug("lookup: result1[..]");
             $line =~ s/\$${1}/$result/;
-            $self->debug && $self->log->debug("lookup: result2[$line]");
+            #$self->debug && $self->log->debug("lookup: result2[$line]");
+            $self->debug && $self->log->debug("lookup: result2[..]");
          }
       }
    }
@@ -162,13 +164,14 @@ sub init {
    my $rc_file = $self->rc_file($self->path_home."/.meby_rc");
    my $history_file = $self->history_file($self->path_home."/.meby_history");
 
+
    if ($LoadRcFile && -f $rc_file) {
       open(my $in, '<', $rc_file)
          or $self->log->fatal("init: can't open rc file [$rc_file]: $!");
       while (defined(my $line = <$in>)) {
          next if ($line =~ /^\s*#/);  # Skip comments
          chomp($line);
-         $self->cmd($self->_lookup_variables($line));
+         $self->cmd($line);
       }
       close($in);
    }
@@ -208,7 +211,6 @@ sub cmdloop {
 
    my @lines = ();
    while (defined(my $line = $self->readline($self->prompt_str))) {
-      $line = $self->_lookup_variables($line);
       push @lines, $line;
 
       if ($line =~ /\\\s*$/) {
@@ -316,19 +318,10 @@ sub run_shell {
    $CONTEXT->call(sub {
       my %args = @_;
 
-      my $__lp_result = {
-         r => $args{out},
-         a => [ split(/\n/, $args{out}) ],
-      };
-
-      for my $__lp_this (@{$__lp_result->{a}}) {
-         push @{$__lp_result->{m}}, [ split(/\s+/, $__lp_this) ];
-      }
-
-      return $_ = $__lp_result;
+      return my $SHELL = $args{out};
    }, out => $out);
 
-   print $self->page($out);
+   print $out;
 
    return 1;
 }
@@ -365,7 +358,7 @@ sub run_history {
 
    my @history = $self->term->GetHistory;
    if (defined($c)) {
-      return $self->cmd($self->_lookup_variables($history[$c]));
+      return $self->cmd($history[$c]);
    }
    else {
       my $c = 0;
@@ -885,7 +878,12 @@ sub run_script {
       next if ($line =~ /^\s*#/);  # Skip comments
       chomp($line);
 
-      $line = $self->_lookup_variables($line);
+      # Exit?
+      if ($line =~ /^exit$/) {
+         $self->cmd($line);
+         last;
+      }
+
       push @lines, $line;
 
       if ($line =~ /\\\s*$/) {

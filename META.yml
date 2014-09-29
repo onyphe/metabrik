@@ -15,7 +15,7 @@ name: Metabricky
 provides:
   Metabricky:
     file: lib/Metabricky.pm
-    version: 0.94
+    version: 0.95
   Metabricky::Brick:
     file: lib/Metabricky/Brick.pm
   Metabricky::Brick::Address::Netmask:
@@ -80,6 +80,8 @@ provides:
     file: lib/Metabricky/Brick/Shell/Meby.pm
   Metabricky::Brick::Ssdp::Ssdp:
     file: lib/Metabricky/Brick/Ssdp/Ssdp.pm
+  Metabricky::Brick::String::Gzip:
+    file: lib/Metabricky/Brick/String/Gzip.pm
   Metabricky::Brick::System::Arp:
     file: lib/Metabricky/Brick/System/Arp.pm
   Metabricky::Brick::System::Os:
@@ -97,11 +99,10 @@ requires:
   Data::Dumper: 0
   File::Find: 0
   File::HomeDir: 0
-  IO::All: 0
   IPC::Run: 0
   Lexical::Persistence: 0
   Module::Reload: 0
   Term::ANSIColor: 0
 resources:
   license: http://www.perlfoundation.org/artistic_license_1_0
-version: 0.94
+version: 0.95

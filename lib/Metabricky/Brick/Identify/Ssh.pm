@@ -48,6 +48,15 @@ sub parsebanner {
          },
       ],
       [
+         '^SSH-(\d+\.\d+)-OpenSSH_(\d+\.\d+)_(\S+) (\S+)$' => {
+            ssh_protocol_version => '$1',
+            ssh_product_version => '$2',
+            ssh_product_feature_portable => '$3',
+            ssh_product => 'OpenSSH',
+            ssh_extra => '$4',
+         },
+      ],
+      [
          '^SSH-(\d+\.\d+)(.*)$' => {
             ssh_protocol_version => '$1',
             ssh_product => 'UNKNOWN',

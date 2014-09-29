@@ -21,7 +21,7 @@ use Metabricky::Brick::Core::Global;
 use Metabricky::Brick::Core::Log;
 
 # Only used to avoid compile-time errors
-my $__CTX = {};
+my $__CTX;
 
 {
    no warnings;
@@ -85,6 +85,11 @@ sub new {
       $lp->set_context(_ => {
          '$__CTX' => { },
          '$CONTEXT' => $self,
+         '$SET' => 'undef',
+         '$GET' => 'undef',
+         '$RUN' => 'undef',
+         '$ERR' => 'undef',
+         '$MSG' => 'undef',
       });
       $lp->call(sub {
          my %args = @_;
@@ -211,7 +216,7 @@ sub lookup {
       return $__CTX->{context}->_lp->{context}->{_}->{$__lp_varname};
    }, varname => $varname);
 
-   $self->debug && $self->log->debug("lookup: [$varname] = [$res]");
+   $self->debug && $self->log->debug("lookup: [$varname] = [".substr($res, 0, 128)."..]");
 
    return $res;
 }
@@ -330,11 +335,14 @@ sub load {
       my $__lp_module = $args{module};
       my $__lp_brick = $args{brick};
 
+      my $ERR = 0;
+
       eval("use $__lp_module;");
       if ($@) {
          chomp($@);
-         $@ = "load: unable to use module [$__lp_module]: $@";
-         die("$@\n");
+         $ERR = 1;
+         my $MSG = "load: unable to use module [$__lp_module]: $@";
+         die("$MSG\n");
       }
 
       my $__lp_new = $__lp_module->new(
@@ -344,8 +352,9 @@ sub load {
       );
       #$__lp_new->init; # No init now. We wait first run() to let set() actions
       if (! defined($__lp_new)) {
-         $@ = "load: unable to create Brick [$__lp_brick]";
-         die("$@\n");
+         $ERR = 1;
+         my $MSG = "load: unable to create Brick [$__lp_brick]";
+         die("$MSG\n");
       }
 
       return $__CTX->{loaded}->{$__lp_brick} = $__lp_new;
@@ -448,9 +457,13 @@ sub set {
       my $__lp_attribute = $args{attribute};
       my $__lp_value = $args{value};
 
+      if ($__lp_value =~ /^(\$.*)$/) {
+         $__lp_value = eval("\$__CTX->{context}->_lp->{context}->{_}->{'$1'}");
+      }
+
       $__CTX->{loaded}->{$__lp_brick}->$__lp_attribute($__lp_value);
 
-      return $__CTX->{set}->{$__lp_brick}->{$__lp_attribute} = $__lp_value;
+      return my $SET = $__CTX->{set}->{$__lp_brick}->{$__lp_attribute} = $__lp_value;
    }, brick => $brick, attribute => $attribute, value => $value);
 
    return $r;
@@ -479,10 +492,10 @@ sub get {
       my $__lp_attribute = $args{attribute};
 
       if (! defined($__CTX->{loaded}->{$__lp_brick}->$__lp_attribute)) {
-         return 'undef';
+         return my $GET = 'undef';
       }
 
-      return $__CTX->{loaded}->{$__lp_brick}->$__lp_attribute;
+      return my $GET = $__CTX->{loaded}->{$__lp_brick}->$__lp_attribute;
    }, brick => $brick, attribute => $attribute);
 
    return $r;
@@ -515,7 +528,19 @@ sub run {
 
       $__lp_run->init; # Will init() only if not already done
 
-      return $_ = $__lp_run->$__lp_command(@__lp_args);
+      for (@__lp_args) {
+         if (/^(\$.*)$/) {
+            $_ = eval("\$__CTX->{context}->_lp->{context}->{_}->{'$1'}");
+         }
+      }
+
+      my $ERR = 0;
+      my $RUN = $__lp_run->$__lp_command(@__lp_args);
+      if (! defined($RUN)) {
+         $ERR = 1;
+      }
+
+      return $RUN;
    }, brick => $brick, command => $command, args => \@args);
 
    return $r;

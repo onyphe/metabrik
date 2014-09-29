@@ -1,6 +1,19 @@
 ### TODO
 
 Prio:
+-> shell commands should set $@ so we can check if they succeeded or not
+=> load some::moduule
+=> if $@ exit
+=> core::context: put back in call() loaded checks into set(), get() and run()  and set $ERR and $MSG
+
+-> integrate: Term::ReadLine::Gnu
+
+-> remove: IO::All from Build.PL, and Module::Reload?
+-> add: File::HomeDir deps
+
+-> remove: Term::Shell function to allow calling a command with just first characters
+=> example: l vs load
+
 -> review: ext::shell: $loaded to use is_loaded and like
 
 -> make shell::meby Brick to depend on the fewest module as possible
