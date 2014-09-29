@@ -1,7 +1,7 @@
 ### TODO
 
 Prio:
--> alias support. example: alias ls "!ls -lF"
+-> review: ext::shell: $loaded to use is_loaded and like
 
 -> make shell::meby Brick to depend on the fewest module as possible
 

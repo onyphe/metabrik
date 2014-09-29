@@ -1,6 +1,6 @@
 set core::log level 3
 
-version
+run core::global metabricky_version
 my $version = $_
 
 print "--[ Welcome to Metabricky - Knowledge is in your head, Detail is in the code ]--\n"
@@ -40,3 +40,6 @@ use lib "$ENV{HOME}/path/to/lib"
 load category::mybrick
 
 set shell::meby echo 1
+
+alias ls "ls -F"
+alias ll "ls -lF"

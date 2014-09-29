@@ -14,9 +14,9 @@ our @AS = qw(
    rc_file
    history_file
    title
-
    echo
    debug
+   _aliases
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
@@ -36,22 +36,32 @@ use Metabricky::Brick::File::Find;
 our $CONTEXT = {};
 our $LoadRcFile = 1;
 our $LoadHistoryFile = 1;
+our $AUTOLOAD;
 
-# XXX: to be used to create aliases
-#use vars qw{$AUTOLOAD};
+sub AUTOLOAD {
+   my $self = shift;
+   my (@args) = @_;
 
-#sub AUTOLOAD {
-#   my $self = shift;
+   if ($AUTOLOAD !~ /^Metabricky::Ext::Shell::run_/) {
+      return 1;
+   }
 
-#   $self->log->debug("autoload[$AUTOLOAD]");
-#   $self->log->debug("self[$self]");
+   (my $alias = $AUTOLOAD) =~ s/^Metabricky::Ext::Shell:://;
 
-#   $self->_update_prompt('xxx $AUTOLOAD ');
-#   #$self->prompt('$AUTOLOAD ');
-#   $self->_update_prompt;
+   if ($self->debug) {
+      $self->log->debug("autoload[$AUTOLOAD]");
+      $self->log->debug("alias[$alias]");
+      $self->log->debug("args[@args]");
+   }
 
-#   return 1;
-#}
+   my $aliases = $self->_aliases;
+   if (exists($aliases->{$alias})) {
+      my $cmd = $aliases->{$alias};
+      return $self->cmd(join(' ', $cmd, @args));
+   }
+
+   return 1;
+}
 
 {
    no warnings;
@@ -259,6 +269,33 @@ sub comp_exit {
    return ();
 }
 
+sub run_alias {
+   my $self = shift;
+   my ($alias, @cmd) = @_;
+
+   my $aliases = $self->_aliases;
+
+   if (! defined($alias)) {
+      for my $this (keys %$aliases) {
+         (my $alias = $this) =~ s/^run_//;
+         $self->log->info(sprintf("%-10s \"%s\"", $alias, $aliases->{$this}));
+      }
+
+      return 1;
+   }
+
+   $aliases->{"run_$alias"} = join(' ', @cmd);
+   $self->_aliases($aliases);
+
+   $self->add_handler("run_$alias");
+
+   return 1;
+}
+
+sub comp_alias {
+   return ();
+}
+
 # For shell commands that do not need a terminal
 sub run_shell {
    my $self = shift;
@@ -277,11 +314,11 @@ sub run_shell {
    }
 
    $CONTEXT->call(sub {
-      my %h = @_;
+      my %args = @_;
 
       my $__lp_result = {
-         r => $h{out},
-         a => [ split(/\n/, $h{out}) ],
+         r => $args{out},
+         a => [ split(/\n/, $args{out}) ],
       };
 
       for my $__lp_this (@{$__lp_result->{a}}) {
@@ -291,7 +328,7 @@ sub run_shell {
       return $_ = $__lp_result;
    }, out => $out);
 
-   print $out;
+   print $self->page($out);
 
    return 1;
 }
@@ -881,14 +918,6 @@ sub run_script {
 sub catch_run {
    my $self = shift;
    my (@args) = @_;
-
-   my $line = $self->line;
-
-   # Line starts with a `!' char, we want to launch a shell command
-   if ($line =~ /^!/) {
-      $line =~ s/^!\s*//;
-      return $self->run_shell(split(/\s+/, $line));
-   }
 
    # Default to execute Perl commands
    return $self->run_pl(@args);
