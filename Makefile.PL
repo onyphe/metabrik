@@ -14,9 +14,6 @@ WriteMakefile(
    PREREQ_PM => {
       'Class::Gomor' => '1.00',
       'Cwd' => 0,
-      'Data::Dump' => 0,
-      'Data::Dumper' => 0,
-      'File::Find' => 0,
       'File::HomeDir' => 0,  
       'IPC::Run' => 0,
       'Lexical::Persistence' => 0,

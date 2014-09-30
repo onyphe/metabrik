@@ -1,8 +1,11 @@
 bin/meby
 Build.PL
 examples/dot-mebyrc-sample
+examples/multiline.meby
 examples/netmask.meby
 INSTALL
+lib/CPAN/Data/Dump.pm
+lib/CPAN/Term/Shell.pm
 lib/Metabricky.pm
 lib/Metabricky/Brick.pm
 lib/Metabricky/Brick/Address/Netmask.pm

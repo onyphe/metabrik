@@ -7,8 +7,7 @@ Prio:
 => http://www.asciiworld.com/-Police,150-.html
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Metabricky
 
-
--> ROT13: tr/n-za-m/a-z/;
+-> core::log: color <1|0>
 
 -> echo: truncate echoed results
 

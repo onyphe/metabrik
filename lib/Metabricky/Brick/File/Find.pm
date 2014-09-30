@@ -24,7 +24,7 @@ sub revision {
 sub require_modules {
    return {
       'IO::All' => [],
-      'File::Find' => [ 'find' ],
+      'File::Find' => [],
    };
 }
 
@@ -37,7 +37,7 @@ sub default_values {
 
 sub help {
    return {
-      'set:path' => '<director1:directory2:..:directoryN> (default: '.')',
+      'set:path' => '<director1:directory2:..:directoryN> (default: \'.\')',
       'set:recursive' => '<0|1> (default: 1)',
       'run:all' => '<dirpattern> <filepattern>',
    };
@@ -68,13 +68,18 @@ sub all {
 
    # In recursive mode, we use the File::Find module
    if ($self->recursive) {
+      my $dir_regex = qr/$dirpattern/;
+      my $file_regex = qr/$filepattern/;
+      my $dot_regex = qr/^\.$/;
+      my $dot2_regex = qr/^\.\.$/;
+
       my $sub = sub {
          my $dir = $File::Find::dir;
          my $file = $_;
          # Skip dot and double dot directories
-         if ($file =~ /^\.$/ || $file =~ /^\.\.$/) {
+         if ($file =~ $dot_regex || $file =~ $dot2_regex) {
          }
-         elsif ($dir =~ /$dirpattern/ && $file =~ /$filepattern/) {
+         elsif ($dir =~ $dir_regex && $file =~ $file_regex) {
             push @dirs, "$dir/";
             push @files, "$dir/$file";
          }
@@ -93,7 +98,7 @@ sub all {
    # In non-recusrive mode, we can use plain IO::All
    else {
       for my $path (@path_list) {
-         $self->debug && $self->log->debug("files: path: $path");
+         $self->debug && $self->log->debug("all: path: $path");
 
          # Includes given directory
          push @dirs, $path;

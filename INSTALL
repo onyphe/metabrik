@@ -1,6 +1,5 @@
 apt-get install libncurses-dev libreadline-dev cpanminus libssl-dev libssh2-1-dev
 
-cpanm Term::Shell
 cpanm File::HomeDir
 cpanm Lexical::Persistence
 cpanm Term::ReadLine::Gnu

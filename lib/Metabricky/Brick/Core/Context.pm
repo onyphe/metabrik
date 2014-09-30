@@ -12,16 +12,18 @@ our @AS = qw(
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-use Data::Dump;
-use Data::Dumper;
-use File::Find; # XXX: use Brick::Find
-use Lexical::Persistence;
-
-use Metabricky::Brick::Core::Global;
-use Metabricky::Brick::Core::Log;
-
 # Only used to avoid compile-time errors
 my $CTX;
+
+sub require_modules {
+   return {
+      'CPAN::Data::Dump' => [],
+      'Lexical::Persistence' => [],
+      'Metabricky::Brick::Core::Global' => [],
+      'Metabricky::Brick::Core::Log' => [],
+      'Metabricky::Brick::File::Find' => [],
+   };
+}
 
 {
    no warnings;
@@ -160,7 +162,7 @@ sub do {
    eval {
       if ($dump) {
          $self->debug && $self->log->debug("do: echo on");
-         $res = Data::Dump::dump($lp->do($code));
+         $res = CPAN::Data::Dump::dump($lp->do($code));
       }
       else {
          $self->debug && $self->log->debug("do: echo off");
@@ -239,37 +241,38 @@ sub variables {
    return $res;
 }
 
-# XXX: to replace with Brick::Find
-my @available = ();
-
-sub _find_bricks {
-   if ($File::Find::dir =~ /Metabricky\/Brick/ && /.pm$/) {
-      #print "DEBUG found[$File::Find::dir/$_\n";
-      (my $category = lc($File::Find::dir)) =~ s/^.*\/metabricky\/brick\/?(.*?)$/$1/;
-      $category =~ s/\//::/g;
-      (my $brick = lc($_)) =~ s/.pm$//;
-      #print "DEBUG brick[$brick] [$category]\n";
-      if (length($category)) {
-         push @available, $category.'::'.$brick;
-      }
-      else {
-         push @available, $brick;
-      }
-   }
-}
-
 sub find_available {
    my $self = shift;
 
-   {
-      no warnings 'File::Find';
-      my @dirs = ();
-      # We skip dot directories
-      for my $dir (@INC) {
-         push @dirs, $dir unless $dir =~ /^\./;
+   my $file_find = Metabricky::Brick::File::Find->new(
+      context => $self,
+      global => $self->global,
+      log => $self->log,
+   ) or return;
+
+   # Read from @INC, exclude current directory
+   my @new = ();
+   for (@INC) {
+      next if /^\.$/;
+      push @new, $_;
+   }
+
+   $file_find->path(join(':', @new));
+   $file_find->recursive(1);
+   $file_find->debug(1);
+
+   my $found = $file_find->all('Metabricky/Brick/', '.pm$') or return;
+
+   my @available = ();
+   for my $this (@{$found->{files}}) {
+      my $brick = lc($this);
+      $brick =~ s/\//::/g;
+      $brick =~ s/^.*::metabricky::brick::(.*?)$/$1/;
+      $brick =~ s/.pm$//;
+      if (length($brick)) {
+         push @available, $brick;
       }
-      find(\&_find_bricks, @dirs);
-   };
+   }
 
    my %h = map { $_ => 1 } @available;
 

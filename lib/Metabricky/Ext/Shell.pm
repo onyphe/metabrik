@@ -5,7 +5,7 @@ package Metabricky::Ext::Shell;
 use strict;
 use warnings;
 
-use base qw(Term::Shell Class::Gomor::Hash);
+use base qw(CPAN::Term::Shell Class::Gomor::Hash);
 
 our @AS = qw(
    path_home

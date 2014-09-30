@@ -13,6 +13,15 @@ meta-spec:
   version: 1.4
 name: Metabricky
 provides:
+  CPAN::Data::Dump:
+    file: lib/CPAN/Data/Dump.pm
+    version: 1.22
+  CPAN::Term::Shell:
+    file: lib/CPAN/Term/Shell.pm
+    version: 0.06
+  CPAN::Term::Shell::OnScopeLeave:
+    file: lib/CPAN/Term/Shell.pm
+    version: 0.06
   Metabricky:
     file: lib/Metabricky.pm
     version: 0.96
@@ -95,9 +104,6 @@ provides:
 requires:
   Class::Gomor: 1.00
   Cwd: 0
-  Data::Dump: 0
-  Data::Dumper: 0
-  File::Find: 0
   File::HomeDir: 0
   IPC::Run: 0
   Lexical::Persistence: 0
