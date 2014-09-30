@@ -4,7 +4,11 @@ examples/dot-mebyrc-sample
 examples/multiline.meby
 examples/netmask.meby
 INSTALL
+lib/CPAN/Class/Gomor.pm
+lib/CPAN/Class/Gomor/Hash.pm
 lib/CPAN/Data/Dump.pm
+lib/CPAN/Lexical/Persistence.pm
+lib/CPAN/Module/Reload.pm
 lib/CPAN/Term/Shell.pm
 lib/Metabricky.pm
 lib/Metabricky/Brick.pm

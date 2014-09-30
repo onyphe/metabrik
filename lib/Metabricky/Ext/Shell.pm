@@ -5,7 +5,7 @@ package Metabricky::Ext::Shell;
 use strict;
 use warnings;
 
-use base qw(CPAN::Term::Shell Class::Gomor::Hash);
+use base qw(CPAN::Term::Shell CPAN::Class::Gomor::Hash);
 
 our @AS = qw(
    path_home
@@ -24,7 +24,7 @@ use Cwd;
 use Data::Dumper;
 use File::HomeDir qw(home);
 use IO::All;
-use Module::Reload;
+use CPAN::Module::Reload;
 use IPC::Run;
 
 use Metabricky;
@@ -454,7 +454,7 @@ sub comp_su {
 sub run_reload {
    my $self = shift;
 
-   my $reloaded = Module::Reload->check;
+   my $reloaded = CPAN::Module::Reload->check;
    if ($reloaded) {
       $self->log->info("reload: some modules were reloaded");
    }

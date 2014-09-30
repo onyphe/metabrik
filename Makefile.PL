@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.PL 90 2014-09-17 20:38:31Z gomor $
+# $Id$
 #
 use ExtUtils::MakeMaker;
 
@@ -12,12 +12,7 @@ WriteMakefile(
    ABSTRACT_FROM => 'lib/Metabricky.pm',
    AUTHOR => 'GomoR <gomor_at_metabricky.org>',
    PREREQ_PM => {
-      'Class::Gomor' => '1.00',
-      'Cwd' => 0,
       'File::HomeDir' => 0,  
       'IPC::Run' => 0,
-      'Lexical::Persistence' => 0,
-      'Module::Reload' => 0,
-      'Term::ANSIColor' => 0,
    },
 );

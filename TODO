@@ -6,6 +6,9 @@ Prio:
 => Beaver?
 => http://www.asciiworld.com/-Police,150-.html
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Metabricky
+=> Ornitorinc
+
+-> rename: load to use?
 
 -> core::log: color <1|0>
 
@@ -13,10 +16,6 @@ Prio:
 
 -> string::gzip => string::compress: gzip/gunzip
 -> file::compress: gzip/gunzip
-
--> integrate: Term::ReadLine::Gnu
-
--> update: require_loaded to return a hashref like others
 
 -> bug: core::global encoding to set utf8 or anything else
 

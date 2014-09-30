@@ -5,7 +5,7 @@ package Metabricky::Brick;
 use strict;
 use warnings;
 
-use base qw(Class::Gomor::Hash);
+use base qw(CPAN::Class::Gomor::Hash);
 
 our @AS = qw(
    debug

@@ -7,7 +7,7 @@ use warnings;
 
 our $VERSION = '0.96';
 
-use base qw(Class::Gomor::Hash);
+use base qw(CPAN::Class::Gomor::Hash);
 
 1;
 

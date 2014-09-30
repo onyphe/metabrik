@@ -12,13 +12,8 @@ my $builder = Module::Build->new(
    dist_author => 'GomoR <gomor_at_metabricky.org>',
    dist_version_from => 'lib/Metabricky.pm',
    requires => {
-      'Class::Gomor' => '1.00',
-      'Cwd' => 0,
       'File::HomeDir' => 0,
       'IPC::Run' => 0,
-      'Lexical::Persistence' => 0,
-      'Module::Reload' => 0,
-      'Term::ANSIColor' => 0,
    },
 );
 

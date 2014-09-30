@@ -18,7 +18,7 @@ my $CTX;
 sub require_modules {
    return {
       'CPAN::Data::Dump' => [],
-      'Lexical::Persistence' => [],
+      'CPAN::Lexical::Persistence' => [],
       'Metabricky::Brick::Core::Global' => [],
       'Metabricky::Brick::Core::Log' => [],
       'Metabricky::Brick::File::Find' => [],
@@ -83,7 +83,7 @@ sub new {
    );
 
    eval {
-      my $lp = Lexical::Persistence->new;
+      my $lp = CPAN::Lexical::Persistence->new;
       $lp->set_context(_ => {
          '$CTX' => 'undef',
          '$SET' => 'undef',

@@ -21,20 +21,31 @@
       },
       "runtime" : {
          "requires" : {
-            "Class::Gomor" : "1.00",
-            "Cwd" : "0",
             "File::HomeDir" : "0",
-            "IPC::Run" : "0",
-            "Lexical::Persistence" : "0",
-            "Module::Reload" : "0",
-            "Term::ANSIColor" : "0"
+            "IPC::Run" : "0"
          }
       }
    },
    "provides" : {
+      "CPAN::Class::Gomor" : {
+         "file" : "lib/CPAN/Class/Gomor.pm",
+         "version" : "1.02"
+      },
+      "CPAN::Class::Gomor::Hash" : {
+         "file" : "lib/CPAN/Class/Gomor/Hash.pm",
+         "version" : "1.02"
+      },
       "CPAN::Data::Dump" : {
          "file" : "lib/CPAN/Data/Dump.pm",
          "version" : "1.22"
+      },
+      "CPAN::Lexical::Persistence" : {
+         "file" : "lib/CPAN/Lexical/Persistence.pm",
+         "version" : "1.020"
+      },
+      "CPAN::Module::Reload" : {
+         "file" : "lib/CPAN/Module/Reload.pm",
+         "version" : "1.08"
       },
       "CPAN::Term::Shell" : {
          "file" : "lib/CPAN/Term/Shell.pm",
