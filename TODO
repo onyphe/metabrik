@@ -1,11 +1,6 @@
 ### TODO
 
 Prio:
--> shell commands should set $@ so we can check if they succeeded or not
-=> load some::module
-=> if $@ exit
-=> core::context: put back in call() loaded checks into set(), get() and run()  and set $ERR and $MSG
-
 -> integrate: Term::ReadLine::Gnu
 
 -> remove: Term::Shell function to allow calling a command with just first characters

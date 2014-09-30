@@ -104,7 +104,7 @@ sub init {
       @_,
    ) or return 1; # Init already done
 
-   $Metabricky::Ext::Shell::CONTEXT = $self->context;
+   $Metabricky::Ext::Shell::CTX = $self->context;
    $Metabricky::Ext::Shell::LoadRcFile = $self->load_rc_file;
    $Metabricky::Ext::Shell::LoadHistoryFile = $self->load_history_file;
 

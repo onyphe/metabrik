@@ -33,7 +33,7 @@ use Metabricky::Brick::File::Find;
 
 # Exists because we cannot give an argument to Term::Shell::new()
 # Or I didn't found how to do it.
-our $CONTEXT = {};
+our $CTX = {};
 our $LoadRcFile = 1;
 our $LoadHistoryFile = 1;
 our $AUTOLOAD;
@@ -68,7 +68,7 @@ sub AUTOLOAD {
 
    # We rewrite the log accessor
    *log = sub {
-      return $CONTEXT->log;
+      return $CTX->log;
    };
 }
 
@@ -133,7 +133,7 @@ sub _off_lookup_variables {
             my $varname = '$'.$1;
             $self->debug && $self->log->debug("lookup: varname[$varname]");
 
-            my $result = $CONTEXT->lookup($varname) || 'undef';
+            my $result = $CTX->lookup($varname) || 'undef';
             #$self->debug && $self->log->debug("lookup: result1[$line]");
             $self->debug && $self->log->debug("lookup: result1[..]");
             $line =~ s/\$${1}/$result/;
@@ -315,7 +315,7 @@ sub run_shell {
       return $self->log->error("run_shell: $@");
    }
 
-   $CONTEXT->call(sub {
+   $CTX->call(sub {
       my %args = @_;
 
       return my $SHELL = $args{out};
@@ -411,7 +411,7 @@ sub run_pl {
 
    $self->debug && $self->log->debug("run_pl: code[$line]");
 
-   my $r = $CONTEXT->do($line, $self->echo);
+   my $r = $CTX->do($line, $self->echo);
    if (! defined($r)) {
       # When ext::shell:echo is off, we can get undef and it is not an error.
       # XXX: we should use $@ to know if there is an error
@@ -474,7 +474,7 @@ sub run_load {
       return $self->log->info("load <brick>");
    }
 
-   my $r = $CONTEXT->load($brick) or return;
+   my $r = $CTX->load($brick) or return;
    if ($r) {
       $self->log->verbose("load: Brick [$brick] loaded");
    }
@@ -500,7 +500,7 @@ sub comp_load {
    # We want to find available bricks by using completion
    if (($count == 1)
    ||  ($count == 2 && length($word) > 0)) {
-      my $available = $CONTEXT->available;
+      my $available = $CTX->available;
       if ($self->debug && ! defined($available)) {
          $self->log->debug("\ncomp_load: can't fetch available Bricks");
          return ();
@@ -517,7 +517,7 @@ sub comp_load {
 sub run_show {
    my $self = shift;
 
-   my $status = $CONTEXT->status;
+   my $status = $CTX->status;
 
    $self->log->info("Available bricks:");
 
@@ -557,17 +557,17 @@ sub run_help {
       return $self->SUPER::run_help;
    }
    else {
-      if ($CONTEXT->is_loaded($brick)) {
-         my $attributes = $CONTEXT->loaded->{$brick}->attributes;
-         my $commands = $CONTEXT->loaded->{$brick}->commands;
+      if ($CTX->is_loaded($brick)) {
+         my $attributes = $CTX->loaded->{$brick}->attributes;
+         my $commands = $CTX->loaded->{$brick}->commands;
 
          for my $attribute (@$attributes) {
-            my $help = $CONTEXT->loaded->{$brick}->help_set($attribute);
+            my $help = $CTX->loaded->{$brick}->help_set($attribute);
             $self->log->info($help) if defined($help);
          }
 
          for my $command (@$commands) {
-            my $help = $CONTEXT->loaded->{$brick}->help_run($command);
+            my $help = $CTX->loaded->{$brick}->help_run($command);
             $self->log->info($help) if defined($help);
          }
       }
@@ -613,7 +613,7 @@ sub run_set {
       return $self->log->info("set <brick> <attribute> <value>");
    }
 
-   my $r = $CONTEXT->set($brick, $attribute, $value);
+   my $r = $CTX->set($brick, $attribute, $value);
    if (! defined($r)) {
       return $self->log->error("set: unable to set Attribute [$attribute] for Brick [$brick]");
    }
@@ -626,7 +626,7 @@ sub comp_set {
    my ($word, $line, $start) = @_;
 
    # Completion is for loaded Bricks only
-   my $loaded = $CONTEXT->loaded;
+   my $loaded = $CTX->loaded;
    if (! defined($loaded)) {
       $self->debug && $self->log->debug("comp_set: can't fetch loaded Bricks");
       return ();
@@ -697,18 +697,18 @@ sub run_get {
 
    # get is called without args, we display everything
    if (! defined($brick)) {
-      my $loaded = $CONTEXT->loaded or return;
+      my $loaded = $CTX->loaded or return;
 
       for my $brick (sort { $a cmp $b } keys %$loaded) {
          my $attributes = $loaded->{$brick}->attributes or next;
          for my $attribute (sort { $a cmp $b } @$attributes) {
-            $self->log->info("$brick $attribute ".$CONTEXT->get($brick, $attribute));
+            $self->log->info("$brick $attribute ".$CTX->get($brick, $attribute));
          }
       }
    }
    # get is called with only a Brick as an arg, we show its Attributes
    elsif (defined($brick) && ! defined($attribute)) {
-      my $loaded = $CONTEXT->loaded or return;
+      my $loaded = $CTX->loaded or return;
 
       if (! exists($loaded->{$brick})) {
          return $self->log->error("get: Brick [$brick] not loaded");
@@ -717,14 +717,14 @@ sub run_get {
       my %printed = ();
       my $attributes = $loaded->{$brick}->attributes;
       for my $attribute (sort { $a cmp $b } @$attributes) {
-         my $print = "$brick $attribute ".$CONTEXT->get($brick, $attribute);
+         my $print = "$brick $attribute ".$CTX->get($brick, $attribute);
          $self->log->info($print) if ! exists($printed{$print});
          $printed{$print}++;
       }
    }
    # get is called with is a Brick and an Attribute
    elsif (defined($brick) && defined($attribute)) {
-      my $loaded = $CONTEXT->loaded or return;
+      my $loaded = $CTX->loaded or return;
 
       if (! exists($loaded->{$brick})) {
          return $self->log->error("get: Brick [$brick] not loaded");
@@ -736,7 +736,7 @@ sub run_get {
          return $self->log->error("get: Attribute [$attribute] does not exist for Brick [$brick]");
       }
 
-      $self->log->info("$brick $attribute ".$CONTEXT->get($brick, $attribute));
+      $self->log->info("$brick $attribute ".$CTX->get($brick, $attribute));
    }
 
    return 1;
@@ -756,7 +756,7 @@ sub run_run {
       return $self->log->info("run <brick> <command> [ <arg1> <arg2> .. <argN> ]");
    }
 
-   my $r = $CONTEXT->run($brick, $command, @args);
+   my $r = $CTX->run($brick, $command, @args);
    if (! defined($r)) {
       return $self->log->error("run: unable to execute Command [$command] for Brick [$brick]");
    }
@@ -773,7 +773,7 @@ sub comp_run {
    my ($word, $line, $start) = @_;
 
    # Completion is for loaded Bricks only
-   my $loaded = $CONTEXT->loaded;
+   my $loaded = $CTX->loaded;
    if (! defined($loaded)) {
       $self->debug && $self->log->debug("comp_run: can't fetch loaded Bricks");
       return ();
@@ -949,7 +949,7 @@ sub catch_comp {
    # We don't use $start here, because the $ is stripped. We have to use $word[-1]
    # We also check against $line, if we have a trailing space, the word was complete.
    if ($last =~ /^\$/ && $line !~ /\s+$/) {
-      my $variables = $CONTEXT->variables;
+      my $variables = $CTX->variables;
 
       for my $this (@$variables) {
          $this =~ s/^\$//;

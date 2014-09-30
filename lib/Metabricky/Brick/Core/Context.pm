@@ -21,8 +21,7 @@ use Metabricky::Brick::Core::Global;
 use Metabricky::Brick::Core::Log;
 
 # Only used to avoid compile-time errors
-my $__CTX;
-my $CONTEXT;
+my $CTX;
 
 {
    no warnings;
@@ -41,7 +40,7 @@ my $CONTEXT;
       my $r;
       eval {
          $r = $lp->call(sub {
-            return $__CTX->{log};
+            return $CTX->{log};
          });
       };
       if ($@) {
@@ -84,8 +83,7 @@ sub new {
    eval {
       my $lp = Lexical::Persistence->new;
       $lp->set_context(_ => {
-         '$__CTX' => { },
-         '$CONTEXT' => $self,
+         '$CTX' => 'undef',
          '$SET' => 'undef',
          '$GET' => 'undef',
          '$RUN' => 'undef',
@@ -96,33 +94,32 @@ sub new {
       $lp->call(sub {
          my %args = @_;
 
-         eval("use strict;");
-         eval("use warnings;");
+         $CTX = $args{self};
 
-         $__CTX->{context} = $args{self};
-
-         $__CTX->{loaded} = {
-            'core::context' => $__CTX->{context},
+         $CTX->{loaded} = {
+            'core::context' => $CTX,
             'core::global' => Metabricky::Brick::Core::Global->new->init,
             'core::log' => Metabricky::Brick::Core::Log->new->init,
          };
-         $__CTX->{available} = { };
-         $__CTX->{set} = { };
-         $__CTX->{log} = $__CTX->{loaded}->{'core::log'};
-         $__CTX->{global} = $__CTX->{loaded}->{'core::global'};
+         $CTX->{available} = { };
+         $CTX->{set} = { };
+         $CTX->{log} = $CTX->{loaded}->{'core::log'};
+         $CTX->{global} = $CTX->{loaded}->{'core::global'};
 
          # We don't use the log accessor to write the value because we wrote 
          # our own log accessor.
-         $__CTX->{loaded}->{'core::context'}->{log} = $__CTX->{log};
-         $__CTX->{loaded}->{'core::global'}->{log} = $__CTX->{log};
+         $CTX->{loaded}->{'core::context'}->{log} = $CTX->{log};
+         $CTX->{loaded}->{'core::global'}->{log} = $CTX->{log};
 
          # When new() was done, bricks was empty. We fix that here.
-         $__CTX->{loaded}->{'core::global'}->{context} = $__CTX->{context};
-         $__CTX->{loaded}->{'core::log'}->{context} = $__CTX->{context};
+         $CTX->{loaded}->{'core::global'}->{context} = $CTX;
+         $CTX->{loaded}->{'core::log'}->{context} = $CTX;
 
          # We did put log and context in Attributes, why not also put global:
-         $__CTX->{loaded}->{'core::context'}->{global} = $__CTX->{global};
-         $__CTX->{loaded}->{'core::log'}->{global} = $__CTX->{global};
+         $CTX->{loaded}->{'core::context'}->{global} = $CTX->{global};
+         $CTX->{loaded}->{'core::log'}->{global} = $CTX->{global};
+
+         my $ERR = 0;
 
          return 1;
       }, self => $self);
@@ -213,9 +210,9 @@ sub lookup {
    my $res = $self->call(sub {
       my %args = @_;
 
-      my $__lp_varname = $args{varname};
+      my $__ctx_varname = $args{varname};
 
-      return $__CTX->{context}->_lp->{context}->{_}->{$__lp_varname};
+      return $CTX->_lp->{context}->{_}->{$__ctx_varname};
    }, varname => $varname);
 
    $self->debug && $self->log->debug("lookup: [$varname] = [".substr($res, 0, 128)."..]");
@@ -227,16 +224,16 @@ sub variables {
    my $self = shift;
 
    my $res = $self->call(sub {
-      my @__lp_variables = ();
+      my @__ctx_variables = ();
 
-      for my $__lp_variable (keys %{$__CTX->{context}->_lp->{context}->{_}}) {
-         next if $__lp_variable !~ /^\$/;
-         next if $__lp_variable =~ /^\$_/;
+      for my $__ctx_variable (keys %{$CTX->_lp->{context}->{_}}) {
+         next if $__ctx_variable !~ /^\$/;
+         next if $__ctx_variable =~ /^\$_/;
 
-         push @__lp_variables, $__lp_variable;
+         push @__ctx_variables, $__ctx_variable;
       }
 
-      return \@__lp_variables;
+      return \@__ctx_variables;
    });
 
    return $res;
@@ -287,7 +284,7 @@ sub update_available {
    my $r = $self->call(sub {
       my %args = @_;
 
-      return $__CTX->{available} = $args{available};
+      return $CTX->{available} = $args{available};
    }, available => $h);
 
    return $r;
@@ -304,67 +301,67 @@ sub load {
    my $r = $self->call(sub {
       my %args = @_;
 
-      my $__lp_brick = $args{brick};
+      my $__ctx_brick = $args{brick};
 
       my $ERR = 0;
 
-      my $__lp_brick_repository = '';
-      my $__lp_brick_category = '';
-      my $__lp_brick_module = '';
+      my $__ctx_brick_repository = '';
+      my $__ctx_brick_category = '';
+      my $__ctx_brick_module = '';
 
-      if ($__lp_brick =~ /^[a-z0-9]+::[a-z0-9]+$/) {
-         ($__lp_brick_category, $__lp_brick_module) = split('::', $__lp_brick);
+      if ($__ctx_brick =~ /^[a-z0-9]+::[a-z0-9]+$/) {
+         ($__ctx_brick_category, $__ctx_brick_module) = split('::', $__ctx_brick);
       }
-      elsif ($__lp_brick =~ /^[a-z0-9]+::[a-z0-9]+::[a-z0-9]+$/) {
-         ($__lp_brick_repository, $__lp_brick_category, $__lp_brick_module) = split('::', $__lp_brick);
+      elsif ($__ctx_brick =~ /^[a-z0-9]+::[a-z0-9]+::[a-z0-9]+$/) {
+         ($__ctx_brick_repository, $__ctx_brick_category, $__ctx_brick_module) = split('::', $__ctx_brick);
       }
       else {
          $ERR = 1;
-         my $MSG = "load: invalid format for Brick [$__lp_brick]";
+         my $MSG = "load: invalid format for Brick [$__ctx_brick]";
          die("$MSG\n");
       }
 
-      if ($CONTEXT->debug) {
-         $CONTEXT->log->debug("repository[$__lp_brick_repository]");
-         $CONTEXT->log->debug("category[$__lp_brick_category]");
-         $CONTEXT->log->debug("module[$__lp_brick_module]");
+      if ($CTX->debug) {
+         $CTX->log->debug("repository[$__ctx_brick_repository]");
+         $CTX->log->debug("category[$__ctx_brick_category]");
+         $CTX->log->debug("module[$__ctx_brick_module]");
       }
 
-      $__lp_brick_repository = ucfirst($__lp_brick_repository);
-      $__lp_brick_category = ucfirst($__lp_brick_category);
-      $__lp_brick_module = ucfirst($__lp_brick_module);
+      $__ctx_brick_repository = ucfirst($__ctx_brick_repository);
+      $__ctx_brick_category = ucfirst($__ctx_brick_category);
+      $__ctx_brick_module = ucfirst($__ctx_brick_module);
 
-      my $__lp_module = 'Metabricky::Brick::'.(length($__lp_brick_repository) ? $__lp_brick_repository.'::' : '').$__lp_brick_category.'::'.$__lp_brick_module;
+      my $__ctx_module = 'Metabricky::Brick::'.(length($__ctx_brick_repository) ? $__ctx_brick_repository.'::' : '').$__ctx_brick_category.'::'.$__ctx_brick_module;
 
-      $CONTEXT->debug && $CONTEXT->log->debug("module2[$__lp_brick_module]");
+      $CTX->debug && $CTX->log->debug("module2[$__ctx_brick_module]");
 
-      if ($CONTEXT->is_loaded($__lp_brick)) {
+      if ($CTX->is_loaded($__ctx_brick)) {
          $ERR = 1;
-         my $MSG = "load: Brick [$__lp_brick] already loaded";
+         my $MSG = "load: Brick [$__ctx_brick] already loaded";
          die("$MSG\n");
       }
 
-      eval("require $__lp_module;");
+      eval("require $__ctx_module;");
       if ($@) {
          chomp($@);
          $ERR = 1;
-         my $MSG = "load: unable to use module [$__lp_module]: $@";
+         my $MSG = "load: unable to use module [$__ctx_module]: $@";
          die("$MSG\n");
       }
 
-      my $__lp_new = $__lp_module->new(
-         context => $__CTX->{context},
-         global => $__CTX->{global},
-         log => $__CTX->{log},
+      my $__ctx_new = $__ctx_module->new(
+         context => $CTX,
+         global => $CTX->{global},
+         log => $CTX->{log},
       );
-      #$__lp_new->init; # No init now. We wait first run() to let set() actions
-      if (! defined($__lp_new)) {
+      #$__ctx_new->init; # No init now. We wait first run() to let set() actions
+      if (! defined($__ctx_new)) {
          $ERR = 1;
-         my $MSG = "load: unable to create Brick [$__lp_brick]";
+         my $MSG = "load: unable to create Brick [$__ctx_brick]";
          die("$MSG\n");
       }
 
-      return $__CTX->{loaded}->{$__lp_brick} = $__lp_new;
+      return $CTX->{loaded}->{$__ctx_brick} = $__ctx_new;
    }, brick => $brick);
 
    return $r;
@@ -374,7 +371,7 @@ sub available {
    my $self = shift;
 
    my $r = $self->call(sub {
-      return $__CTX->{available};
+      return $CTX->{available};
    });
 
    return $r;
@@ -400,7 +397,7 @@ sub loaded {
    my $self = shift;
 
    my $r = $self->call(sub {
-      return $__CTX->{loaded};
+      return $CTX->{loaded};
    });
 
    return $r;
@@ -452,31 +449,31 @@ sub set {
    my $r = $self->call(sub {
       my %args = @_;
 
-      my $__lp_brick = $args{brick};
-      my $__lp_attribute = $args{attribute};
-      my $__lp_value = $args{value};
+      my $__ctx_brick = $args{brick};
+      my $__ctx_attribute = $args{attribute};
+      my $__ctx_value = $args{value};
 
       my $ERR = 0;
 
-      if (! $CONTEXT->is_loaded($__lp_brick)) {
+      if (! $CTX->is_loaded($__ctx_brick)) {
          $ERR = 1;
-         my $MSG = "set: Brick [$__lp_brick] not loaded";
+         my $MSG = "set: Brick [$__ctx_brick] not loaded";
          die("$MSG\n");
       }
 
-      if (! $CONTEXT->loaded->{$__lp_brick}->has_attribute($__lp_attribute)) {
+      if (! $CTX->loaded->{$__ctx_brick}->has_attribute($__ctx_attribute)) {
          $ERR = 1;
-         my $MSG = "set: Brick [$__lp_brick] has no Attribute [$__lp_attribute]";
+         my $MSG = "set: Brick [$__ctx_brick] has no Attribute [$__ctx_attribute]";
          die("$MSG\n");
       }
 
-      if ($__lp_value =~ /^(\$.*)$/) {
-         $__lp_value = eval("\$__CTX->{context}->_lp->{context}->{_}->{'$1'}");
+      if ($__ctx_value =~ /^(\$.*)$/) {
+         $__ctx_value = eval("\$CTX->_lp->{context}->{_}->{'$1'}");
       }
 
-      $__CTX->{loaded}->{$__lp_brick}->$__lp_attribute($__lp_value);
+      $CTX->{loaded}->{$__ctx_brick}->$__ctx_attribute($__ctx_value);
 
-      my $SET = $__CTX->{set}->{$__lp_brick}->{$__lp_attribute} = $__lp_value;
+      my $SET = $CTX->{set}->{$__ctx_brick}->{$__ctx_attribute} = $__ctx_value;
 
       my $RES = \$SET;
 
@@ -497,28 +494,28 @@ sub get {
    my $r = $self->call(sub {
       my %args = @_;
 
-      my $__lp_brick = $args{brick};
-      my $__lp_attribute = $args{attribute};
+      my $__ctx_brick = $args{brick};
+      my $__ctx_attribute = $args{attribute};
 
       my $ERR = 0;
 
-      if (! $CONTEXT->is_loaded($__lp_brick)) {
+      if (! $CTX->is_loaded($__ctx_brick)) {
          $ERR = 1;
-         my $MSG = "set: Brick [$__lp_brick] not loaded";
+         my $MSG = "set: Brick [$__ctx_brick] not loaded";
          die("$MSG\n");
       }
 
-      if (! $CONTEXT->loaded->{$__lp_brick}->has_attribute($__lp_attribute)) {
+      if (! $CTX->loaded->{$__ctx_brick}->has_attribute($__ctx_attribute)) {
          $ERR = 1;
-         my $MSG = "set: Brick [$__lp_brick] has no Attribute [$__lp_attribute]";
+         my $MSG = "set: Brick [$__ctx_brick] has no Attribute [$__ctx_attribute]";
          die("$MSG\n");
       }
 
-      if (! defined($__CTX->{loaded}->{$__lp_brick}->$__lp_attribute)) {
+      if (! defined($CTX->{loaded}->{$__ctx_brick}->$__ctx_attribute)) {
          return my $GET = 'undef';
       }
 
-      my $GET = $__CTX->{loaded}->{$__lp_brick}->$__lp_attribute;
+      my $GET = $CTX->{loaded}->{$__ctx_brick}->$__ctx_attribute;
 
       my $RES = \$GET;
 
@@ -539,35 +536,35 @@ sub run {
    my $r = $self->call(sub {
       my %args = @_;
 
-      my $__lp_brick = $args{brick};
-      my $__lp_command = $args{command};
-      my @__lp_args = @{$args{args}};
+      my $__ctx_brick = $args{brick};
+      my $__ctx_command = $args{command};
+      my @__ctx_args = @{$args{args}};
 
       my $ERR = 0;
 
-      if (! $CONTEXT->is_loaded($__lp_brick)) {
+      if (! $CTX->is_loaded($__ctx_brick)) {
          $ERR = 1;
-         my $MSG = "run: Brick [$__lp_brick] not loaded";
+         my $MSG = "run: Brick [$__ctx_brick] not loaded";
          die("$MSG\n");
       }
 
-      if (! $CONTEXT->loaded->{$__lp_brick}->has_command($__lp_command)) {
+      if (! $CTX->loaded->{$__ctx_brick}->has_command($__ctx_command)) {
          $ERR = 1;
-         my $MSG = "run: Brick [$__lp_brick] has no Command [$__lp_command]";
+         my $MSG = "run: Brick [$__ctx_brick] has no Command [$__ctx_command]";
          die("$MSG\n");
       }
 
-      my $__lp_run = $__CTX->{loaded}->{$__lp_brick};
+      my $__ctx_run = $CTX->{loaded}->{$__ctx_brick};
 
-      $__lp_run->init; # Will init() only if not already done
+      $__ctx_run->init; # Will init() only if not already done
 
-      for (@__lp_args) {
+      for (@__ctx_args) {
          if (/^(\$.*)$/) {
-            $_ = eval("\$__CTX->{context}->_lp->{context}->{_}->{'$1'}");
+            $_ = eval("\$CTX->_lp->{context}->{_}->{'$1'}");
          }
       }
 
-      my $RUN = $__lp_run->$__lp_command(@__lp_args);
+      my $RUN = $__ctx_run->$__ctx_command(@__ctx_args);
       if (! defined($RUN)) {
          $ERR = 1;
       }
