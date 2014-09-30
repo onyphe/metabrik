@@ -122,7 +122,7 @@ sub new {
 
       my @imports = @{$modules->{$module}};
       if (@imports > 0) {
-         eval("import $module qw(@imports);");
+         eval("$module->import(@imports);");
          if ($@) {
             chomp($@);
             return $self->log->error("new: unable to import Functions [@imports] from Module [$module]: $@");

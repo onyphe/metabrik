@@ -67,7 +67,7 @@ sub text {
          return $self->log->error("text: append file [".$self->output."]: $!");
       }
 
-      print $out $data;
+      ref($data) eq 'SCALAR' ? print $out $$data : print $out $data;
 
       close($out);
    }
@@ -81,9 +81,9 @@ sub text {
          return $self->log->error("text: write file [".$self->output."]: $!");
       }
 
-      print $out $data;
+      ref($data) eq 'SCALAR' ? print $out $$data : print $out $data;
 
-      close($data);
+      close($out);
    }
 
    return $data;

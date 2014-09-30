@@ -45,7 +45,7 @@ my $CTX;
       };
       if ($@) {
          chomp($@);
-         die("[FATAL] core::context: log: $@\n");
+         die("[F] core::context: log: $@\n");
       }
 
       $@ = $save;
@@ -127,7 +127,7 @@ sub new {
    };
    if ($@) {
       chomp($@);
-      die("[FATAL] core::context: new: unable to create context: $@\n");
+      die("[F] core::context: new: unable to create context: $@\n");
    }
 
    return $self;

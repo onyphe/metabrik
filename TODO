@@ -1,7 +1,25 @@
 ### TODO
 
 Prio:
+-> chose ASCII art:
+=> http://www.retrojunkie.com/asciiart/animals/animals.htm
+=> Beaver?
+=> http://www.asciiworld.com/-Police,150-.html
+=> http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Metabricky
+
+
+-> ROT13: tr/n-za-m/a-z/;
+
+-> echo: truncate echoed results
+
+-> string::gzip => string::compress: gzip/gunzip
+-> file::compress: gzip/gunzip
+
 -> integrate: Term::ReadLine::Gnu
+
+-> update: require_loaded to return a hashref like others
+
+-> bug: core::global encoding to set utf8 or anything else
 
 -> remove: Term::Shell function to allow calling a command with just first characters
 => example: l vs load

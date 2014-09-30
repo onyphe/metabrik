@@ -66,7 +66,7 @@ sub fatal {
    $msg ||= 'undef';
    my ($package) = lc(caller());
    $package =~ s/^metabricky::brick:://;
-   print Term::ANSIColor::RED(), "[FATAL] ", Term::ANSIColor::RESET();
+   print Term::ANSIColor::RED(), "[F] ", Term::ANSIColor::RESET();
    die("$package: $msg\n");
 }
 
