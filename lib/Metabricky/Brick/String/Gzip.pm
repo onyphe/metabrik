@@ -19,11 +19,6 @@ sub revision {
    return '$Revision$';
 }
 
-sub require_loaded {
-   return [
-   ];
-}
-
 sub require_modules {
    return {
       'Gzip::Faster' => [],

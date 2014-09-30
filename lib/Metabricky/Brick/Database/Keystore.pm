@@ -19,10 +19,10 @@ sub revision {
 }
 
 sub require_loaded {
-   return [
-      'crypto::aes',
-      'file::read',
-   ];
+   return {
+      'crypto::aes' => [],
+      'file::read' => [],
+   };
 }
 
 sub help {

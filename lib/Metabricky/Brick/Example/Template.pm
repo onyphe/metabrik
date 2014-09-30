@@ -20,9 +20,9 @@ sub revision {
 }
 
 sub require_loaded {
-   return [
-      'some::brick',
-   ];
+   return {
+      'some::brick' => [],
+   };
 }
 
 sub require_modules {

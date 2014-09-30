@@ -88,6 +88,14 @@ sub help_run {
    return;
 }
 
+sub require_loaded {
+   return { };
+}
+
+sub require_modules {
+   return { };
+}
+
 sub default_values {
    return {
       debug => 0,
@@ -136,7 +144,7 @@ sub new {
       my $error = 0;
       my $loaded = $self->context->loaded;
       my $require_loaded = $self->require_loaded;
-      for my $brick (@$require_loaded) {
+      for my $brick (keys %$require_loaded) {
          if (! $self->context->is_loaded($brick)) {
             $self->log->error("new: you must load Brick [$brick] first");
             $error++;
@@ -333,14 +341,6 @@ sub init {
    $self->inited(1);
 
    return $self;
-}
-
-sub require_loaded {
-   return [];
-}
-
-sub require_modules {
-   return { };
 }
 
 sub self {

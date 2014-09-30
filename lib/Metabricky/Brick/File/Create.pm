@@ -18,16 +18,6 @@ sub revision {
    return '$Revision$';
 }
 
-sub require_loaded {
-   return [
-   ];
-}
-
-sub require_modules {
-   return {
-   };
-}
-
 sub help {
    return {
       'set:max_size' => '<value>',
