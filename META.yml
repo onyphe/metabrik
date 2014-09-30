@@ -36,7 +36,7 @@ provides:
     version: 0.06
   Metabricky:
     file: lib/Metabricky.pm
-    version: 0.96
+    version: 0.97
   Metabricky::Brick:
     file: lib/Metabricky/Brick.pm
   Metabricky::Brick::Address::Netmask:
@@ -118,4 +118,4 @@ requires:
   IPC::Run: 0
 resources:
   license: http://www.perlfoundation.org/artistic_license_1_0
-version: 0.96
+version: 0.97
