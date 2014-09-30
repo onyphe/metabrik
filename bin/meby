@@ -33,5 +33,30 @@ if (defined($script)) {
    $context->run('shell::meby', 'script', $script);
 }
 else {
+   # ASCII art courtesy: http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Metabricky
+   print<<EOF
+
+ ███▄ ▄███▓▓█████▄▄▄█████▓ ▄▄▄       ▄▄▄▄    ██▀███   ██▓ ▄████▄   ██ ▄█▀▓██   ██▓
+▓██▒▀█▀ ██▒▓█   ▀▓  ██▒ ▓▒▒████▄    ▓█████▄ ▓██ ▒ ██▒▓██▒▒██▀ ▀█   ██▄█▒  ▒██  ██▒
+▓██    ▓██░▒███  ▒ ▓██░ ▒░▒██  ▀█▄  ▒██▒ ▄██▓██ ░▄█ ▒▒██▒▒▓█    ▄ ▓███▄░   ▒██ ██░
+▒██    ▒██ ▒▓█  ▄░ ▓██▓ ░ ░██▄▄▄▄██ ▒██░█▀  ▒██▀▀█▄  ░██░▒▓▓▄ ▄██▒▓██ █▄   ░ ▐██▓░
+▒██▒   ░██▒░▒████▒ ▒██▒ ░  ▓█   ▓██▒░▓█  ▀█▓░██▓ ▒██▒░██░▒ ▓███▀ ░▒██▒ █▄  ░ ██▒▓░
+░ ▒░   ░  ░░░ ▒░ ░ ▒ ░░    ▒▒   ▓▒█░░▒▓███▀▒░ ▒▓ ░▒▓░░▓  ░ ░▒ ▒  ░▒ ▒▒ ▓▒   ██▒▒▒ 
+░  ░      ░ ░ ░  ░   ░      ▒   ▒▒ ░▒░▒   ░   ░▒ ░ ▒░ ▒ ░  ░  ▒   ░ ░▒ ▒░ ▓██ ░▒░ 
+░      ░      ░    ░        ░   ▒    ░    ░   ░░   ░  ▒ ░░        ░ ░░ ░  ▒ ▒ ░░  
+       ░      ░  ░              ░  ░ ░         ░      ░  ░ ░      ░  ░    ░ ░     
+                                          ░              ░                ░ ░     
+
+EOF
+;
+
+   my $version = $context->run('core::global', 'metabricky_version');
+
+   print "--[ Welcome to Metabricky - Knowledge is in your head, Detail is in the code ]--\n";
+   print "--[ Version $version ]--\n";
+   print "\n";
+
+   print "    There is a Brick for that.\n\n";
+
    $context->run('shell::meby', 'cmdloop');
 }

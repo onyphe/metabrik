@@ -1,13 +1,5 @@
 set core::log level 3
 
-run core::global metabricky_version
-my $version = $RUN
-
-print "--[ Welcome to Metabricky - Knowledge is in your head, Detail is in the code ]--\n"
-print "--[ Version $version ]--\n"
-print "\n"
-print "    There is a Brick for that.\n\n"
-
 # Change terminal title
 title "meby Metabricky shell"
 
