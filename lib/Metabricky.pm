@@ -5,7 +5,7 @@ package Metabricky;
 use strict;
 use warnings;
 
-our $VERSION = '0.96';
+our $VERSION = '0.97';
 
 use base qw(CPAN::Class::Gomor::Hash);
 
