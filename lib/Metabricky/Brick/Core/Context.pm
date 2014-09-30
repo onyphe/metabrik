@@ -22,6 +22,7 @@ use Metabricky::Brick::Core::Log;
 
 # Only used to avoid compile-time errors
 my $__CTX;
+my $CONTEXT;
 
 {
    no warnings;
@@ -90,6 +91,7 @@ sub new {
          '$RUN' => 'undef',
          '$ERR' => 'undef',
          '$MSG' => 'undef',
+         '$RES' => 'undef',
       });
       $lp->call(sub {
          my %args = @_;
@@ -299,45 +301,50 @@ sub load {
       return $self->log->info($self->help_run('load'));
    }
 
-   my $repository = '';
-   my $category = '';
-   my $module = '';
-
-   if ($brick =~ /^[a-z0-9]+::[a-z0-9]+$/) {
-      ($category, $module) = split('::', $brick);
-   }
-   elsif ($brick =~ /^[a-z0-9]+::[a-z0-9]+::[a-z0-9]+$/) {
-      ($repository, $category, $module) = split('::', $brick);
-   }
-   else {
-      return $self->log->error("load: invalid format for Brick [$brick]");
-   }
-
-   $self->debug && $self->log->debug("repository[$repository]");
-   $self->debug && $self->log->debug("category[$category]");
-   $self->debug && $self->log->debug("module[$module]");
-
-   $repository = ucfirst($repository);
-   $category = ucfirst($category);
-   $module = ucfirst($module);
-
-   $module = 'Metabricky::Brick::'.(length($repository) ? $repository.'::' : '').$category.'::'.$module;
-
-   $self->debug && $self->log->debug("module2[$module]");
-
-   if ($self->is_loaded($brick)) {
-      return $self->log->error("load: Brick [$brick] already loaded");
-   }
-
    my $r = $self->call(sub {
       my %args = @_;
 
-      my $__lp_module = $args{module};
       my $__lp_brick = $args{brick};
 
       my $ERR = 0;
 
-      eval("use $__lp_module;");
+      my $__lp_brick_repository = '';
+      my $__lp_brick_category = '';
+      my $__lp_brick_module = '';
+
+      if ($__lp_brick =~ /^[a-z0-9]+::[a-z0-9]+$/) {
+         ($__lp_brick_category, $__lp_brick_module) = split('::', $__lp_brick);
+      }
+      elsif ($__lp_brick =~ /^[a-z0-9]+::[a-z0-9]+::[a-z0-9]+$/) {
+         ($__lp_brick_repository, $__lp_brick_category, $__lp_brick_module) = split('::', $__lp_brick);
+      }
+      else {
+         $ERR = 1;
+         my $MSG = "load: invalid format for Brick [$__lp_brick]";
+         die("$MSG\n");
+      }
+
+      if ($CONTEXT->debug) {
+         $CONTEXT->log->debug("repository[$__lp_brick_repository]");
+         $CONTEXT->log->debug("category[$__lp_brick_category]");
+         $CONTEXT->log->debug("module[$__lp_brick_module]");
+      }
+
+      $__lp_brick_repository = ucfirst($__lp_brick_repository);
+      $__lp_brick_category = ucfirst($__lp_brick_category);
+      $__lp_brick_module = ucfirst($__lp_brick_module);
+
+      my $__lp_module = 'Metabricky::Brick::'.(length($__lp_brick_repository) ? $__lp_brick_repository.'::' : '').$__lp_brick_category.'::'.$__lp_brick_module;
+
+      $CONTEXT->debug && $CONTEXT->log->debug("module2[$__lp_brick_module]");
+
+      if ($CONTEXT->is_loaded($__lp_brick)) {
+         $ERR = 1;
+         my $MSG = "load: Brick [$__lp_brick] already loaded";
+         die("$MSG\n");
+      }
+
+      eval("require $__lp_module;");
       if ($@) {
          chomp($@);
          $ERR = 1;
@@ -358,7 +365,7 @@ sub load {
       }
 
       return $__CTX->{loaded}->{$__lp_brick} = $__lp_new;
-   }, module => $module, brick => $brick);
+   }, brick => $brick);
 
    return $r;
 }
@@ -442,14 +449,6 @@ sub set {
       return $self->log->info($self->help_run('set'));
    }
 
-   if (! $self->is_loaded($brick)) {
-      return $self->log->error("set: Brick [$brick] not loaded");
-   }
-
-   if (! $self->loaded->{$brick}->has_attribute($attribute)) {
-      return $self->log->error("set: Brick [$brick] has no Attribute [$attribute]");
-   }
-
    my $r = $self->call(sub {
       my %args = @_;
 
@@ -457,13 +456,31 @@ sub set {
       my $__lp_attribute = $args{attribute};
       my $__lp_value = $args{value};
 
+      my $ERR = 0;
+
+      if (! $CONTEXT->is_loaded($__lp_brick)) {
+         $ERR = 1;
+         my $MSG = "set: Brick [$__lp_brick] not loaded";
+         die("$MSG\n");
+      }
+
+      if (! $CONTEXT->loaded->{$__lp_brick}->has_attribute($__lp_attribute)) {
+         $ERR = 1;
+         my $MSG = "set: Brick [$__lp_brick] has no Attribute [$__lp_attribute]";
+         die("$MSG\n");
+      }
+
       if ($__lp_value =~ /^(\$.*)$/) {
          $__lp_value = eval("\$__CTX->{context}->_lp->{context}->{_}->{'$1'}");
       }
 
       $__CTX->{loaded}->{$__lp_brick}->$__lp_attribute($__lp_value);
 
-      return my $SET = $__CTX->{set}->{$__lp_brick}->{$__lp_attribute} = $__lp_value;
+      my $SET = $__CTX->{set}->{$__lp_brick}->{$__lp_attribute} = $__lp_value;
+
+      my $RES = \$SET;
+
+      return $SET;
    }, brick => $brick, attribute => $attribute, value => $value);
 
    return $r;
@@ -477,25 +494,35 @@ sub get {
       return $self->log->info($self->help_run('get'));
    }
 
-   if (! $self->is_loaded($brick)) {
-      return $self->log->error("set: Brick [$brick] not loaded");
-   }
-
-   if (! $self->loaded->{$brick}->has_attribute($attribute)) {
-      return $self->log->error("set: Brick [$brick] has no Attribute [$attribute]");
-   }
-
    my $r = $self->call(sub {
       my %args = @_;
 
       my $__lp_brick = $args{brick};
       my $__lp_attribute = $args{attribute};
 
+      my $ERR = 0;
+
+      if (! $CONTEXT->is_loaded($__lp_brick)) {
+         $ERR = 1;
+         my $MSG = "set: Brick [$__lp_brick] not loaded";
+         die("$MSG\n");
+      }
+
+      if (! $CONTEXT->loaded->{$__lp_brick}->has_attribute($__lp_attribute)) {
+         $ERR = 1;
+         my $MSG = "set: Brick [$__lp_brick] has no Attribute [$__lp_attribute]";
+         die("$MSG\n");
+      }
+
       if (! defined($__CTX->{loaded}->{$__lp_brick}->$__lp_attribute)) {
          return my $GET = 'undef';
       }
 
-      return my $GET = $__CTX->{loaded}->{$__lp_brick}->$__lp_attribute;
+      my $GET = $__CTX->{loaded}->{$__lp_brick}->$__lp_attribute;
+
+      my $RES = \$GET;
+
+      return $GET;
    }, brick => $brick, attribute => $attribute);
 
    return $r;
@@ -509,20 +536,26 @@ sub run {
       return $self->log->info($self->help_run('run'));
    }
 
-   if (! $self->is_loaded($brick)) {
-      return $self->log->error("run: Brick [$brick] not loaded");
-   }
-
-   if (! $self->loaded->{$brick}->has_command($command)) {
-      return $self->log->error("run: Brick [$brick] has no Command [$command]");
-   }
-
    my $r = $self->call(sub {
       my %args = @_;
 
       my $__lp_brick = $args{brick};
       my $__lp_command = $args{command};
       my @__lp_args = @{$args{args}};
+
+      my $ERR = 0;
+
+      if (! $CONTEXT->is_loaded($__lp_brick)) {
+         $ERR = 1;
+         my $MSG = "run: Brick [$__lp_brick] not loaded";
+         die("$MSG\n");
+      }
+
+      if (! $CONTEXT->loaded->{$__lp_brick}->has_command($__lp_command)) {
+         $ERR = 1;
+         my $MSG = "run: Brick [$__lp_brick] has no Command [$__lp_command]";
+         die("$MSG\n");
+      }
 
       my $__lp_run = $__CTX->{loaded}->{$__lp_brick};
 
@@ -534,11 +567,12 @@ sub run {
          }
       }
 
-      my $ERR = 0;
       my $RUN = $__lp_run->$__lp_command(@__lp_args);
       if (! defined($RUN)) {
          $ERR = 1;
       }
+
+      my $RES = \$RUN;
 
       return $RUN;
    }, brick => $brick, command => $command, args => \@args);
