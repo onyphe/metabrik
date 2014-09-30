@@ -15,7 +15,7 @@ name: Metabricky
 provides:
   Metabricky:
     file: lib/Metabricky.pm
-    version: 0.95
+    version: 0.96
   Metabricky::Brick:
     file: lib/Metabricky/Brick.pm
   Metabricky::Brick::Address::Netmask:
@@ -105,4 +105,4 @@ requires:
   Term::ANSIColor: 0
 resources:
   license: http://www.perlfoundation.org/artistic_license_1_0
-version: 0.95
+version: 0.96
