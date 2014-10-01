@@ -8,9 +8,12 @@ Prio:
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Metabricky
 => Ornitorinc
 
+-> new: shell::history, shell::builtins
+=> new: history: recall a range: history 10-13, will rerun lines 10 to 13
+
 -> rename: load to use?
 
--> core::log: color <1|0>
+-> new: getopt for bin/meby
 
 -> echo: truncate echoed results
 
@@ -19,7 +22,7 @@ Prio:
 
 -> bug: core::global encoding to set utf8 or anything else
 
--> remove: Term::Shell function to allow calling a command with just first characters
+-> remove: Term::Shell function that allows calling a command with just first characters
 => example: l vs load
 
 -> review: ext::shell: $loaded to use is_loaded and like
@@ -38,12 +41,9 @@ Prio:
 -> decide which Brick will be in main repository and which ones are private
 
 
-### Future:
+### Future (or not):
 -> update() function to autoupdate
 -> use page() and pager_internal() from Term::Shell
--> shell::meby: require_bricks { 'core::context' => 1 }
--> new: shell::history, shell::builtins
--> new: history: recall a range: history 10-13, will rerun lines 10 to 13
 
 Bricks API: See remote::ssh2
 -> require_arg() to check for a method invocation

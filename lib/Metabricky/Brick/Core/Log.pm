@@ -8,6 +8,7 @@ use warnings;
 use base qw(Metabricky::Brick);
 
 our @AS = qw(
+   color
    level
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
@@ -24,6 +25,7 @@ sub revision {
 
 sub help {
    return {
+      'set:color' => '<0|1>',
       'set:level' => '<0|1|2|3>',
       'run:info' => '<message>',
       'run:verbose' => '<message>',
@@ -36,59 +38,102 @@ sub help {
 
 sub default_values {
    return {
+      color => 1,
       level => 1,
    };
+}
+
+sub _msg {
+   my $self = shift;
+   my ($msg) = @_;
+
+   $msg ||= 'undef';
+
+   my ($package) = lc(caller());
+   $package =~ s/^metabricky::brick:://;
+
+   return "$package: $msg\n";
 }
 
 sub warning {
    my $self = shift;
    my ($msg) = @_;
-   $msg ||= 'undef';
-   my ($package) = lc(caller());
-   $package =~ s/^metabricky::brick:://;
-   print("[!] $package: $msg\n");
+
+   if ($self->color) {
+      print Term::ANSIColor::MAGENTA(), "[!] ", Term::ANSIColor::RESET();
+   }
+   else {
+      print "[!] ";
+   }
+
+   print $self->_msg($msg);
+
+   return 1;
 }
 
 sub error {
    my $self = shift;
    my ($msg) = @_;
-   $msg ||= 'undef';
-   my ($package) = lc(caller());
-   $package =~ s/^metabricky::brick:://;
-   print Term::ANSIColor::RED(), "[-] ", Term::ANSIColor::RESET();
-   print("$package: $msg\n");
+
+   if ($self->color) {
+      print Term::ANSIColor::RED(), "[-] ", Term::ANSIColor::RESET();
+   }
+   else {
+      print "[-] ";
+   }
+
+   print $self->_msg($msg);
+
    return;
 }
 
 sub fatal {
    my $self = shift;
    my ($msg) = @_;
-   $msg ||= 'undef';
-   my ($package) = lc(caller());
-   $package =~ s/^metabricky::brick:://;
-   print Term::ANSIColor::RED(), "[F] ", Term::ANSIColor::RESET();
-   die("$package: $msg\n");
+
+   if ($self->color) {
+      print Term::ANSIColor::RED(), "[F] ", Term::ANSIColor::RESET();
+   }
+   else {
+      print "[F] ";
+   }
+
+   die($self->_msg($msg));
 }
 
 sub info {
    my $self = shift;
    my ($msg) = @_;
-   $msg ||= 'undef';
+
    return unless $self->level > 0;
-   print Term::ANSIColor::GREEN(), "[*] ", Term::ANSIColor::RESET();
-   print("$msg\n");
+
+   if ($self->color) {
+      print Term::ANSIColor::GREEN(), "[*] ", Term::ANSIColor::RESET();
+   }
+   else {
+      print "[*] ";
+   }
+
+   print $self->_msg($msg);
+
    return 1;
 }
 
 sub verbose {
    my $self = shift;
    my ($msg) = @_;
-   $msg ||= 'undef';
+
    return unless $self->level > 1;
-   my ($package) = lc(caller());
-   $package =~ s/^metabricky::brick:://;
-   print Term::ANSIColor::YELLOW(), "[+] ", Term::ANSIColor::RESET();
-   print("$package: $msg\n");
+
+   if ($self->color) {
+      print Term::ANSIColor::YELLOW(), "[+] ", Term::ANSIColor::RESET();
+   }
+   else {
+      print "[+] ";
+   }
+
+   print $self->_msg($msg);
+
    return 1;
 }
 
@@ -110,10 +155,15 @@ sub debug {
       }
       else {
          return unless $self->level > 2;
-         my ($package) = lc(caller());
-         $package =~ s/^metabricky::brick:://;
-         print Term::ANSIColor::BLUE(), "[D] ", Term::ANSIColor::RESET();
-         print("$package: $msg\n");
+
+         if ($self->color) {
+            print Term::ANSIColor::CYAN(), "[D] ", Term::ANSIColor::RESET();
+         }
+         else {
+            print "[D] ";
+         }
+
+         print $self->_msg($msg);
       }
    }
 

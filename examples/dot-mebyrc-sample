@@ -1,7 +1,7 @@
 set core::log level 3
 
 # Change terminal title
-title "meby Metabricky shell"
+title "meby: The Metabricky Shell"
 
 my $home = $ENV{HOME}
 my $user = $ENV{USER}

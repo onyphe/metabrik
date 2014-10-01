@@ -855,7 +855,7 @@ sub run_title {
       return $self->log->info("title <title>");
    }
 
-   print "\c[];$title\a";
+   print "\c[];$title\a\e[0m";
 
    return $self->title($title);
 }
