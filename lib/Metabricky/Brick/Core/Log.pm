@@ -114,7 +114,7 @@ sub info {
       print "[*] ";
    }
 
-   print $self->_msg($msg);
+   print "$msg\n";
 
    return 1;
 }

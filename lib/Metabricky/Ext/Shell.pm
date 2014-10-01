@@ -506,7 +506,10 @@ sub comp_load {
          return ();
       }
 
+      # Do not keep already loaded bricks
+      my $loaded = $CTX->loaded;
       for my $a (keys %$available) {
+         next if $loaded->{$a};
          push @comp, $a if $a =~ /^$word/;
       }
    }
