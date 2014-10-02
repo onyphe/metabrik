@@ -9,14 +9,15 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   nameserver
-   domainname
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
-   return '$Revision$';
+   return '$Revision: 144 $';
+}
+
+sub declare_attributes {
+   return {
+      nameserver => [],
+      domainname => [],
+   };
 }
 
 sub require_modules {
