@@ -70,7 +70,7 @@ sub process_request {
    my $self = shift;
 
    my $context = $self->{server}->{context};
-   my $shell = $context->loaded->{'core::shell'};
+   my $shell = $context->used->{'core::shell'};
 
    while (<STDIN>) {
       s/[\r\n]+$//;

@@ -20,7 +20,7 @@ sub declare_attributes {
    };
 }
 
-sub require_loaded {
+sub require_used {
    return {
       'some::brik' => [],
    };

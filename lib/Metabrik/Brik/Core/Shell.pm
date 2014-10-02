@@ -82,7 +82,7 @@ sub help {
       'run:su' => '',
       'run:help' => '[ <cmd> ]',
       'run:show' => '',
-      'run:load' => '<brik>',
+      'run:use' => '<brik>',
       'run:set' => '<brik> <attribute> <value>',
       'run:get' => '[ <brik> ] [ <attribute> ]',
       'run:run' => '<brik> <command> [ <arg1:arg2:..:argN> ]',
@@ -176,10 +176,10 @@ sub show {
    return 1;
 }
 
-sub load {
+sub use {
    my $self = shift;
 
-   $self->_shell->run_load(@_);
+   $self->_shell->run_use(@_);
 
    return 1;
 }

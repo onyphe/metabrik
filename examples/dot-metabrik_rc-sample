@@ -1,5 +1,5 @@
 # If you want history to be enabled
-load shell::history
+use shell::history
 
 set core::log level 3
 
@@ -15,16 +15,16 @@ set core::global datadir $datadir
 set core::global ctimeout 20
 set core::global rtimeout 20
 
-load http::www
+use http::www
 
-load file::slurp
+use file::slurp
 
-load http::proxy
+use http::proxy
 
 my $publickey = $home."/.ssh/id_rsa.pub"
 my $privatekey = $home."/.ssh/id_rsa"
 
-load remote::ssh2
+use remote::ssh2
 set remote::ssh2 debug 1
 set remote::ssh2 host localhost
 set remote::ssh2 username $user
@@ -33,14 +33,14 @@ set remote::ssh2 privatekey $privatekey
 
 my $vfeed = $home."/metabrik/data/vfeed.db"
 
-load database::vfeed
+use database::vfeed
 set database::vfeed db $vfeed
 
 # Use your own private briks
 use lib "$ENV{HOME}/path/to/lib"
 run core::context update_available
 
-load category::mybrik
+use category::mybrik
 
 set core::shell echo 1
 

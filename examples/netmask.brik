@@ -1,6 +1,6 @@
 print "Running script address::netmask\n"
 
-load address::netmask
+use address::netmask
 
 set address::netmask subnet 192.168.0.0/24
 run address::netmask block

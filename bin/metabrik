@@ -14,7 +14,7 @@ BEGIN {
    eval("use lib \"$lib\";");
    if ($@) {
       chomp($@);
-      die("[F] metabrik: unable to load Metabrik libs [$@]\n");
+      die("[F] metabrik: unable to use Metabrik libs [$@]\n");
    }
 }
 
@@ -25,12 +25,12 @@ my $script = shift;
 my $context = Metabrik::Brik::Core::Context->new;
 $context->init or return;
 
-$context->load('core::shell') or return;
+$context->use('core::shell') or return;
 
 #$context->set('core::log', 'level', 3) or return;
 
 if (defined($script)) {
-   $context->load('shell::script') or return;
+   $context->use('shell::script') or return;
    #$context->set('shell::script', 'file', $script) or return;
    #$context->set('shell::script', 'debug', 1) or return;
    #$context->set('core::shell', 'debug', 1) or return;
@@ -45,7 +45,7 @@ if (defined($script)) {
    #}
 }
 else {
-   $context->load('shell::rc') or return;
+   $context->use('shell::rc') or return;
 
    # ASCII art courtesy: http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetabriK
    print<<EOF

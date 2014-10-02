@@ -63,12 +63,12 @@ sub revision {
 
 sub help {
    return {
-      'run:load' => '<brik>',
+      'run:use' => '<brik>',
       'run:set' => '<brik> <attribute> <value>',
       'run:get' => '<brik> <attribute>',
       'run:run' => '<brik> <command> [ <arg1 arg2 .. argN> ]',
-      'run:loaded' => '',
-      'run:is_loaded' => '<brik>',
+      'run:used' => '',
+      'run:is_used' => '<brik>',
       'run:find_available' => '',
       'run:update_available' => '',
       'run:available' => '',
@@ -99,28 +99,28 @@ sub new {
 
          $CTX = $args{self};
 
-         $CTX->{loaded} = {
+         $CTX->{used} = {
             'core::context' => $CTX,
             'core::global' => Metabrik::Brik::Core::Global->new,
             'core::log' => Metabrik::Brik::Core::Log->new,
          };
          $CTX->{available} = { };
          $CTX->{set} = { };
-         $CTX->{log} = $CTX->{loaded}->{'core::log'};
-         $CTX->{global} = $CTX->{loaded}->{'core::global'};
+         $CTX->{log} = $CTX->{used}->{'core::log'};
+         $CTX->{global} = $CTX->{used}->{'core::global'};
 
          # We don't use the log accessor to write the value because we wrote 
          # our own log accessor.
-         $CTX->{loaded}->{'core::context'}->{log} = $CTX->{log};
-         $CTX->{loaded}->{'core::global'}->{log} = $CTX->{log};
+         $CTX->{used}->{'core::context'}->{log} = $CTX->{log};
+         $CTX->{used}->{'core::global'}->{log} = $CTX->{log};
 
          # When new() was done, briks was empty. We fix that here.
-         $CTX->{loaded}->{'core::global'}->{context} = $CTX;
-         $CTX->{loaded}->{'core::log'}->{context} = $CTX;
+         $CTX->{used}->{'core::global'}->{context} = $CTX;
+         $CTX->{used}->{'core::log'}->{context} = $CTX;
 
          # We did put log and context in Attributes, why not also put global:
-         $CTX->{loaded}->{'core::context'}->{global} = $CTX->{global};
-         $CTX->{loaded}->{'core::log'}->{global} = $CTX->{global};
+         $CTX->{used}->{'core::context'}->{global} = $CTX->{global};
+         $CTX->{used}->{'core::log'}->{global} = $CTX->{global};
 
          my $ERR = 0;
 
@@ -294,12 +294,12 @@ sub update_available {
    return $r;
 }
 
-sub load {
+sub use {
    my $self = shift;
    my ($brik) = @_;
 
    if (! defined($brik)) {
-      return $self->log->info($self->help_run('load'));
+      return $self->log->info($self->help_run('use'));
    }
 
    my $r = $self->call(sub {
@@ -321,7 +321,7 @@ sub load {
       }
       else {
          $ERR = 1;
-         my $MSG = "load: invalid format for Brik [$__ctx_brik]";
+         my $MSG = "use: invalid format for Brik [$__ctx_brik]";
          die("$MSG\n");
       }
 
@@ -339,9 +339,9 @@ sub load {
 
       $CTX->debug && $CTX->log->debug("module2[$__ctx_brik_module]");
 
-      if ($CTX->is_loaded($__ctx_brik)) {
+      if ($CTX->is_used($__ctx_brik)) {
          $ERR = 1;
-         my $MSG = "load: Brik [$__ctx_brik] already loaded";
+         my $MSG = "use: Brik [$__ctx_brik] already used";
          die("$MSG\n");
       }
 
@@ -349,7 +349,7 @@ sub load {
       if ($@) {
          chomp($@);
          $ERR = 1;
-         my $MSG = "load: unable to load Brik [$__ctx_brik]: $@";
+         my $MSG = "use: unable to use Brik [$__ctx_brik]: $@";
          die("$MSG\n");
       }
 
@@ -361,11 +361,11 @@ sub load {
       #$__ctx_new->init; # No init now. We wait first run() to let set() actions
       if (! defined($__ctx_new)) {
          $ERR = 1;
-         my $MSG = "load: unable to create Brik [$__ctx_brik]";
+         my $MSG = "use: unable to create Brik [$__ctx_brik]";
          die("$MSG\n");
       }
 
-      return $CTX->{loaded}->{$__ctx_brik} = $__ctx_new;
+      return $CTX->{used}->{$__ctx_brik} = $__ctx_new;
    }, brik => $brik);
 
    return $r;
@@ -397,26 +397,26 @@ sub is_available {
    return 0;
 }
 
-sub loaded {
+sub used {
    my $self = shift;
 
    my $r = $self->call(sub {
-      return $CTX->{loaded};
+      return $CTX->{used};
    });
 
    return $r;
 }
 
-sub is_loaded {
+sub is_used {
    my $self = shift;
    my ($brik) = @_;
 
    if (! defined($brik)) {
-      return $self->log->info($self->help_run('is_loaded'));
+      return $self->log->info($self->help_run('is_used'));
    }
 
-   my $loaded = $self->loaded;
-   if (exists($loaded->{$brik})) {
+   my $used = $self->used;
+   if (exists($used->{$brik})) {
       return 1;
    }
 
@@ -427,18 +427,18 @@ sub status {
    my $self = shift;
 
    my $available = $self->available;
-   my $loaded = $self->loaded;
+   my $used = $self->used;
 
-   my @loaded = ();
-   my @notloaded = ();
+   my @used = ();
+   my @not_used = ();
 
    for my $k (sort { $a cmp $b } keys %$available) {
-      exists($loaded->{$k}) ? push @loaded, $k : push @notloaded, $k;
+      exists($used->{$k}) ? push @used, $k : push @not_used, $k;
    }
 
    return {
-      loaded => \@loaded,
-      notloaded => \@notloaded,
+      used => \@used,
+      not_used => \@not_used,
    };
 }
 
@@ -459,13 +459,13 @@ sub set {
 
       my $ERR = 0;
 
-      if (! $CTX->is_loaded($__ctx_brik)) {
+      if (! $CTX->is_used($__ctx_brik)) {
          $ERR = 1;
-         my $MSG = "set: Brik [$__ctx_brik] not loaded";
+         my $MSG = "set: Brik [$__ctx_brik] not used";
          die("$MSG\n");
       }
 
-      if (! $CTX->loaded->{$__ctx_brik}->has_attribute($__ctx_attribute)) {
+      if (! $CTX->used->{$__ctx_brik}->has_attribute($__ctx_attribute)) {
          $ERR = 1;
          my $MSG = "set: Brik [$__ctx_brik] has no Attribute [$__ctx_attribute]";
          die("$MSG\n");
@@ -475,7 +475,7 @@ sub set {
          $__ctx_value = eval("\$CTX->_lp->{context}->{_}->{'$1'}");
       }
 
-      $CTX->{loaded}->{$__ctx_brik}->$__ctx_attribute($__ctx_value);
+      $CTX->{used}->{$__ctx_brik}->$__ctx_attribute($__ctx_value);
 
       my $SET = $CTX->{set}->{$__ctx_brik}->{$__ctx_attribute} = $__ctx_value;
 
@@ -503,23 +503,23 @@ sub get {
 
       my $ERR = 0;
 
-      if (! $CTX->is_loaded($__ctx_brik)) {
+      if (! $CTX->is_used($__ctx_brik)) {
          $ERR = 1;
-         my $MSG = "set: Brik [$__ctx_brik] not loaded";
+         my $MSG = "set: Brik [$__ctx_brik] not used";
          die("$MSG\n");
       }
 
-      if (! $CTX->loaded->{$__ctx_brik}->has_attribute($__ctx_attribute)) {
+      if (! $CTX->used->{$__ctx_brik}->has_attribute($__ctx_attribute)) {
          $ERR = 1;
          my $MSG = "set: Brik [$__ctx_brik] has no Attribute [$__ctx_attribute]";
          die("$MSG\n");
       }
 
-      if (! defined($CTX->{loaded}->{$__ctx_brik}->$__ctx_attribute)) {
+      if (! defined($CTX->{used}->{$__ctx_brik}->$__ctx_attribute)) {
          return my $GET = 'undef';
       }
 
-      my $GET = $CTX->{loaded}->{$__ctx_brik}->$__ctx_attribute;
+      my $GET = $CTX->{used}->{$__ctx_brik}->$__ctx_attribute;
 
       my $RES = \$GET;
 
@@ -546,19 +546,19 @@ sub run {
 
       my $ERR = 0;
 
-      if (! $CTX->is_loaded($__ctx_brik)) {
+      if (! $CTX->is_used($__ctx_brik)) {
          $ERR = 1;
-         my $MSG = "run: Brik [$__ctx_brik] not loaded";
+         my $MSG = "run: Brik [$__ctx_brik] not used";
          die("$MSG\n");
       }
 
-      if (! $CTX->loaded->{$__ctx_brik}->has_command($__ctx_command)) {
+      if (! $CTX->used->{$__ctx_brik}->has_command($__ctx_command)) {
          $ERR = 1;
          my $MSG = "run: Brik [$__ctx_brik] has no Command [$__ctx_command]";
          die("$MSG\n");
       }
 
-      my $__ctx_run = $CTX->{loaded}->{$__ctx_brik};
+      my $__ctx_run = $CTX->{used}->{$__ctx_brik};
 
       $__ctx_run->init; # Will init() only if not already done
 

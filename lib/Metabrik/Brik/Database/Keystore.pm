@@ -19,7 +19,7 @@ sub declare_attributes {
    };
 }
 
-sub require_loaded {
+sub require_used {
    return {
       'crypto::aes' => [],
       'file::read' => [],

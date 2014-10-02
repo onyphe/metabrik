@@ -92,7 +92,7 @@ sub help_run {
    return;
 }
 
-sub require_loaded {
+sub require_used {
    return { };
 }
 
@@ -143,7 +143,7 @@ sub new {
       $self->$k($this_default->{$k});
    }
 
-   # Set default values for loaded Brik
+   # Set default values for used Brik
    my $default_values = $self->default_values;
    for my $k (keys %$default_values) {
       #next unless defined($self->$k); # Do not overwrite if set on new
@@ -168,15 +168,15 @@ sub new {
       }
    }
 
-   # Not all modules are capable of checking context against loaded briks
+   # Not all modules are capable of checking context against used briks
    # For instance, core::context Brik itselves.
-   if (defined($self->context) && $self->context->can('loaded')) {
+   if (defined($self->context) && $self->context->can('used')) {
       my $error = 0;
-      my $loaded = $self->context->loaded;
-      my $require_loaded = $self->require_loaded;
-      for my $brik (keys %$require_loaded) {
-         if (! $self->context->is_loaded($brik)) {
-            $self->log->error("new: you must load Brik [$brik] first");
+      my $used = $self->context->used;
+      my $require_used = $self->require_used;
+      for my $brik (keys %$require_used) {
+         if (! $self->context->is_used($brik)) {
+            $self->log->error("new: you must use Brik [$brik] first");
             $error++;
          }
       }

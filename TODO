@@ -5,12 +5,12 @@ Prio:
 => http://www.retrojunkie.com/asciiart/animals/animals.htm
 => Beaver?
 => http://www.asciiworld.com/-Police,150-.html
-=> http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Metabricky
+=> http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetaBriky
 => Ornitorinc
 
 -> merge default_values into declare_attributes
 
--> shell::script Brick
+-> shell::script Brik
 
 -> new: shell::builtins
 
@@ -27,14 +27,9 @@ Prio:
 => category::subcategory::name
 => category::name
 
--> rename: load to use?
+-> new: use_if_not_used, run_if_used, set_if_used, get_if_used
 
--> new: load_if_not_loaded, run_if_loaded, set_if_loaded, get_if_loaded
-==> use_if_not_used, run_if_used, ...
-
--> rename: meby to maby (MetABrickY)?
-
--> new: getopt for bin/meby
+-> new: getopt for bin/metabrik
 
 -> echo: truncate echoed results
 
@@ -45,29 +40,29 @@ Prio:
 -> bug: core::global encoding to set utf8 or anything else
 
 -> remove: Term::Shell function that allows calling a command with just first characters
-=> example: l vs load
+=> example: l vs ex-load
 
--> review: ext::shell: $loaded to use is_loaded and like
+-> review: ext::shell: $used to use is_used and like
 
--> make shell::meby Brick to depend on the fewest module as possible
+-> make shell::meby Brik to depend on the fewest module as possible
 
--> integrate cpanm into Metabricky
+-> integrate cpanm into MetaBriky
 
--> update: bricks using bricks should call is_loaded and die if not i/o using from Perl itself
-=> if not loaded, feature is disabled
+-> update: Briks using Briks should call is_used and die if not i/o using from Perl itself
+=> if not used, feature is disabled
 => example: database::keystore
-=> add require_brick|loaded() to Brick.pm
+=> add require_Brik|used() to Brik.pm
 
 -> remote::ssh, check for exit_status when exec()
 
--> decide which Brick will be in main repository and which ones are private
+-> decide which Brik will be in main repository and which ones are private
 
 
 ### Future (or not):
 -> update() function to autoupdate
 -> use page() and pager_internal() from Term::Shell
 
-Bricks API: See remote::ssh2
+Briks API: See remote::ssh2
 -> require_arg() to check for a method invocation
 -> require_called_first() or require_commands() to check for a previous method to be called first
 
@@ -76,7 +71,7 @@ Wwwutil:
 
 
 
-### BRICKS TODO
+### BrikS TODO
 - Heartbleed
 - Zmap
 - SSL Capable NetCat
@@ -91,7 +86,7 @@ Wwwutil:
 ### DOC/PRES
 
 Name:
--> Metabricky (formerly Plashy: Perl Awesome|Audit|Attack|All-in-one Shell (Yeaaahh))
+-> MetaBriky (formerly Plashy: Perl Awesome|Audit|Attack|All-in-one Shell (Yeaaahh))
 -> y: Why the Y? Yeaaaah
 
 Rationales:
@@ -99,73 +94,75 @@ Rationales:
 -> Tired of using different programs with different syntax
 -> Tired of being lost when using Windows
 
-Metabricky:
+MetaBriky:
 -> takes the best from MetaSploit CLI, Scapy ideas, and UNIX Shells.
 -> Bind them in the darkness.
 
-Metabricky - knowledge is in your head, detail is in the code
-Metabricky - There is a Brick for that.
+MetaBriky - knowledge is in your head, detail is in the code
+MetaBriky - There is a Brik for that.
 > Brain has knowledge, code has details.
 
-Move everything to a Brick. Even ls, save, ..., cd ...
--> The software in itself is built using Bricks ...
+Move everything to a Brik. Even ls, save, ..., cd ...
+-> The software in itself is built using Briks ...
 
 Name:
-MetaBricks?
-MetaBricko?
-MecaBrick?
-> metabricky/meby
-MetaBricko?
+MetaBriks?
+MetaBriko?
+MecaBrik?
+> metaBriky/meby
+MetaBriko?
 MetaScapy? MSP/MSY
-Bricko
-Bricko Depo
+Briko
+Briko Depo
 
 Design rules:
 1. Only shell `run' and `get' commands can overwrite $_
 => all shell `run' and `get' commands writes $_, $? and $@ (including !, which is an alias)
-2. Must be quick and easy to develop bricks
-3. Must be quick and easy to USE bricks
+2. Must be quick and easy to develop Briks
+3. Must be quick and easy to USE Briks
 4. Do simple functions
-5. One or two args at most for a brick command, other stuff in `set' attributes
-6. Everything is a brick, like everything is a file in UNIX
+5. One or two args at most for a Brik command, other stuff in `set' attributes
+6. Everything is a Brik, like everything is a file in UNIX
 7. Performance is not the goal
-8. Return USEFUL things from brick EVERY commands
+8. Return USEFUL things from Brik EVERY commands
 9. Reuse CPAN modules as much as possible
 10. Run command once, analyze at will
 11. Commands should be non-blocking
 12. Commands to return only base scalars (scalar, hashref, arrayref)
 
--> Within meby Shell, bricks do not print anything by default, except if shell::meby echo is set to true.
+-> Within meby Shell, Briks do not print anything by default, except if shell::meby echo is set to true.
 => $_ is written with the result.
 
 Developer rules:
 - in Context::call or ::do, die() will be catched.
-=> Bricks do not need access to $log.
+=> Briks do not need access to $log.
 
 Usage rules:
 1. Three kind of command lines:
 - Perl line
-- Metabricky shell line
+- MetaBriky shell line
 - External command
 
 Vocabulary:
-- The Shell has builtins (load, set, run)
-- The Shell loads Bricks
+- The Shell has builtins (use, set, get, run)
+- The Shell uses Briks
+- Meta is the Metabrik shell
 - You enter Words on shell CLI (run core::context get, 3 words)
-- meby is the Metabricky shell
-- A Brick has Commands (not methods)
-- A Brick has Attributes (you can set using `set' builtin)
-- A Brick Command may have Arguments
-- A Brick is attached to a Category
-- A Brick has a Category
-- A Brick may have a Repository
-- Brickification: process of turning a process/software into a Meby Brick
+- meby is the MetaBriky shell
+- A Brik has Commands (not methods)
+- A Brik has Attributes (you can set using `set' builtin)
+- A Brik Command may have Arguments
+- A Brik is attached to a Category
+- A Brik has a Category
+- A Brik may have a Repository
+- Brikification: process of turning a process/software into a Meby Brik
 => Rename to use that in all code
 - Meby shell can execute Code (Perl code)
 
+
 Doc:
-- core::context Brick autoloads core::global Brick
--> core::* bricks are always loaded and available in ->bricks->{$brick}
+- core::context Brik autouses core::global Brik
+-> core::* Briks are always used and available in ->Briks->{$Brik}
 
 ### FURTURE WORK
 
@@ -195,7 +192,7 @@ set $? and $! to indicate error and print error string
 write/save: writes $_ content to a file (set out 'file.txt')
 set global input $_  # default
 set global ouput $_  # default
-=> input and ouput may also be bricks (future work)
+=> input and ouput may also be Briks (future work)
 
 Proc::Simple:
 => launch cmd as background jobs (&)
@@ -211,13 +208,13 @@ Proc::SafePipe (http://search.cpan.org/~rosch/Proc-SafePipe-0.01/SafePipe.pm)
 File::Tools
 => ls, cd, cat, df, ...
 Term::ShellKit::Commands
-=> reload, load, show methods/functions of a module
+=> reuse, use, show methods/functions of a module
 
 Gather available methods/functions:
-use Metabricky::Brick::Core::Global;
+use MetaBriky::Brik::Core::Global;
 
 --8<--
-my $pkg = "Metabricky::Brick::Core::Global";
+my $pkg = "MetaBriky::Brik::Core::Global";
 no strict 'refs';
 my @r = keys %{ $pkg . "::" };
 use Data::Dumper;

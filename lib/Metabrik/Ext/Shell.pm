@@ -157,7 +157,7 @@ sub init {
    $self->_update_path_cwd;
    $self->_update_prompt;
 
-   if ($CTX->is_loaded('shell::rc')) {
+   if ($CTX->is_used('shell::rc')) {
       my $cmd = $CTX->run('shell::rc', 'load');
       for (@$cmd) {
          $self->cmd($_);
@@ -168,14 +168,14 @@ sub init {
    # See also Term::ReadLine LoadTermCap() and ornaments() subs.
    $self->term->ornaments('md,me');
 
-   if ($CTX->is_loaded('shell::history')) {
+   if ($CTX->is_used('shell::history')) {
       if ($CTX->get('shell::history', 'shell') eq 'undef') {
          $CTX->set('shell::history', 'shell', $self);
       }
       $CTX->run('shell::history', 'load');
    }
 
-   # They are loaded when core::context init is performed
+   # They are used when core::context init is performed
    # Should be placed in core::context Brik instead of here
    $self->add_handler('run_core::log');
    $self->add_handler('run_core::context');
@@ -230,7 +230,7 @@ sub cmdloop {
 sub run_exit {
    my $self = shift;
 
-   if ($CTX->is_loaded('shell::history')) {
+   if ($CTX->is_used('shell::history')) {
       $CTX->run('shell::history', 'write');
    } 
 
@@ -326,7 +326,7 @@ sub run_history {
    my $self = shift;
    my ($c) = @_;
 
-   if (! $CTX->is_loaded('shell::history')) {
+   if (! $CTX->is_used('shell::history')) {
       return 1;
    }
 
@@ -436,40 +436,48 @@ sub comp_su {
    return ();
 }
 
-sub run_reload {
+sub run_reuse {
    my $self = shift;
 
-   my $reloaded = CPAN::Module::Reload->check;
-   if ($reloaded) {
-      $self->log->info("reload: some modules were reloaded");
+   my $reused = CPAN::Module::Reload->check;
+   if ($reused) {
+      $self->log->info("reuse: some modules were reused");
    }
 
    return 1;
 }
 
-sub comp_reload {
+sub comp_reuse {
    return ();
 }
 
-sub run_load {
+sub run_use {
    my $self = shift;
-   my ($brik) = @_;
+   my ($brik, @args) = @_;
 
    if (! defined($brik)) {
-      return $self->log->info("load <brik>");
+      return $self->log->info("use <brik>");
    }
 
-   my $r = $CTX->load($brik) or return;
-   if ($r) {
-      $self->log->verbose("load: Brik [$brik] loaded");
-   }
+   my $r;
+   # If Brik starts with a minuscule, we want to use Brik in Metabrik sens.
+   # Otherwise, it is a use command in the Perl sens.
+   if ($brik =~ /^[a-z]/ && $brik =~ /::/) {
+      $r = $CTX->use($brik) or return;
+      if ($r) {
+         $self->log->verbose("use: Brik [$brik] used");
+      }
 
-   $self->add_handler("run_$brik");
+      $self->add_handler("run_$brik");
+   }
+   else {
+      return $self->run_pl($brik, @args);
+   }
 
    return $r;
 }
 
-sub comp_load {
+sub comp_use {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
@@ -487,14 +495,14 @@ sub comp_load {
    ||  ($count == 2 && length($word) > 0)) {
       my $available = $CTX->available;
       if ($self->debug && ! defined($available)) {
-         $self->log->debug("\ncomp_load: can't fetch available Briks");
+         $self->log->debug("\ncomp_use: can't fetch available Briks");
          return ();
       }
 
-      # Do not keep already loaded briks
-      my $loaded = $CTX->loaded;
+      # Do not keep already used briks
+      my $used = $CTX->used;
       for my $a (keys %$available) {
-         next if $loaded->{$a};
+         next if $used->{$a};
          push @comp, $a if $a =~ /^$word/;
       }
    }
@@ -511,18 +519,18 @@ sub run_show {
 
    my $total = 0;
    my $count = 0;
-   $self->log->info("   Loaded:");
-   for my $loaded (@{$status->{loaded}}) {
-      $self->log->info("      $loaded");
+   $self->log->info("   Used:");
+   for my $used (@{$status->{used}}) {
+      $self->log->info("      $used");
       $count++;
       $total++;
    }
    $self->log->info("   Count: $count");
 
    $count = 0;
-   $self->log->info("   Not loaded:");
-   for my $notloaded (@{$status->{notloaded}}) {
-      $self->log->info("      $notloaded");
+   $self->log->info("   Not used:");
+   for my $not_used (@{$status->{not_used}}) {
+      $self->log->info("      $not_used");
       $count++;
       $total++;
    }
@@ -545,17 +553,17 @@ sub run_help {
       return $self->SUPER::run_help;
    }
    else {
-      if ($CTX->is_loaded($brik)) {
-         my $attributes = $CTX->loaded->{$brik}->attributes;
-         my $commands = $CTX->loaded->{$brik}->commands;
+      if ($CTX->is_used($brik)) {
+         my $attributes = $CTX->used->{$brik}->attributes;
+         my $commands = $CTX->used->{$brik}->commands;
 
          for my $attribute (@$attributes) {
-            my $help = $CTX->loaded->{$brik}->help_set($attribute);
+            my $help = $CTX->used->{$brik}->help_set($attribute);
             $self->log->info($help) if defined($help);
          }
 
          for my $command (@$commands) {
-            my $help = $CTX->loaded->{$brik}->help_run($command);
+            my $help = $CTX->used->{$brik}->help_run($command);
             $self->log->info($help) if defined($help);
          }
       }
@@ -581,7 +589,7 @@ sub comp_help {
 
    my @comp = ();
 
-   # We want to find help for loaded briks by using completion
+   # We want to find help for used briks by using completion
    if (($count == 1)
    ||  ($count == 2 && length($word) > 0)) {
       for my $a (keys %{$self->{handlers}}) {
@@ -613,10 +621,10 @@ sub comp_set {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
-   # Completion is for loaded Briks only
-   my $loaded = $CTX->loaded;
-   if (! defined($loaded)) {
-      $self->debug && $self->log->debug("comp_set: can't fetch loaded Briks");
+   # Completion is for used Briks only
+   my $used = $CTX->used;
+   if (! defined($used)) {
+      $self->debug && $self->log->debug("comp_set: can't fetch used Briks");
       return ();
    }
 
@@ -631,35 +639,35 @@ sub comp_set {
 
    my @comp = ();
 
-   # We want completion for loaded Briks
+   # We want completion for used Briks
    if (($count == 1)
    ||  ($count == 2 && length($word) > 0)) {
-      for my $a (keys %$loaded) {
+      for my $a (keys %$used) {
          push @comp, $a if $a =~ /^$word/;
       }
    }
    # We fetch Brik Attributes
    elsif ($count == 2 && length($word) == 0) {
       if ($self->debug) {
-         if (! exists($loaded->{$brik})) {
-            $self->log->debug("comp_set: Brik [$brik] not loaded");
+         if (! exists($used->{$brik})) {
+            $self->log->debug("comp_set: Brik [$brik] not used");
             return ();
          }
       }
 
-      my $attributes = $loaded->{$brik}->attributes;
+      my $attributes = $used->{$brik}->attributes;
       push @comp, @$attributes;
    }
    # We want to complete entered Attribute
    elsif ($count == 3 && length($word) > 0) {
       if ($self->debug) {
-         if (! exists($loaded->{$brik})) {
-            $self->log->debug("comp_set: Brik [$brik] not loaded");
+         if (! exists($used->{$brik})) {
+            $self->log->debug("comp_set: Brik [$brik] not used");
             return ();
          }
       }
 
-      my $attributes = $loaded->{$brik}->attributes;
+      my $attributes = $used->{$brik}->attributes;
 
       for my $a (@$attributes) {
          if ($a =~ /^$word/) {
@@ -685,10 +693,10 @@ sub run_get {
 
    # get is called without args, we display everything
    if (! defined($brik)) {
-      my $loaded = $CTX->loaded or return;
+      my $used = $CTX->used or return;
 
-      for my $brik (sort { $a cmp $b } keys %$loaded) {
-         my $attributes = $loaded->{$brik}->attributes or next;
+      for my $brik (sort { $a cmp $b } keys %$used) {
+         my $attributes = $used->{$brik}->attributes or next;
          for my $attribute (sort { $a cmp $b } @$attributes) {
             $self->log->info("$brik $attribute ".$CTX->get($brik, $attribute));
          }
@@ -696,14 +704,14 @@ sub run_get {
    }
    # get is called with only a Brik as an arg, we show its Attributes
    elsif (defined($brik) && ! defined($attribute)) {
-      my $loaded = $CTX->loaded or return;
+      my $used = $CTX->used or return;
 
-      if (! exists($loaded->{$brik})) {
-         return $self->log->error("get: Brik [$brik] not loaded");
+      if (! exists($used->{$brik})) {
+         return $self->log->error("get: Brik [$brik] not used");
       }
 
       my %printed = ();
-      my $attributes = $loaded->{$brik}->attributes;
+      my $attributes = $used->{$brik}->attributes;
       for my $attribute (sort { $a cmp $b } @$attributes) {
          my $print = "$brik $attribute ".$CTX->get($brik, $attribute);
          $self->log->info($print) if ! exists($printed{$print});
@@ -712,15 +720,15 @@ sub run_get {
    }
    # get is called with is a Brik and an Attribute
    elsif (defined($brik) && defined($attribute)) {
-      my $loaded = $CTX->loaded or return;
+      my $used = $CTX->used or return;
 
-      if (! exists($loaded->{$brik})) {
-         return $self->log->error("get: Brik [$brik] not loaded");
+      if (! exists($used->{$brik})) {
+         return $self->log->error("get: Brik [$brik] not used");
       }
 
-      my $attributes = $loaded->{$brik}->attributes or return;
+      my $attributes = $used->{$brik}->attributes or return;
 
-      if (! $loaded->{$brik}->can($attribute)) {
+      if (! $used->{$brik}->can($attribute)) {
          return $self->log->error("get: Attribute [$attribute] does not exist for Brik [$brik]");
       }
 
@@ -760,10 +768,10 @@ sub comp_run {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
-   # Completion is for loaded Briks only
-   my $loaded = $CTX->loaded;
-   if (! defined($loaded)) {
-      $self->debug && $self->log->debug("comp_run: can't fetch loaded Briks");
+   # Completion is for used Briks only
+   my $used = $CTX->used;
+   if (! defined($used)) {
+      $self->debug && $self->log->debug("comp_run: can't fetch used Briks");
       return ();
    }
 
@@ -779,38 +787,38 @@ sub comp_run {
 
    my @comp = ();
 
-   # We want completion for loaded Briks
+   # We want completion for used Briks
    if (($count == 1)
    ||  ($count == 2 && length($word) > 0)) {
-      for my $a (keys %$loaded) {
+      for my $a (keys %$used) {
          push @comp, $a if $a =~ /^$word/;
       }
    }
    # We fetch Brik Commands
    elsif ($count == 2 && length($word) == 0) {
       if ($self->debug) {
-         if (! exists($loaded->{$brik})) {
-            $self->log->debug("comp_run: Brik [$brik] not loaded");
+         if (! exists($used->{$brik})) {
+            $self->log->debug("comp_run: Brik [$brik] not used");
             return ();
          }
       }
 
-      my $commands = $loaded->{$brik}->commands;
-      my $attributes = $loaded->{$brik}->attributes;
+      my $commands = $used->{$brik}->commands;
+      my $attributes = $used->{$brik}->attributes;
       push @comp, @$commands;
       push @comp, @$attributes;
    }
    # We want to complete entered Command and Attributes
    elsif ($count == 3 && length($word) > 0) {
       if ($self->debug) {
-         if (! exists($loaded->{$brik})) {
-            $self->log->debug("comp_run: Brik [$brik] not loaded");
+         if (! exists($used->{$brik})) {
+            $self->log->debug("comp_run: Brik [$brik] not used");
             return ();
          }
       }
 
-      my $commands = $loaded->{$brik}->commands;
-      my $attributes = $loaded->{$brik}->attributes;
+      my $commands = $used->{$brik}->commands;
+      my $attributes = $used->{$brik}->attributes;
 
       for my $a (@$commands, @$attributes) {
          if ($a =~ /^$word/) {
@@ -864,7 +872,7 @@ sub run_script {
       return $self->log->error("script: file [$script] not found");
    }
 
-   if ($CTX->is_loaded('shell::script')) {
+   if ($CTX->is_used('shell::script')) {
       $CTX->set('shell::script', 'file', $script);
       my $lines = $CTX->run('shell::script', 'load');
       for (@$lines) {
@@ -873,7 +881,7 @@ sub run_script {
       }
    }
    else {
-      return $self->log->info("script: shell::script Brik not loaded");
+      return $self->log->info("script: shell::script Brik not used");
    }
 
    return 1;
