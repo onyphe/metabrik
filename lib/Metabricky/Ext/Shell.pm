@@ -861,41 +861,20 @@ sub run_script {
    }
 
    if (! -f $script) {
-      return $self->log->error("script: script [$script] is not a file");
+      return $self->log->error("script: file [$script] not found");
    }
 
-   open(my $in, '<', $script)
-      or return $self->log->error("run_script: can't open file [$script]: $!");
-
-   my @lines = ();
-   while (defined(my $line = <$in>)) {
-      next if ($line =~ /^\s*#/);  # Skip comments
-      chomp($line);
-
-      # Exit?
-      if ($line =~ /^exit$/) {
-         $self->cmd($line);
-         last;
+   if ($CTX->is_loaded('shell::script')) {
+      $CTX->set('shell::script', 'file', $script);
+      my $lines = $CTX->run('shell::script', 'load');
+      for (@$lines) {
+         $self->run_exit if /^exit$/;
+         $self->cmd($_);
       }
-
-      push @lines, $line;
-
-      if ($line =~ /\\\s*$/) {
-         next;
-      }
-
-      # Multiline edition finished, we can remove the `\' char before joining
-      for (@lines) {
-         s/\\\s*$//;
-      }
-
-      $self->debug && $self->log->debug("run_script: lines[@lines]");
-
-      $self->cmd(join('', @lines));
-      @lines = ();
    }
-
-   close($in);
+   else {
+      return $self->log->info("script: shell::script Brick not loaded");
+   }
 
    return 1;
 }

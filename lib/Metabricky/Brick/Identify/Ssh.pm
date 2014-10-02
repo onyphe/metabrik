@@ -1,7 +1,7 @@
 #
-# $Id: Ssh.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# Ssh brick
+# identify::ssh Brick
 #
 package Metabricky::Brick::Identify::Ssh;
 use strict;
@@ -9,13 +9,14 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   banner
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      banner => [],
+   };
 }
 
 sub help {

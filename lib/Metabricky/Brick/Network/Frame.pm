@@ -1,7 +1,7 @@
 #
-# $Id: Frame.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# Net::Frame modules brick
+# network::frame Brick
 #
 package Metabricky::Brick::Network::Frame;
 use strict;

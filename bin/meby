@@ -25,9 +25,23 @@ my $script = shift;
 my $context = Metabricky::Brick::Core::Context->new;
 $context->init or return;
 
+#$context->set('core::log', 'level', 3) or return;
+
 if (defined($script)) {
    $context->load('shell::meby') or return;
-   $context->run('shell::meby', 'script', $script);
+   $context->load('shell::script') or return;
+   #$context->set('shell::script', 'file', $script) or return;
+   #$context->set('shell::script', 'debug', 1) or return;
+   #$context->set('shell::meby', 'debug', 1) or return;
+   $context->run('shell::meby', 'script', $script) or return;
+   #my $cmd = $context->run('shell::script', 'load');
+   #for (@$cmd) {
+      #print "DEBUG cmd[$_]\n";
+      #if (/^exit$/) {
+         #exit;
+      #}
+      #$context->run('shell::meby', 'cmd', $_);
+   #}
 }
 else {
    $context->load('shell::rc') or return;

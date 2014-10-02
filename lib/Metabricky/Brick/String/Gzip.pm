@@ -9,14 +9,15 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   data
-   memory_limit
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      data => [],
+      memory_limit => [],
+   };
 }
 
 sub require_modules {

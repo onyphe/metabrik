@@ -1,7 +1,7 @@
 #
-# $Id: Vfeed.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# vFeed brick
+# database::vfeed Brick
 #
 package Metabricky::Brick::Database::Vfeed;
 use strict;
@@ -9,14 +9,15 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   db
-   vfeed
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      db => [],
+      vfeed => [],
+   };
 }
 
 sub require_modules {

@@ -1,7 +1,7 @@
 #
-# $Id: Www.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# Www brick
+# http::www Brick
 #
 package Metabricky::Brick::Http::Www;
 use strict;
@@ -9,13 +9,14 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   mechanize
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      mechanize => [],
+   };
 }
 
 sub require_modules {

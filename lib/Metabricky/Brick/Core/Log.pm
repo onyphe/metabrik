@@ -1,5 +1,7 @@
 #
-# $Id: Log.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
+#
+# core::log Brick
 #
 package Metabricky::Brick::Core::Log;
 use strict;
@@ -7,20 +9,21 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   color
-   level
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
+sub revision {
+   return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      color => [],
+      level => [],
+   };
+}
 
 sub require_modules {
    return {
       'Term::ANSIColor' => [],
    };
-}
-
-sub revision {
-   return '$Revision$';
 }
 
 sub help {

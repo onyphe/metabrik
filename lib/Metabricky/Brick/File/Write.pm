@@ -9,15 +9,16 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   output
-   append
-   overwrite
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      output => [],
+      append => [],
+      overwrite => [],
+   };
 }
 
 sub require_modules {

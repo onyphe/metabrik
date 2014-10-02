@@ -1,5 +1,5 @@
 #
-# $Id: Context.pm 94 2014-09-19 05:24:06Z gomor $
+# $Id$
 #
 package Metabricky::Brick::Core::Context;
 use strict;
@@ -7,10 +7,11 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   _lp
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
+sub declare_attributes {
+   return {
+      _lp => [],
+   };
+}
 
 # Only used to avoid compile-time errors
 my $CTX;

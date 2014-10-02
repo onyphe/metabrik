@@ -1,7 +1,7 @@
 #
-# $Id: Find.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# Find brick
+# file::find Brick
 #
 package Metabricky::Brick::File::Find;
 use strict;
@@ -9,17 +9,18 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   path
-   recursive
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
-use IO::All;
-
 sub revision {
    return '$Revision$';
 }
+
+sub declare_attributes {
+   return {
+      path => [],
+      recursive => [],
+   };
+}
+
+use IO::All;
 
 sub require_modules {
    return {

@@ -1,7 +1,7 @@
 #
-# $Id: Proxy.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# HTTP::Proxy brick
+# http::proxy Brick
 #
 package Metabricky::Brick::Http::Proxy;
 use strict;
@@ -9,15 +9,16 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   port
-   truncate_request
-   truncate_response
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      port => [],
+      truncate_request => [],
+      truncate_response => [],
+   };
 }
 
 sub require_modules {

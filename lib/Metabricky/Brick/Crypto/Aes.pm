@@ -1,7 +1,7 @@
 #
-# $Id: Aes.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# AES brick
+# crypto::aes Brick
 #
 package Metabricky::Brick::Crypto::Aes;
 use strict;

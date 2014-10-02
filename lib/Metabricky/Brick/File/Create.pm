@@ -9,13 +9,14 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   max_size
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      max_size => [],
+   };
 }
 
 sub help {
@@ -27,7 +28,7 @@ sub help {
 
 sub default_values {
    return {
-      max_size => 10_000_000, # 10M
+      max_size => 10_000_000, # 10MB
    };
 }
 

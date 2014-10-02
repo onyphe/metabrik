@@ -1,7 +1,7 @@
 #
-# $Id: Tcpdump.pm 94 2014-09-19 05:24:06Z gomor $
+# $Id$
 #
-# remote::tcpdump brick
+# remote::tcpdump Brick
 #
 package Metabricky::Brick::Remote::Tcpdump;
 use strict;
@@ -9,16 +9,17 @@ use warnings;
 
 use base qw(Metabricky::Brick::Remote::Ssh2);
 
-our @AS = qw(
-   _started
-   _channel
-   _out
-   _dump
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      _started => [],
+      _channel => [],
+      _out => [],
+      _dump => [],
+   };
 }
 
 sub require_modules {

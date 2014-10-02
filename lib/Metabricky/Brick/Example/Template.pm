@@ -1,5 +1,5 @@
 #
-# $Id: Template.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
 # example::template Brick
 #
@@ -9,14 +9,15 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   attribute1
-   attribute2
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      attribute1 => [],
+      attribute2 => [],
+   };
 }
 
 sub require_loaded {

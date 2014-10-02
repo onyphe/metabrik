@@ -1,7 +1,7 @@
 #
-# $Id: Nvd.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# NVD brick
+# database::nvd Brick
 #
 package Metabricky::Brick::Database::Nvd;
 use strict;
@@ -9,19 +9,20 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   uri_recent
-   uri_modified
-   uri_others
-   xml_recent
-   xml_modified
-   xml_others
-   xml
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      uri_recent => [],
+      uri_modified => [],
+      uri_others => [],
+      xml_recent => [],
+      xml_modified => [],
+      xml_others => [],
+      xml => [],
+   };
 }
 
 sub require_modules {

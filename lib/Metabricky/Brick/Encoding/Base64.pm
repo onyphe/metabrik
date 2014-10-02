@@ -1,5 +1,5 @@
 #
-# $Id: Base64.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
 # encoding::base64 Brick
 #

@@ -1,8 +1,8 @@
-print "Running script netmask\n"
+print "Running script address::netmask\n"
 
-load netmask
+load address::netmask
 
-set netmask subnet 192.168.0.0/24
-run netmask block
+set address::netmask subnet 192.168.0.0/24
+run address::netmask block
 
-print
+$RUN

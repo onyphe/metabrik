@@ -1,7 +1,7 @@
 #
-# $Id: Sqlite.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# SQLite brick
+# database::sqlite Brick
 #
 package Metabricky::Brick::Database::Sqlite;
 use strict;
@@ -9,15 +9,16 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   db
-   dbh
-   autocommit
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      db => [],
+      dbh => [],
+      autocommit => [],
+   };
 }
 
 sub require_modules {

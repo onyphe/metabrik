@@ -1,7 +1,7 @@
 #
-# $Id: Arp.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# Arp brick
+# system::arp brick
 #
 package Metabricky::Brick::System::Arp;
 use strict;
@@ -9,13 +9,14 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   _dnet
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      _dnet => [],
+   };
 }
 
 sub require_modules {

@@ -1,7 +1,7 @@
 #
-# $Id: Wwwutil.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# Wwwutil brick
+# http::wwwutil Brick
 #
 package Metabricky::Brick::Http::Wwwutil;
 use strict;

@@ -1,7 +1,7 @@
 #
-# $Id: Ssdp.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# SSDP brick
+# ssdp::ssdp brick
 #
 package Metabricky::Brick::Ssdp::Ssdp;
 use strict;
@@ -9,13 +9,14 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   device
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      device => [],
+   };
 }
 
 sub require_modules {

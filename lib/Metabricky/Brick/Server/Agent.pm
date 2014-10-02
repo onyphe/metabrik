@@ -1,5 +1,5 @@
 #
-# $Id: Agent.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
 # Agent brick
 #
@@ -9,13 +9,14 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   port
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      port => [],
+   };
 }
 
 sub require_modules {

@@ -1,7 +1,7 @@
 #
-# $Id: Cwe.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# CWE brick
+# database::cwe Brick
 #
 package Metabricky::Brick::Database::Cwe;
 use strict;
@@ -9,14 +9,15 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   file
-   xml
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      file => [],
+      xml => [],
+   };
 }
 
 sub require_modules {

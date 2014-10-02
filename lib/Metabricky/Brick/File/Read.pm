@@ -1,5 +1,5 @@
 #
-# $Id: Slurp.pm 94 2014-09-19 05:24:06Z gomor $
+# $Id$
 #
 # file::read Brick
 #
@@ -9,17 +9,18 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   input
-   csv_has_header
-   csv_format
-   csv_separator
-   csv_header
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      input => [],
+      csv_has_header => [],
+      csv_format => [],
+      csv_separator => [],
+      csv_header => [],
+   };
 }
 
 sub require_modules {

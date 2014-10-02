@@ -1,7 +1,7 @@
 #
-# $Id: Keystore.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# Keystore brick
+# database::keystore Brick
 #
 package Metabricky::Brick::Database::Keystore;
 use strict;
@@ -9,13 +9,14 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   db
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      db => [],
+   };
 }
 
 sub require_loaded {

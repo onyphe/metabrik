@@ -1,7 +1,7 @@
 #
-# $Id: Netmask.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# Net::Netmask brick
+# address::netmask Brick
 #
 package Metabricky::Brick::Address::Netmask;
 use strict;
@@ -9,10 +9,17 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   subnet
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
+sub declare_attributes {
+   return {
+      subnet => [],
+   };
+}
+
+sub default_values {
+   return {
+      subnet => '192.168.0.0/24',
+   };
+}
 
 sub revision {
    return '$Revision$';

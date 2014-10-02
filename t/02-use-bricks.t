@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 33) }
+BEGIN { plan(tests => 34) }
 
 ok(sub { eval("use Metabricky::Brick::Address::Netmask");     $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::Audit::Dns");           $@ ? 0 : 1 }, 1, $@);
@@ -29,6 +29,7 @@ ok(sub { eval("use Metabricky::Brick::Server::Agent");        $@ ? 0 : 1 }, 1, $
 ok(sub { eval("use Metabricky::Brick::Shell::History");       $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::Shell::Meby");          $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::Shell::Rc");            $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabricky::Brick::Shell::Script");        $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::Ssdp::Ssdp");           $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::String::Gzip");         $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabricky::Brick::System::Arp");          $@ ? 0 : 1 }, 1, $@);

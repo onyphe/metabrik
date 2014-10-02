@@ -1,5 +1,5 @@
 #
-# $Id: Brick.pm 93 2014-09-18 06:06:28Z gomor $
+# $Id$
 #
 package Metabricky::Brick;
 use strict;
@@ -15,6 +15,10 @@ our @AS = qw(
    log
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
+
+sub declare_attributes {
+   return { };
+}
 
 sub help {
    return {
@@ -108,15 +112,41 @@ sub new {
       @_,
    );
 
+   # Build Attributes, Class::Gomor style
+   my $attributes = $self->declare_attributes;
+   my @as = ( keys %$attributes );
+   if (@as > 0) {
+      no strict 'refs';
+
+      my $class = $self->class;
+
+      my %current = map { $_ => 1 } @{$class.'::AS'};
+      my @new = ();
+      for my $this (@as) {
+         if (! exists($current{$this})) {
+            push @new, $this;
+         }
+      }
+
+      push @{$class.'::AS'}, @new;
+      for my $this (@new) {
+         if (! $class->can($this)) {
+            $class->cgBuildAccessorsScalar([ $this ]);
+         }
+      }
+   }
+
    # Set default values for main Brick class
    my $this_default = __PACKAGE__->default_values;
    for my $k (keys %$this_default) {
+      #next unless defined($self->$k); # Do not overwrite if set on new
       $self->$k($this_default->{$k});
    }
 
    # Set default values for loaded Brick
    my $default_values = $self->default_values;
    for my $k (keys %$default_values) {
+      #next unless defined($self->$k); # Do not overwrite if set on new
       $self->$k($default_values->{$k});
    }
 

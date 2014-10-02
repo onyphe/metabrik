@@ -1,5 +1,7 @@
 #
-# $Id: Meby.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
+#
+# shell::meby Brick
 #
 package Metabricky::Brick::Shell::Meby;
 use strict;
@@ -7,14 +9,19 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   echo
-   _shell
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
+sub revision {
+   return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      echo => [],
+      _shell => [],
+   };
+}
 
 {
-   no warnings;
+   no warnings;   # Avoid redefine warnings
 
    # We redefine some accessors so we can write the value to Ext::Shell
 
@@ -49,10 +56,6 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
       return $self->{debug};
    };
-}
-
-sub revision {
-   return '$Revision$';
 }
 
 sub require_modules {
@@ -212,6 +215,7 @@ sub exit {
 
    return 1;
 }
+
 sub cmd {
    my $self = shift;
 
@@ -242,7 +246,7 @@ __END__
 
 =head1 NAME
 
-Metabricky::Brick::Shell::Meby - the Metabricky shell
+Metabricky::Brick::Shell::Meby - The Metabricky Shell
 
 =head1 COPYRIGHT AND LICENSE
 

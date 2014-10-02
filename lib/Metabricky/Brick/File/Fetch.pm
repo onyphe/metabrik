@@ -1,7 +1,7 @@
 #
-# $Id: Fetch.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# Fetch brick
+# file::fetch Brick
 #
 package Metabricky::Brick::File::Fetch;
 use strict;
@@ -9,13 +9,14 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   output
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      output => [],
+   };
 }
 
 sub help {

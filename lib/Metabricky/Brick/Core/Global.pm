@@ -1,7 +1,7 @@
 #
-# $Id: Global.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# Global brick
+# core::global Brick
 #
 package Metabricky::Brick::Core::Global;
 use strict;
@@ -9,31 +9,32 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   input
-   output
-   db
-   file
-   uri
-   target
-   ctimeout
-   rtimeout
-   datadir
-   username
-   hostname
-   homedir
-   port
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
+sub revision {
+   return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      input => [],
+      output => [],
+      db => [],
+      file => [],
+      uri => [],
+      target => [],
+      ctimeout => [],
+      rtimeout => [],
+      datadir => [],
+      username => [],
+      hostname => [],
+      homedir => [],
+      port => [],
+   };
+}
 
 sub require_modules {
    return {
       'Metabricky' => [],
    };
-}
-
-sub revision {
-   return '$Revision$';
 }
 
 sub default_values {

@@ -1,7 +1,7 @@
 #
-# $Id: Ssh2.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# Ssh2 brick
+# remote::ssh2 Brick
 #
 package Metabricky::Brick::Remote::Ssh2;
 use strict;
@@ -9,19 +9,20 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   hostname
-   port
-   username
-   publickey
-   privatekey
-   ssh2
-   _channel
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      hostname => [],
+      port => [],
+      username => [],
+      publickey => [],
+      privatekey => [],
+      ssh2 => [],
+      _channel => [],
+   };
 }
 
 sub require_modules {

@@ -1,5 +1,5 @@
 #
-# $Id: Os.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
 # system::os brick
 #
@@ -9,13 +9,14 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   _uname
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      _uname => [],
+   };
 }
 
 sub require_modules {

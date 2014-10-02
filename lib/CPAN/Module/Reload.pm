@@ -13,30 +13,30 @@ sub check {
     foreach my $entry (map { [ $_, $INC{$_} ] } keys %INC) {
         my($key,$file) = @$entry;
 
-        next if $file eq $INC{"Module/Reload.pm"};  #too confusing
+        next if $file eq $INC{"CPAN/Module/Reload.pm"};  #too confusing
         local $^W = 0;
         my $mtime = (stat $file)[9];
         $Stat{$file} = $^T unless defined $Stat{$file};
 
         if ($Debug >= 3) {
-            warn "CPAN::Module::Reload: stat '$file' got $mtime >? $Stat{$file}\n";
+            CORE::warn "CPAN::Module::Reload: stat '$file' got $mtime >? $Stat{$file}\n";
         }
 
         if ($mtime > $Stat{$file}) {
             delete $INC{$key};
             eval { 
-                local $SIG{__WARN__} = \&warn;
+                local $SIG{__WARN__} = \&CORE::warn;
                 require $key;
             };
             if ($@) {
-                warn "CPAN::Module::Reload: error during reload of '$key': $@\n";
+                CORE::warn "CPAN::Module::Reload: error during reload of '$key': $@\n";
             }
             elsif ($Debug) {
                 if ($Debug == 1) {
-                    warn "CPAN::Module::Reload: process $$ reloaded '$key'\n";
+                    CORE::warn "CPAN::Module::Reload: process $$ reloaded '$key'\n";
                 }
                 if ($Debug >= 2) {
-                    warn("CPAN::Module::Reload: process $$ reloaded '$key' (\@INC=".
+                    CORE::warn("CPAN::Module::Reload: process $$ reloaded '$key' (\@INC=".
                          join(', ',@INC).")\n");
                 }
             }

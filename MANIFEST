@@ -43,6 +43,7 @@ lib/Metabricky/Brick/Server/Agent.pm
 lib/Metabricky/Brick/Shell/History.pm
 lib/Metabricky/Brick/Shell/Meby.pm
 lib/Metabricky/Brick/Shell/Rc.pm
+lib/Metabricky/Brick/Shell/Script.pm
 lib/Metabricky/Brick/Ssdp/Ssdp.pm
 lib/Metabricky/Brick/String/Gzip.pm
 lib/Metabricky/Brick/System/Arp.pm

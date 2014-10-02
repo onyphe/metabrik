@@ -8,10 +8,16 @@ Prio:
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Metabricky
 => Ornitorinc
 
+-> merge default_values into declare_attributes
+
 -> shell::script Brick
 
--> new: shell::history, shell::builtins
-=> new: history: recall a range: history 10-13, will rerun lines 10 to 13
+-> new: shell::builtins
+
+-> new: system::identify
+=> returns Linux/Ubuntu/...
+=> or update system::os to fetch distrib information
+=> new: ubuntu::os, ubuntu::package, and system::os uses ubuntu::os, same for system::package
 
 -> new: declare_attributes {} i/o __PACKAGE__->... Class::Gomor stuff
 
@@ -34,6 +40,7 @@ Prio:
 
 -> string::gzip => string::compress: gzip/gunzip
 -> file::compress: gzip/gunzip
+=> file::zip: => file::compress zip/unzip
 
 -> bug: core::global encoding to set utf8 or anything else
 

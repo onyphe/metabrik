@@ -1,5 +1,5 @@
 #
-# $Id: Metabricky.pm 108 2014-09-22 17:59:52Z gomor $
+# $Id$
 #
 package Metabricky;
 use strict;

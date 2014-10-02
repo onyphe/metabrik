@@ -1,7 +1,7 @@
 #
-# $Id: Route.pm 89 2014-09-17 20:29:29Z gomor $
+# $Id$
 #
-# Route brick
+# system::route Brick
 #
 package Metabricky::Brick::System::Route;
 use strict;
@@ -9,13 +9,14 @@ use warnings;
 
 use base qw(Metabricky::Brick);
 
-our @AS = qw(
-   dnet
-);
-__PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
 sub revision {
    return '$Revision$';
+}
+
+sub declare_attributes {
+   return {
+      dnet => [],
+   };
 }
 
 sub require_modules {
