@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 34) }
+BEGIN { plan(tests => 33) }
 
 ok(sub { eval("use Metabrik::Brik::Address::Netmask");     $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::Audit::Dns");           $@ ? 0 : 1 }, 1, $@);
@@ -27,7 +27,6 @@ ok(sub { eval("use Metabrik::Brik::Remote::Ssh2");         $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::Remote::Tcpdump");      $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::Server::Agent");        $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::Shell::History");       $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Shell::Meby");          $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::Shell::Rc");            $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::Shell::Script");        $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::Ssdp::Ssdp");           $@ ? 0 : 1 }, 1, $@);
