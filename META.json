@@ -57,7 +57,7 @@
       },
       "Metabricky" : {
          "file" : "lib/Metabricky.pm",
-         "version" : "0.97"
+         "version" : "0.98"
       },
       "Metabricky::Brick" : {
          "file" : "lib/Metabricky/Brick.pm"
@@ -186,5 +186,5 @@
          "http://opensource.org/licenses/artistic-license.php"
       ]
    },
-   "version" : "0.97"
+   "version" : "0.98"
 }
