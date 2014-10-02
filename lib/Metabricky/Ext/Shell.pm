@@ -11,8 +11,6 @@ our @AS = qw(
    path_home
    path_cwd
    prompt
-   rc_file
-   history_file
    title
    echo
    debug
@@ -34,8 +32,6 @@ use Metabricky::Brick::File::Find;
 # Exists because we cannot give an argument to Term::Shell::new()
 # Or I didn't found how to do it.
 our $CTX = {};
-our $LoadRcFile = 1;
-our $LoadHistoryFile = 1;
 our $AUTOLOAD;
 
 sub AUTOLOAD {
@@ -161,31 +157,22 @@ sub init {
    $self->_update_path_cwd;
    $self->_update_prompt;
 
-   my $rc_file = $self->rc_file($self->path_home."/.meby_rc");
-   my $history_file = $self->history_file($self->path_home."/.meby_history");
-
-
-   if ($LoadRcFile && -f $rc_file) {
-      open(my $in, '<', $rc_file)
-         or $self->log->fatal("init: can't open rc file [$rc_file]: $!");
-      while (defined(my $line = <$in>)) {
-         next if ($line =~ /^\s*#/);  # Skip comments
-         chomp($line);
-         $self->cmd($line);
+   if ($CTX->is_loaded('shell::rc')) {
+      my $cmd = $CTX->run('shell::rc', 'load');
+      for (@$cmd) {
+         $self->cmd($_);
       }
-      close($in);
    }
 
    # Default: 'us,ue,md,me', see `man 5 termcap' and Term::Cap
    # See also Term::ReadLine LoadTermCap() and ornaments() subs.
    $self->term->ornaments('md,me');
 
-   if ($LoadHistoryFile && $self->term->can('ReadHistory')) {
-      if (-f $history_file) {
-         #print "DEBUG: ReadHistory\n";
-         $self->term->ReadHistory($history_file)
-            or $self->log->fatal("init: can't read history file [$history_file]: $!");
+   if ($CTX->is_loaded('shell::history')) {
+      if ($CTX->get('shell::history', 'shell') eq 'undef') {
+         $CTX->set('shell::history', 'shell', $self);
       }
+      $CTX->run('shell::history', 'load');
    }
 
    # They are loaded when core::context init is performed
@@ -240,29 +227,12 @@ sub cmdloop {
 #
 # Term::Shell::run stuff
 #
-sub run_write_history {
-   my $self = shift;
-
-   if ($self->term->can('WriteHistory') && defined($self->history_file)) {
-      my $r = $self->term->WriteHistory($self->history_file);
-      if (! defined($r)) {
-         $self->log->error("write_history: unable to write history file");
-         return;
-      }
-      #print "DEBUG: WriteHistory ok\n";
-   }
-
-   return 1;
-}
-
-sub comp_write_history {
-   return ();
-}
-
 sub run_exit {
    my $self = shift;
 
-   $self->run_write_history;
+   if ($CTX->is_loaded('shell::history')) {
+      $CTX->run('shell::history', 'write');
+   } 
 
    return $self->stoploop;
 }
@@ -356,15 +326,30 @@ sub run_history {
    my $self = shift;
    my ($c) = @_;
 
-   my @history = $self->term->GetHistory;
-   if (defined($c)) {
-      return $self->cmd($history[$c]);
+   if (! $CTX->is_loaded('shell::history')) {
+      return 1;
    }
+
+   # We want to exec some history command(s)
+   if (defined($c)) {
+      my $history = [];
+      if ($c =~ /^\d+$/) {
+         $history = $CTX->run('shell::history', 'get_one', $c);
+         $self->cmd($history);
+      }
+      elsif ($c =~ /^\d+\.\.\d+$/) {
+         $history = $CTX->run('shell::history', 'get_range', $c);
+         for (@$history) {
+            $self->cmd($_);
+         }
+      }
+   }
+   # We just want to display history
    else {
-      my $c = 0;
-      for (@history) {
-         $self->log->info("[$c] $_");
-         $c++;
+      my $history = $CTX->run('shell::history', 'get');
+      my $count = 0;
+      for (@$history) {
+         $self->log->info("[".$count++."] $_");
       }
    }
 

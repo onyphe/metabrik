@@ -25,14 +25,14 @@ my $script = shift;
 my $context = Metabricky::Brick::Core::Context->new;
 $context->init or return;
 
-$context->load('shell::meby') or return;
-
 if (defined($script)) {
-   $context->set('shell::meby', 'load_history_file', 0);
-   $context->set('shell::meby', 'load_rc_file', 0);
+   $context->load('shell::meby') or return;
    $context->run('shell::meby', 'script', $script);
 }
 else {
+   $context->load('shell::rc') or return;
+   $context->load('shell::meby') or return;
+
    # ASCII art courtesy: http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Metabricky
    print<<EOF
 

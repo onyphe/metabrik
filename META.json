@@ -4,7 +4,7 @@
       "GomoR <gomor_at_metabricky.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.132510",
+   "generated_by" : "Module::Build version 0.421",
    "license" : [
       "artistic_1"
    ],
@@ -16,7 +16,7 @@
    "prereqs" : {
       "configure" : {
          "requires" : {
-            "Module::Build" : "0.40"
+            "Module::Build" : "0.42"
          }
       },
       "runtime" : {
@@ -149,8 +149,14 @@
       "Metabricky::Brick::Server::Agent::Server" : {
          "file" : "lib/Metabricky/Brick/Server/Agent.pm"
       },
+      "Metabricky::Brick::Shell::History" : {
+         "file" : "lib/Metabricky/Brick/Shell/History.pm"
+      },
       "Metabricky::Brick::Shell::Meby" : {
          "file" : "lib/Metabricky/Brick/Shell/Meby.pm"
+      },
+      "Metabricky::Brick::Shell::Rc" : {
+         "file" : "lib/Metabricky/Brick/Shell/Rc.pm"
       },
       "Metabricky::Brick::Ssdp::Ssdp" : {
          "file" : "lib/Metabricky/Brick/Ssdp/Ssdp.pm"
@@ -177,7 +183,7 @@
    "release_status" : "stable",
    "resources" : {
       "license" : [
-         "http://www.perlfoundation.org/artistic_license_1_0"
+         "http://opensource.org/licenses/artistic-license.php"
       ]
    },
    "version" : "0.97"

@@ -21,6 +21,7 @@ our @AS = qw(
    datadir
    username
    hostname
+   homedir
    port
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
@@ -48,6 +49,7 @@ sub default_values {
       datadir => '/tmp',
       username => $ENV{USER} || 'root',
       hostname => 'localhost',
+      homedir => $ENV{HOME} || '/tmp',
       port => 80,
    };
 }
@@ -66,6 +68,7 @@ sub help {
       'set:username' => '<username>',
       'set:hostname' => '<hostname>',
       'set:port' => '<port>',
+      'set:homedir' => '<directory>',
       'run:metabricky_version' => '',
    };
 }

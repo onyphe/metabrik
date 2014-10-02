@@ -9,8 +9,6 @@ use base qw(Metabricky::Brick);
 
 our @AS = qw(
    echo
-   load_rc_file
-   load_history_file
    _shell
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
@@ -66,8 +64,6 @@ sub require_modules {
 sub help {
    return {
       'set:echo' => '<0|1>',
-      'set:load_rc_file' => '<0|1>',
-      'set:load_history_file' => '<0|1>',
       'run:version' => '',
       'run:title' => '<title>',
       'run:cmd' => '<cmd>',
@@ -94,8 +90,6 @@ sub help {
 sub default_values {
    return {
       echo => 1,
-      load_rc_file => 1,
-      load_history_file => 1,
    };
 }
 
@@ -105,8 +99,6 @@ sub init {
    ) or return 1; # Init already done
 
    $Metabricky::Ext::Shell::CTX = $self->context;
-   $Metabricky::Ext::Shell::LoadRcFile = $self->load_rc_file;
-   $Metabricky::Ext::Shell::LoadHistoryFile = $self->load_history_file;
 
    my $shell = Metabricky::Ext::Shell->new;
    $shell->echo($self->echo);

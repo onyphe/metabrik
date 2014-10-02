@@ -45,14 +45,13 @@ sub default_values {
 
 sub _msg {
    my $self = shift;
-   my ($msg) = @_;
+   my ($brick, $msg) = @_;
 
    $msg ||= 'undef';
 
-   my ($package) = lc(caller());
-   $package =~ s/^metabricky::brick:://;
+   $brick =~ s/^metabricky::brick:://i;
 
-   return "$package: $msg\n";
+   return lc($brick).": $msg\n";
 }
 
 sub warning {
@@ -66,7 +65,7 @@ sub warning {
       print "[!] ";
    }
 
-   print $self->_msg($msg);
+   print $self->_msg(my ($caller) = caller(), $msg);
 
    return 1;
 }
@@ -82,7 +81,7 @@ sub error {
       print "[-] ";
    }
 
-   print $self->_msg($msg);
+   print $self->_msg(my ($caller) = caller(), $msg);
 
    return;
 }
@@ -98,7 +97,7 @@ sub fatal {
       print "[F] ";
    }
 
-   die($self->_msg($msg));
+   die($self->_msg(my ($caller) = caller(), $msg));
 }
 
 sub info {
@@ -132,7 +131,7 @@ sub verbose {
       print "[+] ";
    }
 
-   print $self->_msg($msg);
+   print $self->_msg(my ($caller) = caller(), $msg);
 
    return 1;
 }
@@ -163,7 +162,7 @@ sub debug {
             print "[D] ";
          }
 
-         print $self->_msg($msg);
+         print $self->_msg(my ($caller) = caller(), $msg);
       }
    }
 

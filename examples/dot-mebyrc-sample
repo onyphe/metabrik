@@ -1,3 +1,6 @@
+# If you want history to be enabled
+load shell::history
+
 set core::log level 3
 
 # Change terminal title
@@ -41,5 +44,6 @@ load category::mybrick
 
 set shell::meby echo 1
 
-alias ls "ls -F"
-alias ll "ls -lF"
+# Define your aliases
+alias ls "shell ls -F"
+alias ll "shell ls -lF"

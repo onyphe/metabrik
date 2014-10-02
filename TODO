@@ -8,10 +8,25 @@ Prio:
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Metabricky
 => Ornitorinc
 
+-> shell::script Brick
+
 -> new: shell::history, shell::builtins
 => new: history: recall a range: history 10-13, will rerun lines 10 to 13
 
+-> new: declare_attributes {} i/o __PACKAGE__->... Class::Gomor stuff
+
+-> new: add subcategory:
+=> repository::category::subcategory::name
+=> repository::category::name
+=> category::subcategory::name
+=> category::name
+
 -> rename: load to use?
+
+-> new: load_if_not_loaded, run_if_loaded, set_if_loaded, get_if_loaded
+==> use_if_not_used, run_if_used, ...
+
+-> rename: meby to maby (MetABrickY)?
 
 -> new: getopt for bin/meby
 

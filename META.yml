@@ -4,39 +4,39 @@ author:
   - 'GomoR <gomor_at_metabricky.org>'
 build_requires: {}
 configure_requires:
-  Module::Build: 0.40
+  Module::Build: '0.42'
 dynamic_config: 1
-generated_by: 'Module::Build version 0.4003, CPAN::Meta::Converter version 2.132510'
+generated_by: 'Module::Build version 0.421, CPAN::Meta::Converter version 2.142690'
 license: artistic
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
+  version: '1.4'
 name: Metabricky
 provides:
   CPAN::Class::Gomor:
     file: lib/CPAN/Class/Gomor.pm
-    version: 1.02
+    version: '1.02'
   CPAN::Class::Gomor::Hash:
     file: lib/CPAN/Class/Gomor/Hash.pm
-    version: 1.02
+    version: '1.02'
   CPAN::Data::Dump:
     file: lib/CPAN/Data/Dump.pm
-    version: 1.22
+    version: '1.22'
   CPAN::Lexical::Persistence:
     file: lib/CPAN/Lexical/Persistence.pm
-    version: 1.020
+    version: '1.020'
   CPAN::Module::Reload:
     file: lib/CPAN/Module/Reload.pm
-    version: 1.08
+    version: '1.08'
   CPAN::Term::Shell:
     file: lib/CPAN/Term/Shell.pm
-    version: 0.06
+    version: '0.06'
   CPAN::Term::Shell::OnScopeLeave:
     file: lib/CPAN/Term/Shell.pm
-    version: 0.06
+    version: '0.06'
   Metabricky:
     file: lib/Metabricky.pm
-    version: 0.97
+    version: '0.97'
   Metabricky::Brick:
     file: lib/Metabricky/Brick.pm
   Metabricky::Brick::Address::Netmask:
@@ -97,8 +97,12 @@ provides:
     file: lib/Metabricky/Brick/Server/Agent.pm
   Metabricky::Brick::Server::Agent::Server:
     file: lib/Metabricky/Brick/Server/Agent.pm
+  Metabricky::Brick::Shell::History:
+    file: lib/Metabricky/Brick/Shell/History.pm
   Metabricky::Brick::Shell::Meby:
     file: lib/Metabricky/Brick/Shell/Meby.pm
+  Metabricky::Brick::Shell::Rc:
+    file: lib/Metabricky/Brick/Shell/Rc.pm
   Metabricky::Brick::Ssdp::Ssdp:
     file: lib/Metabricky/Brick/Ssdp/Ssdp.pm
   Metabricky::Brick::String::Gzip:
@@ -114,8 +118,8 @@ provides:
   Metabricky::Ext::Utils:
     file: lib/Metabricky/Ext/Utils.pm
 requires:
-  File::HomeDir: 0
-  IPC::Run: 0
+  File::HomeDir: '0'
+  IPC::Run: '0'
 resources:
-  license: http://www.perlfoundation.org/artistic_license_1_0
-version: 0.97
+  license: http://opensource.org/licenses/artistic-license.php
+version: '0.97'

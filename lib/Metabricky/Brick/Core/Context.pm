@@ -348,7 +348,7 @@ sub load {
       if ($@) {
          chomp($@);
          $ERR = 1;
-         my $MSG = "load: unable to use module [$__ctx_module]: $@";
+         my $MSG = "load: unable to load Brick [$__ctx_brick]: $@";
          die("$MSG\n");
       }
 
