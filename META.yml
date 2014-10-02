@@ -1,7 +1,7 @@
 ---
 abstract: 'formerly PerL Awesome SHell, Yeeeeaaaaaa!'
 author:
-  - 'GomoR <gomor_at_Metabrik.org>'
+  - 'GomoR <gomor_at_metabrik.org>'
 build_requires: {}
 configure_requires:
   Module::Build: '0.42'
@@ -39,80 +39,30 @@ provides:
     version: '0.98'
   Metabrik::Brik:
     file: lib/Metabrik/Brik.pm
-  Metabrik::Brik::Address::Netmask:
-    file: lib/Metabrik/Brik/Address/Netmask.pm
-  Metabrik::Brik::Audit::Dns:
-    file: lib/Metabrik/Brik/Audit/Dns.pm
   Metabrik::Brik::Core::Context:
     file: lib/Metabrik/Brik/Core/Context.pm
   Metabrik::Brik::Core::Global:
     file: lib/Metabrik/Brik/Core/Global.pm
   Metabrik::Brik::Core::Log:
     file: lib/Metabrik/Brik/Core/Log.pm
-  Metabrik::Brik::Crypto::Aes:
-    file: lib/Metabrik/Brik/Crypto/Aes.pm
-  Metabrik::Brik::Database::Cwe:
-    file: lib/Metabrik/Brik/Database/Cwe.pm
-  Metabrik::Brik::Database::Keystore:
-    file: lib/Metabrik/Brik/Database/Keystore.pm
-  Metabrik::Brik::Database::Nvd:
-    file: lib/Metabrik/Brik/Database/Nvd.pm
-  Metabrik::Brik::Database::Sqlite:
-    file: lib/Metabrik/Brik/Database/Sqlite.pm
-  Metabrik::Brik::Database::Vfeed:
-    file: lib/Metabrik/Brik/Database/Vfeed.pm
-  Metabrik::Brik::Encoding::Base64:
-    file: lib/Metabrik/Brik/Encoding/Base64.pm
+  Metabrik::Brik::Core::Shell:
+    file: lib/Metabrik/Brik/Core/Shell.pm
   Metabrik::Brik::Example::Template:
     file: lib/Metabrik/Brik/Example/Template.pm
-  Metabrik::Brik::File::Create:
-    file: lib/Metabrik/Brik/File/Create.pm
-  Metabrik::Brik::File::Fetch:
-    file: lib/Metabrik/Brik/File/Fetch.pm
   Metabrik::Brik::File::Find:
     file: lib/Metabrik/Brik/File/Find.pm
   Metabrik::Brik::File::Read:
     file: lib/Metabrik/Brik/File/Read.pm
   Metabrik::Brik::File::Write:
     file: lib/Metabrik/Brik/File/Write.pm
-  Metabrik::Brik::File::Zip:
-    file: lib/Metabrik/Brik/File/Zip.pm
-  Metabrik::Brik::Http::Proxy:
-    file: lib/Metabrik/Brik/Http/Proxy.pm
-  Metabrik::Brik::Http::Www:
-    file: lib/Metabrik/Brik/Http/Www.pm
-  Metabrik::Brik::Http::Wwwutil:
-    file: lib/Metabrik/Brik/Http/Wwwutil.pm
-  Metabrik::Brik::Identify::Ssh:
-    file: lib/Metabrik/Brik/Identify/Ssh.pm
-  Metabrik::Brik::Netbios::Name:
-    file: lib/Metabrik/Brik/Netbios/Name.pm
-  Metabrik::Brik::Network::Frame:
-    file: lib/Metabrik/Brik/Network/Frame.pm
   Metabrik::Brik::Remote::Ssh2:
     file: lib/Metabrik/Brik/Remote/Ssh2.pm
-  Metabrik::Brik::Remote::Tcpdump:
-    file: lib/Metabrik/Brik/Remote/Tcpdump.pm
-  Metabrik::Brik::Server::Agent:
-    file: lib/Metabrik/Brik/Server/Agent.pm
-  Metabrik::Brik::Server::Agent::Server:
-    file: lib/Metabrik/Brik/Server/Agent.pm
   Metabrik::Brik::Shell::History:
     file: lib/Metabrik/Brik/Shell/History.pm
-  Metabrik::Brik::Shell::Meby:
-    file: lib/Metabrik/Brik/Shell/Meby.pm
   Metabrik::Brik::Shell::Rc:
     file: lib/Metabrik/Brik/Shell/Rc.pm
-  Metabrik::Brik::Ssdp::Ssdp:
-    file: lib/Metabrik/Brik/Ssdp/Ssdp.pm
-  Metabrik::Brik::String::Gzip:
-    file: lib/Metabrik/Brik/String/Gzip.pm
-  Metabrik::Brik::System::Arp:
-    file: lib/Metabrik/Brik/System/Arp.pm
-  Metabrik::Brik::System::Os:
-    file: lib/Metabrik/Brik/System/Os.pm
-  Metabrik::Brik::System::Route:
-    file: lib/Metabrik/Brik/System/Route.pm
+  Metabrik::Brik::Shell::Script:
+    file: lib/Metabrik/Brik/Shell/Script.pm
   Metabrik::Ext::Shell:
     file: lib/Metabrik/Ext/Shell.pm
   Metabrik::Ext::Utils:

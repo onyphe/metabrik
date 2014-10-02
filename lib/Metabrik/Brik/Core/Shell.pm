@@ -16,6 +16,7 @@ sub revision {
 sub declare_attributes {
    return {
       echo => [],
+      splash => [],
       _shell => [],
    };
 }
@@ -67,6 +68,7 @@ sub require_modules {
 sub help {
    return {
       'set:echo' => '<0|1>',
+      'set:splash' => '<0|1>',
       'run:version' => '',
       'run:title' => '<title>',
       'run:cmd' => '<cmd>',
@@ -93,6 +95,7 @@ sub help {
 sub default_values {
    return {
       echo => 1,
+      splash => 1,
    };
 }
 

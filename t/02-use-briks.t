@@ -1,36 +1,11 @@
 use Test;
-BEGIN { plan(tests => 33) }
+BEGIN { plan(tests => 8) }
 
-ok(sub { eval("use Metabrik::Brik::Address::Netmask");     $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Audit::Dns");           $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Crypto::Aes");          $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Database::Cwe");        $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Database::Keystore");   $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Database::Nvd");        $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Database::Sqlite");     $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Database::Vfeed");      $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Encoding::Base64");     $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::Example::Template");    $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::File::Create");         $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::File::Fetch");          $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::File::Find");           $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::File::Read");           $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::File::Write");          $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::File::Zip");            $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Http::Proxy");          $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Http::Www");            $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Http::Wwwutil");        $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Identify::Ssh");        $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Netbios::Name");        $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Network::Frame");       $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::Remote::Ssh2");         $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Remote::Tcpdump");      $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Server::Agent");        $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::Shell::History");       $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::Shell::Rc");            $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Brik::Shell::Script");        $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::Ssdp::Ssdp");           $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::String::Gzip");         $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::System::Arp");          $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::System::Os");           $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Brik::System::Route");        $@ ? 0 : 1 }, 1, $@);

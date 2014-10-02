@@ -10,6 +10,8 @@ Prio:
 
 -> new: shell::builtins
 
+-> new: core::shell: splash to disable splash screen
+
 -> new: system::identify
 => returns Linux/Ubuntu/...
 => or update system::os to fetch distrib information
