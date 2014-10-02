@@ -16,7 +16,6 @@ sub revision {
 sub declare_attributes {
    return {
       echo => [],
-      splash => [],
       _shell => [],
    };
 }
@@ -68,8 +67,7 @@ sub require_modules {
 sub help {
    return {
       'set:echo' => '<0|1>',
-      'set:splash' => '<0|1>',
-      'run:version' => '',
+      'run:splash' => '',
       'run:title' => '<title>',
       'run:cmd' => '<cmd>',
       'run:cmdloop' => '',
@@ -95,7 +93,6 @@ sub help {
 sub default_values {
    return {
       echo => 1,
-      splash => 1,
    };
 }
 
@@ -113,6 +110,28 @@ sub init {
    $self->_shell($shell);
 
    return $self;
+}
+
+sub splash {
+   my $self = shift;
+
+   # ASCII art courtesy: http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetabriK
+   print<<EOF
+
+        ███▄ ▄███▓▓█████▄▄▄█████▓ ▄▄▄       ▄▄▄▄    ██▀███   ██▓ ██ ▄█▀
+       ▓██▒▀█▀ ██▒▓█   ▀▓  ██▒ ▓▒▒████▄    ▓█████▄ ▓██ ▒ ██▒▓██▒ ██▄█▒
+       ▓██    ▓██░▒███  ▒ ▓██░ ▒░▒██  ▀█▄  ▒██▒ ▄██▓██ ░▄█ ▒▒██▒▓███▄░
+       ▒██    ▒██ ▒▓█  ▄░ ▓██▓ ░ ░██▄▄▄▄██ ▒██░█▀  ▒██▀▀█▄  ░██░▓██ █▄
+       ▒██▒   ░██▒░▒████▒ ▒██▒ ░  ▓█   ▓██▒░▓█  ▀█▓░██▓ ▒██▒░██░▒██▒ █▄
+       ░ ▒░   ░  ░░░ ▒░ ░ ▒ ░░    ▒▒   ▓▒█░░▒▓███▀▒░ ▒▓ ░▒▓░░▓  ▒ ▒▒ ▓▒
+       ░  ░      ░ ░ ░  ░   ░      ▒   ▒▒ ░▒░▒   ░   ░▒ ░ ▒░ ▒ ░░ ░▒ ▒░
+       ░      ░      ░    ░        ░   ▒    ░    ░   ░░   ░  ▒ ░░ ░░ ░
+              ░      ░  ░              ░  ░ ░         ░      ░  ░  ░
+                                                 ░
+EOF
+;
+
+   return 1;
 }
 
 sub title {

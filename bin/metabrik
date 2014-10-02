@@ -25,6 +25,8 @@ my $script = shift;
 my $context = Metabrik::Brik::Core::Context->new;
 $context->init or return;
 
+$context->run('core::shell', 'splash');
+
 #$context->set('core::log', 'level', 3) or return;
 
 if (defined($script)) {
@@ -44,22 +46,6 @@ if (defined($script)) {
 }
 else {
    $context->use('shell::rc') or return;
-
-   # ASCII art courtesy: http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetabriK
-   print<<EOF
-
-        ███▄ ▄███▓▓█████▄▄▄█████▓ ▄▄▄       ▄▄▄▄    ██▀███   ██▓ ██ ▄█▀
-       ▓██▒▀█▀ ██▒▓█   ▀▓  ██▒ ▓▒▒████▄    ▓█████▄ ▓██ ▒ ██▒▓██▒ ██▄█▒ 
-       ▓██    ▓██░▒███  ▒ ▓██░ ▒░▒██  ▀█▄  ▒██▒ ▄██▓██ ░▄█ ▒▒██▒▓███▄░ 
-       ▒██    ▒██ ▒▓█  ▄░ ▓██▓ ░ ░██▄▄▄▄██ ▒██░█▀  ▒██▀▀█▄  ░██░▓██ █▄ 
-       ▒██▒   ░██▒░▒████▒ ▒██▒ ░  ▓█   ▓██▒░▓█  ▀█▓░██▓ ▒██▒░██░▒██▒ █▄
-       ░ ▒░   ░  ░░░ ▒░ ░ ▒ ░░    ▒▒   ▓▒█░░▒▓███▀▒░ ▒▓ ░▒▓░░▓  ▒ ▒▒ ▓▒
-       ░  ░      ░ ░ ░  ░   ░      ▒   ▒▒ ░▒░▒   ░   ░▒ ░ ▒░ ▒ ░░ ░▒ ▒░
-       ░      ░      ░    ░        ░   ▒    ░    ░   ░░   ░  ▒ ░░ ░░ ░ 
-              ░      ░  ░              ░  ░ ░         ░      ░  ░  ░   
-                                                 ░                     
-EOF
-;
 
    my $version = $context->run('core::global', 'metabrik_version');
 
