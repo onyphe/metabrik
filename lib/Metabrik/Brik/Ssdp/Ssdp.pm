@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# ssdp::ssdp brick
+# ssdp::ssdp brik
 #
-package Metabricky::Brick::Ssdp::Ssdp;
+package Metabrik::Brik::Ssdp::Ssdp;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

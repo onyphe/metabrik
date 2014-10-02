@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package Metabricky;
+package Metabrik;
 use strict;
 use warnings;
 
@@ -15,15 +15,15 @@ __END__
 
 =head1 NAME
 
-Metabricky - formerly PerL Awesome SHell, Yeeeeaaaaaa!
+Metabrik - formerly PerL Awesome SHell, Yeeeeaaaaaa!
 
 =head1 SYNOPSIS
 
-   use Metabricky;
+   use Metabrik;
 
 =head1 DESCRIPTION
 
-Just exports Metabricky $VERSION variable.
+Just exports Metabrik $VERSION variable.
 
 =head2 COMMANDS
 

@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# shell::history Brick
+# shell::history Brik
 #
-package Metabricky::Brick::Shell::History;
+package Metabrik::Brik::Shell::History;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';
@@ -47,7 +47,7 @@ sub init {
    my $shell = $self->shell;
 
    if (! defined($shell)) {
-      return $self->log->error("init: you must give a shell Brick as Attribute");
+      return $self->log->error("init: you must give a shell Brik as Attribute");
    }
 
    return $self;
@@ -60,7 +60,7 @@ sub load {
    my $history_file = $self->history_file;
 
    if (! defined($shell)) {
-      return $self->log->error("load: you must give a shell Brick as Attribute");
+      return $self->log->error("load: you must give a shell Brik as Attribute");
    }
 
    if ($shell->term->can('ReadHistory')) {
@@ -87,7 +87,7 @@ sub write {
    my $history_file = $self->history_file;
 
    if (! defined($shell)) {
-      return $self->log->error("write: you must give a shell Brick as Attribute");
+      return $self->log->error("write: you must give a shell Brik as Attribute");
    }
 
    if ($shell->term->can('WriteHistory')) {
@@ -108,7 +108,7 @@ sub get {
    my $shell = $self->shell;
 
    if (! defined($shell)) {
-      return $self->log->error("get: you must give a shell Brick as Attribute");
+      return $self->log->error("get: you must give a shell Brik as Attribute");
    }
 
    my @history = ();
@@ -135,7 +135,7 @@ sub get_one {
    my $shell = $self->shell;
 
    if (! defined($shell)) {
-      return $self->log->error("get_one: you must give a shell Brick as Attribute");
+      return $self->log->error("get_one: you must give a shell Brik as Attribute");
    }
 
    my $history = '';
@@ -164,7 +164,7 @@ sub get_range {
    my $shell = $self->shell;
 
    if (! defined($shell)) {
-      return $self->log->error("get_range: you must give a shell Brick as Attribute");
+      return $self->log->error("get_range: you must give a shell Brik as Attribute");
    }
 
    my @history = ();

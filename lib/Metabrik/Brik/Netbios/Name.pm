@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# netbios::name Brick
+# netbios::name Brik
 #
-package Metabricky::Brick::Netbios::Name;
+package Metabrik::Brik::Netbios::Name;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

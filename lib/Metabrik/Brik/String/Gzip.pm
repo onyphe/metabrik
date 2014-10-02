@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# string::gzip Brick
+# string::gzip Brik
 #
-package Metabricky::Brick::String::Gzip;
+package Metabrik::Brik::String::Gzip;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';
@@ -91,20 +91,20 @@ __END__
 
 =head1 NAME
 
-Metabricky::Brick::Example::Template - template to write a new Metabricky brick
+Metabrik::Brik::Example::Template - template to write a new Metabriky Brik
 
 =head1 SYNOPSIS
 
-   $ cp lib/Metabricky/Brick/Example/Template.pm ~/myMetabricky/lib/Brick/Category/Mybrick.pm
-   $ vi ~/myMetabricky/lib/Brick/Category/Mybrick.pm
+   $ cp lib/Metabrik/Brik/Example/Template.pm ~/myMetabriky/lib/Brik/Category/Mybrik.pm
+   $ vi ~/myMetabrik/lib/Brik/Category/Mybrik.pm
 
    # From a module
 
-   use Metabricky::Brick::File::Find;
+   use Metabrik::Brik::File::Find;
 
    my $path = join(':', @INC);
-   my $brick = Metabricky::Brick::File::Find->new;
-   my $found = $brick->find($path, '/lib/Metabricky/Brick$', '.pm$');
+   my $brik = Metabrik::Brik::File::Find->new;
+   my $found = $brik->find($path, '/lib/Metabrik/Brik$', '.pm$');
    for my $file (@$found) {
       print "$file\n";
    }
@@ -113,11 +113,11 @@ Metabricky::Brick::Example::Template - template to write a new Metabricky brick
 
    > my $path = join(':', @INC)
    > set file::find path $path
-   > run file::find files /lib/Metabricky/Brick$ .pm$
+   > run file::find files /lib/Metabrik/Brik$ .pm$
 
 =head1 DESCRIPTION
 
-Template to write a new Metabricky brick.
+Template to write a new Metabrik Brik.
 
 =head2 COMMANDS
 

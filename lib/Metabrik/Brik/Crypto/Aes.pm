@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# crypto::aes Brick
+# crypto::aes Brik
 #
-package Metabricky::Brick::Crypto::Aes;
+package Metabrik::Brik::Crypto::Aes;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

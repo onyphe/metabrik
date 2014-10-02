@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# http::wwwutil Brick
+# http::wwwutil Brik
 #
-package Metabricky::Brick::Http::Wwwutil;
+package Metabrik::Brik::Http::Wwwutil;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';
@@ -38,8 +38,8 @@ sub nslookup {
    $mech->agent_alias('Windows Mozilla');
 
    $mech->get(sprintf($url, $host, $ns || '8.8.8.8'));
-   # XXX: give access to bricks
-   #$self->{Metabricky}->{log}->info("HTTP code: ".$mech->status);
+   # XXX: give access to briks
+   #$self->{Metabrik}->{log}->info("HTTP code: ".$mech->status);
 
    my $html = $mech->content;
 

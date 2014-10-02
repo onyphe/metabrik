@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# identify::ssh Brick
+# identify::ssh Brik
 #
-package Metabricky::Brick::Identify::Ssh;
+package Metabrik::Brik::Identify::Ssh;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

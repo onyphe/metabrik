@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# address::netmask Brick
+# address::netmask Brik
 #
-package Metabricky::Brick::Address::Netmask;
+package Metabrik::Brik::Address::Netmask;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub declare_attributes {
    return {

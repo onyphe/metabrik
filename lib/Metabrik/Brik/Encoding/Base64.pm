@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# encoding::base64 Brick
+# encoding::base64 Brik
 #
-package Metabricky::Brick::Encoding::Base64;
+package Metabrik::Brik::Encoding::Base64;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

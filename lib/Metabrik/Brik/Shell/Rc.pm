@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# shell::rc Brick
+# shell::rc Brik
 #
-package Metabricky::Brick::Shell::Rc;
+package Metabrik::Brik::Shell::Rc;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

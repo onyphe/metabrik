@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# remote::ssh2 Brick
+# remote::ssh2 Brik
 #
-package Metabricky::Brick::Remote::Ssh2;
+package Metabrik::Brik::Remote::Ssh2;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

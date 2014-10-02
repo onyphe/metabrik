@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# core::log Brick
+# core::log Brik
 #
-package Metabricky::Brick::Core::Log;
+package Metabrik::Brik::Core::Log;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';
@@ -48,13 +48,13 @@ sub default_values {
 
 sub _msg {
    my $self = shift;
-   my ($brick, $msg) = @_;
+   my ($brik, $msg) = @_;
 
    $msg ||= 'undef';
 
-   $brick =~ s/^metabricky::brick:://i;
+   $brik =~ s/^metabrik::Brik:://i;
 
-   return lc($brick).": $msg\n";
+   return lc($brik).": $msg\n";
 }
 
 sub warning {
@@ -178,13 +178,13 @@ __END__
 
 =head1 NAME
 
-Metabricky::Brick::Core::Log - logging directly on the console
+Metabrik::Brik::Core::Log - logging directly on the console
 
 =head1 SYNOPSIS
 
-   use Metabricky::Brick::Core::Log;
+   use Metabrik::Brik::Core::Log;
 
-   my $log = Metabricky::Brick::Core::Log->new(
+   my $log = Metabrik::Brik::Core::Log->new(
       level => 1,
    );
 

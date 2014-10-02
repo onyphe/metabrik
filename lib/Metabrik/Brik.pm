@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package Metabricky::Brick;
+package Metabrik::Brik;
 use strict;
 use warnings;
 
@@ -57,7 +57,7 @@ sub help_set {
    my $classes = $self->classes;
 
    for my $class (@$classes) {
-      last if $class eq 'Metabricky::Brick';
+      last if $class eq 'Metabrik::Brik';
 
       if (exists($class->help->{"set:$attribute"})) {
          my $help = $class->help->{"set:$attribute"};
@@ -81,7 +81,7 @@ sub help_run {
    my $classes = $self->classes;
 
    for my $class (@$classes) {
-      last if $class eq 'Metabricky::Brick';
+      last if $class eq 'Metabrik::Brik';
 
       if (exists($class->help->{"run:$command"})) {
          my $help = $class->help->{"run:$command"};
@@ -136,14 +136,14 @@ sub new {
       }
    }
 
-   # Set default values for main Brick class
+   # Set default values for main Brik class
    my $this_default = __PACKAGE__->default_values;
    for my $k (keys %$this_default) {
       #next unless defined($self->$k); # Do not overwrite if set on new
       $self->$k($this_default->{$k});
    }
 
-   # Set default values for loaded Brick
+   # Set default values for loaded Brik
    my $default_values = $self->default_values;
    for my $k (keys %$default_values) {
       #next unless defined($self->$k); # Do not overwrite if set on new
@@ -168,15 +168,15 @@ sub new {
       }
    }
 
-   # Not all modules are capable of checking context against loaded bricks
-   # For instance, core::context Brick itselves.
+   # Not all modules are capable of checking context against loaded briks
+   # For instance, core::context Brik itselves.
    if (defined($self->context) && $self->context->can('loaded')) {
       my $error = 0;
       my $loaded = $self->context->loaded;
       my $require_loaded = $self->require_loaded;
-      for my $brick (keys %$require_loaded) {
-         if (! $self->context->is_loaded($brick)) {
-            $self->log->error("new: you must load Brick [$brick] first");
+      for my $brik (keys %$require_loaded) {
+         if (! $self->context->is_loaded($brik)) {
+            $self->log->error("new: you must load Brik [$brik] first");
             $error++;
          }
       }
@@ -207,7 +207,7 @@ sub name {
    my $self = shift;
 
    my $module = lc($self->class);
-   $module =~ s/^metabricky::brick:://;
+   $module =~ s/^metabrik::brik:://;
 
    return $module;
 }
@@ -268,7 +268,7 @@ sub classes {
    my @classes = ();
 
    for my $class (@$ary) {
-      next if ($class !~ /^Metabricky::Brick/);
+      next if ($class !~ /^Metabrik::Brik/);
       push @classes, $class;
    }
 
@@ -290,7 +290,7 @@ sub commands {
       for my $this (keys %$help) {
          my ($command, $name) = split(':', $this);
 
-         next unless $name =~ /^[a-z]/; # Brick Commands always begin with a minuscule
+         next unless $name =~ /^[a-z]/; # Brik Commands always begin with a minuscule
          next if $name =~ /^cg[A-Z]/; # Class::Gomor stuff
          next if $name =~ /^_/; # Internal stuff
          next if $name =~ /^(?:a|b|import|init|new|SUPER::|BEGIN|isa|can|EXPORT|AA|AS|ISA|DESTROY|__ANON__)$/; # Perl stuff
@@ -334,7 +334,7 @@ sub attributes {
       for my $this (keys %$help) {
          my ($command, $name) = split(':', $this);
 
-         next unless $name =~ /^[a-z]/; # Brick Attributes always begin with a minuscule
+         next unless $name =~ /^[a-z]/; # Brik Attributes always begin with a minuscule
          next if $name =~ /^_/; # Internal stuff
 
          if ($command eq 'set') {

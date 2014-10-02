@@ -1,7 +1,7 @@
 ---
 abstract: 'formerly PerL Awesome SHell, Yeeeeaaaaaa!'
 author:
-  - 'GomoR <gomor_at_metabricky.org>'
+  - 'GomoR <gomor_at_Metabrik.org>'
 build_requires: {}
 configure_requires:
   Module::Build: '0.42'
@@ -11,7 +11,7 @@ license: artistic
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: '1.4'
-name: Metabricky
+name: Metabrik
 provides:
   CPAN::Class::Gomor:
     file: lib/CPAN/Class/Gomor.pm
@@ -34,89 +34,89 @@ provides:
   CPAN::Term::Shell::OnScopeLeave:
     file: lib/CPAN/Term/Shell.pm
     version: '0.06'
-  Metabricky:
-    file: lib/Metabricky.pm
+  Metabrik:
+    file: lib/Metabrik.pm
     version: '0.98'
-  Metabricky::Brick:
-    file: lib/Metabricky/Brick.pm
-  Metabricky::Brick::Address::Netmask:
-    file: lib/Metabricky/Brick/Address/Netmask.pm
-  Metabricky::Brick::Audit::Dns:
-    file: lib/Metabricky/Brick/Audit/Dns.pm
-  Metabricky::Brick::Core::Context:
-    file: lib/Metabricky/Brick/Core/Context.pm
-  Metabricky::Brick::Core::Global:
-    file: lib/Metabricky/Brick/Core/Global.pm
-  Metabricky::Brick::Core::Log:
-    file: lib/Metabricky/Brick/Core/Log.pm
-  Metabricky::Brick::Crypto::Aes:
-    file: lib/Metabricky/Brick/Crypto/Aes.pm
-  Metabricky::Brick::Database::Cwe:
-    file: lib/Metabricky/Brick/Database/Cwe.pm
-  Metabricky::Brick::Database::Keystore:
-    file: lib/Metabricky/Brick/Database/Keystore.pm
-  Metabricky::Brick::Database::Nvd:
-    file: lib/Metabricky/Brick/Database/Nvd.pm
-  Metabricky::Brick::Database::Sqlite:
-    file: lib/Metabricky/Brick/Database/Sqlite.pm
-  Metabricky::Brick::Database::Vfeed:
-    file: lib/Metabricky/Brick/Database/Vfeed.pm
-  Metabricky::Brick::Encoding::Base64:
-    file: lib/Metabricky/Brick/Encoding/Base64.pm
-  Metabricky::Brick::Example::Template:
-    file: lib/Metabricky/Brick/Example/Template.pm
-  Metabricky::Brick::File::Create:
-    file: lib/Metabricky/Brick/File/Create.pm
-  Metabricky::Brick::File::Fetch:
-    file: lib/Metabricky/Brick/File/Fetch.pm
-  Metabricky::Brick::File::Find:
-    file: lib/Metabricky/Brick/File/Find.pm
-  Metabricky::Brick::File::Read:
-    file: lib/Metabricky/Brick/File/Read.pm
-  Metabricky::Brick::File::Write:
-    file: lib/Metabricky/Brick/File/Write.pm
-  Metabricky::Brick::File::Zip:
-    file: lib/Metabricky/Brick/File/Zip.pm
-  Metabricky::Brick::Http::Proxy:
-    file: lib/Metabricky/Brick/Http/Proxy.pm
-  Metabricky::Brick::Http::Www:
-    file: lib/Metabricky/Brick/Http/Www.pm
-  Metabricky::Brick::Http::Wwwutil:
-    file: lib/Metabricky/Brick/Http/Wwwutil.pm
-  Metabricky::Brick::Identify::Ssh:
-    file: lib/Metabricky/Brick/Identify/Ssh.pm
-  Metabricky::Brick::Netbios::Name:
-    file: lib/Metabricky/Brick/Netbios/Name.pm
-  Metabricky::Brick::Network::Frame:
-    file: lib/Metabricky/Brick/Network/Frame.pm
-  Metabricky::Brick::Remote::Ssh2:
-    file: lib/Metabricky/Brick/Remote/Ssh2.pm
-  Metabricky::Brick::Remote::Tcpdump:
-    file: lib/Metabricky/Brick/Remote/Tcpdump.pm
-  Metabricky::Brick::Server::Agent:
-    file: lib/Metabricky/Brick/Server/Agent.pm
-  Metabricky::Brick::Server::Agent::Server:
-    file: lib/Metabricky/Brick/Server/Agent.pm
-  Metabricky::Brick::Shell::History:
-    file: lib/Metabricky/Brick/Shell/History.pm
-  Metabricky::Brick::Shell::Meby:
-    file: lib/Metabricky/Brick/Shell/Meby.pm
-  Metabricky::Brick::Shell::Rc:
-    file: lib/Metabricky/Brick/Shell/Rc.pm
-  Metabricky::Brick::Ssdp::Ssdp:
-    file: lib/Metabricky/Brick/Ssdp/Ssdp.pm
-  Metabricky::Brick::String::Gzip:
-    file: lib/Metabricky/Brick/String/Gzip.pm
-  Metabricky::Brick::System::Arp:
-    file: lib/Metabricky/Brick/System/Arp.pm
-  Metabricky::Brick::System::Os:
-    file: lib/Metabricky/Brick/System/Os.pm
-  Metabricky::Brick::System::Route:
-    file: lib/Metabricky/Brick/System/Route.pm
-  Metabricky::Ext::Shell:
-    file: lib/Metabricky/Ext/Shell.pm
-  Metabricky::Ext::Utils:
-    file: lib/Metabricky/Ext/Utils.pm
+  Metabrik::Brik:
+    file: lib/Metabrik/Brik.pm
+  Metabrik::Brik::Address::Netmask:
+    file: lib/Metabrik/Brik/Address/Netmask.pm
+  Metabrik::Brik::Audit::Dns:
+    file: lib/Metabrik/Brik/Audit/Dns.pm
+  Metabrik::Brik::Core::Context:
+    file: lib/Metabrik/Brik/Core/Context.pm
+  Metabrik::Brik::Core::Global:
+    file: lib/Metabrik/Brik/Core/Global.pm
+  Metabrik::Brik::Core::Log:
+    file: lib/Metabrik/Brik/Core/Log.pm
+  Metabrik::Brik::Crypto::Aes:
+    file: lib/Metabrik/Brik/Crypto/Aes.pm
+  Metabrik::Brik::Database::Cwe:
+    file: lib/Metabrik/Brik/Database/Cwe.pm
+  Metabrik::Brik::Database::Keystore:
+    file: lib/Metabrik/Brik/Database/Keystore.pm
+  Metabrik::Brik::Database::Nvd:
+    file: lib/Metabrik/Brik/Database/Nvd.pm
+  Metabrik::Brik::Database::Sqlite:
+    file: lib/Metabrik/Brik/Database/Sqlite.pm
+  Metabrik::Brik::Database::Vfeed:
+    file: lib/Metabrik/Brik/Database/Vfeed.pm
+  Metabrik::Brik::Encoding::Base64:
+    file: lib/Metabrik/Brik/Encoding/Base64.pm
+  Metabrik::Brik::Example::Template:
+    file: lib/Metabrik/Brik/Example/Template.pm
+  Metabrik::Brik::File::Create:
+    file: lib/Metabrik/Brik/File/Create.pm
+  Metabrik::Brik::File::Fetch:
+    file: lib/Metabrik/Brik/File/Fetch.pm
+  Metabrik::Brik::File::Find:
+    file: lib/Metabrik/Brik/File/Find.pm
+  Metabrik::Brik::File::Read:
+    file: lib/Metabrik/Brik/File/Read.pm
+  Metabrik::Brik::File::Write:
+    file: lib/Metabrik/Brik/File/Write.pm
+  Metabrik::Brik::File::Zip:
+    file: lib/Metabrik/Brik/File/Zip.pm
+  Metabrik::Brik::Http::Proxy:
+    file: lib/Metabrik/Brik/Http/Proxy.pm
+  Metabrik::Brik::Http::Www:
+    file: lib/Metabrik/Brik/Http/Www.pm
+  Metabrik::Brik::Http::Wwwutil:
+    file: lib/Metabrik/Brik/Http/Wwwutil.pm
+  Metabrik::Brik::Identify::Ssh:
+    file: lib/Metabrik/Brik/Identify/Ssh.pm
+  Metabrik::Brik::Netbios::Name:
+    file: lib/Metabrik/Brik/Netbios/Name.pm
+  Metabrik::Brik::Network::Frame:
+    file: lib/Metabrik/Brik/Network/Frame.pm
+  Metabrik::Brik::Remote::Ssh2:
+    file: lib/Metabrik/Brik/Remote/Ssh2.pm
+  Metabrik::Brik::Remote::Tcpdump:
+    file: lib/Metabrik/Brik/Remote/Tcpdump.pm
+  Metabrik::Brik::Server::Agent:
+    file: lib/Metabrik/Brik/Server/Agent.pm
+  Metabrik::Brik::Server::Agent::Server:
+    file: lib/Metabrik/Brik/Server/Agent.pm
+  Metabrik::Brik::Shell::History:
+    file: lib/Metabrik/Brik/Shell/History.pm
+  Metabrik::Brik::Shell::Meby:
+    file: lib/Metabrik/Brik/Shell/Meby.pm
+  Metabrik::Brik::Shell::Rc:
+    file: lib/Metabrik/Brik/Shell/Rc.pm
+  Metabrik::Brik::Ssdp::Ssdp:
+    file: lib/Metabrik/Brik/Ssdp/Ssdp.pm
+  Metabrik::Brik::String::Gzip:
+    file: lib/Metabrik/Brik/String/Gzip.pm
+  Metabrik::Brik::System::Arp:
+    file: lib/Metabrik/Brik/System/Arp.pm
+  Metabrik::Brik::System::Os:
+    file: lib/Metabrik/Brik/System/Os.pm
+  Metabrik::Brik::System::Route:
+    file: lib/Metabrik/Brik/System/Route.pm
+  Metabrik::Ext::Shell:
+    file: lib/Metabrik/Ext/Shell.pm
+  Metabrik::Ext::Utils:
+    file: lib/Metabrik/Ext/Utils.pm
 requires:
   File::HomeDir: '0'
   IPC::Run: '0'

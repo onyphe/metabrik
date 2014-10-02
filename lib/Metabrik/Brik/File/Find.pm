@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# file::find Brick
+# file::find Brik
 #
-package Metabricky::Brick::File::Find;
+package Metabrik::Brik::File::Find;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';
@@ -157,21 +157,21 @@ __END__
 
 =head1 NAME
 
-Metabricky::Brick::File::Find - brick to find some files using pattern matching
+Metabrik::Brik::File::Find - brik to find some files using pattern matching
 
 =head1 SYNOPSIS
 
    # From a module
 
-   use Metabricky::Brick::File::Find;
+   use Metabrik::Brik::File::Find;
 
    my $path = join(':', @INC);
 
-   my $brick = Metabricky::Brick::File::Find->new;
-   $brick->recusrive(1);
-   $brick->path($path);
+   my $brik = Metabrik::Brik::File::Find->new;
+   $brik->recusrive(1);
+   $brik->path($path);
 
-   my $found = $brick->find('/lib/Metabricky/Brick$', '.pm$');
+   my $found = $brik->find('/lib/Metabrik/Brik$', '.pm$');
    for my $file (@$found) {
       print "$file\n";
    }
@@ -181,11 +181,11 @@ Metabricky::Brick::File::Find - brick to find some files using pattern matching
    > my $path = join(':', @INC)
    > set file::find path $path
    > set file::find recursive 1
-   > run file::find files /lib/Metabricky/Brick$ .pm$
+   > run file::find files /lib/Metabrik/Brik$ .pm$
 
 =head1 DESCRIPTION
 
-Brick to find some files using pattern matching.
+Brik to find some files using pattern matching.
 
 =head2 ATTRIBUTES
 

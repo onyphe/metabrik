@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# database::vfeed Brick
+# database::vfeed Brik
 #
-package Metabricky::Brick::Database::Vfeed;
+package Metabrik::Brik::Database::Vfeed;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

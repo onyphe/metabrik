@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# file::zip brick
+# file::zip brik
 #
-package Metabricky::Brick::File::Zip;
+package Metabrik::Brik::File::Zip;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

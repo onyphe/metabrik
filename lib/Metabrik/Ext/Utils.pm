@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-package Metabricky::Ext::Utils;
+package Metabrik::Ext::Utils;
 use strict;
 use warnings;
 

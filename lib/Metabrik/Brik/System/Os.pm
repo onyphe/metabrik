@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# system::os brick
+# system::os brik
 #
-package Metabricky::Brick::System::Os;
+package Metabrik::Brik::System::Os;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

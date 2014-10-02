@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# Agent brick
+# server::agent Brik
 #
-package Metabricky::Brick::Server::Agent;
+package Metabrik::Brik::Server::Agent;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';
@@ -43,13 +43,13 @@ sub listen {
 
    my $port = $self->port;
 
-   return Metabricky::Brick::Server::Agent::Server->run(
+   return Metabrik::Brik::Server::Agent::Server->run(
       port => $port,
       ipv => '*',
    );
 }
 
-package Metabricky::Brick::Server::Agent::Server;
+package Metabrik::Brik::Server::Agent::Server;
 use strict;
 use warnings;
 

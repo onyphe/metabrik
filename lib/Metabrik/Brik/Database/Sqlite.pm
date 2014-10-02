@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# database::sqlite Brick
+# database::sqlite Brik
 #
-package Metabricky::Brick::Database::Sqlite;
+package Metabrik::Brik::Database::Sqlite;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

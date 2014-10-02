@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# file::create Brick
+# file::create Brik
 #
-package Metabricky::Brick::File::Create;
+package Metabrik::Brik::File::Create;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';
@@ -61,7 +61,7 @@ __END__
 
 =head1 NAME
 
-Metabricky::Brick::File::Create - Brick to create files in different manners
+Metabrik::Brik::File::Create - Brik to create files in different manners
 
 =head1 COPYRIGHT AND LICENSE
 

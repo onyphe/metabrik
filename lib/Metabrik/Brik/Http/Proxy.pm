@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# http::proxy Brick
+# http::proxy Brik
 #
-package Metabricky::Brick::Http::Proxy;
+package Metabrik::Brik::Http::Proxy;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

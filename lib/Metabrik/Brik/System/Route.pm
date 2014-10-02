@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# system::route Brick
+# system::route Brik
 #
-package Metabricky::Brick::System::Route;
+package Metabrik::Brik::System::Route;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

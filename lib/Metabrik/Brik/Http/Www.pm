@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# http::www Brick
+# http::www Brik
 #
-package Metabricky::Brick::Http::Www;
+package Metabrik::Brik::Http::Www;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

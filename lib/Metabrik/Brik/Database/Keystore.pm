@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# database::keystore Brick
+# database::keystore Brik
 #
-package Metabricky::Brick::Database::Keystore;
+package Metabrik::Brik::Database::Keystore;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

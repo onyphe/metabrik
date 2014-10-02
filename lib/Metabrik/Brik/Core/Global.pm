@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# core::global Brick
+# core::global Brik
 #
-package Metabricky::Brick::Core::Global;
+package Metabrik::Brik::Core::Global;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';
@@ -33,7 +33,7 @@ sub declare_attributes {
 
 sub require_modules {
    return {
-      'Metabricky' => [],
+      'Metabrik' => [],
    };
 }
 
@@ -70,14 +70,14 @@ sub help {
       'set:hostname' => '<hostname>',
       'set:port' => '<port>',
       'set:homedir' => '<directory>',
-      'run:metabricky_version' => '',
+      'run:metabrik_version' => '',
    };
 }
 
-sub metabricky_version {
+sub metabrik_version {
    my $self = shift;
 
-   return $Metabricky::VERSION;
+   return $Metabrik::VERSION;
 }
 
 1;

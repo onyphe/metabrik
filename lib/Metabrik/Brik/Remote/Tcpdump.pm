@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# remote::tcpdump Brick
+# remote::tcpdump Brik
 #
-package Metabricky::Brick::Remote::Tcpdump;
+package Metabrik::Brik::Remote::Tcpdump;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick::Remote::Ssh2);
+use base qw(Metabrik::Brik::Remote::Ssh2);
 
 sub revision {
    return '$Revision$';

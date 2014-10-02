@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# database::nvd Brick
+# database::nvd Brik
 #
-package Metabricky::Brick::Database::Nvd;
+package Metabrik::Brik::Database::Nvd;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';
@@ -27,8 +27,8 @@ sub declare_attributes {
 
 sub require_modules {
    return {
-      'Metabricky::Brick::File::Fetch' => [],
-      'Metabricky::Brick::File::Read' => [],
+      'Metabrik::Brik::File::Fetch' => [],
+      'Metabrik::Brik::File::Read' => [],
    };
 }
 
@@ -111,7 +111,7 @@ sub update {
    my $count = scalar @$xml_files;
 
    for my $c (0..$count-1) {
-      my $fetch = Metabricky::Brick::File::Fetch->new(
+      my $fetch = Metabrik::Brik::File::Fetch->new(
          output => $xml_files->[$c],
       );
       $fetch->get($uri_list->[$c]) or $self->log->error("fetch::get: uri[".$uri_list->[$c]."]");
@@ -146,7 +146,7 @@ sub load {
       if (defined($pattern) && $file !~ /$pattern/) {
          next;
       }
-      my $read = Metabricky::Brick::File::Read->new(
+      my $read = Metabrik::Brik::File::Read->new(
          input => $file,
       );
       print "DEBUG Reading file: ".$xml_files->[$c]."\n";

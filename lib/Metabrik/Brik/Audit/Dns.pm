@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# audit::dns Brick
+# audit::dns Brik
 #
-package Metabricky::Brick::Audit::Dns;
+package Metabrik::Brik::Audit::Dns;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# network::frame Brick
+# network::frame Brik
 #
-package Metabricky::Brick::Network::Frame;
+package Metabrik::Brik::Network::Frame;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 # XXX: TODO
 

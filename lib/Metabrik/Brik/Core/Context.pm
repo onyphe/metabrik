@@ -1,11 +1,11 @@
 #
 # $Id$
 #
-package Metabricky::Brick::Core::Context;
+package Metabrik::Brik::Core::Context;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub declare_attributes {
    return {
@@ -20,9 +20,9 @@ sub require_modules {
    return {
       'CPAN::Data::Dump' => [],
       'CPAN::Lexical::Persistence' => [],
-      'Metabricky::Brick::Core::Global' => [],
-      'Metabricky::Brick::Core::Log' => [],
-      'Metabricky::Brick::File::Find' => [],
+      'Metabrik::Brik::Core::Global' => [],
+      'Metabrik::Brik::Core::Log' => [],
+      'Metabrik::Brik::File::Find' => [],
    };
 }
 
@@ -63,16 +63,16 @@ sub revision {
 
 sub help {
    return {
-      'run:load' => '<brick>',
-      'run:set' => '<brick> <attribute> <value>',
-      'run:get' => '<brick> <attribute>',
-      'run:run' => '<brick> <command> [ <arg1 arg2 .. argN> ]',
+      'run:load' => '<brik>',
+      'run:set' => '<brik> <attribute> <value>',
+      'run:get' => '<brik> <attribute>',
+      'run:run' => '<brik> <command> [ <arg1 arg2 .. argN> ]',
       'run:loaded' => '',
-      'run:is_loaded' => '<brick>',
+      'run:is_loaded' => '<brik>',
       'run:find_available' => '',
       'run:update_available' => '',
       'run:available' => '',
-      'run:is_available' => '<brick>',
+      'run:is_available' => '<brik>',
       'run:status' => '',
       'run:variables' => '',
    };
@@ -101,8 +101,8 @@ sub new {
 
          $CTX->{loaded} = {
             'core::context' => $CTX,
-            'core::global' => Metabricky::Brick::Core::Global->new->init,
-            'core::log' => Metabricky::Brick::Core::Log->new->init,
+            'core::global' => Metabrik::Brik::Core::Global->new->init,
+            'core::log' => Metabrik::Brik::Core::Log->new->init,
          };
          $CTX->{available} = { };
          $CTX->{set} = { };
@@ -114,7 +114,7 @@ sub new {
          $CTX->{loaded}->{'core::context'}->{log} = $CTX->{log};
          $CTX->{loaded}->{'core::global'}->{log} = $CTX->{log};
 
-         # When new() was done, bricks was empty. We fix that here.
+         # When new() was done, briks was empty. We fix that here.
          $CTX->{loaded}->{'core::global'}->{context} = $CTX;
          $CTX->{loaded}->{'core::log'}->{context} = $CTX;
 
@@ -143,7 +143,7 @@ sub init {
 
    my $r = $self->update_available;
    if (! defined($r)) {
-      return $self->log->error("init: unable to init Brick [core::context]: update_available failed");
+      return $self->log->error("init: unable to init Brik [core::context]: update_available failed");
    }
 
    return $self;
@@ -245,7 +245,7 @@ sub variables {
 sub find_available {
    my $self = shift;
 
-   my $file_find = Metabricky::Brick::File::Find->new(
+   my $file_find = Metabrik::Brik::File::Find->new(
       context => $self,
       global => $self->global,
       log => $self->log,
@@ -262,16 +262,16 @@ sub find_available {
    $file_find->recursive(1);
    $file_find->debug(1);
 
-   my $found = $file_find->all('Metabricky/Brick/', '.pm$') or return;
+   my $found = $file_find->all('Metabrik/Brik/', '.pm$') or return;
 
    my @available = ();
    for my $this (@{$found->{files}}) {
-      my $brick = lc($this);
-      $brick =~ s/\//::/g;
-      $brick =~ s/^.*::metabricky::brick::(.*?)$/$1/;
-      $brick =~ s/.pm$//;
-      if (length($brick)) {
-         push @available, $brick;
+      my $brik = lc($this);
+      $brik =~ s/\//::/g;
+      $brik =~ s/^.*::metabrik::brik::(.*?)$/$1/;
+      $brik =~ s/.pm$//;
+      if (length($brik)) {
+         push @available, $brik;
       }
    }
 
@@ -296,52 +296,52 @@ sub update_available {
 
 sub load {
    my $self = shift;
-   my ($brick) = @_;
+   my ($brik) = @_;
 
-   if (! defined($brick)) {
+   if (! defined($brik)) {
       return $self->log->info($self->help_run('load'));
    }
 
    my $r = $self->call(sub {
       my %args = @_;
 
-      my $__ctx_brick = $args{brick};
+      my $__ctx_brik = $args{brik};
 
       my $ERR = 0;
 
-      my $__ctx_brick_repository = '';
-      my $__ctx_brick_category = '';
-      my $__ctx_brick_module = '';
+      my $__ctx_brik_repository = '';
+      my $__ctx_brik_category = '';
+      my $__ctx_brik_module = '';
 
-      if ($__ctx_brick =~ /^[a-z0-9]+::[a-z0-9]+$/) {
-         ($__ctx_brick_category, $__ctx_brick_module) = split('::', $__ctx_brick);
+      if ($__ctx_brik =~ /^[a-z0-9]+::[a-z0-9]+$/) {
+         ($__ctx_brik_category, $__ctx_brik_module) = split('::', $__ctx_brik);
       }
-      elsif ($__ctx_brick =~ /^[a-z0-9]+::[a-z0-9]+::[a-z0-9]+$/) {
-         ($__ctx_brick_repository, $__ctx_brick_category, $__ctx_brick_module) = split('::', $__ctx_brick);
+      elsif ($__ctx_brik =~ /^[a-z0-9]+::[a-z0-9]+::[a-z0-9]+$/) {
+         ($__ctx_brik_repository, $__ctx_brik_category, $__ctx_brik_module) = split('::', $__ctx_brik);
       }
       else {
          $ERR = 1;
-         my $MSG = "load: invalid format for Brick [$__ctx_brick]";
+         my $MSG = "load: invalid format for Brik [$__ctx_brik]";
          die("$MSG\n");
       }
 
       if ($CTX->debug) {
-         $CTX->log->debug("repository[$__ctx_brick_repository]");
-         $CTX->log->debug("category[$__ctx_brick_category]");
-         $CTX->log->debug("module[$__ctx_brick_module]");
+         $CTX->log->debug("repository[$__ctx_brik_repository]");
+         $CTX->log->debug("category[$__ctx_brik_category]");
+         $CTX->log->debug("module[$__ctx_brik_module]");
       }
 
-      $__ctx_brick_repository = ucfirst($__ctx_brick_repository);
-      $__ctx_brick_category = ucfirst($__ctx_brick_category);
-      $__ctx_brick_module = ucfirst($__ctx_brick_module);
+      $__ctx_brik_repository = ucfirst($__ctx_brik_repository);
+      $__ctx_brik_category = ucfirst($__ctx_brik_category);
+      $__ctx_brik_module = ucfirst($__ctx_brik_module);
 
-      my $__ctx_module = 'Metabricky::Brick::'.(length($__ctx_brick_repository) ? $__ctx_brick_repository.'::' : '').$__ctx_brick_category.'::'.$__ctx_brick_module;
+      my $__ctx_module = 'Metabrik::Brik::'.(length($__ctx_brik_repository) ? $__ctx_brik_repository.'::' : '').$__ctx_brik_category.'::'.$__ctx_brik_module;
 
-      $CTX->debug && $CTX->log->debug("module2[$__ctx_brick_module]");
+      $CTX->debug && $CTX->log->debug("module2[$__ctx_brik_module]");
 
-      if ($CTX->is_loaded($__ctx_brick)) {
+      if ($CTX->is_loaded($__ctx_brik)) {
          $ERR = 1;
-         my $MSG = "load: Brick [$__ctx_brick] already loaded";
+         my $MSG = "load: Brik [$__ctx_brik] already loaded";
          die("$MSG\n");
       }
 
@@ -349,7 +349,7 @@ sub load {
       if ($@) {
          chomp($@);
          $ERR = 1;
-         my $MSG = "load: unable to load Brick [$__ctx_brick]: $@";
+         my $MSG = "load: unable to load Brik [$__ctx_brik]: $@";
          die("$MSG\n");
       }
 
@@ -361,12 +361,12 @@ sub load {
       #$__ctx_new->init; # No init now. We wait first run() to let set() actions
       if (! defined($__ctx_new)) {
          $ERR = 1;
-         my $MSG = "load: unable to create Brick [$__ctx_brick]";
+         my $MSG = "load: unable to create Brik [$__ctx_brik]";
          die("$MSG\n");
       }
 
-      return $CTX->{loaded}->{$__ctx_brick} = $__ctx_new;
-   }, brick => $brick);
+      return $CTX->{loaded}->{$__ctx_brik} = $__ctx_new;
+   }, brik => $brik);
 
    return $r;
 }
@@ -383,14 +383,14 @@ sub available {
 
 sub is_available {
    my $self = shift;
-   my ($brick) = @_;
+   my ($brik) = @_;
 
-   if (! defined($brick)) {
+   if (! defined($brik)) {
       return $self->log->info($self->help_run('is_available'));
    }
 
    my $available = $self->available;
-   if (exists($available->{$brick})) {
+   if (exists($available->{$brik})) {
       return 1;
    }
 
@@ -409,14 +409,14 @@ sub loaded {
 
 sub is_loaded {
    my $self = shift;
-   my ($brick) = @_;
+   my ($brik) = @_;
 
-   if (! defined($brick)) {
+   if (! defined($brik)) {
       return $self->log->info($self->help_run('is_loaded'));
    }
 
    my $loaded = $self->loaded;
-   if (exists($loaded->{$brick})) {
+   if (exists($loaded->{$brik})) {
       return 1;
    }
 
@@ -444,30 +444,30 @@ sub status {
 
 sub set {
    my $self = shift;
-   my ($brick, $attribute, $value) = @_;
+   my ($brik, $attribute, $value) = @_;
 
-   if (! defined($brick) || ! defined($attribute) || ! defined($value)) {
+   if (! defined($brik) || ! defined($attribute) || ! defined($value)) {
       return $self->log->info($self->help_run('set'));
    }
 
    my $r = $self->call(sub {
       my %args = @_;
 
-      my $__ctx_brick = $args{brick};
+      my $__ctx_brik = $args{brik};
       my $__ctx_attribute = $args{attribute};
       my $__ctx_value = $args{value};
 
       my $ERR = 0;
 
-      if (! $CTX->is_loaded($__ctx_brick)) {
+      if (! $CTX->is_loaded($__ctx_brik)) {
          $ERR = 1;
-         my $MSG = "set: Brick [$__ctx_brick] not loaded";
+         my $MSG = "set: Brik [$__ctx_brik] not loaded";
          die("$MSG\n");
       }
 
-      if (! $CTX->loaded->{$__ctx_brick}->has_attribute($__ctx_attribute)) {
+      if (! $CTX->loaded->{$__ctx_brik}->has_attribute($__ctx_attribute)) {
          $ERR = 1;
-         my $MSG = "set: Brick [$__ctx_brick] has no Attribute [$__ctx_attribute]";
+         my $MSG = "set: Brik [$__ctx_brik] has no Attribute [$__ctx_attribute]";
          die("$MSG\n");
       }
 
@@ -475,90 +475,90 @@ sub set {
          $__ctx_value = eval("\$CTX->_lp->{context}->{_}->{'$1'}");
       }
 
-      $CTX->{loaded}->{$__ctx_brick}->$__ctx_attribute($__ctx_value);
+      $CTX->{loaded}->{$__ctx_brik}->$__ctx_attribute($__ctx_value);
 
-      my $SET = $CTX->{set}->{$__ctx_brick}->{$__ctx_attribute} = $__ctx_value;
+      my $SET = $CTX->{set}->{$__ctx_brik}->{$__ctx_attribute} = $__ctx_value;
 
       my $RES = \$SET;
 
       return $SET;
-   }, brick => $brick, attribute => $attribute, value => $value);
+   }, brik => $brik, attribute => $attribute, value => $value);
 
    return $r;
 }
 
 sub get {
    my $self = shift;
-   my ($brick, $attribute) = @_;
+   my ($brik, $attribute) = @_;
 
-   if (! defined($brick) || ! defined($attribute)) {
+   if (! defined($brik) || ! defined($attribute)) {
       return $self->log->info($self->help_run('get'));
    }
 
    my $r = $self->call(sub {
       my %args = @_;
 
-      my $__ctx_brick = $args{brick};
+      my $__ctx_brik = $args{brik};
       my $__ctx_attribute = $args{attribute};
 
       my $ERR = 0;
 
-      if (! $CTX->is_loaded($__ctx_brick)) {
+      if (! $CTX->is_loaded($__ctx_brik)) {
          $ERR = 1;
-         my $MSG = "set: Brick [$__ctx_brick] not loaded";
+         my $MSG = "set: Brik [$__ctx_brik] not loaded";
          die("$MSG\n");
       }
 
-      if (! $CTX->loaded->{$__ctx_brick}->has_attribute($__ctx_attribute)) {
+      if (! $CTX->loaded->{$__ctx_brik}->has_attribute($__ctx_attribute)) {
          $ERR = 1;
-         my $MSG = "set: Brick [$__ctx_brick] has no Attribute [$__ctx_attribute]";
+         my $MSG = "set: Brik [$__ctx_brik] has no Attribute [$__ctx_attribute]";
          die("$MSG\n");
       }
 
-      if (! defined($CTX->{loaded}->{$__ctx_brick}->$__ctx_attribute)) {
+      if (! defined($CTX->{loaded}->{$__ctx_brik}->$__ctx_attribute)) {
          return my $GET = 'undef';
       }
 
-      my $GET = $CTX->{loaded}->{$__ctx_brick}->$__ctx_attribute;
+      my $GET = $CTX->{loaded}->{$__ctx_brik}->$__ctx_attribute;
 
       my $RES = \$GET;
 
       return $GET;
-   }, brick => $brick, attribute => $attribute);
+   }, brik => $brik, attribute => $attribute);
 
    return $r;
 }
 
 sub run {
    my $self = shift;
-   my ($brick, $command, @args) = @_;
+   my ($brik, $command, @args) = @_;
 
-   if (! defined($brick) || ! defined($command)) {
+   if (! defined($brik) || ! defined($command)) {
       return $self->log->info($self->help_run('run'));
    }
 
    my $r = $self->call(sub {
       my %args = @_;
 
-      my $__ctx_brick = $args{brick};
+      my $__ctx_brik = $args{brik};
       my $__ctx_command = $args{command};
       my @__ctx_args = @{$args{args}};
 
       my $ERR = 0;
 
-      if (! $CTX->is_loaded($__ctx_brick)) {
+      if (! $CTX->is_loaded($__ctx_brik)) {
          $ERR = 1;
-         my $MSG = "run: Brick [$__ctx_brick] not loaded";
+         my $MSG = "run: Brik [$__ctx_brik] not loaded";
          die("$MSG\n");
       }
 
-      if (! $CTX->loaded->{$__ctx_brick}->has_command($__ctx_command)) {
+      if (! $CTX->loaded->{$__ctx_brik}->has_command($__ctx_command)) {
          $ERR = 1;
-         my $MSG = "run: Brick [$__ctx_brick] has no Command [$__ctx_command]";
+         my $MSG = "run: Brik [$__ctx_brik] has no Command [$__ctx_command]";
          die("$MSG\n");
       }
 
-      my $__ctx_run = $CTX->{loaded}->{$__ctx_brick};
+      my $__ctx_run = $CTX->{loaded}->{$__ctx_brik};
 
       $__ctx_run->init; # Will init() only if not already done
 
@@ -576,7 +576,7 @@ sub run {
       my $RES = \$RUN;
 
       return $RUN;
-   }, brick => $brick, command => $command, args => \@args);
+   }, brik => $brik, command => $command, args => \@args);
 
    return $r;
 }

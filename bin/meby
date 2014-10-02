@@ -14,15 +14,15 @@ BEGIN {
    eval("use lib \"$lib\";");
    if ($@) {
       chomp($@);
-      die("[F] meby: unable to load Metabricky libs [$@]\n");
+      die("[F] meby: unable to load Metabrik libs [$@]\n");
    }
 }
 
-use Metabricky::Brick::Core::Context;
+use Metabrik::Brik::Core::Context;
 
 my $script = shift;
 
-my $context = Metabricky::Brick::Core::Context->new;
+my $context = Metabrik::Brik::Core::Context->new;
 $context->init or return;
 
 #$context->set('core::log', 'level', 3) or return;
@@ -47,7 +47,7 @@ else {
    $context->load('shell::rc') or return;
    $context->load('shell::meby') or return;
 
-   # ASCII art courtesy: http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Metabricky
+   # ASCII art courtesy: http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Metabrik
    print<<EOF
 
  ███▄ ▄███▓▓█████▄▄▄█████▓ ▄▄▄       ▄▄▄▄    ██▀███  ██▓ ▄████▄  ██ ▄█▀▓██   ██▓
@@ -64,13 +64,13 @@ else {
 EOF
 ;
 
-   my $version = $context->run('core::global', 'metabricky_version');
+   my $version = $context->run('core::global', 'metabrik_version');
 
-   print "--[ Welcome to Metabricky - Knowledge is in your head, Detail is in the code ]--\n";
+   print "--[ Welcome to Metabrik - Knowledge is in your head, Detail is in the code ]--\n";
    print "--[ Version $version ]--\n";
    print "\n";
 
-   print "    There is a Brick for that.\n\n";
+   print "    There is a Brik for that.\n\n";
 
    $context->run('shell::meby', 'cmdloop');
 }

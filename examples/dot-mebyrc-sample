@@ -4,12 +4,12 @@ load shell::history
 set core::log level 3
 
 # Change terminal title
-title "meby: The Metabricky Shell"
+title "meby: The Metabrik Shell"
 
 my $home = $ENV{HOME}
 my $user = $ENV{USER}
 
-my $datadir = $home."/metabricky/data"
+my $datadir = $home."/metabrik/data"
 
 set core::global datadir $datadir
 set core::global ctimeout 20
@@ -31,16 +31,16 @@ set remote::ssh2 username $user
 set remote::ssh2 publickey $publickey
 set remote::ssh2 privatekey $privatekey
 
-my $vfeed = $home."/metabricky/data/vfeed.db"
+my $vfeed = $home."/metabrik/data/vfeed.db"
 
 load database::vfeed
 set database::vfeed db $vfeed
 
-# Use your own private bricks
+# Use your own private briks
 use lib "$ENV{HOME}/path/to/lib"
 run core::context update_available
 
-load category::mybrick
+load category::mybrik
 
 set shell::meby echo 1
 

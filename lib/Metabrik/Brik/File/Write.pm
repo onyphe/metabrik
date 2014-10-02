@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# file::write Brick
+# file::write Brik
 #
-package Metabricky::Brick::File::Write;
+package Metabrik::Brik::File::Write;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

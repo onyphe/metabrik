@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# database::cwe Brick
+# database::cwe Brik
 #
-package Metabricky::Brick::Database::Cwe;
+package Metabrik::Brik::Database::Cwe;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';
@@ -22,10 +22,10 @@ sub declare_attributes {
 
 sub require_modules {
    return {
-      'Metabricky::Brick::Database::Sqlite' => [],
-      'Metabricky::Brick::File::Fetch' => [],
-      'Metabricky::Brick::File::Read' => [],
-      'Metabricky::Brick::File::Zip' => [],
+      'Metabrik::Brik::Database::Sqlite' => [],
+      'Metabrik::Brik::File::Fetch' => [],
+      'Metabrik::Brik::File::Read' => [],
+      'Metabrik::Brik::File::Zip' => [],
    };
 }
 
@@ -48,14 +48,14 @@ sub update {
 
    my $datadir = $self->global->datadir;
 
-   my $fetch = Metabricky::Brick::File::Fetch->new(
+   my $fetch = Metabrik::Brik::File::Fetch->new(
       output => "$datadir/2000.xml.zip",
    );
 
    $fetch->get('http://cwe.mitre.org/data/xml/views/2000.xml.zip')
       or return $self->log->error("can't fetch file");
 
-   my $zip = Metabricky::Brick::File::Zip->new(
+   my $zip = Metabrik::Brik::File::Zip->new(
       input => "$datadir/2000.xml.zip",
       destdir => $datadir,
    );
@@ -74,7 +74,7 @@ sub load {
       return $self->log->info($self->help_run('update'));
    }
 
-   my $read = Metabricky::Brick::File::Read->new(
+   my $read = Metabrik::Brik::File::Read->new(
       input => $file,
    );
 

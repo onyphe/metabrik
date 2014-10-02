@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# system::arp brick
+# system::arp brik
 #
-package Metabricky::Brick::System::Arp;
+package Metabrik::Brik::System::Arp;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# file::read Brick
+# file::read Brik
 #
-package Metabricky::Brick::File::Read;
+package Metabrik::Brik::File::Read;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';

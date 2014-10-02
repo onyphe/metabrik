@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# shell::meby Brick
+# shell::meby Brik
 #
-package Metabricky::Brick::Shell::Meby;
+package Metabrik::Brik::Shell::Meby;
 use strict;
 use warnings;
 
-use base qw(Metabricky::Brick);
+use base qw(Metabrik::Brik);
 
 sub revision {
    return '$Revision$';
@@ -60,7 +60,7 @@ sub declare_attributes {
 
 sub require_modules {
    return {
-      'Metabricky::Ext::Shell' => [],
+      'Metabrik::Ext::Shell' => [],
    };
 }
 
@@ -82,10 +82,10 @@ sub help {
       'run:su' => '',
       'run:help' => '[ <cmd> ]',
       'run:show' => '',
-      'run:load' => '<brick>',
-      'run:set' => '<brick> <attribute> <value>',
-      'run:get' => '[ <brick> ] [ <attribute> ]',
-      'run:run' => '<brick> <command> [ <arg1:arg2:..:argN> ]',
+      'run:load' => '<brik>',
+      'run:set' => '<brik> <attribute> <value>',
+      'run:get' => '[ <brik> ] [ <attribute> ]',
+      'run:run' => '<brik> <command> [ <arg1:arg2:..:argN> ]',
       'run:exit' => '',
    };
 }
@@ -101,9 +101,9 @@ sub init {
       @_,
    ) or return 1; # Init already done
 
-   $Metabricky::Ext::Shell::CTX = $self->context;
+   $Metabrik::Ext::Shell::CTX = $self->context;
 
-   my $shell = Metabricky::Ext::Shell->new;
+   my $shell = Metabrik::Ext::Shell->new;
    $shell->echo($self->echo);
    $shell->debug($self->debug);
 
@@ -246,7 +246,7 @@ __END__
 
 =head1 NAME
 
-Metabricky::Brick::Shell::Meby - The Metabricky Shell
+Metabrik::Brik::Shell::Meby - The Metabriky Shell
 
 =head1 COPYRIGHT AND LICENSE
 
