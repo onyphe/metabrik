@@ -8,10 +8,6 @@ Prio:
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetaBriky
 => Ornitorinc
 
--> merge default_values into declare_attributes
-
--> shell::script Brik
-
 -> new: shell::builtins
 
 -> new: system::identify
@@ -19,13 +15,12 @@ Prio:
 => or update system::os to fetch distrib information
 => new: ubuntu::os, ubuntu::package, and system::os uses ubuntu::os, same for system::package
 
--> new: declare_attributes {} i/o __PACKAGE__->... Class::Gomor stuff
-
 -> new: add subcategory:
 => repository::category::subcategory::name
 => repository::category::name
 => category::subcategory::name
 => category::name
+==> XXX not sure it is a good idea
 
 -> new: use_if_not_used, run_if_used, set_if_used, get_if_used
 
