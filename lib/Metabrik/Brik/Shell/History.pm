@@ -35,7 +35,7 @@ sub default_values {
    my $self = shift;
 
    return {
-      history_file => $self->global->homedir.'/.meby_history',
+      history_file => $self->global->homedir.'/.metabrik_history',
    };
 }
 

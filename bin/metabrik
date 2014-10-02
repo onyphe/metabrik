@@ -14,7 +14,7 @@ BEGIN {
    eval("use lib \"$lib\";");
    if ($@) {
       chomp($@);
-      die("[F] meby: unable to load Metabrik libs [$@]\n");
+      die("[F] metabrik: unable to load Metabrik libs [$@]\n");
    }
 }
 
@@ -25,7 +25,7 @@ my $script = shift;
 my $context = Metabrik::Brik::Core::Context->new;
 $context->init or return;
 
-$context->load('shell::meby') or return;
+$context->load('core::shell') or return;
 
 #$context->set('core::log', 'level', 3) or return;
 
@@ -33,15 +33,15 @@ if (defined($script)) {
    $context->load('shell::script') or return;
    #$context->set('shell::script', 'file', $script) or return;
    #$context->set('shell::script', 'debug', 1) or return;
-   #$context->set('shell::meby', 'debug', 1) or return;
-   $context->run('shell::meby', 'script', $script) or return;
+   #$context->set('core::shell', 'debug', 1) or return;
+   $context->run('core::shell', 'script', $script) or return;
    #my $cmd = $context->run('shell::script', 'load');
    #for (@$cmd) {
       #print "DEBUG cmd[$_]\n";
       #if (/^exit$/) {
          #exit;
       #}
-      #$context->run('shell::meby', 'cmd', $_);
+      #$context->run('core::shell', 'cmd', $_);
    #}
 }
 else {
@@ -50,16 +50,16 @@ else {
    # ASCII art courtesy: http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetabriK
    print<<EOF
 
- ███▄ ▄███▓▓█████▄▄▄█████▓ ▄▄▄       ▄▄▄▄    ██▀███   ██▓ ██ ▄█▀
-▓██▒▀█▀ ██▒▓█   ▀▓  ██▒ ▓▒▒████▄    ▓█████▄ ▓██ ▒ ██▒▓██▒ ██▄█▒ 
-▓██    ▓██░▒███  ▒ ▓██░ ▒░▒██  ▀█▄  ▒██▒ ▄██▓██ ░▄█ ▒▒██▒▓███▄░ 
-▒██    ▒██ ▒▓█  ▄░ ▓██▓ ░ ░██▄▄▄▄██ ▒██░█▀  ▒██▀▀█▄  ░██░▓██ █▄ 
-▒██▒   ░██▒░▒████▒ ▒██▒ ░  ▓█   ▓██▒░▓█  ▀█▓░██▓ ▒██▒░██░▒██▒ █▄
-░ ▒░   ░  ░░░ ▒░ ░ ▒ ░░    ▒▒   ▓▒█░░▒▓███▀▒░ ▒▓ ░▒▓░░▓  ▒ ▒▒ ▓▒
-░  ░      ░ ░ ░  ░   ░      ▒   ▒▒ ░▒░▒   ░   ░▒ ░ ▒░ ▒ ░░ ░▒ ▒░
-░      ░      ░    ░        ░   ▒    ░    ░   ░░   ░  ▒ ░░ ░░ ░ 
-       ░      ░  ░              ░  ░ ░         ░      ░  ░  ░   
-                                          ░                     
+        ███▄ ▄███▓▓█████▄▄▄█████▓ ▄▄▄       ▄▄▄▄    ██▀███   ██▓ ██ ▄█▀
+       ▓██▒▀█▀ ██▒▓█   ▀▓  ██▒ ▓▒▒████▄    ▓█████▄ ▓██ ▒ ██▒▓██▒ ██▄█▒ 
+       ▓██    ▓██░▒███  ▒ ▓██░ ▒░▒██  ▀█▄  ▒██▒ ▄██▓██ ░▄█ ▒▒██▒▓███▄░ 
+       ▒██    ▒██ ▒▓█  ▄░ ▓██▓ ░ ░██▄▄▄▄██ ▒██░█▀  ▒██▀▀█▄  ░██░▓██ █▄ 
+       ▒██▒   ░██▒░▒████▒ ▒██▒ ░  ▓█   ▓██▒░▓█  ▀█▓░██▓ ▒██▒░██░▒██▒ █▄
+       ░ ▒░   ░  ░░░ ▒░ ░ ▒ ░░    ▒▒   ▓▒█░░▒▓███▀▒░ ▒▓ ░▒▓░░▓  ▒ ▒▒ ▓▒
+       ░  ░      ░ ░ ░  ░   ░      ▒   ▒▒ ░▒░▒   ░   ░▒ ░ ▒░ ▒ ░░ ░▒ ▒░
+       ░      ░      ░    ░        ░   ▒    ░    ░   ░░   ░  ▒ ░░ ░░ ░ 
+              ░      ░  ░              ░  ░ ░         ░      ░  ░  ░   
+                                                 ░                     
 EOF
 ;
 
@@ -71,5 +71,5 @@ EOF
 
    print "    There is a Brik for that.\n\n";
 
-   $context->run('shell::meby', 'cmdloop');
+   $context->run('core::shell', 'cmdloop');
 }

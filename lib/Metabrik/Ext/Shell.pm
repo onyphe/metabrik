@@ -101,7 +101,7 @@ sub _update_prompt {
    else {
       my $cwd = $self->path_cwd;
 
-      my $prompt = "meby $cwd> ";
+      my $prompt = "meta $cwd> ";
       if ($^O =~ /win32/i) {
          $prompt =~ s/> /\$ /;
       }

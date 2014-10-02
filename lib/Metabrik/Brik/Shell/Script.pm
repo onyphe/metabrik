@@ -28,7 +28,7 @@ sub help {
 
 sub default_values {
    return {
-      file => 'script.meby',
+      file => 'script.brik',
    };
 }
 

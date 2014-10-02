@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# shell::meby Brik
+# core::shell Brik
 #
-package Metabrik::Brik::Shell::Meby;
+package Metabrik::Brik::Core::Shell;
 use strict;
 use warnings;
 
@@ -246,7 +246,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Brik::Shell::Meby - The Metabriky Shell
+Metabrik::Brik::Core::Shell - The Metabrik Shell
 
 =head1 COPYRIGHT AND LICENSE
 

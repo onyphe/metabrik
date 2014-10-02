@@ -109,7 +109,7 @@ Metabrik::Brik::Example::Template - template to write a new Metabriky Brik
       print "$file\n";
    }
 
-   # From meby shell
+   # From Metabrik shell
 
    > my $path = join(':', @INC)
    > set file::find path $path

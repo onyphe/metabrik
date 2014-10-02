@@ -4,7 +4,7 @@ load shell::history
 set core::log level 3
 
 # Change terminal title
-title "meby: The Metabrik Shell"
+title "meta: The Metabrik Shell"
 
 my $home = $ENV{HOME}
 my $user = $ENV{USER}
@@ -42,7 +42,7 @@ run core::context update_available
 
 load category::mybrik
 
-set shell::meby echo 1
+set core::shell echo 1
 
 # Define your aliases
 alias ls "shell ls -F"

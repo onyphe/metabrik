@@ -70,11 +70,11 @@ sub process_request {
    my $self = shift;
 
    my $context = $self->{server}->{context};
-   my $meby = $context->loaded->{'shell::meby'};
+   my $shell = $context->loaded->{'core::shell'};
 
    while (<STDIN>) {
       s/[\r\n]+$//;
-      $meby->cmd($_);
+      $shell->cmd($_);
       last if /^\s*quit\s*$/i;
    }
 }

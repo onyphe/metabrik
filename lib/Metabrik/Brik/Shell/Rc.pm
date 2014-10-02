@@ -30,7 +30,7 @@ sub default_values {
    my $self = shift;
 
    return {
-      rc_file => $self->global->homedir.'/.meby_rc',
+      rc_file => $self->global->homedir.'/.metabrik_rc',
    };
 }
 

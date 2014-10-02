@@ -176,7 +176,7 @@ Metabrik::Brik::File::Find - brik to find some files using pattern matching
       print "$file\n";
    }
 
-   # From meby shell
+   # From Metabrik shell
 
    > my $path = join(':', @INC)
    > set file::find path $path
