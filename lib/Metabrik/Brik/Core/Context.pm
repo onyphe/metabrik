@@ -22,6 +22,7 @@ sub require_modules {
       'CPAN::Lexical::Persistence' => [],
       'Metabrik::Brik::Core::Global' => [],
       'Metabrik::Brik::Core::Log' => [],
+      'Metabrik::Brik::Core::Shell' => [],
       'Metabrik::Brik::File::Find' => [],
    };
 }
@@ -87,6 +88,7 @@ sub new {
       my $lp = CPAN::Lexical::Persistence->new;
       $lp->set_context(_ => {
          '$CTX' => 'undef',
+         '$USE' => 'undef',
          '$SET' => 'undef',
          '$GET' => 'undef',
          '$RUN' => 'undef',
@@ -103,24 +105,34 @@ sub new {
             'core::context' => $CTX,
             'core::global' => Metabrik::Brik::Core::Global->new,
             'core::log' => Metabrik::Brik::Core::Log->new,
+            'core::shell' => Metabrik::Brik::Core::Shell->new,
          };
          $CTX->{available} = { };
          $CTX->{set} = { };
+
          $CTX->{log} = $CTX->{used}->{'core::log'};
          $CTX->{global} = $CTX->{used}->{'core::global'};
+         $CTX->{shell} = $CTX->{used}->{'core::shell'};
 
-         # We don't use the log accessor to write the value because we wrote 
-         # our own log accessor.
+         # When new() was done, some Attributes were empty. We fix that here.
          $CTX->{used}->{'core::context'}->{log} = $CTX->{log};
          $CTX->{used}->{'core::global'}->{log} = $CTX->{log};
+         $CTX->{used}->{'core::shell'}->{log} = $CTX->{log};
 
-         # When new() was done, briks was empty. We fix that here.
+         # When new() was done, some Attributes were empty. We fix that here.
          $CTX->{used}->{'core::global'}->{context} = $CTX;
          $CTX->{used}->{'core::log'}->{context} = $CTX;
+         $CTX->{used}->{'core::shell'}->{context} = $CTX;
 
-         # We did put log and context in Attributes, why not also put global:
+         # When new() was done, some Attributes were empty. We fix that here.
          $CTX->{used}->{'core::context'}->{global} = $CTX->{global};
          $CTX->{used}->{'core::log'}->{global} = $CTX->{global};
+         $CTX->{used}->{'core::shell'}->{global} = $CTX->{global};
+
+         # When new() was done, some Attributes were empty. We fix that here.
+         $CTX->{used}->{'core::global'}->{shell} = $CTX->{shell};
+         $CTX->{used}->{'core::context'}->{shell} = $CTX->{shell};
+         $CTX->{used}->{'core::log'}->{shell} = $CTX->{shell};
 
          my $ERR = 0;
 
@@ -308,6 +320,7 @@ sub use {
       my $__ctx_brik = $args{brik};
 
       my $ERR = 0;
+      my $USE = 'undef';
 
       my $__ctx_brik_repository = '';
       my $__ctx_brik_category = '';
@@ -364,6 +377,8 @@ sub use {
          my $MSG = "use: unable to create Brik [$__ctx_brik]";
          die("$MSG\n");
       }
+
+      $USE = $__ctx_brik;
 
       return $CTX->{used}->{$__ctx_brik} = $__ctx_new;
    }, brik => $brik);

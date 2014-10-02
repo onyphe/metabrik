@@ -13,6 +13,7 @@ our @AS = qw(
    context
    global
    log
+   shell
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 

@@ -44,7 +44,7 @@ Prio:
 
 -> review: ext::shell: $used to use is_used and like
 
--> make shell::meby Brik to depend on the fewest module as possible
+-> make core::shell Brik to depend on the fewest module as possible
 
 -> integrate cpanm into MetaBriky
 
@@ -130,7 +130,7 @@ Design rules:
 11. Commands should be non-blocking
 12. Commands to return only base scalars (scalar, hashref, arrayref)
 
--> Within meby Shell, Briks do not print anything by default, except if shell::meby echo is set to true.
+-> Within meta Shell, Briks do not print anything by default, except if core::shell echo is set to true.
 => $_ is written with the result.
 
 Developer rules:
@@ -148,16 +148,16 @@ Vocabulary:
 - The Shell uses Briks
 - Meta is the Metabrik shell
 - You enter Words on shell CLI (run core::context get, 3 words)
-- meby is the MetaBriky shell
+- meta is the Metabrik shell
 - A Brik has Commands (not methods)
 - A Brik has Attributes (you can set using `set' builtin)
 - A Brik Command may have Arguments
 - A Brik is attached to a Category
 - A Brik has a Category
 - A Brik may have a Repository
-- Brikification: process of turning a process/software into a Meby Brik
+- Brikification: process of turning a process/software into a Meta Brik
 => Rename to use that in all code
-- Meby shell can execute Code (Perl code)
+- Meta shell can execute Code (Perl code)
 
 
 Doc:
