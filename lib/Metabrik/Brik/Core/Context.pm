@@ -101,8 +101,8 @@ sub new {
 
          $CTX->{loaded} = {
             'core::context' => $CTX,
-            'core::global' => Metabrik::Brik::Core::Global->new->init,
-            'core::log' => Metabrik::Brik::Core::Log->new->init,
+            'core::global' => Metabrik::Brik::Core::Global->new,
+            'core::log' => Metabrik::Brik::Core::Log->new,
          };
          $CTX->{available} = { };
          $CTX->{set} = { };

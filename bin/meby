@@ -25,10 +25,11 @@ my $script = shift;
 my $context = Metabrik::Brik::Core::Context->new;
 $context->init or return;
 
+$context->load('shell::meby') or return;
+
 #$context->set('core::log', 'level', 3) or return;
 
 if (defined($script)) {
-   $context->load('shell::meby') or return;
    $context->load('shell::script') or return;
    #$context->set('shell::script', 'file', $script) or return;
    #$context->set('shell::script', 'debug', 1) or return;
@@ -45,22 +46,20 @@ if (defined($script)) {
 }
 else {
    $context->load('shell::rc') or return;
-   $context->load('shell::meby') or return;
 
-   # ASCII art courtesy: http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Metabrik
+   # ASCII art courtesy: http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetabriK
    print<<EOF
 
- ███▄ ▄███▓▓█████▄▄▄█████▓ ▄▄▄       ▄▄▄▄    ██▀███  ██▓ ▄████▄  ██ ▄█▀▓██   ██▓
-▓██▒▀█▀ ██▒▓█   ▀▓  ██▒ ▓▒▒████▄    ▓█████▄ ▓██ ▒ ██▓██▒▒██▀ ▀█  ██▄█▒  ▒██  ██▒
-▓██    ▓██░▒███  ▒ ▓██░ ▒░▒██  ▀█▄  ▒██▒ ▄██▓██ ░▄█ ▒██▒▒▓█     ▓███▄░   ▒██ ██░
-▒██    ▒██ ▒▓█  ▄░ ▓██▓ ░ ░██▄▄▄▄██ ▒██░█▀  ▒██▀▀█▄ ░██░▒▓▓▄ ▄█▒▓██ █▄   ░ ▐██▓░
-▒██▒   ░██▒░▒████▒ ▒██▒ ░  ▓█   ▓██▒░▓█  ▀█▓░██▓ ▒██░██░▒ ▓███▀░▒██▒ █▄  ░ ██▒▓░
-░ ▒░   ░  ░░░ ▒░ ░ ▒ ░░    ▒▒   ▓▒█░░▒▓███▀▒░ ▒▓ ░▒▓░▓  ░ ░▒ ▒ ░▒ ▒▒ ▓▒   ██▒▒▒ 
-░  ░      ░ ░ ░  ░   ░      ▒   ▒▒ ░▒░▒   ░   ░▒ ░ ▒ ▒ ░  ░  ▒  ░ ░▒ ▒░ ▓██ ░▒░ 
-░      ░      ░    ░        ░   ▒    ░    ░   ░░   ░ ▒ ░░       ░ ░░ ░  ▒ ▒ ░░  
-       ░      ░  ░              ░  ░ ░         ░     ░  ░ ░     ░  ░    ░ ░     
-                                          ░             ░               ░ ░     
-
+ ███▄ ▄███▓▓█████▄▄▄█████▓ ▄▄▄       ▄▄▄▄    ██▀███   ██▓ ██ ▄█▀
+▓██▒▀█▀ ██▒▓█   ▀▓  ██▒ ▓▒▒████▄    ▓█████▄ ▓██ ▒ ██▒▓██▒ ██▄█▒ 
+▓██    ▓██░▒███  ▒ ▓██░ ▒░▒██  ▀█▄  ▒██▒ ▄██▓██ ░▄█ ▒▒██▒▓███▄░ 
+▒██    ▒██ ▒▓█  ▄░ ▓██▓ ░ ░██▄▄▄▄██ ▒██░█▀  ▒██▀▀█▄  ░██░▓██ █▄ 
+▒██▒   ░██▒░▒████▒ ▒██▒ ░  ▓█   ▓██▒░▓█  ▀█▓░██▓ ▒██▒░██░▒██▒ █▄
+░ ▒░   ░  ░░░ ▒░ ░ ▒ ░░    ▒▒   ▓▒█░░▒▓███▀▒░ ▒▓ ░▒▓░░▓  ▒ ▒▒ ▓▒
+░  ░      ░ ░ ░  ░   ░      ▒   ▒▒ ░▒░▒   ░   ░▒ ░ ▒░ ▒ ░░ ░▒ ▒░
+░      ░      ░    ░        ░   ▒    ░    ░   ░░   ░  ▒ ░░ ░░ ░ 
+       ░      ░  ░              ░  ░ ░         ░      ░  ░  ░   
+                                          ░                     
 EOF
 ;
 
