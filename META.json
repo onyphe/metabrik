@@ -48,16 +48,16 @@
          "version" : "1.08"
       },
       "CPAN::Term::Shell" : {
-         "file" : "lib/CPAN/Term/Shell.pm",
+         "file" : "lib/Metabrik/Brik/Core/Shell.pm",
          "version" : "0.06"
       },
       "CPAN::Term::Shell::OnScopeLeave" : {
-         "file" : "lib/CPAN/Term/Shell.pm",
+         "file" : "lib/Metabrik/Brik/Core/Shell.pm",
          "version" : "0.06"
       },
       "Metabrik" : {
          "file" : "lib/Metabrik.pm",
-         "version" : "0.98"
+         "version" : "0.99"
       },
       "Metabrik::Brik" : {
          "file" : "lib/Metabrik/Brik.pm"
@@ -99,10 +99,7 @@
          "file" : "lib/Metabrik/Brik/Shell/Script.pm"
       },
       "Metabrik::Ext::Shell" : {
-         "file" : "lib/Metabrik/Ext/Shell.pm"
-      },
-      "Metabrik::Ext::Utils" : {
-         "file" : "lib/Metabrik/Ext/Utils.pm"
+         "file" : "lib/Metabrik/Brik/Core/Shell.pm"
       }
    },
    "release_status" : "stable",
@@ -111,5 +108,5 @@
          "http://opensource.org/licenses/artistic-license.php"
       ]
    },
-   "version" : "0.98"
+   "version" : "0.99"
 }
