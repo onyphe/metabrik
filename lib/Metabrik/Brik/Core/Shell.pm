@@ -101,6 +101,8 @@ sub init {
       @_,
    ) or return 1; # Init already done
 
+   $self->debug && $self->log->debug("init: start");
+
    $Metabrik::Ext::Shell::CTX = $self->context;
 
    my $shell = Metabrik::Ext::Shell->new;
@@ -108,6 +110,8 @@ sub init {
    $shell->debug($self->debug);
 
    $self->_shell($shell);
+
+   $self->debug && $self->log->debug("init: done");
 
    return $self;
 }

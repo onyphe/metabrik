@@ -158,6 +158,8 @@ sub init {
    $self->_update_prompt;
 
    if ($CTX->is_used('shell::rc')) {
+      $self->debug && $self->log->debug("init: load rc file");
+
       my $cmd = $CTX->run('shell::rc', 'load');
       for (@$cmd) {
          $self->cmd($_);

@@ -25,16 +25,18 @@ my $script = shift;
 my $context = Metabrik::Brik::Core::Context->new;
 $context->init or return;
 
-$context->run('core::shell', 'splash');
-
-#$context->set('core::log', 'level', 3) or return;
+my $metabrik_version = $context->get('core::global', 'metabrik_version');
 
 if (defined($script)) {
    $context->use('shell::script') or return;
+
    #$context->set('shell::script', 'file', $script) or return;
    #$context->set('shell::script', 'debug', 1) or return;
    #$context->set('core::shell', 'debug', 1) or return;
+
    $context->run('core::shell', 'script', $script) or return;
+
+   # XXX: does not work, to fix
    #my $cmd = $context->run('shell::script', 'load');
    #for (@$cmd) {
       #print "DEBUG cmd[$_]\n";
@@ -47,10 +49,10 @@ if (defined($script)) {
 else {
    $context->use('shell::rc') or return;
 
-   my $version = $context->run('core::global', 'metabrik_version');
+   $context->run('core::shell', 'splash');
 
    print "--[ Welcome to Metabrik - Knowledge is in your head, Detail is in the code ]--\n";
-   print "--[ Version $version ]--\n";
+   print "--[ Version $metabrik_version ]--\n";
    print "\n";
 
    print "    There is a Brik for that.\n\n";
