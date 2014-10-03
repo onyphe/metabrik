@@ -9,7 +9,6 @@ lib/CPAN/Class/Gomor/Hash.pm
 lib/CPAN/Data/Dump.pm
 lib/CPAN/Lexical/Persistence.pm
 lib/CPAN/Module/Reload.pm
-lib/CPAN/Term/Shell.pm
 lib/Metabrik.pm
 lib/Metabrik/Brik.pm
 lib/Metabrik/Brik/Core/Context.pm
@@ -24,8 +23,6 @@ lib/Metabrik/Brik/Remote/Ssh2.pm
 lib/Metabrik/Brik/Shell/History.pm
 lib/Metabrik/Brik/Shell/Rc.pm
 lib/Metabrik/Brik/Shell/Script.pm
-lib/Metabrik/Ext/Shell.pm
-lib/Metabrik/Ext/Utils.pm
 Makefile.PL
 MANIFEST
 META.json
