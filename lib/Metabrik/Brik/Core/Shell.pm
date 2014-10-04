@@ -67,7 +67,6 @@ sub help {
    return {
       'set:echo' => '<0|1>',
       'run:splash' => '',
-      'run:title' => '<title>',
       'run:cmd' => '<cmd>',
       'run:cmdloop' => '',
       'run:script' => '<script>',
@@ -133,14 +132,6 @@ sub splash {
                                                  ░
 EOF
 ;
-
-   return 1;
-}
-
-sub title {
-   my $self = shift;
-
-   $self->_shell->run_title(@_);
 
    return 1;
 }
@@ -1219,7 +1210,6 @@ our @AS = qw(
    path_home
    path_cwd
    prompt
-   title
    echo
    debug
    _aliases
@@ -2059,23 +2049,6 @@ sub comp_run {
    }
 
    return @comp;
-}
-
-sub run_title {
-   my $self = shift;
-   my ($title) = @_;
-
-   if (! defined($title)) {
-      return $self->log->info("title <title>");
-   }
-
-   print "\c[];$title\a\e[0m";
-
-   return $self->title($title);
-}
-
-sub comp_title {
-   return ();
 }
 
 sub run_script {
