@@ -14,10 +14,7 @@ sub revision {
 }
 
 sub declare_attributes {
-   return {
-      path => [],
-      recursive => [],
-   };
+   return [ qw(path recursive) ];
 }
 
 use IO::All;

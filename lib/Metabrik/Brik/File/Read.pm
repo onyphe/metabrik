@@ -14,13 +14,7 @@ sub revision {
 }
 
 sub declare_attributes {
-   return {
-      input => [],
-      csv_has_header => [],
-      csv_format => [],
-      csv_separator => [],
-      csv_header => [],
-   };
+   return [ qw(input csv_has_header csv_format csv_separator csv_header) ];
 }
 
 sub require_modules {

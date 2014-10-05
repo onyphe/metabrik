@@ -17,8 +17,26 @@ our @AS = qw(
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
+sub revision {
+   return 1;
+}
+
+sub version {
+   my $self = shift;
+
+   my $revision = $self->revision;
+   my ($version) = $revision =~ /(\d+)/;
+
+   # Version 1 of the API
+   return "1.$version";
+}
+
+sub declare_tags {
+   return [ ];
+}
+
 sub declare_attributes {
-   return { };
+   return [ ];
 }
 
 sub help {
@@ -115,7 +133,7 @@ sub new {
 
    # Build Attributes, Class::Gomor style
    my $attributes = $self->declare_attributes;
-   my @as = ( keys %$attributes );
+   my @as = ( @$attributes );
    if (@as > 0) {
       no strict 'refs';
 
@@ -188,20 +206,6 @@ sub new {
    }
 
    return $self;
-}
-
-sub revision {
-   return 1;
-}
-
-sub version {
-   my $self = shift;
-
-   my $revision = $self->revision;
-   my ($version) = $revision =~ /(\d+)/;
-
-   # Version 1 of the API
-   return "1.$version";
 }
 
 sub name {

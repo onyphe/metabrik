@@ -14,15 +14,7 @@ sub revision {
 }
 
 sub declare_attributes {
-   return {
-      hostname => [],
-      port => [],
-      username => [],
-      publickey => [],
-      privatekey => [],
-      ssh2 => [],
-      _channel => [],
-   };
+   return [ qw(hostname port username publickey privatekey ssh2 _channel) ];
 }
 
 sub require_modules {

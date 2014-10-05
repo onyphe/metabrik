@@ -15,7 +15,6 @@ lib/Metabrik/Brik/Core/Context.pm
 lib/Metabrik/Brik/Core/Global.pm
 lib/Metabrik/Brik/Core/Log.pm
 lib/Metabrik/Brik/Core/Shell.pm
-lib/Metabrik/Brik/Example/Template.pm
 lib/Metabrik/Brik/File/Find.pm
 lib/Metabrik/Brik/File/Read.pm
 lib/Metabrik/Brik/File/Write.pm

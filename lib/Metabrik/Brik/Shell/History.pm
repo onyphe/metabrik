@@ -14,10 +14,7 @@ sub revision {
 }
 
 sub declare_attributes {
-   return {
-      shell => [],
-      history_file => [],
-   };
+   return [ qw(shell history_file) ];
 }
 
 sub help {

@@ -14,11 +14,7 @@ sub revision {
 }
 
 sub declare_attributes {
-   return {
-      output => [],
-      append => [],
-      overwrite => [],
-   };
+   return [ qw(output append overwrite) ];
 }
 
 sub require_modules {

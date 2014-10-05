@@ -14,9 +14,7 @@ sub revision {
 }
 
 sub declare_attributes {
-   return {
-      file => [],
-   };
+   return [ qw(file) ];
 }
 
 sub help {

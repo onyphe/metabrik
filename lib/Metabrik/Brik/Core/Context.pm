@@ -7,10 +7,12 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
+sub revision {
+   return '$Revision$';
+}
+
 sub declare_attributes {
-   return {
-      _lp => [],
-   };
+   return [ qw(_lp) ];
 }
 
 # Only used to avoid compile-time errors
@@ -56,10 +58,6 @@ sub require_modules {
 
       return $r;
    };
-}
-
-sub revision {
-   return '$Revision$';
 }
 
 sub help {

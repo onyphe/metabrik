@@ -14,10 +14,7 @@ sub revision {
 }
 
 sub declare_attributes {
-   return {
-      echo => [],
-      _shell => [],
-   };
+   return [ qw(echo _shell) ];
 }
 
 {

@@ -14,21 +14,21 @@ sub revision {
 }
 
 sub declare_attributes {
-   return {
-      input => [],
-      output => [],
-      db => [],
-      file => [],
-      uri => [],
-      target => [],
-      ctimeout => [],
-      rtimeout => [],
-      datadir => [],
-      username => [],
-      hostname => [],
-      homedir => [],
-      port => [],
-   };
+   return [ qw(
+      input
+      output
+      db
+      file
+      uri
+      target
+      ctimeout
+      rtimeout
+      datadir
+      username
+      hostname
+      homedir
+      port
+   )];
 }
 
 sub require_modules {

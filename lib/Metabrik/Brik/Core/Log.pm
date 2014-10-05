@@ -14,10 +14,7 @@ sub revision {
 }
 
 sub declare_attributes {
-   return {
-      color => [],
-      level => [],
-   };
+   return [ qw(color level) ];
 }
 
 sub require_modules {

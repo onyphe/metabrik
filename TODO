@@ -8,13 +8,9 @@ Prio:
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetaBriky
 => Ornitorinc
 
--> brik: tags() return [ 'unstable', ... ]
-
 -> rename: core::gobal metabrik_version to version?
 
 -> new: shell::builtins
-
--> new: core::shell: splash to disable splash screen
 
 -> new: system::identify
 => returns Linux/Ubuntu/...
@@ -34,10 +30,6 @@ Prio:
 
 -> echo: truncate echoed results
 
--> string::gzip => string::compress: gzip/gunzip
--> file::compress: gzip/gunzip
-=> file::zip: => file::compress zip/unzip
-
 -> bug: core::global encoding to set utf8 or anything else
 
 -> remove: Term::Shell function that allows calling a command with just first characters
@@ -54,7 +46,7 @@ Prio:
 => example: database::keystore
 => add require_Brik|used() to Brik.pm
 
--> remote::ssh, check for exit_status when exec()
+-> remote::ssh2, check for exit_status when exec()
 
 -> decide which Brik will be in main repository and which ones are private
 
