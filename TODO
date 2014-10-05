@@ -8,6 +8,8 @@ Prio:
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetaBriky
 => Ornitorinc
 
+-> brik: tags() return [ 'unstable', ... ]
+
 -> rename: core::gobal metabrik_version to version?
 
 -> new: shell::builtins

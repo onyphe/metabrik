@@ -79,7 +79,6 @@ sub help {
       'run:pl' => '<code>',
       'run:su' => '',
       'run:help' => '[ <cmd> ]',
-      'run:show' => '',
       'run:use' => '<brik>',
       'run:set' => '<brik> <attribute> <value>',
       'run:get' => '[ <brik> ] [ <attribute> ]',
@@ -180,14 +179,6 @@ sub su {
    my $self = shift;
 
    $self->_shell->run_su(@_);
-
-   return 1;
-}
-
-sub show {
-   my $self = shift;
-
-   $self->_shell->run_show(@_);
 
    return 1;
 }
@@ -1716,41 +1707,6 @@ sub comp_use {
    }
 
    return @comp;
-}
-
-sub run_show {
-   my $self = shift;
-
-   my $status = $CTX->status;
-
-   $self->log->info("Available briks:");
-
-   my $total = 0;
-   my $count = 0;
-   $self->log->info("   Used:");
-   for my $used (@{$status->{used}}) {
-      $self->log->info("      $used");
-      $count++;
-      $total++;
-   }
-   $self->log->info("   Count: $count");
-
-   $count = 0;
-   $self->log->info("   Not used:");
-   for my $not_used (@{$status->{not_used}}) {
-      $self->log->info("      $not_used");
-      $count++;
-      $total++;
-   }
-   $self->log->info("   Count: $count");
-
-   $self->log->info("Total: $total");
-
-   return 1;
-}
-
-sub comp_show {
-   return ();
 }
 
 sub run_help {
