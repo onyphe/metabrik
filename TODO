@@ -10,6 +10,8 @@ Prio:
 
 -> rename: core::gobal metabrik_version to version?
 
+-> move: reuse() to core::context
+
 -> new: shell::builtins
 
 -> new: system::identify
@@ -156,6 +158,8 @@ Vocabulary:
 Doc:
 - core::context Brik autouses core::global Brik
 -> core::* Briks are always used and available in ->Briks->{$Brik}
+- declare_* returns an ARRAYREF
+- require_* returns an HASHREF with ARRAYREF values
 
 ### FURTURE WORK
 
