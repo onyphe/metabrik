@@ -10,6 +10,8 @@ Prio:
 
 -> rename: core::gobal metabrik_version to version?
 
+-> remove: run_pl() integrate into catch_run() instead.
+
 -> move: reuse() to core::context
 
 -> new: shell::builtins
