@@ -47,18 +47,18 @@ sub help {
       'run:help_run' => '<command>',
       'run:class' => '',
       'run:classes' => '',
-      'run:commands' => '',
-      'run:attributes' => '',
-      'run:revision' => '',
       'run:version' => '',
+      'run:revision' => '',
       'run:default_values' => '',
       'run:name' => '',
       'run:repository' => '',
       'run:category' => '',
+      'run:tags' => '',
+      'run:has_tag' => '<tag>',
       'run:commands' => '',
-      'run:has_command' => '',
+      'run:has_command' => '<command>',
       'run:attributes' => '',
-      'run:has_attribute' => '',
+      'run:has_attribute' => '<attribute>',
       'run:self' => '',
    };
 }
@@ -208,15 +208,6 @@ sub new {
    return $self;
 }
 
-sub name {
-   my $self = shift;
-
-   my $module = lc($self->class);
-   $module =~ s/^metabrik::brik:://;
-
-   return $module;
-}
-
 sub repository {
    my $self = shift;
 
@@ -257,6 +248,15 @@ sub category {
    return $self->log->fatal("category: no Category found");
 }
 
+sub name {
+   my $self = shift;
+
+   my $module = lc($self->class);
+   $module =~ s/^metabrik::brik:://;
+
+   return $module;
+}
+
 sub class {
    my $self = shift;
 
@@ -278,6 +278,29 @@ sub classes {
    }
 
    return \@classes;
+}
+
+sub tags {
+   my $self = shift;
+
+   return [ sort { $a cmp $b } @{$self->declare_tags} ];
+}
+
+sub has_tag {
+   my $self = shift;
+   my ($tag) = @_;
+
+   if (! defined($tag)) {
+      return $self->log->info("run ".$self->name." has_tag <tag>");
+   }
+
+   my %h = map { $_ => 1 } @{$self->declare_tags};
+
+   if (exists($h{$tag})) {
+      return 1;
+   }
+
+   return 0;
 }
 
 sub commands {
