@@ -26,6 +26,7 @@ sub declare_attributes {
       datadir
       username
       hostname
+      domainname
       homedir
       port
    )];
@@ -54,6 +55,7 @@ sub default_values {
       datadir => '/tmp',
       username => $ENV{USER} || 'root',
       hostname => 'localhost',
+      domainname => 'example.com',
       homedir => $ENV{HOME} || '/tmp',
       port => 80,
    };
@@ -72,6 +74,7 @@ sub help {
       'set:datadir' => '<directory>',
       'set:username' => '<username>',
       'set:hostname' => '<hostname>',
+      'set:domainname' => '<domainname>',
       'set:port' => '<port>',
       'set:homedir' => '<directory>',
       'run:metabrik_version' => '',

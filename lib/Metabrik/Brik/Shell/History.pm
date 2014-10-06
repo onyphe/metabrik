@@ -36,29 +36,11 @@ sub default_values {
    };
 }
 
-sub init {
-   my $self = shift->SUPER::init(
-      @_,
-   ) or return 1; # Init already done
-
-   my $shell = $self->shell;
-
-   if (! defined($shell)) {
-      return $self->log->error("init: you must give a shell Brik as Attribute");
-   }
-
-   return $self;
-}
-
 sub load {
    my $self = shift;
 
-   my $shell = $self->shell;
+   my $shell = $self->shell->_shell;
    my $history_file = $self->history_file;
-
-   if (! defined($shell)) {
-      return $self->log->error("load: you must give a shell Brik as Attribute");
-   }
 
    if ($shell->term->can('ReadHistory')) {
       if (! -f $history_file) {
@@ -80,12 +62,8 @@ sub load {
 sub write {
    my $self = shift;
 
-   my $shell = $self->shell;
+   my $shell = $self->shell->_shell;
    my $history_file = $self->history_file;
-
-   if (! defined($shell)) {
-      return $self->log->error("write: you must give a shell Brik as Attribute");
-   }
 
    if ($shell->term->can('WriteHistory')) {
       $shell->term->WriteHistory($history_file)
@@ -102,11 +80,7 @@ sub write {
 sub get {
    my $self = shift;
 
-   my $shell = $self->shell;
-
-   if (! defined($shell)) {
-      return $self->log->error("get: you must give a shell Brik as Attribute");
-   }
+   my $shell = $self->shell->_shell;
 
    my @history = ();
    if ($shell->term->can('GetHistory')) {
@@ -129,11 +103,7 @@ sub get_one {
       return $self->log->info($self->help_run('get_one'));
    }
 
-   my $shell = $self->shell;
-
-   if (! defined($shell)) {
-      return $self->log->error("get_one: you must give a shell Brik as Attribute");
-   }
+   my $shell = $self->shell->_shell;
 
    my $history = '';
    my @history = ();
@@ -158,11 +128,7 @@ sub get_range {
       return $self->log->info($self->help_run('get_range'));
    }
 
-   my $shell = $self->shell;
-
-   if (! defined($shell)) {
-      return $self->log->error("get_range: you must give a shell Brik as Attribute");
-   }
+   my $shell = $self->shell->_shell;
 
    my @history = ();
    if ($shell->term->can('GetHistory')) {

@@ -59,8 +59,9 @@ sub declare_tags {
    };
 }
 
-sub require_modules {
+sub default_values {
    return {
+      echo => 1,
    };
 }
 
@@ -87,12 +88,6 @@ sub help {
    };
 }
 
-sub default_values {
-   return {
-      echo => 1,
-   };
-}
-
 sub init {
    my $self = shift->SUPER::init(
       @_,
@@ -100,13 +95,28 @@ sub init {
 
    $self->debug && $self->log->debug("init: start");
 
-   $Metabrik::Ext::Shell::CTX = $self->context;
+   my $context = $self->context;
+
+   $Metabrik::Ext::Shell::CTX = $context;
 
    my $shell = Metabrik::Ext::Shell->new;
    $shell->echo($self->echo);
    $shell->debug($self->debug);
-
    $self->_shell($shell);
+
+   if ($context->is_used('shell::rc')) {
+      $self->debug && $self->log->debug("init: load rc file");
+
+      my $cmd = $context->run('shell::rc', 'load');
+      for (@$cmd) {
+         $self->_shell->cmd($_);
+      }
+   }
+
+   # XXX: should be removed in favor of doing it in rc file
+   #      when merge complete.
+   $context->use('shell::history');
+   $context->run('shell::history', 'load');
 
    $self->debug && $self->log->debug("init: done");
 
@@ -1327,31 +1337,16 @@ sub init {
    $self->_update_path_cwd;
    $self->_update_prompt;
 
-   if ($CTX->is_used('shell::rc')) {
-      $self->debug && $self->log->debug("init: load rc file");
-
-      my $cmd = $CTX->run('shell::rc', 'load');
-      for (@$cmd) {
-         $self->cmd($_);
-      }
-   }
-
    # Default: 'us,ue,md,me', see `man 5 termcap' and Term::Cap
    # See also Term::ReadLine LoadTermCap() and ornaments() subs.
    $self->term->ornaments('md,me');
-
-   if ($CTX->is_used('shell::history')) {
-      if ($CTX->get('shell::history', 'shell') eq 'undef') {
-         $CTX->set('shell::history', 'shell', $self);
-      }
-      $CTX->run('shell::history', 'load');
-   }
 
    # They are used when core::context init is performed
    # Should be placed in core::context Brik instead of here
    $self->add_handler('run_core::log');
    $self->add_handler('run_core::context');
    $self->add_handler('run_core::global');
+   $self->add_handler('run_core::shell');
 
    return $self;
 }

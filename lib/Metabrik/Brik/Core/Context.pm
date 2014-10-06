@@ -115,26 +115,31 @@ sub new {
          $CTX->{log} = $CTX->{used}->{'core::log'};
          $CTX->{global} = $CTX->{used}->{'core::global'};
          $CTX->{shell} = $CTX->{used}->{'core::shell'};
+         $CTX->{context} = $CTX->{used}->{'core::context'};
 
          # When new() was done, some Attributes were empty. We fix that here.
          $CTX->{used}->{'core::context'}->{log} = $CTX->{log};
          $CTX->{used}->{'core::global'}->{log} = $CTX->{log};
          $CTX->{used}->{'core::shell'}->{log} = $CTX->{log};
+         $CTX->{used}->{'core::log'}->{log} = $CTX->{log};
 
          # When new() was done, some Attributes were empty. We fix that here.
          $CTX->{used}->{'core::global'}->{context} = $CTX;
          $CTX->{used}->{'core::log'}->{context} = $CTX;
          $CTX->{used}->{'core::shell'}->{context} = $CTX;
+         $CTX->{used}->{'core::context'}->{context} = $CTX;
 
          # When new() was done, some Attributes were empty. We fix that here.
          $CTX->{used}->{'core::context'}->{global} = $CTX->{global};
          $CTX->{used}->{'core::log'}->{global} = $CTX->{global};
          $CTX->{used}->{'core::shell'}->{global} = $CTX->{global};
+         $CTX->{used}->{'core::global'}->{global} = $CTX->{global};
 
          # When new() was done, some Attributes were empty. We fix that here.
          $CTX->{used}->{'core::global'}->{shell} = $CTX->{shell};
          $CTX->{used}->{'core::context'}->{shell} = $CTX->{shell};
          $CTX->{used}->{'core::log'}->{shell} = $CTX->{shell};
+         $CTX->{used}->{'core::shell'}->{shell} = $CTX->{shell};
 
          my $ERR = 0;
 
@@ -350,6 +355,7 @@ sub use {
       my $__ctx_new = $__ctx_module->new(
          context => $CTX,
          global => $CTX->{global},
+         shell => $CTX->{shell},
          log => $CTX->{log},
       );
       #$__ctx_new->init; # No init now. We wait first run() to let set() actions
