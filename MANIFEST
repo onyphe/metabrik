@@ -11,6 +11,7 @@ lib/CPAN/Lexical/Persistence.pm
 lib/CPAN/Module/Reload.pm
 lib/Metabrik.pm
 lib/Metabrik/Brik.pm
+lib/Metabrik/Brik/Brik/Search.pm
 lib/Metabrik/Brik/Core/Context.pm
 lib/Metabrik/Brik/Core/Global.pm
 lib/Metabrik/Brik/Core/Log.pm

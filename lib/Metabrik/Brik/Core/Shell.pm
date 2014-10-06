@@ -72,7 +72,6 @@ sub help {
       'run:history' => '[ <number> ]',
       'run:write_history' => '',
       'run:cd' => '[ <path> ]',
-      'run:pwd' => '',
       'run:pl' => '<code>',
       'run:su' => '',
       'run:help' => '[ <cmd> ]',
@@ -1307,33 +1306,6 @@ sub _update_prompt {
    }
 
    return 1;
-}
-
-sub _off_lookup_variables {
-   my $self = shift;
-   my ($line) = @_;
-
-   my @words = $self->line_parsed($line);
-   my $word = $words[0];
-
-   # We lookup variables only for run and set shell Commands
-   if (defined($word) && $word =~ /^(?:run|set)$/) {
-      for my $this (@words) {
-         if ($this =~ /\$([a-zA-Z0-9_]+)/) {
-            my $varname = '$'.$1;
-            $self->debug && $self->log->debug("lookup: varname[$varname]");
-
-            my $result = $CTX->lookup($varname) || 'undef';
-            #$self->debug && $self->log->debug("lookup: result1[$line]");
-            $self->debug && $self->log->debug("lookup: result1[..]");
-            $line =~ s/\$${1}/$result/;
-            #$self->debug && $self->log->debug("lookup: result2[$line]");
-            $self->debug && $self->log->debug("lookup: result2[..]");
-         }
-      }
-   }
-
-   return $line;
 }
 
 sub init {

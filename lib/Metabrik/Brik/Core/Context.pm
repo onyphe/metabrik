@@ -212,27 +212,6 @@ sub call {
    return $res;
 }
 
-sub lookup {
-   my $self = shift;
-   my ($varname) = @_;
-
-   if (! defined($varname)) {
-      return $self->log->error($self->help_run('lookup'));
-   }
-
-   my $res = $self->call(sub {
-      my %args = @_;
-
-      my $__ctx_varname = $args{varname};
-
-      return $CTX->_lp->{context}->{_}->{$__ctx_varname};
-   }, varname => $varname);
-
-   $self->debug && $self->log->debug("lookup: [$varname] = [".substr($res, 0, 128)."..]");
-
-   return $res;
-}
-
 sub variables {
    my $self = shift;
 
@@ -518,13 +497,13 @@ sub get {
 
       if (! $CTX->is_used($__ctx_brik)) {
          $ERR = 1;
-         my $MSG = "set: Brik [$__ctx_brik] not used";
+         my $MSG = "get: Brik [$__ctx_brik] not used";
          die("$MSG\n");
       }
 
       if (! $CTX->used->{$__ctx_brik}->has_attribute($__ctx_attribute)) {
          $ERR = 1;
-         my $MSG = "set: Brik [$__ctx_brik] has no Attribute [$__ctx_attribute]";
+         my $MSG = "get: Brik [$__ctx_brik] has no Attribute [$__ctx_attribute]";
          die("$MSG\n");
       }
 

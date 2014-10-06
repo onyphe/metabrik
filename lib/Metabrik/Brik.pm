@@ -179,7 +179,7 @@ sub new {
 
       my @imports = @{$modules->{$module}};
       if (@imports > 0) {
-         eval("$module->import(@imports);");
+         eval('$module->import(@imports);');
          if ($@) {
             chomp($@);
             return $self->log->error("new: unable to import Functions [@imports] from Module [$module]: $@");
@@ -283,7 +283,15 @@ sub classes {
 sub tags {
    my $self = shift;
 
-   return [ sort { $a cmp $b } @{$self->declare_tags} ];
+   my $tags = $self->declare_tags;
+
+   # We add the used tags if Brik has been used.
+   # Not all Briks have a context set (core::context don't)
+   if ($self->category eq 'core' || ($self->can('context') && $self->context->is_used($self->name))) {
+      push @$tags, 'used';
+   }
+
+   return [ sort { $a cmp $b } @$tags ];
 }
 
 sub has_tag {
@@ -359,8 +367,12 @@ sub attributes {
 
       my $help = $class->help;
 
+      $self->debug && $self->log->debug("class [$class]");
+
       for my $this (keys %$help) {
          my ($command, $name) = split(':', $this);
+
+         $self->debug && $self->log->debug("this [$command:$name]");
 
          next unless $name =~ /^[a-z]/; # Brik Attributes always begin with a minuscule
          next if $name =~ /^_/; # Internal stuff
