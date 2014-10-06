@@ -13,6 +13,10 @@ sub revision {
    return '$Revision$';
 }
 
+sub declare_tags {
+   return [ qw(main remote ssh ssh2) ];
+}
+
 sub declare_attributes {
    return [ qw(hostname port username publickey privatekey ssh2 _channel) ];
 }

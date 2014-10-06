@@ -13,6 +13,10 @@ sub revision {
    return '$Revision$';
 }
 
+sub declare_tags {
+   return [ qw(main file) ];
+}
+
 sub declare_attributes {
    return [ qw(output append overwrite) ];
 }

@@ -8,6 +8,8 @@ Prio:
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetaBriky
 => Ornitorinc
 
+-> extract: csv code from file::read
+
 -> rename: core::gobal metabrik_version to version?
 
 -> remove: run_pl() integrate into catch_run() instead.
@@ -20,13 +22,6 @@ Prio:
 => returns Linux/Ubuntu/...
 => or update system::os to fetch distrib information
 => new: ubuntu::os, ubuntu::package, and system::os uses ubuntu::os, same for system::package
-
--> new: add subcategory:
-=> repository::category::subcategory::name
-=> repository::category::name
-=> category::subcategory::name
-=> category::name
-==> XXX not sure it is a good idea
 
 -> new: use_if_not_used, run_if_used, set_if_used, get_if_used
 
@@ -45,14 +40,8 @@ Prio:
 
 -> integrate cpanm into MetaBriky
 
--> update: Briks using Briks should call is_used and die if not i/o using from Perl itself
-=> if not used, feature is disabled
-=> example: database::keystore
-=> add require_Brik|used() to Brik.pm
-
 -> remote::ssh2, check for exit_status when exec()
 
--> decide which Brik will be in main repository and which ones are private
 
 
 ### Future (or not):

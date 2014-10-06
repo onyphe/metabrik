@@ -13,6 +13,10 @@ sub revision {
    return '$Revision$';
 }
 
+sub declare_tags {
+   return [ qw(main file) ];
+}
+
 sub declare_attributes {
    return [ qw(input csv_has_header csv_format csv_separator csv_header) ];
 }

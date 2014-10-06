@@ -16,7 +16,7 @@ sub declare_attributes {
 }
 
 sub declare_tags {
-   return [ qw(core) ];
+   return [ qw(core context main) ];
 }
 
 # Only used to avoid compile-time errors

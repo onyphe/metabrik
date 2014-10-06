@@ -13,6 +13,10 @@ sub revision {
    return '$Revision$';
 }
 
+sub declare_tags {
+   return [ qw(main find) ];
+}
+
 sub declare_attributes {
    return [ qw(path recursive) ];
 }

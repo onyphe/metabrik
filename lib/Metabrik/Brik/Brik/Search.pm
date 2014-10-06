@@ -14,7 +14,7 @@ sub revision {
 }
 
 sub declare_tags {
-   return [ qw(unstable) ];
+   return [ qw(unstable main brik search) ];
 }
 
 sub help {

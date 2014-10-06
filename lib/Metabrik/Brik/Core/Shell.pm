@@ -18,7 +18,7 @@ sub declare_attributes {
 }
 
 sub declare_tags {
-   return [ qw(core) ];
+   return [ qw(core main shell) ];
 }
 
 {
