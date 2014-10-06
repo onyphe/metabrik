@@ -15,6 +15,9 @@ my $builder = Module::Build->new(
       'File::HomeDir' => 0,
       'IPC::Run' => 0,
    },
+   configure_requires => {
+      'Module::Build' => 0.42,
+   },
 );
 
 $builder->create_build_script;
