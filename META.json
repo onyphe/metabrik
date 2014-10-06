@@ -62,6 +62,9 @@
       "Metabrik::Brik" : {
          "file" : "lib/Metabrik/Brik.pm"
       },
+      "Metabrik::Brik::Brik::Search" : {
+         "file" : "lib/Metabrik/Brik/Brik/Search.pm"
+      },
       "Metabrik::Brik::Core::Context" : {
          "file" : "lib/Metabrik/Brik/Core/Context.pm"
       },
@@ -73,9 +76,6 @@
       },
       "Metabrik::Brik::Core::Shell" : {
          "file" : "lib/Metabrik/Brik/Core/Shell.pm"
-      },
-      "Metabrik::Brik::Example::Template" : {
-         "file" : "lib/Metabrik/Brik/Example/Template.pm"
       },
       "Metabrik::Brik::File::Find" : {
          "file" : "lib/Metabrik/Brik/File/Find.pm"
