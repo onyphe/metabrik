@@ -31,6 +31,10 @@ sub declare_attributes {
    )];
 }
 
+sub declare_tags {
+   return [ qw(core) ];
+}
+
 sub require_modules {
    return {
       'Metabrik' => [],

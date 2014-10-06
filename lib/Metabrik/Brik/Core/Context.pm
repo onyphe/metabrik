@@ -15,6 +15,10 @@ sub declare_attributes {
    return [ qw(_lp) ];
 }
 
+sub declare_tags {
+   return [ qw(core) ];
+}
+
 # Only used to avoid compile-time errors
 my $CTX;
 

@@ -17,6 +17,10 @@ sub declare_attributes {
    return [ qw(color level) ];
 }
 
+sub declare_tags {
+   return [ qw(core) ];
+}
+
 sub require_modules {
    return {
       'Term::ANSIColor' => [],

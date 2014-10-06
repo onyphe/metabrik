@@ -17,6 +17,10 @@ sub declare_attributes {
    return [ qw(echo _shell) ];
 }
 
+sub declare_tags {
+   return [ qw(core) ];
+}
+
 {
    no warnings;   # Avoid redefine warnings
 
