@@ -1252,7 +1252,7 @@ sub AUTOLOAD {
 
    # We rewrite the log accessor
    *log = sub {
-      return $CTX->log;
+      return $CTX->{log};
    };
 }
 
