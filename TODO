@@ -8,6 +8,14 @@ Prio:
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetaBriky
 => Ornitorinc
 
+-> tags: support : to specify multiple tags, support ! to skip not wanted tags
+=> search tag to display also available briks
+=> search string: uniformise like search tag
+
+-> Brik API: declare_attributes { attribute1 => [ 'ARRAY|ARRAYREF' ] }
+
+-> Brik API: change help() format to 'set' => [], 'run' => [],
+
 -> extract: csv code from file::read
 
 -> rename: core::gobal metabrik_version to version?
@@ -56,6 +64,16 @@ Wwwutil:
 -> Interrogates Hurricane Electric stuff: http://bgp.he.net/ip/130.193.27.21
 
 
+API:
+Step 1:
+- use
+=> new() + preinit()
+- set
+- get
+- run
+=> init() (first time only) + run()
+- DESTROY
+=> fini()
 
 ### BrikS TODO
 - Heartbleed

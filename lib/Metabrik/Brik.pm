@@ -174,7 +174,7 @@ sub new {
       eval("require $module;");
       if ($@) {
          chomp($@);
-         return $self->log->error("new: you have to install Module [$module]: $@");
+         return $self->log->error("new: you have to install Module [$module]: $@", $self->class);
       }
 
       my @imports = @{$modules->{$module}};
@@ -182,7 +182,7 @@ sub new {
          eval('$module->import(@imports);');
          if ($@) {
             chomp($@);
-            return $self->log->error("new: unable to import Functions [@imports] from Module [$module]: $@");
+            return $self->log->error("new: unable to import Functions [@imports] from Module [$module]: $@", $self->class);
          }
       }
    }
@@ -195,7 +195,7 @@ sub new {
       my $require_used = $self->require_used;
       for my $brik (keys %$require_used) {
          if (! $self->context->is_used($brik)) {
-            $self->log->error("new: you must use Brik [$brik] first");
+            $self->log->error("new: you must use Brik [$brik] first", $self->class);
             $error++;
          }
       }
@@ -205,7 +205,7 @@ sub new {
       }
    }
 
-   return $self;
+   return $self->preinit;
 }
 
 sub repository {
@@ -401,6 +401,13 @@ sub has_attribute {
    return 0;
 }
 
+# preinit() directly runs after new() is run. new() is called on use().
+sub preinit {
+   my $self = shift;
+
+   return $self;
+}
+
 sub init {
    my $self = shift;
 
@@ -419,10 +426,17 @@ sub self {
    return $self;
 }
 
-sub DESTROY {
+# fini() is run at DESTROY time
+sub fini {
    my $self = shift;
 
    return $self;
+}
+
+sub DESTROY {
+   my $self = shift;
+
+   return $self->fini;
 }
 
 1;

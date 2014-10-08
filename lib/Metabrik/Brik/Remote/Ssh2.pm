@@ -311,10 +311,10 @@ sub load {
    return $buf;
 }
 
-sub DESTROY {
+sub fini {
    my $self = shift;
 
-   $self->debug && $self->log->debug("DESTROY: called");
+   $self->debug && $self->log->debug("fini: called");
 
    my $ssh2 = $self->ssh2;
    if (defined($ssh2)) {

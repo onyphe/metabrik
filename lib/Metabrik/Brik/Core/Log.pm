@@ -53,14 +53,14 @@ sub _msg {
 
    $msg ||= 'undef';
 
-   $brik =~ s/^metabrik::Brik:://i;
+   $brik =~ s/^metabrik::brik:://i;
 
    return lc($brik).": $msg\n";
 }
 
 sub warning {
    my $self = shift;
-   my ($msg) = @_;
+   my ($msg, $caller) = @_;
 
    if ($self->color) {
       print Term::ANSIColor::MAGENTA(), "[!] ", Term::ANSIColor::RESET();
@@ -69,14 +69,14 @@ sub warning {
       print "[!] ";
    }
 
-   print $self->_msg(my ($caller) = caller(), $msg);
+   print $self->_msg(($caller) ||= caller(), $msg);
 
    return 1;
 }
 
 sub error {
    my $self = shift;
-   my ($msg) = @_;
+   my ($msg, $caller) = @_;
 
    if ($self->color) {
       print Term::ANSIColor::RED(), "[-] ", Term::ANSIColor::RESET();
@@ -85,14 +85,14 @@ sub error {
       print "[-] ";
    }
 
-   print $self->_msg(my ($caller) = caller(), $msg);
+   print $self->_msg(($caller) ||= caller(), $msg);
 
    return;
 }
 
 sub fatal {
    my $self = shift;
-   my ($msg) = @_;
+   my ($msg, $caller) = @_;
 
    if ($self->color) {
       print Term::ANSIColor::RED(), "[F] ", Term::ANSIColor::RESET();
@@ -101,12 +101,12 @@ sub fatal {
       print "[F] ";
    }
 
-   die($self->_msg(my ($caller) = caller(), $msg));
+   die($self->_msg(($caller) ||= caller(), $msg));
 }
 
 sub info {
    my $self = shift;
-   my ($msg) = @_;
+   my ($msg, $caller) = @_;
 
    return unless $self->level > 0;
 
@@ -124,7 +124,7 @@ sub info {
 
 sub verbose {
    my $self = shift;
-   my ($msg) = @_;
+   my ($msg, $caller) = @_;
 
    return unless $self->level > 1;
 
@@ -135,14 +135,14 @@ sub verbose {
       print "[+] ";
    }
 
-   print $self->_msg(my ($caller) = caller(), $msg);
+   print $self->_msg(($caller) ||= caller(), $msg);
 
    return 1;
 }
 
 sub debug {
    my $self = shift;
-   my ($msg) = @_;
+   my ($msg, $caller) = @_;
 
    # We have a conflict between the method and the accessor,
    # we have to identify which one is accessed.
@@ -166,7 +166,7 @@ sub debug {
             print "[D] ";
          }
 
-         print $self->_msg(my ($caller) = caller(), $msg);
+         print $self->_msg(($caller) ||= caller(), $msg);
       }
    }
 

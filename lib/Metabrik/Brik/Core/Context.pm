@@ -152,7 +152,7 @@ sub new {
       die("[F] core::context: new: unable to create context: $@\n");
    }
 
-   return $self;
+   return $self->preinit;
 }
 
 sub init {
@@ -162,7 +162,9 @@ sub init {
 
    my $r = $self->update_available;
    if (! defined($r)) {
-      return $self->log->error("init: unable to init Brik [core::context]: update_available failed");
+      return $self->log->error("init: unable to init Brik [core::context]: ".
+         "update_available failed"
+      );
    }
 
    return $self;
@@ -334,7 +336,9 @@ sub use {
       $__ctx_brik_category = ucfirst($__ctx_brik_category);
       $__ctx_brik_module = ucfirst($__ctx_brik_module);
 
-      my $__ctx_module = 'Metabrik::Brik::'.(length($__ctx_brik_repository) ? $__ctx_brik_repository.'::' : '').$__ctx_brik_category.'::'.$__ctx_brik_module;
+      my $__ctx_module = 'Metabrik::Brik::'.(length($__ctx_brik_repository)
+         ? $__ctx_brik_repository.'::'
+         : '').$__ctx_brik_category.'::'.$__ctx_brik_module;
 
       $CTX->debug && $CTX->log->debug("module2[$__ctx_brik_module]");
 
@@ -361,7 +365,7 @@ sub use {
       #$__ctx_new->init; # No init now. We wait first run() to let set() actions
       if (! defined($__ctx_new)) {
          $ERR = 1;
-         my $MSG = "use: unable to create Brik [$__ctx_brik]";
+         my $MSG = "use: unable to use Brik [$__ctx_brik]";
          die("$MSG\n");
       }
 
