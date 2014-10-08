@@ -9,12 +9,11 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub revision {
-   return '$Revision$';
-}
-
-sub declare_tags {
-   return [ qw(unstable main brik search) ];
+sub properties {
+   return {
+      revision => '$Revision$',
+      tags => [ qw(unstable main brik search) ],
+   };
 }
 
 sub help {

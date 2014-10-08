@@ -9,23 +9,27 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub revision {
-   return '$Revision$';
-}
+sub properties {
+   my $self = shift;
 
-sub declare_tags {
-   return [ qw(main file) ];
-}
-
-sub declare_attributes {
-   return [ qw(output append overwrite) ];
-}
-
-sub require_modules {
    return {
-      'JSON::XS' => [],
-      'XML::Simple' => [],
-      'Text::CSV::Hashify' => [],
+      revision => '$Revision$',
+      tags => [ qw(main file) ],
+      attributes => {
+         output => [ qw(SCALAR) ],
+         append => [ qw(SCALAR) ],
+         overwrite => [ qw(SCALAR) ],
+      },
+      attributes_default => {
+         output => $self->global->output || '/tmp/output.txt',
+         append => 1,
+         overwrite => 0,
+      },
+      require_modules => {
+         'JSON::XS' => [ ],
+         'XML::Simple' => [ ],
+         'Text::CSV::Hashify' => [ ],
+      },
    };
 }
 
@@ -35,16 +39,6 @@ sub help {
       'set:append' => '<0|1>',
       'set:overwrite' => '<0|1>',
       'run:text' => '<data>',
-   };
-}
-
-sub default_values {
-   my $self = shift;
-
-   return {
-      output => $self->global->output || '/tmp/output.txt',
-      append => 1,
-      overwrite => 0,
    };
 }
 

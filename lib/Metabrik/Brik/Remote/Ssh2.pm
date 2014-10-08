@@ -9,22 +9,30 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub revision {
-   return '$Revision$';
-}
+sub properties {
+   my $self = shift;
 
-sub declare_tags {
-   return [ qw(main remote ssh ssh2) ];
-}
-
-sub declare_attributes {
-   return [ qw(hostname port username publickey privatekey ssh2 _channel) ];
-}
-
-sub require_modules {
    return {
-      'IO::Scalar' => [],
-      'Net::SSH2' => [],
+      revision => '$Revision$',
+      tags => [ qw(main remote ssh ssh2) ],
+      attributes => {
+         hostname => [ qw(SCALAR) ],
+         port => [ qw(SCALAR) ],
+         username => [ qw(SCALAR) ],
+         publickey => [ qw(SCALAR) ],
+         privatekey => [ qw(SCALAR) ],
+         ssh2 => [ qw(SCALAR) ],
+         _channel => [ qw(SCALAR) ],
+      },
+      attributes_default => {
+         hostname => $self->global->hostname || 'localhost',
+         port => 22,
+         username => $self->global->username || 'root',
+      },
+      require_modules => {
+         'IO::Scalar' => [ ],
+         'Net::SSH2' => [ ],
+      },
    };
 }
 
@@ -44,16 +52,6 @@ sub help {
       'run:load' => '<file>',
       'run:listfiles' => '<glob>',
       'run:disconnect' => '',
-   };
-}
-
-sub default_values {
-   my $self = shift;
-
-   return {
-      hostname => $self->global->hostname || 'localhost',
-      port => 22,
-      username => $self->global->username || 'root',
    };
 }
 

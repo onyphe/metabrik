@@ -7,31 +7,26 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub revision {
-   return '$Revision$';
-}
-
-sub declare_attributes {
-   return [ qw(_lp) ];
-}
-
-sub declare_tags {
-   return [ qw(core context main) ];
+sub properties {
+   return {
+      revision => '$Revision$',
+      tags => [ qw(core context main) ],
+      attributes => {
+         _lp => [ qw(OBJECT) ],
+      },
+      require_modules => {
+         'CPAN::Data::Dump' => [],
+         'CPAN::Lexical::Persistence' => [],
+         'Metabrik::Brik::Core::Global' => [],
+         'Metabrik::Brik::Core::Log' => [],
+         'Metabrik::Brik::Core::Shell' => [],
+         'Metabrik::Brik::File::Find' => [],
+      },
+   };
 }
 
 # Only used to avoid compile-time errors
 my $CTX;
-
-sub require_modules {
-   return {
-      'CPAN::Data::Dump' => [],
-      'CPAN::Lexical::Persistence' => [],
-      'Metabrik::Brik::Core::Global' => [],
-      'Metabrik::Brik::Core::Log' => [],
-      'Metabrik::Brik::Core::Shell' => [],
-      'Metabrik::Brik::File::Find' => [],
-   };
-}
 
 {
    no warnings;

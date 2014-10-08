@@ -9,23 +9,24 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub revision {
-   return '$Revision$';
-}
-
-sub declare_attributes {
-   return [ qw(color level) ];
-}
-
-sub declare_tags {
-   return [ qw(core main log) ];
-}
-
-sub require_modules {
+sub properties {
    return {
-      'Term::ANSIColor' => [],
+      revision => '$Revision$',
+      tags => [ qw(core main log) ],
+      attributes => {
+         color => [ qw(SCALAR) ],
+         level => [ qw(SCALAR) ],
+      },
+      attributes_default => {
+         color => 1,
+         level => 1,
+      },
+      require_modules => {
+         'Term::ANSIColor' => [ ],
+      },
    };
 }
+
 
 sub help {
    return {
@@ -37,13 +38,6 @@ sub help {
       'run:error' => '<message>',
       'run:fatal' => '<message>',
       'run:debug' => '<message>',
-   };
-}
-
-sub default_values {
-   return {
-      color => 1,
-      level => 1,
    };
 }
 

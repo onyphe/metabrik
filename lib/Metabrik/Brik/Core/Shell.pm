@@ -9,16 +9,18 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub revision {
-   return '$Revision$';
-}
-
-sub declare_attributes {
-   return [ qw(echo _shell) ];
-}
-
-sub declare_tags {
-   return [ qw(core main shell) ];
+sub properties {
+   return {
+      revision => '$Revision$',
+      tags => [ qw(core main shell) ],
+      attributes => {
+         echo => [ qw(SCALAR) ],
+         _shell => [ qw(OBJECT) ],
+      },
+      attributes_default => {
+         echo => 1,
+      },
+   };
 }
 
 {
@@ -56,12 +58,6 @@ sub declare_tags {
       }
 
       return $self->{debug};
-   };
-}
-
-sub default_values {
-   return {
-      echo => 1,
    };
 }
 

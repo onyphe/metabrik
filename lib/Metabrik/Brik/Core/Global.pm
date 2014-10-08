@@ -9,55 +9,45 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub revision {
-   return '$Revision$';
-}
-
-sub declare_attributes {
-   return [ qw(
-      input
-      output
-      db
-      file
-      uri
-      target
-      ctimeout
-      rtimeout
-      datadir
-      username
-      hostname
-      domainname
-      homedir
-      port
-   )];
-}
-
-sub declare_tags {
-   return [ qw(core main global) ];
-}
-
-sub require_modules {
+sub properties {
    return {
-      'Metabrik' => [],
-   };
-}
-
-sub default_values {
-   return {
-      input => '/tmp/input.txt',
-      output => '/tmp/output.txt',
-      db => '/tmp/db.db',
-      file => '/tmp/file.txt',
-      uri => 'http://www.example.com',
-      target => 'localhost',
-      ctimeout => 5,
-      rtimeout => 5,
-      datadir => '/tmp',
-      username => $ENV{USER} || 'root',
-      hostname => 'localhost',
-      domainname => 'example.com',
-      homedir => $ENV{HOME} || '/tmp',
-      port => 80,
+      revision => '$Revision$',
+      tags => [ qw(core main global) ],
+      attributes => { 
+         input => [ qw(SCALAR) ],
+         output => [ qw(SCALAR) ],
+         db => [ qw(SCALAR) ],
+         file => [ qw(SCALAR) ],
+         uri => [ qw(SCALAR) ],
+         target => [ qw(SCALAR) ],
+         ctimeout => [ qw(SCALAR) ],
+         rtimeout => [ qw(SCALAR) ],
+         datadir => [ qw(SCALAR) ],
+         username => [ qw(SCALAR) ],
+         hostname => [ qw(SCALAR) ],
+         domainname => [ qw(SCALAR) ],
+         homedir => [ qw(SCALAR) ],
+         port => [ qw(SCALAR) ],
+      },
+      attributes_default => {
+         input => '/tmp/input.txt',
+         output => '/tmp/output.txt',
+         db => '/tmp/db.db',
+         file => '/tmp/file.txt',
+         uri => 'http://www.example.com',
+         target => 'localhost',
+         ctimeout => 5,
+         rtimeout => 5,
+         datadir => '/tmp',
+         username => $ENV{USER} || 'root',
+         hostname => 'localhost',
+         domainname => 'example.com',
+         homedir => $ENV{HOME} || '/tmp',
+         port => 80,
+      },
+      require_modules => {
+         'Metabrik' => [ ],
+      },
    };
 }
 

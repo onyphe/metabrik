@@ -12,9 +12,14 @@ Prio:
 => search tag to display also available briks
 => search string: uniformise like search tag
 
+-> help() to be removed, merged with properties()
 -> Brik API: declare_attributes { attribute1 => [ 'ARRAY|ARRAYREF' ] }
-
 -> Brik API: change help() format to 'set' => [], 'run' => [],
+-> Brik API: merge declare* and require* into properties()
+-> Brik API: add newed() to avoid recreating accessors or other stuff
+=> Define our own TYPES (SCALAR, HASH, ARRAY, URL, NUMBER, ...)
+-> To prefix every Brik API with brik_? example: brik_properties()
+-> core::context: check_properties() for validity on use(), do it one time, sets _checked
 
 -> extract: csv code from file::read
 
@@ -118,6 +123,12 @@ MetaBriko?
 MetaScapy? MSP/MSY
 Briko
 Briko Depo
+
+Tags
+TODO > experimental > unstable > stable
+expe: everything can change (name, API)
+unstable: API may change
+stable: used extensively, can be enriched
 
 Design rules:
 1. Only shell `run' and `get' commands can overwrite $_

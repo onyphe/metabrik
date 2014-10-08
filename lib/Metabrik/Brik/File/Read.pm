@@ -9,24 +9,32 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub revision {
-   return '$Revision$';
-}
+sub properties {
+   my $self = shift;
 
-sub declare_tags {
-   return [ qw(main file) ];
-}
-
-sub declare_attributes {
-   return [ qw(input csv_has_header csv_format csv_separator csv_header) ];
-}
-
-sub require_modules {
    return {
-      'File::Slurp' => [],
-      'JSON::XS' => [],
-      'XML::Simple' => [],
-      'Text::CSV::Hashify' => [],
+      revision => '$Revision$',
+      tags => [ qw(main file) ],
+      attributes => {
+         input => [ qw(SCALAR) ],
+         csv_has_header => [ qw(SCALAR) ],
+         csv_format => [ qw(SCALAR) ],
+         csv_separator => [ qw(SCALAR) ],
+         csv_header => [ qw(ARRAY) ],
+      },
+      attributes_default => {
+         input => $self->global->input || '/tmp/input.txt',
+         csv_has_header => 0,
+         csv_header => [ ],
+         csv_format => 'aoh',
+         csv_separator => ';',
+      },
+      require_modules => {
+         'File::Slurp' => [ ],
+         'JSON::XS' => [ ],
+         'XML::Simple' => [ ],
+         'Text::CSV::Hashify' => [ ],
+      },
    };
 }
 
@@ -43,18 +51,6 @@ sub help {
       'run:csv' => '',
       'run:csv_get_col_by_name' => '<data> <type> <value>',
       'run:csv_get_col_by_number' => '<data> <number>',
-   };
-}
-
-sub default_values {
-   my $self = shift;
-
-   return {
-      input => $self->global->input || '/tmp/input.txt',
-      csv_has_header => 0,
-      csv_header => [ ],
-      csv_format => 'aoh',
-      csv_separator => ';',
    };
 }
 

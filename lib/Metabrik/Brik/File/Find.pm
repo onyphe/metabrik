@@ -9,31 +9,24 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub revision {
-   return '$Revision$';
-}
-
-sub declare_tags {
-   return [ qw(main find) ];
-}
-
-sub declare_attributes {
-   return [ qw(path recursive) ];
-}
-
 use IO::All;
 
-sub require_modules {
+sub properties {
    return {
-      'IO::All' => [],
-      'File::Find' => [],
-   };
-}
-
-sub default_values {
-   return {
-      'path' => '.',
-      'recursive' => 1,
+      revision => '$Revision$',
+      tags => [ qw(main find) ],
+      attributes => {
+         path => [ qw(SCALAR) ],
+         recursive => [ qw(SCALAR) ],
+      },
+      attributes_default => {
+         path => '.',
+         recursive => 1,
+      },
+      require_modules => {
+         'IO::All' => [ ],
+         'File::Find' => [ ],
+      },
    };
 }
 

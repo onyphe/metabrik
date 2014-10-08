@@ -9,28 +9,23 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub revision {
-   return '$Revision$';
-}
-
-sub declare_tags {
-   return [ qw(main shell script) ];
-}
-
-sub declare_attributes {
-   return [ qw(file) ];
+sub properties {
+   return {
+      revision => '$Revision$',
+      tags => [ qw(main shell script) ],
+      attributes => {
+         file => [ qw(SCALAR) ],
+      },
+      attributes_default => {
+         file => 'script.brik',
+      },
+   };
 }
 
 sub help {
    return {
       'set:file' => '<file>',
       'run:load' => '',
-   };
-}
-
-sub default_values {
-   return {
-      file => 'script.brik',
    };
 }
 

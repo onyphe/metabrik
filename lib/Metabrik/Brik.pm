@@ -17,10 +17,6 @@ our @AS = qw(
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
-sub revision {
-   return 1;
-}
-
 sub version {
    my $self = shift;
 
@@ -31,12 +27,45 @@ sub version {
    return "1.$version";
 }
 
-sub declare_tags {
-   return [ ];
-}
-
-sub declare_attributes {
-   return [ ];
+sub properties {
+   return {
+      version => '1',
+      revision => '0',
+      tags => [ qw() ],
+      attributes => {
+         debug => [ qw(SCALAR) ],
+         inited => [ qw(SCALAR) ],
+         context => [ qw(OBJECT) ],
+         global => [ qw(OBJECT) ],
+         log => [ qw(OBJECT) ],
+         shell => [ qw(OBJECT) ],
+      },
+      attributes_default => {
+         debug => 0,
+         inited => 0,
+      },
+      commands => {
+         command1 => [ qw() ],
+         command2 => [ qw(ARRAY SCALAR) ],
+         help => [ qw() ],
+         help_set => [ qw(SCALAR) ],
+         help_run => [ qw(SCALAR) ],
+         class => [ qw() ],
+         classes => [ qw() ],
+         name => [ qw() ],
+         repository => [ qw() ],
+         category => [ qw() ],
+         tags => [ qw() ],
+         has_tag => [ qw(SCALAR) ],
+         commands => [ qw() ],
+         has_command => [ qw(SCALAR) ],
+         attributes => [ qw() ],
+         has_attribute => [ qw(SCALAR) ],
+         self => [ qw() ],
+      },
+      require_modules => { },
+      require_used => { },
+   };
 }
 
 sub help {
@@ -49,7 +78,6 @@ sub help {
       'run:classes' => '',
       'run:version' => '',
       'run:revision' => '',
-      'run:default_values' => '',
       'run:name' => '',
       'run:repository' => '',
       'run:category' => '',
@@ -111,29 +139,18 @@ sub help_run {
    return;
 }
 
-sub require_used {
-   return { };
-}
-
-sub require_modules {
-   return { };
-}
-
-sub default_values {
-   return {
-      debug => 0,
-      inited => 0,
-   };
-}
-
 sub new {
    my $self = shift->SUPER::new(
       @_,
    );
 
+   if (! $self->can('properties')) {
+      $self->log->error("new: Brik [".$self->name."] has no properties");
+   }
+
    # Build Attributes, Class::Gomor style
-   my $attributes = $self->declare_attributes;
-   my @as = ( @$attributes );
+   my $attributes = $self->properties->{attributes};
+   my @as = ( keys %$attributes );
    if (@as > 0) {
       no strict 'refs';
 
@@ -156,20 +173,20 @@ sub new {
    }
 
    # Set default values for main Brik class
-   my $this_default = __PACKAGE__->default_values;
+   my $this_default = __PACKAGE__->properties->{attributes_default};
    for my $k (keys %$this_default) {
       #next unless defined($self->$k); # Do not overwrite if set on new
       $self->$k($this_default->{$k});
    }
 
    # Set default values for used Brik
-   my $default_values = $self->default_values;
-   for my $k (keys %$default_values) {
+   my $attributes_default = $self->properties->{attributes_default};
+   for my $k (keys %$attributes_default) {
       #next unless defined($self->$k); # Do not overwrite if set on new
-      $self->$k($default_values->{$k});
+      $self->$k($attributes_default->{$k});
    }
 
-   my $modules = $self->require_modules;
+   my $modules = $self->properties->{require_modules};
    for my $module (keys %$modules) {
       eval("require $module;");
       if ($@) {
@@ -182,7 +199,9 @@ sub new {
          eval('$module->import(@imports);');
          if ($@) {
             chomp($@);
-            return $self->log->error("new: unable to import Functions [@imports] from Module [$module]: $@", $self->class);
+            return $self->log->error("new: unable to import Functions [@imports] ".
+               "from Module [$module]: $@", $self->class
+            );
          }
       }
    }
@@ -192,7 +211,7 @@ sub new {
    if (defined($self->context) && $self->context->can('used')) {
       my $error = 0;
       my $used = $self->context->used;
-      my $require_used = $self->require_used;
+      my $require_used = $self->properties->{require_used};
       for my $brik (keys %$require_used) {
          if (! $self->context->is_used($brik)) {
             $self->log->error("new: you must use Brik [$brik] first", $self->class);
@@ -283,7 +302,7 @@ sub classes {
 sub tags {
    my $self = shift;
 
-   my $tags = $self->declare_tags;
+   my $tags = $self->properties->{tags};
 
    # We add the used tags if Brik has been used.
    # Not all Briks have a context set (core::context don't)

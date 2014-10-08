@@ -9,16 +9,19 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub revision {
-   return '$Revision$';
-}
+sub properties {
+   my $self = shift;
 
-sub declare_tags {
-   return [ qw(main shell rc) ];
-}
-
-sub declare_attributes {
-   return [ qw(rc_file) ];
+   return {
+      revision => '$Revision$',
+      tags => [ qw(main shell rc) ],
+      attributes => {
+         rc_file => [ qw(SCALAR) ],
+      },
+      attributes_default => {
+         rc_file => $self->global->homedir.'/.metabrik_rc',
+      },
+   };
 }
 
 sub help {
@@ -28,21 +31,13 @@ sub help {
    };
 }
 
-sub default_values {
-   my $self = shift;
-
-   return {
-      rc_file => $self->global->homedir.'/.metabrik_rc',
-   };
-}
-
 sub load {
    my $self = shift;
 
    my $rc_file = $self->rc_file;
 
    if (! -f $rc_file) {
-      return $self->log->info("load: can't find rc file [$rc_file]");
+      return $self->log->error("load: can't find rc file [$rc_file]");
    }
 
    my @lines = ();

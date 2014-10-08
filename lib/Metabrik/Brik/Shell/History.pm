@@ -9,16 +9,20 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub revision {
-   return '$Revision$';
-}
+sub properties {
+   my $self = shift;
 
-sub declare_tags {
-   return [ qw(main shell history) ];
-}
-
-sub declare_attributes {
-   return [ qw(shell history_file) ];
+   return {
+      revision => '$Revision$',
+      tags => [ qw(main shell history) ],
+      attributes => {
+         shell => [ qw(OBJECT) ],
+         history_file => [ qw(SCALAR) ],
+      },
+      attributes_default => {
+         history_file => $self->global->homedir.'/.metabrik_history',
+      },
+   };
 }
 
 sub help {
@@ -29,14 +33,6 @@ sub help {
       'run:get' => '',
       'run:get_one' => '<number>',
       'run:get_range' => '<number1..number2>',
-   };
-}
-
-sub default_values {
-   my $self = shift;
-
-   return {
-      history_file => $self->global->homedir.'/.metabrik_history',
    };
 }
 
