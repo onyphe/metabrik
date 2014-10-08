@@ -57,7 +57,7 @@
       },
       "Metabrik" : {
          "file" : "lib/Metabrik.pm",
-         "version" : "1.00_01"
+         "version" : "1.00_02"
       },
       "Metabrik::Brik" : {
          "file" : "lib/Metabrik/Brik.pm"
@@ -108,5 +108,5 @@
          "http://opensource.org/licenses/artistic-license.php"
       ]
    },
-   "version" : "1.00_01"
+   "version" : "1.00_02"
 }
