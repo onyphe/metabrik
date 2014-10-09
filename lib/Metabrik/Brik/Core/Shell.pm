@@ -1468,7 +1468,7 @@ sub comp_shell {
 
    # XXX: use $ENV{PATH} to gather binaries
 
-   return $self->catch_comp($word, $start, $line);
+   return $self->catch_comp_sub($word, $start, $line);
 }
 
 # For external commands that need a terminal (vi, for instance)
@@ -1555,7 +1555,7 @@ sub comp_cd {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
-   return $self->catch_comp($word, $start, $line);
+   return $self->catch_comp_sub($word, $start, $line);
 }
 
 sub run_pl {
@@ -1582,7 +1582,7 @@ sub comp_pl {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
-   return $self->catch_comp($word, $start, $line);
+   return $self->catch_comp_sub($word, $start, $line);
 }
 
 sub run_su {
@@ -1812,7 +1812,7 @@ sub comp_set {
    }
    # Else, default completion method on remaining word
    else {
-      return $self->catch_comp($word, $start, $line);
+      return $self->catch_comp_sub($word, $start, $line);
    }
 
    return @comp;
@@ -1957,7 +1957,7 @@ sub comp_run {
    }
    # Else, default completion method on remaining word
    else {
-      return $self->catch_comp($word, $start, $line);
+      return $self->catch_comp_sub($word, $start, $line);
    }
 
    return @comp;
@@ -1994,7 +1994,7 @@ sub comp_script {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
-   return $self->catch_comp($word, $start, $line);
+   return $self->catch_comp_sub($word, $start, $line);
 }
 
 #
@@ -2008,11 +2008,10 @@ sub catch_run {
    return $self->run_pl(@args);
 }
 
-# 1.  $word - The word the user is trying to complete.
-# 2.  $line - The line as typed by the user so far.
-# 3.  $start - The offset into $line where $word starts.
-# Default to check for global completion value
-sub catch_comp {
+# 1. $word - The word the user is trying to complete.
+# 2. $line - The line as typed by the user so far.
+# 3. $start - The offset into $line where $word starts.
+sub catch_comp_sub {
    my $self = shift;
    # Strange, we had to reverse order for $start and $line only for catch_comp() method.
    my ($word, $start, $line) = @_;
@@ -2067,6 +2066,74 @@ sub catch_comp {
       for my $this (@{$found->{files}}, @{$found->{directories}}) {
          #$self->debug && $self->log->debug("check[$this]");
          if ($this =~ /^$word/) {
+            push @comp, $this;
+         }
+      }
+   }
+
+   return @comp;
+}
+
+# 1. $word - The word the user is trying to complete.
+# 2. $line - The line as typed by the user so far.
+# 3. $start - The offset into $line where $word starts.
+# The true default completion method for Term::Shell when no comp_* matched.
+# Ugly, we should merge with comp_catch_sub().
+# Bug from Term::Shell: $start is not an offset in that case.
+sub catch_comp {
+   my $self = shift;
+   # Strange, we had to reverse order for $start and $line only for catch_comp() method.
+   my ($word, $start, $line) = @_;
+
+   my @words = $self->line_parsed($line);
+   my $count = scalar(@words);
+   my $last = $words[-1];
+
+   $self->debug && $self->log->debug("catch_comp: words[@words] | word[$word] line[$line] start[$start] | last[$last]");
+
+   # Be default, we will read the current directory
+   if (! length($start)) {
+      $start = '.';
+   }
+
+   $self->debug && $self->log->debug("catch_comp: DEFAULT: words[@words] | word[$word] line[$line] start[$start] | last[$last]");
+
+   my @comp = ();
+
+   # We don't use $start here, because the $ is stripped. We have to use $word[-1]
+   # We also check against $line, if we have a trailing space, the word was complete.
+   if ($last =~ /^\$/ && $line !~ /\s+$/) {
+      my $variables = $CTX->variables;
+
+      for my $this (@$variables) {
+         $this =~ s/^\$//;
+         #$self->debug && $self->log->debug("variable[$this] start[$start]");
+         if ($this =~ /^$start/) {
+            push @comp, $this;
+         }
+      }
+   }
+   else {
+      my $path = '.';
+
+      my $home = $self->path_home;
+      $start =~ s/^~/$home/;
+
+      if ($start =~ /^(.*)\/.*$/) {
+         $path = $1 || '/';
+      }
+      $self->debug && $self->log->debug("path[$path]");
+
+      my $find = Metabrik::Brik::File::Find->new or return $self->log->error("file::fine: new");
+      $find->init;
+      $find->path($path);
+      $find->recursive(0);
+
+      my $found = $find->all('.*', '.*');
+
+      for my $this (@{$found->{files}}, @{$found->{directories}}) {
+         #$self->debug && $self->log->debug("check[$this]");
+         if ($this =~ /^$start/) {
             push @comp, $this;
          }
       }

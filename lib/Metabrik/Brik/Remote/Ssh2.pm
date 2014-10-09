@@ -312,8 +312,6 @@ sub load {
 sub fini {
    my $self = shift;
 
-   $self->debug && $self->log->debug("fini: called");
-
    my $ssh2 = $self->ssh2;
    if (defined($ssh2)) {
       $ssh2->disconnect;

@@ -15,7 +15,6 @@ sub properties {
          _lp => [ qw(OBJECT) ],
       },
       require_modules => {
-         'CPAN::Data::Dump' => [],
          'CPAN::Lexical::Persistence' => [],
          'Metabrik::Brik::Core::Global' => [],
          'Metabrik::Brik::Core::Log' => [],
@@ -91,7 +90,7 @@ sub new {
          '$RUN' => 'undef',
          '$ERR' => 'undef',
          '$MSG' => 'undef',
-         '$RES' => 'undef',
+         '$REF' => 'undef',
       });
       $lp->call(sub {
          my %args = @_;
@@ -167,7 +166,7 @@ sub init {
 
 sub do {
    my $self = shift;
-   my ($code, $dump) = @_;
+   my ($code) = @_;
 
    if (! defined($code)) {
       return $self->log->info($self->help_run('do'));
@@ -177,14 +176,7 @@ sub do {
 
    my $res;
    eval {
-      if ($dump) {
-         $self->debug && $self->log->debug("do: echo on");
-         $res = CPAN::Data::Dump::dump($lp->do($code));
-      }
-      else {
-         $self->debug && $self->log->debug("do: echo off");
-         $res = $lp->do($code);
-      }
+      $res = $lp->do($code);
    };
    if ($@) {
       chomp($@);
@@ -193,7 +185,7 @@ sub do {
 
    $self->debug && $self->log->debug("do: returned[".(defined($res) ? $res : 'undef')."]");
 
-   return $res;
+   return defined($res) ? $res : 'undef';
 }
 
 sub call {
@@ -480,7 +472,7 @@ sub set {
 
       my $SET = $CTX->{set}->{$__ctx_brik}->{$__ctx_attribute} = $__ctx_value;
 
-      my $RES = \$SET;
+      my $REF = \$SET;
 
       return $SET;
    }, brik => $brik, attribute => $attribute, value => $value);
@@ -522,7 +514,7 @@ sub get {
 
       my $GET = $CTX->{used}->{$__ctx_brik}->$__ctx_attribute;
 
-      my $RES = \$GET;
+      my $REF = \$GET;
 
       return $GET;
    }, brik => $brik, attribute => $attribute);
@@ -574,7 +566,7 @@ sub run {
          $ERR = 1;
       }
 
-      my $RES = \$RUN;
+      my $REF = \$RUN;
 
       return $RUN;
    }, brik => $brik, command => $command, args => \@args);
