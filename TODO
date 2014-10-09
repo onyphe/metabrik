@@ -10,6 +10,9 @@ Prio:
 
 -> DESIGN: shall only Commands take no argument?
 
+Changer : par | (path dans file::find)
+Séparateur officiel: |
+
 -> tags: support : to specify multiple tags, support ! to skip not wanted tags
 => search tag to display also available briks
 => search string: uniformise like search tag
