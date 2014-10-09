@@ -20,6 +20,9 @@ sub properties {
       attributes_default => {
          echo => 1,
       },
+      require_modules => {
+         'CPAN::Data::Dump' => [ 'dump' ],
+      },
    };
 }
 
@@ -1461,10 +1464,11 @@ sub run_shell {
 
 sub comp_shell {
    my $self = shift;
+   my ($word, $line, $start) = @_;
 
    # XXX: use $ENV{PATH} to gather binaries
 
-   return ();
+   return $self->catch_comp($word, $start, $line);
 }
 
 # For external commands that need a terminal (vi, for instance)
@@ -1547,9 +1551,12 @@ sub run_cd {
    return 1;
 }
 
-# off: use catch_comp()
-#sub comp_cd {
-#}
+sub comp_cd {
+   my $self = shift;
+   my ($word, $line, $start) = @_;
+
+   return $self->catch_comp($word, $start, $line);
+}
 
 sub run_pl {
    my $self = shift;
@@ -1559,24 +1566,24 @@ sub run_pl {
 
    $self->debug && $self->log->debug("run_pl: code[$line]");
 
-   my $r = $CTX->do($line, $self->echo);
+   my $r = $CTX->do($line);
    if (! defined($r)) {
-      # When ext::shell:echo is off, we can get undef and it is not an error.
-      # XXX: we should use $@ to know if there is an error
-      #$self->log->error("pl: unable to execute Code [$line]");
-      return;
+      return $self->log->error("pl: unable to execute Code [$line]");
    }
 
    if ($self->echo) {
-      print "$r\n";
+      print CPAN::Data::Dump::dump($r)."\n";
    }
 
    return $r;
 }
 
-# off: use catch_comp()
-#sub comp_pl {
-#}
+sub comp_pl {
+   my $self = shift;
+   my ($word, $line, $start) = @_;
+
+   return $self->catch_comp($word, $start, $line);
+}
 
 sub run_su {
    my $self = shift;
@@ -1804,12 +1811,8 @@ sub comp_set {
       }
    }
    # Else, default completion method on remaining word
-   elsif ($count == 3 || $count == 4 && length($word) > 0) {
-      # Default completion method, we strip first three words "set <brik> <attribute>"
-      shift @words;
-      shift @words;
-      shift @words;
-      return $self->catch_comp($word, join(' ', @words), $start);
+   else {
+      return $self->catch_comp($word, $start, $line);
    }
 
    return @comp;
@@ -1886,7 +1889,7 @@ sub run_run {
    }
 
    if ($self->echo) {
-      print "$r\n";
+      print CPAN::Data::Dump::dump($r)."\n";
    }
 
    return $r;
@@ -1896,19 +1899,17 @@ sub comp_run {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
+   my @words = $self->line_parsed($line);
+   my $count = scalar(@words);
+   my $last = $words[-1];
+
+   $self->debug && $self->log->debug("comp_run: words[@words] | word[$word] line[$line] start[$start] | last[$last]");
+
    # Completion is for used Briks only
    my $used = $CTX->used;
    if (! defined($used)) {
       $self->debug && $self->log->debug("comp_run: can't fetch used Briks");
       return ();
-   }
-
-   my @words = $self->line_parsed($line);
-   my $count = scalar(@words);
-   my $last = $words[-1];
-
-   if ($self->debug) {
-      $self->log->debug("comp_run: word[$word] line[$line] start[$start] count[$count] last[$last]");
    }
 
    my $brik = defined($words[1]) ? $words[1] : undef;
@@ -1955,17 +1956,8 @@ sub comp_run {
       }
    }
    # Else, default completion method on remaining word
-   elsif ($count == 3 || $count == 4 && length($word) > 0) {
-      # Default completion method, we strip first three words "run <brik> <command>"
-      shift @words;
-      shift @words;
-      shift @words;
-      my $line = join(' ', @words);
-      #$self->log->verbose("word[$word] line[$line] start[$start] last[$last]");
-      #my @new = $self->line_parsed($line);
-      #$self->log->verbose("new[@new]");
-      #return $self->catch_comp($word, $start, $line); #$line, $start);
-      return $self->catch_comp($word, $line, $start);
+   else {
+      return $self->catch_comp($word, $start, $line);
    }
 
    return @comp;
@@ -1998,9 +1990,12 @@ sub run_script {
    return 1;
 }
 
-# off: use catch_comp()
-#sub comp_script {
-#}
+sub comp_script {
+   my $self = shift;
+   my ($word, $line, $start) = @_;
+
+   return $self->catch_comp($word, $start, $line);
+}
 
 #
 # Term::Shell::catch stuff
@@ -2013,6 +2008,9 @@ sub catch_run {
    return $self->run_pl(@args);
 }
 
+# 1.  $word - The word the user is trying to complete.
+# 2.  $line - The line as typed by the user so far.
+# 3.  $start - The offset into $line where $word starts.
 # Default to check for global completion value
 sub catch_comp {
    my $self = shift;
@@ -2023,24 +2021,26 @@ sub catch_comp {
    my $count = scalar(@words);
    my $last = $words[-1];
 
+   $self->debug && $self->log->debug("catch_comp: words[@words] | word[$word] line[$line] start[$start] | last[$last]");
+
    # Be default, we will read the current directory
-   if (! length($start)) {
-      $start = '.';
+   if (! length($word)) {
+      $word = '.';
    }
 
-   $self->debug && $self->log->debug("catch_comp: word[$word] line[$line] start[$start] count[$count]");
+   $self->debug && $self->log->debug("catch_comp: DEFAULT: words[@words] | word[$word] line[$line] start[$start] | last[$last]");
 
    my @comp = ();
 
-   # We don't use $start here, because the $ is stripped. We have to use $word[-1]
+   # We don't use $word here, because the $ is stripped. We have to use $word[-1]
    # We also check against $line, if we have a trailing space, the word was complete.
    if ($last =~ /^\$/ && $line !~ /\s+$/) {
       my $variables = $CTX->variables;
 
       for my $this (@$variables) {
          $this =~ s/^\$//;
-         $self->debug && $self->log->debug("variable[$this] start[$start]");
-         if ($this =~ /^$start/) {
+         #$self->debug && $self->log->debug("variable[$this] start[$start]");
+         if ($this =~ /^$word/) {
             push @comp, $this;
          }
       }
@@ -2049,13 +2049,13 @@ sub catch_comp {
       my $path = '.';
 
       my $home = $self->path_home;
-      $start =~ s/^~/$home/;
+      $word =~ s/^~/$home/;
 
-      if ($start =~ /^(.*)\/.*$/) {
+      if ($word =~ /^(.*)\/.*$/) {
          $path = $1 || '/';
       }
 
-      $self->debug && $self->log->debug("path[$path]");
+      #$self->debug && $self->log->debug("path[$path]");
 
       my $find = Metabrik::Brik::File::Find->new or return $self->log->error("file::fine: new");
       $find->init;
@@ -2066,7 +2066,7 @@ sub catch_comp {
 
       for my $this (@{$found->{files}}, @{$found->{directories}}) {
          #$self->debug && $self->log->debug("check[$this]");
-         if ($this =~ /^$start/) {
+         if ($this =~ /^$word/) {
             push @comp, $this;
          }
       }
