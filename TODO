@@ -8,6 +8,8 @@ Prio:
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetaBriky
 => Ornitorinc
 
+-> DESIGN: shall only Commands take no argument?
+
 -> tags: support : to specify multiple tags, support ! to skip not wanted tags
 => search tag to display also available briks
 => search string: uniformise like search tag

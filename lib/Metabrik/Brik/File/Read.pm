@@ -17,23 +17,14 @@ sub properties {
       tags => [ qw(main file) ],
       attributes => {
          input => [ qw(SCALAR) ],
-         csv_has_header => [ qw(SCALAR) ],
-         csv_format => [ qw(SCALAR) ],
-         csv_separator => [ qw(SCALAR) ],
-         csv_header => [ qw(ARRAY) ],
       },
       attributes_default => {
          input => $self->global->input || '/tmp/input.txt',
-         csv_has_header => 0,
-         csv_header => [ ],
-         csv_format => 'aoh',
-         csv_separator => ';',
       },
       require_modules => {
          'File::Slurp' => [ ],
          'JSON::XS' => [ ],
          'XML::Simple' => [ ],
-         'Text::CSV::Hashify' => [ ],
       },
    };
 }
@@ -41,16 +32,9 @@ sub properties {
 sub help {
    return {
       'set:input' => '<file>',
-      'set:csv_has_header' => '<0|1>',
-      'set:csv_header' => '<header1:header2:..:headerN>',
-      'set:csv_format' => '<aoh|..> (default: aoh)',
-      'set:csv_separator' => '<separator>',
       'run:text' => '',
       'run:json' => '',
       'run:xml' => '',
-      'run:csv' => '',
-      'run:csv_get_col_by_name' => '<data> <type> <value>',
-      'run:csv_get_col_by_number' => '<data> <number>',
    };
 }
 
@@ -87,74 +71,6 @@ sub xml {
    my $xs = XML::Simple->new;
 
    return $xs->XMLin($self->text);
-}
-
-sub csv {
-   my $self = shift;
-
-   if (! defined($self->input)) {
-      return $self->log->info($self->help_set('input'));
-   }
-
-   if (! defined($self->csv_separator)) {
-      return $self->log->info($self->help_set('csv_separator'));
-   }
-
-   if (! defined($self->csv_format)) {
-      return $self->log->info($self->help_set('csv_format'));
-   }
-
-   my $format = $self->csv_format;
-   if ($format !~ /^aoh$/) {
-      return $self->log->info($self->help_set('csv_format'));
-   }
-
-   my $data = Text::CSV::Hashify->new({
-      file => $self->input,
-      format => $format,
-      sep_char => $self->csv_separator,
-   }) or return $self->log->error("Text::CSV::Hashify: new");
-
-   return $data->all;
-}
-
-sub csv_get_col_by_name {
-   my $self = shift;
-   my ($data, $type, $value) = @_;
-
-   if (! $self->csv_has_header || @{$self->csv_header} == 0) {
-      return $self->log->error("CSV has no header, can't do that");
-   }
-
-   if (! defined($data)) {
-      return $self->log->info($self->help_run('csv'));
-   }
-
-   if (! defined($type)) {
-      return $self->log->info($self->help_run('csv_get_col_by_name'));
-   }
-
-   if (! defined($value)) {
-      return $self->log->info($self->help_run('csv_get_col_by_name'));
-   }
-
-   my @results = ();
-   for my $row (@$data) {
-      if (exists($row->{$type})) {
-         if ($row->{$type} eq $value) {
-            push @results, $row;
-         }
-      }
-   }
-
-   return \@results;
-}
-
-sub csv_get_col_by_number {
-   my $self = shift;
-   my ($data, $number) = @_;
-
-   return $self->log->info("XXX: TODO");
 }
 
 1;
