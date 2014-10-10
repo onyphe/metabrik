@@ -8,9 +8,10 @@ Prio:
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetaBriky
 => Ornitorinc
 
--> brik: www::cewl => to gather keywords for brute-force attacks
+-> brikclass: version() to return $Metabrik::VERSION.$revision.
+=> can remote metabrik_version() from core::global
 
--> $RES => $REF
+-> brik: www::cewl => to gather keywords for brute-force attacks
 
 -> file::csv
 => use file::read and decoding::csv (decode + encode)
@@ -35,8 +36,6 @@ Séparateur officiel: |
 -> Brik API: add newed() to avoid recreating accessors or other stuff
 => Define our own TYPES (SCALAR, HASH, ARRAY, URL, NUMBER, ...)
 -> core::context: check_properties() for validity on use(), do it one time, sets _checked
-
--> rename: core::gobal metabrik_version to version?
 
 -> remove: run_pl() integrate into catch_run() instead.
 
