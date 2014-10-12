@@ -17,20 +17,20 @@ our @AS = qw(
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
+use Metabrik;
+
 sub version {
    my $self = shift;
 
-   my $revision = $self->revision;
-   my ($version) = $revision =~ /(\d+)/;
+   my $revision = $self->properties->{revision};
+   $revision =~ s/^.*?(\d+).*?$/$1/;
 
-   # Version 1 of the API
-   return "1.$version";
+   return $Metabrik::VERSION.'.'.$revision;
 }
 
 sub properties {
    return {
-      version => '1',
-      revision => '0',
+      revision => '$Revision$',
       tags => [ qw() ],
       attributes => {
          debug => [ qw(SCALAR) ],
@@ -45,9 +45,7 @@ sub properties {
          inited => 0,
       },
       commands => {
-         command1 => [ qw() ],
-         command2 => [ qw(ARRAY SCALAR) ],
-         help => [ qw() ],
+         version => [ q() ],
          help_set => [ qw(SCALAR) ],
          help_run => [ qw(SCALAR) ],
          class => [ qw() ],
@@ -68,29 +66,6 @@ sub properties {
    };
 }
 
-sub help {
-   return {
-      'set:debug' => '<0|1>',
-      'run:help' => '',
-      'run:help_set' => '<attribute>',
-      'run:help_run' => '<command>',
-      'run:class' => '',
-      'run:classes' => '',
-      'run:version' => '',
-      'run:revision' => '',
-      'run:name' => '',
-      'run:repository' => '',
-      'run:category' => '',
-      'run:tags' => '',
-      'run:has_tag' => '<tag>',
-      'run:commands' => '',
-      'run:has_command' => '<command>',
-      'run:attributes' => '',
-      'run:has_attribute' => '<attribute>',
-      'run:self' => '',
-   };
-}
-
 sub help_set {
    my $self = shift;
    my ($attribute) = @_;
@@ -106,9 +81,12 @@ sub help_set {
    for my $class (@$classes) {
       last if $class eq 'Metabrik::Brik';
 
-      if (exists($class->help->{"set:$attribute"})) {
-         my $help = $class->help->{"set:$attribute"};
-         return "set $name $attribute $help";
+      my $attributes = $class->attributes;
+
+      if (exists($attributes->{$attribute})) {
+         my $help = sprintf("set %s %-20s ", $name, $attribute);
+         $help .= join(' ', @{$attributes->{$attribute}});
+         return $help;
       }
    }
 
@@ -130,9 +108,12 @@ sub help_run {
    for my $class (@$classes) {
       last if $class eq 'Metabrik::Brik';
 
-      if (exists($class->help->{"run:$command"})) {
-         my $help = $class->help->{"run:$command"};
-         return "run $name $command $help";
+      my $commands = $class->commands;
+
+      if (exists($commands->{commands})) {
+         my $help = sprintf("run %s %-20s ", $name, $command);
+         $help .= join(' ', @{$commands->{$command}});
+         return $help;
       }
    }
 
@@ -333,30 +314,22 @@ sub has_tag {
 sub commands {
    my $self = shift;
 
-   my %commands = ();
+   my $commands = { %{__PACKAGE__->properties->{commands}} };
 
-   my $classes = $self->classes;
+   if (exists($self->properties->{commands})) {
+      for my $command (keys %{$self->properties->{commands}}) {
+         #$self->log->info("command[$command]");
 
-   for my $class (@$classes) {
-      next if (! $class->can('help'));
+         next unless $command =~ /^[a-z]/; # Brik Commands always begin with a minuscule
+         next if $command =~ /^cg[A-Z]/; # Class::Gomor stuff
+         next if $command =~ /^_/; # Internal stuff
+         next if $command =~ /^(?:a|b|import|init|fini|new|SUPER::|BEGIN|isa|can|EXPORT|AA|AS|ISA|DESTROY|__ANON__)$/; # Perl stuff
 
-      my $help = $class->help;
-
-      for my $this (keys %$help) {
-         my ($command, $name) = split(':', $this);
-
-         next unless $name =~ /^[a-z]/; # Brik Commands always begin with a minuscule
-         next if $name =~ /^cg[A-Z]/; # Class::Gomor stuff
-         next if $name =~ /^_/; # Internal stuff
-         next if $name =~ /^(?:a|b|import|init|new|SUPER::|BEGIN|isa|can|EXPORT|AA|AS|ISA|DESTROY|__ANON__)$/; # Perl stuff
-
-         if ($command eq 'set' || $command eq 'run') {
-            $commands{$name}++;
-         }
+         $commands->{$command} = $self->properties->{commands}->{$command};
       }
    }
 
-   return [ sort { $a cmp $b } keys %commands ];
+   return $commands;
 }
 
 sub has_command {
@@ -364,10 +337,10 @@ sub has_command {
    my ($command) = @_;
 
    if (! defined($command)) {
-      return $self->log->info("run ".$self->name." has_command <command>");
+      return $self->log->info($self->help_run('has_command'));
    }
 
-   if ($self->can($command)) {
+   if (exists($self->commands->{$command})) {
       return 1;
    }
 
@@ -377,32 +350,18 @@ sub has_command {
 sub attributes {
    my $self = shift;
 
-   my %attributes = ();
+   my $attributes = { %{__PACKAGE__->properties->{attributes}} };
 
-   my $classes = $self->classes;
+   if (exists($self->properties->{attributes})) {
+      for my $attribute (keys %{$self->properties->{attributes}}) {
+         next unless $attribute =~ /^[a-z]/; # Brik Attributes always begin with a minuscule
+         next if $attribute =~ /^_/;         # Internal stuff
 
-   for my $class (@$classes) {
-      next if (! $class->can('help'));
-
-      my $help = $class->help;
-
-      $self->debug && $self->log->debug("class [$class]");
-
-      for my $this (keys %$help) {
-         my ($command, $name) = split(':', $this);
-
-         $self->debug && $self->log->debug("this [$command:$name]");
-
-         next unless $name =~ /^[a-z]/; # Brik Attributes always begin with a minuscule
-         next if $name =~ /^_/; # Internal stuff
-
-         if ($command eq 'set') {
-            $attributes{$name}++;
-         }
+         $attributes->{$attribute} = $self->properties->{attributes}->{$attribute};
       }
    }
 
-   return [ sort { $a cmp $b } keys %attributes ];
+   return $attributes;
 }
 
 sub has_attribute {
@@ -410,10 +369,10 @@ sub has_attribute {
    my ($attribute) = @_;
 
    if (! defined($attribute)) {
-      return $self->log->info("run ".$self->name." has_attribute <command>");
+      return $self->log->info($self->help_run('has_attribute'));
    }
 
-   if ($self->can($attribute)) {
+   if (exists($self->attributes->{$attribute})) {
       return 1;
    }
 

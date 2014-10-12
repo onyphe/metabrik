@@ -11,6 +11,8 @@ Prio:
 -> brikclass: version() to return $Metabrik::VERSION.$revision.
 => can remote metabrik_version() from core::global
 
+-> write_history => put in fini() from shell:history
+
 -> brik: www::cewl => to gather keywords for brute-force attacks
 
 -> file::csv
@@ -20,7 +22,7 @@ Prio:
 
 -> bug: no completion for $ in run audit::twiki url_paths $ or set, or get ...
 
--> DESIGN: shall only Commands take no argument?
+-> DESIGN: shall Commands take no argument?
 => No.
 
 Changer : par | (path dans file::find)
@@ -36,6 +38,7 @@ Séparateur officiel: |
 -> Brik API: add newed() to avoid recreating accessors or other stuff
 => Define our own TYPES (SCALAR, HASH, ARRAY, URL, NUMBER, ...)
 -> core::context: check_properties() for validity on use(), do it one time, sets _checked
+=> also check is some commands will overwrite base class commands
 
 -> remove: run_pl() integrate into catch_run() instead.
 

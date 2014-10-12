@@ -21,23 +21,17 @@ sub properties {
          color => 1,
          level => 1,
       },
+      commands => {
+         info => [ qw(SCALAR) ],
+         verbose => [ qw(SCALAR) ],
+         warning => [ qw(SCALAR) ],
+         error => [ qw(SCALAR) ],
+         fatal => [ qw(SCALAR) ],
+         debug => [ qw(SCALAR) ],
+      },
       require_modules => {
          'Term::ANSIColor' => [ ],
       },
-   };
-}
-
-
-sub help {
-   return {
-      'set:color' => '<0|1>',
-      'set:level' => '<0|1|2|3>',
-      'run:info' => '<message>',
-      'run:verbose' => '<message>',
-      'run:warning' => '<message>',
-      'run:error' => '<message>',
-      'run:fatal' => '<message>',
-      'run:debug' => '<message>',
    };
 }
 

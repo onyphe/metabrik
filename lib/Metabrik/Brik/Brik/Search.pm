@@ -13,14 +13,11 @@ sub properties {
    return {
       revision => '$Revision$',
       tags => [ qw(unstable main brik search) ],
-   };
-}
-
-sub help {
-   return {
-      'run:all' => '',
-      'run:string' => '<string>',
-      'run:tag' => '<tag>',
+      commands => {
+         all => [ ],
+         string => [ qw(SCALAR) ],
+         tag => [ qw(SCALAR) ],
+      },
    };
 }
 

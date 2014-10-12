@@ -25,7 +25,7 @@ my $script = shift;
 my $context = Metabrik::Brik::Core::Context->new;
 $context->init or return;
 
-my $metabrik_version = $context->get('core::global', 'metabrik_version');
+my $version = $context->run('core::global', 'version');
 
 if (defined($script)) {
    $context->use('shell::script') or return;
@@ -52,7 +52,7 @@ else {
    $context->run('core::shell', 'splash');
 
    print "--[ Welcome to Metabrik - Knowledge is in your head, Detail is in the code ]--\n";
-   print "--[ Version $metabrik_version ]--\n";
+   print "--[ Version $version ]--\n";
    print "\n";
 
    print "    There is a Brik for that.\n\n";

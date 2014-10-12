@@ -29,29 +29,21 @@ sub properties {
          port => 22,
          username => $self->global->username || 'root',
       },
+      commands => {
+         connect => [ ],
+         cat => [ qw(SCALAR) ],
+         exec => [ qw(SCALAR) ],
+         readall => [ ],
+         readline => [ ],
+         readlineall => [ ],
+         load => [ qw(SCALAR) ],
+         listfiles => [ qw(SCALAR) ],
+         disconnect => [ ],
+      },
       require_modules => {
          'IO::Scalar' => [ ],
          'Net::SSH2' => [ ],
       },
-   };
-}
-
-sub help {
-   return {
-      'set:hostname' => '<ip|hostname>',
-      'set:port' => '<port>',
-      'set:username' => '<user>',
-      'set:publickey' => '<file>',
-      'set:privatekey' => '<file>',
-      'run:connect' => '',
-      'run:cat' => '<file>',
-      'run:exec' => '<command>',
-      'run:readall' => '',
-      'run:readline' => '',
-      'run:readlineall' => '',
-      'run:load' => '<file>',
-      'run:listfiles' => '<glob>',
-      'run:disconnect' => '',
    };
 }
 

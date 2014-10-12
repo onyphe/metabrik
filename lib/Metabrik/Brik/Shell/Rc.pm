@@ -21,13 +21,9 @@ sub properties {
       attributes_default => {
          rc_file => $self->global->homedir.'/.metabrik_rc',
       },
-   };
-}
-
-sub help {
-   return {
-      'set:rc_file' => '<file>',
-      'run:load' => '',
+      commands => {
+         load => [ ],
+      },
    };
 }
 

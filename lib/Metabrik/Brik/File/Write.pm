@@ -25,20 +25,14 @@ sub properties {
          append => 1,
          overwrite => 0,
       },
+      commands => {
+         text => [ qw(SCALAR SCALARREF) ],
+      },
       require_modules => {
          'JSON::XS' => [ ],
          'XML::Simple' => [ ],
          'Text::CSV::Hashify' => [ ],
       },
-   };
-}
-
-sub help {
-   return {
-      'set:output' => '<file>',
-      'set:append' => '<0|1>',
-      'set:overwrite' => '<0|1>',
-      'run:text' => '<data>',
    };
 }
 

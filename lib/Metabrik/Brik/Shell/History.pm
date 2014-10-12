@@ -22,17 +22,13 @@ sub properties {
       attributes_default => {
          history_file => $self->global->homedir.'/.metabrik_history',
       },
-   };
-}
-
-sub help {
-   return {
-      'set:history_file' => '<file>',
-      'run:load' => '',
-      'run:write' => '',
-      'run:get' => '',
-      'run:get_one' => '<number>',
-      'run:get_range' => '<number1..number2>',
+      commands => {
+         load => [ ],
+         write => [ ],
+         get => [ ],
+         get_one => [ qw(SCALAR) ],
+         get_range => [ qw(ARRAY) ],
+      },
    };
 }
 

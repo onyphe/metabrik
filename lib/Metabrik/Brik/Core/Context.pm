@@ -14,6 +14,22 @@ sub properties {
       attributes => {
          _lp => [ qw(OBJECT) ],
       },
+      commands => {
+         use => [ qw(SCALAR) ],
+         set => [ qw(SCALAR SCALAR SCALAR) ],
+         get => [ qw(SCALAR SCALAR) ],
+         run => [ qw(SCALAR SCALAR) ],
+         do => [ qw(SCALAR) ],
+         call => [ qw(SCALAR) ],
+         variables => [ ],
+         find_available => [ ],
+         update_available => [ ],
+         available => [ ],
+         is_available => [ qw(SCALAR) ],
+         used => [ ],
+         is_used => [ qw(SCALAR) ],
+         status => [ ],
+      },
       require_modules => {
          'CPAN::Lexical::Persistence' => [],
          'Metabrik::Brik::Core::Global' => [],

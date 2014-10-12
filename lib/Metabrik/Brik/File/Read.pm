@@ -21,20 +21,16 @@ sub properties {
       attributes_default => {
          input => $self->global->input || '/tmp/input.txt',
       },
+      commands => {
+         text => [ ],
+         json => [ ],
+         xml => [ ],
+      },
       require_modules => {
          'File::Slurp' => [ ],
          'JSON::XS' => [ ],
          'XML::Simple' => [ ],
       },
-   };
-}
-
-sub help {
-   return {
-      'set:input' => '<file>',
-      'run:text' => '',
-      'run:json' => '',
-      'run:xml' => '',
    };
 }
 

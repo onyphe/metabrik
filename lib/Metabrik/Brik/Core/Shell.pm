@@ -20,6 +20,24 @@ sub properties {
       attributes_default => {
          echo => 1,
       },
+      commands => {
+         splash => [ ],
+         system => [ qw(SCALAR) ],
+         history  => [ qw(SCALAR) ],
+         write_history  => [ ],
+         cd => [ qw(SCALAR) ],
+         pl => [ qw(SCALAR) ],
+         su => [ ],
+         use => [ qw(SCALAR) ],
+         set => [ qw(SCALAR SCALAR SCALAR) ],
+         get => [ qw(SCALAR SCALAR) ],
+         run => [ qw(SCALAR SCALAR) ],
+         exit => [ ],
+         cmd => [ qw(SCALAR) ],
+         cmdloop => [ ],
+         script => [ qw(SCALAR) ],
+         reuse => [ ],
+      },
       require_modules => {
          'CPAN::Data::Dump' => [ 'dump' ],
       },
@@ -252,6 +270,14 @@ sub script {
    my $self = shift;
 
    $self->_shell->run_script(@_);
+
+   return 1;
+}
+
+sub reuse {
+   my $self = shift;
+
+   $self->_shell->run_reuse(@_);
 
    return 1;
 }
@@ -1692,12 +1718,12 @@ sub run_help {
          my $attributes = $CTX->used->{$brik}->attributes;
          my $commands = $CTX->used->{$brik}->commands;
 
-         for my $attribute (@$attributes) {
+         for my $attribute (keys %$attributes) {
             my $help = $CTX->used->{$brik}->help_set($attribute);
             $self->log->info($help) if defined($help);
          }
 
-         for my $command (@$commands) {
+         for my $command (keys %$commands) {
             my $help = $CTX->used->{$brik}->help_run($command);
             $self->log->info($help) if defined($help);
          }
@@ -1791,7 +1817,7 @@ sub comp_set {
       }
 
       my $attributes = $used->{$brik}->attributes;
-      push @comp, @$attributes;
+      push @comp, keys %$attributes;
    }
    # We want to complete entered Attribute
    elsif ($count == 3 && length($word) > 0) {
@@ -1804,7 +1830,7 @@ sub comp_set {
 
       my $attributes = $used->{$brik}->attributes;
 
-      for my $a (@$attributes) {
+      for my $a (keys %$attributes) {
          if ($a =~ /^$word/) {
             push @comp, $a;
          }
@@ -1828,7 +1854,7 @@ sub run_get {
 
       for my $brik (sort { $a cmp $b } keys %$used) {
          my $attributes = $used->{$brik}->attributes or next;
-         for my $attribute (sort { $a cmp $b } @$attributes) {
+         for my $attribute (sort { $a cmp $b } keys %$attributes) {
             $self->log->info("$brik $attribute ".$CTX->get($brik, $attribute));
          }
       }
@@ -1843,7 +1869,7 @@ sub run_get {
 
       my %printed = ();
       my $attributes = $used->{$brik}->attributes;
-      for my $attribute (sort { $a cmp $b } @$attributes) {
+      for my $attribute (sort { $a cmp $b } keys %$attributes) {
          my $print = "$brik $attribute ".$CTX->get($brik, $attribute);
          $self->log->info($print) if ! exists($printed{$print});
          $printed{$print}++;
@@ -1857,9 +1883,7 @@ sub run_get {
          return $self->log->error("get: Brik [$brik] not used");
       }
 
-      my $attributes = $used->{$brik}->attributes or return;
-
-      if (! $used->{$brik}->can($attribute)) {
+      if (! $used->{$brik}->has_attribute($attribute)) {
          return $self->log->error("get: Attribute [$attribute] does not exist for Brik [$brik]");
       }
 
@@ -1933,9 +1957,7 @@ sub comp_run {
       }
 
       my $commands = $used->{$brik}->commands;
-      my $attributes = $used->{$brik}->attributes;
-      push @comp, @$commands;
-      push @comp, @$attributes;
+      push @comp, keys %$commands;
    }
    # We want to complete entered Command and Attributes
    elsif ($count == 3 && length($word) > 0) {
@@ -1947,9 +1969,8 @@ sub comp_run {
       }
 
       my $commands = $used->{$brik}->commands;
-      my $attributes = $used->{$brik}->attributes;
 
-      for my $a (@$commands, @$attributes) {
+      for my $a (keys %$commands) {
          if ($a =~ /^$word/) {
             push @comp, $a;
          }

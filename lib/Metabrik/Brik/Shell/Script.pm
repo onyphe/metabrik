@@ -19,13 +19,9 @@ sub properties {
       attributes_default => {
          file => 'script.brik',
       },
-   };
-}
-
-sub help {
-   return {
-      'set:file' => '<file>',
-      'run:load' => '',
+      commands => {
+         load => [ ],
+      },
    };
 }
 

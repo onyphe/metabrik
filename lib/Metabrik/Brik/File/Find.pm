@@ -23,18 +23,13 @@ sub properties {
          path => '.',
          recursive => 1,
       },
+      commands => {
+         all => [ qw(SCALAR SCALAR) ],
+      },
       require_modules => {
          'IO::All' => [ ],
          'File::Find' => [ ],
       },
-   };
-}
-
-sub help {
-   return {
-      'set:path' => '<director1:directory2:..:directoryN> (default: \'.\')',
-      'set:recursive' => '<0|1> (default: 1)',
-      'run:all' => '<dirpattern> <filepattern>',
    };
 }
 
