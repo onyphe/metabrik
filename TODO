@@ -8,6 +8,9 @@ Prio:
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetaBriky
 => Ornitorinc
 
+-> shell::exec: command(), attributes terminal => 1|0
+=> run shell::exec command ls /
+
 -> brikclass: version() to return $Metabrik::VERSION.$revision.
 => can remote metabrik_version() from core::global
 
