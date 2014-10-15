@@ -9,9 +9,7 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub properties {
-   my $self = shift;
-
+sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(main shell history) ],
@@ -19,15 +17,22 @@ sub properties {
          shell => [ qw(OBJECT) ],
          history_file => [ qw(SCALAR) ],
       },
-      attributes_default => {
-         history_file => $self->global->homedir.'/.metabrik_history',
-      },
       commands => {
          load => [ ],
          write => [ ],
          get => [ ],
          get_one => [ qw(SCALAR) ],
          get_range => [ qw(ARRAY) ],
+      },
+   };
+}
+
+sub properties {
+   my $self = shift;
+
+   return {
+      attributes_default => {
+         history_file => $self->global->homedir.'/.metabrik_history',
       },
    };
 }

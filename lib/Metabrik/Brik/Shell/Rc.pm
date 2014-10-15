@@ -9,20 +9,25 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub properties {
-   my $self = shift;
-
+sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(main shell rc) ],
       attributes => {
          rc_file => [ qw(SCALAR) ],
       },
-      attributes_default => {
-         rc_file => $self->global->homedir.'/.metabrik_rc',
-      },
       commands => {
          load => [ ],
+      },
+   };
+}
+
+sub properties {
+   my $self = shift;
+
+   return {
+      attributes_default => {
+         rc_file => $self->global->homedir.'/.metabrik_rc',
       },
    };
 }

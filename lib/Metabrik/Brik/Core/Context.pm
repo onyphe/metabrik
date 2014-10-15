@@ -7,7 +7,7 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub properties {
+sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(core context main) ],

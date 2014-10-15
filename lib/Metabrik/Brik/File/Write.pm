@@ -9,9 +9,7 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub properties {
-   my $self = shift;
-
+sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(main file) ],
@@ -20,11 +18,6 @@ sub properties {
          append => [ qw(SCALAR) ],
          overwrite => [ qw(SCALAR) ],
       },
-      attributes_default => {
-         output => $self->global->output || '/tmp/output.txt',
-         append => 1,
-         overwrite => 0,
-      },
       commands => {
          text => [ qw(SCALAR SCALARREF) ],
       },
@@ -32,6 +25,18 @@ sub properties {
          'JSON::XS' => [ ],
          'XML::Simple' => [ ],
          'Text::CSV::Hashify' => [ ],
+      },
+   };
+}
+
+sub properties {
+   my $self = shift;
+
+   return {
+      attributes_default => {
+         output => $self->global->output || '/tmp/output.txt',
+         append => 1,
+         overwrite => 0,
       },
    };
 }

@@ -9,9 +9,7 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub properties {
-   my $self = shift;
-
+sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(main remote ssh ssh2) ],
@@ -23,11 +21,6 @@ sub properties {
          privatekey => [ qw(SCALAR) ],
          ssh2 => [ qw(SCALAR) ],
          _channel => [ qw(SCALAR) ],
-      },
-      attributes_default => {
-         hostname => $self->global->hostname || 'localhost',
-         port => 22,
-         username => $self->global->username || 'root',
       },
       commands => {
          connect => [ ],
@@ -43,6 +36,18 @@ sub properties {
       require_modules => {
          'IO::Scalar' => [ ],
          'Net::SSH2' => [ ],
+      },
+   };
+}
+
+sub properties {
+   my $self = shift;
+
+   return {
+      attributes_default => {
+         hostname => $self->global->hostname || 'localhost',
+         port => 22,
+         username => $self->global->username || 'root',
       },
    };
 }

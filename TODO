@@ -33,6 +33,7 @@ Séparateur officiel: |
 => No; use ARRAYREF directly
 
 -> tags: support : to specify multiple tags, support ! to skip not wanted tags
+=> no, use Command not_tag
 => search tag to display also available briks
 => search string: uniformise like search tag
 

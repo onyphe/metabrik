@@ -22,13 +22,13 @@ use Metabrik;
 sub version {
    my $self = shift;
 
-   my $revision = $self->properties->{revision};
+   my $revision = $self->brik_properties->{revision};
    $revision =~ s/^.*?(\d+).*?$/$1/;
 
    return $Metabrik::VERSION.'.'.$revision;
 }
 
-sub properties {
+sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw() ],
@@ -125,12 +125,12 @@ sub new {
       @_,
    );
 
-   if (! $self->can('properties')) {
-      $self->log->error("new: Brik [".$self->name."] has no properties");
+   if (! $self->can('brik_properties')) {
+      return $self->log->error("new: Brik [".$self->name."] has no brik_properties");
    }
 
    # Build Attributes, Class::Gomor style
-   my $attributes = $self->properties->{attributes};
+   my $attributes = $self->brik_properties->{attributes};
    my @as = ( keys %$attributes );
    if (@as > 0) {
       no strict 'refs';
@@ -153,21 +153,33 @@ sub new {
       }
    }
 
-   # Set default values for main Brik class
-   my $this_default = __PACKAGE__->properties->{attributes_default};
-   for my $k (keys %$this_default) {
-      #next unless defined($self->$k); # Do not overwrite if set on new
-      $self->$k($this_default->{$k});
+   # Set default values for Attributes
+   my $classes = $self->classes;
+
+   for my $class (@$classes) {
+      next if (! $class->can('brik_properties'));
+
+      # brik_properties() is the general value to use for the default_attributes
+      if (exists($class->brik_properties->{attributes_default})) {
+         for my $attribute (keys %{$class->brik_properties->{attributes_default}}) {
+            #next unless defined($self->$attribute); # Do not overwrite if set on new
+            $self->$attribute($class->brik_properties->{attributes_default}->{$attribute});
+         }
+      }
+
+      last if $class eq 'Metabrik::Brik';
    }
 
-   # Set default values for used Brik
-   my $attributes_default = $self->properties->{attributes_default};
-   for my $k (keys %$attributes_default) {
-      #next unless defined($self->$k); # Do not overwrite if set on new
-      $self->$k($attributes_default->{$k});
+   # Then we look at standard default attributes
+   if ($self->can('properties') && exists($self->properties->{attributes_default})) {
+      for my $attribute (keys %{$self->properties->{attributes_default}}) {
+         #next unless defined($self->$attribute); # Do not overwrite if set on new
+         $self->$attribute($self->properties->{attributes_default}->{$attribute});
+      }
    }
 
-   my $modules = $self->properties->{require_modules};
+   # Module check
+   my $modules = $self->brik_properties->{require_modules};
    for my $module (keys %$modules) {
       eval("require $module;");
       if ($@) {
@@ -192,7 +204,7 @@ sub new {
    if (defined($self->context) && $self->context->can('used')) {
       my $error = 0;
       my $used = $self->context->used;
-      my $require_used = $self->properties->{require_used};
+      my $require_used = $self->brik_properties->{require_used};
       for my $brik (keys %$require_used) {
          if (! $self->context->is_used($brik)) {
             $self->log->error("new: you must use Brik [$brik] first", $self->class);
@@ -283,7 +295,7 @@ sub classes {
 sub tags {
    my $self = shift;
 
-   my $tags = $self->properties->{tags};
+   my $tags = $self->brik_properties->{tags};
 
    # We add the used tags if Brik has been used.
    # Not all Briks have a context set (core::context don't)
@@ -314,19 +326,29 @@ sub has_tag {
 sub commands {
    my $self = shift;
 
-   my $commands = { %{__PACKAGE__->properties->{commands}} };
+   my $commands = { };
 
-   if (exists($self->properties->{commands})) {
-      for my $command (keys %{$self->properties->{commands}}) {
-         #$self->log->info("command[$command]");
+   my $classes = $self->classes;
 
-         next unless $command =~ /^[a-z]/; # Brik Commands always begin with a minuscule
-         next if $command =~ /^cg[A-Z]/; # Class::Gomor stuff
-         next if $command =~ /^_/; # Internal stuff
-         next if $command =~ /^(?:a|b|import|init|fini|new|SUPER::|BEGIN|isa|can|EXPORT|AA|AS|ISA|DESTROY|__ANON__)$/; # Perl stuff
+   for my $class (@$classes) {
+      next if (! $class->can('brik_properties'));
 
-         $commands->{$command} = $self->properties->{commands}->{$command};
+      #$self->log->info("commands: class[$class]");
+
+      if (exists($class->brik_properties->{commands})) {
+         for my $command (keys %{$class->brik_properties->{commands}}) {
+            #$self->log->info("command[$command]");
+
+            next unless $command =~ /^[a-z]/; # Brik Commands always begin with a minuscule
+            next if $command =~ /^cg[A-Z]/; # Class::Gomor stuff
+            next if $command =~ /^_/; # Internal stuff
+            next if $command =~ /^(?:a|b|import|init|fini|new|SUPER::|BEGIN|isa|can|EXPORT|AA|AS|ISA|DESTROY|__ANON__)$/; # Perl stuff
+
+            $commands->{$command} = $class->brik_properties->{commands}->{$command};
+         }
       }
+
+      last if $class eq 'Metabrik::Brik';
    }
 
    return $commands;
@@ -350,15 +372,25 @@ sub has_command {
 sub attributes {
    my $self = shift;
 
-   my $attributes = { %{__PACKAGE__->properties->{attributes}} };
+   my $attributes = { };
 
-   if (exists($self->properties->{attributes})) {
-      for my $attribute (keys %{$self->properties->{attributes}}) {
-         next unless $attribute =~ /^[a-z]/; # Brik Attributes always begin with a minuscule
-         next if $attribute =~ /^_/;         # Internal stuff
+   my $classes = $self->classes;
 
-         $attributes->{$attribute} = $self->properties->{attributes}->{$attribute};
+   for my $class (@$classes) {
+      next if (! $class->can('brik_properties'));
+
+      #$self->log->info("attributes: class[$class]");
+
+      if (exists($class->brik_properties->{attributes})) {
+         for my $attribute (keys %{$class->brik_properties->{attributes}}) {
+            next unless $attribute =~ /^[a-z]/; # Brik Attributes always begin with a minuscule
+            next if $attribute =~ /^_/;         # Internal stuff
+
+            $attributes->{$attribute} = $class->brik_properties->{attributes}->{$attribute};
+         }
       }
+
+      last if $class eq 'Metabrik::Brik';
    }
 
    return $attributes;

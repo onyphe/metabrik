@@ -11,7 +11,7 @@ use base qw(Metabrik::Brik);
 
 use IO::All;
 
-sub properties {
+sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(main find) ],

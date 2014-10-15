@@ -9,17 +9,12 @@ use warnings;
 
 use base qw(Metabrik::Brik);
 
-sub properties {
-   my $self = shift;
-
+sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(main file) ],
       attributes => {
          input => [ qw(SCALAR) ],
-      },
-      attributes_default => {
-         input => $self->global->input || '/tmp/input.txt',
       },
       commands => {
          text => [ ],
@@ -30,6 +25,16 @@ sub properties {
          'File::Slurp' => [ ],
          'JSON::XS' => [ ],
          'XML::Simple' => [ ],
+      },
+   };
+}
+
+sub properties {
+   my $self = shift;
+
+   return {
+      attributes_default => {
+         input => $self->global->input || '/tmp/input.txt',
       },
    };
 }
