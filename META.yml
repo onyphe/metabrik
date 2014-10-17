@@ -36,7 +36,7 @@ provides:
     version: '0.06'
   Metabrik:
     file: lib/Metabrik.pm
-    version: 1.00_02
+    version: 1.00_03
   Metabrik::Brik:
     file: lib/Metabrik/Brik.pm
   Metabrik::Brik::Brik::Search:
@@ -70,4 +70,4 @@ requires:
   IPC::Run: '0'
 resources:
   license: http://opensource.org/licenses/artistic-license.php
-version: 1.00_02
+version: 1.00_03
