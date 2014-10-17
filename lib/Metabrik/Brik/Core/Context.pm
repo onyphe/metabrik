@@ -74,23 +74,6 @@ my $CTX;
    };
 }
 
-sub help {
-   return {
-      'run:use' => '<brik>',
-      'run:set' => '<brik> <attribute> <value>',
-      'run:get' => '<brik> <attribute>',
-      'run:run' => '<brik> <command> [ <arg1 arg2 .. argN> ]',
-      'run:used' => '',
-      'run:is_used' => '<brik>',
-      'run:find_available' => '',
-      'run:update_available' => '',
-      'run:available' => '',
-      'run:is_available' => '<brik>',
-      'run:status' => '',
-      'run:variables' => '',
-   };
-}
-
 sub new {
    my $self = shift->SUPER::new(
       @_,
@@ -162,17 +145,17 @@ sub new {
       die("[F] core::context: new: unable to create context: $@\n");
    }
 
-   return $self->preinit;
+   return $self->brik_preinit;
 }
 
-sub init {
-   my $self = shift->SUPER::init(
+sub brik_init {
+   my $self = shift->SUPER::brik_init(
       @_,
    ) or return 1; # Init already done
 
    my $r = $self->update_available;
    if (! defined($r)) {
-      return $self->log->error("init: unable to init Brik [core::context]: ".
+      return $self->log->error("brik_init: unable to init Brik [core::context]: ".
          "update_available failed"
       );
    }
@@ -185,7 +168,7 @@ sub do {
    my ($code) = @_;
 
    if (! defined($code)) {
-      return $self->log->info($self->help_run('do'));
+      return $self->log->info($self->brik_help_run('do'));
    }
 
    my $lp = $self->_lp;
@@ -209,7 +192,7 @@ sub call {
    my ($subref, %args) = @_;
 
    if (! defined($subref)) {
-      return $self->log->info($self->help_run('call'));
+      return $self->log->info($self->brik_help_run('call'));
    }
 
    my $lp = $self->_lp;
@@ -302,7 +285,7 @@ sub use {
    my ($brik) = @_;
 
    if (! defined($brik)) {
-      return $self->log->info($self->help_run('use'));
+      return $self->log->info($self->brik_help_run('use'));
    }
 
    my $r = $self->call(sub {
@@ -365,7 +348,7 @@ sub use {
          shell => $CTX->{shell},
          log => $CTX->{log},
       );
-      #$__ctx_new->init; # No init now. We wait first run() to let set() actions
+      #$__ctx_new->brik_init; # No init now. We wait first run() to let set() actions
       if (! defined($__ctx_new)) {
          $ERR = 1;
          my $MSG = "use: unable to use Brik [$__ctx_brik]";
@@ -395,7 +378,7 @@ sub is_available {
    my ($brik) = @_;
 
    if (! defined($brik)) {
-      return $self->log->info($self->help_run('is_available'));
+      return $self->log->info($self->brik_help_run('is_available'));
    }
 
    my $available = $self->available;
@@ -421,7 +404,7 @@ sub is_used {
    my ($brik) = @_;
 
    if (! defined($brik)) {
-      return $self->log->info($self->help_run('is_used'));
+      return $self->log->info($self->brik_help_run('is_used'));
    }
 
    my $used = $self->used;
@@ -456,7 +439,7 @@ sub set {
    my ($brik, $attribute, $value) = @_;
 
    if (! defined($brik) || ! defined($attribute) || ! defined($value)) {
-      return $self->log->info($self->help_run('set'));
+      return $self->log->info($self->brik_help_run('set'));
    }
 
    my $r = $self->call(sub {
@@ -474,7 +457,7 @@ sub set {
          die("$MSG\n");
       }
 
-      if (! $CTX->used->{$__ctx_brik}->has_attribute($__ctx_attribute)) {
+      if (! $CTX->used->{$__ctx_brik}->brik_has_attribute($__ctx_attribute)) {
          $ERR = 1;
          my $MSG = "set: Brik [$__ctx_brik] has no Attribute [$__ctx_attribute]";
          die("$MSG\n");
@@ -501,7 +484,7 @@ sub get {
    my ($brik, $attribute) = @_;
 
    if (! defined($brik) || ! defined($attribute)) {
-      return $self->log->info($self->help_run('get'));
+      return $self->log->info($self->brik_help_run('get'));
    }
 
    my $r = $self->call(sub {
@@ -518,7 +501,7 @@ sub get {
          die("$MSG\n");
       }
 
-      if (! $CTX->used->{$__ctx_brik}->has_attribute($__ctx_attribute)) {
+      if (! $CTX->used->{$__ctx_brik}->brik_has_attribute($__ctx_attribute)) {
          $ERR = 1;
          my $MSG = "get: Brik [$__ctx_brik] has no Attribute [$__ctx_attribute]";
          die("$MSG\n");
@@ -543,7 +526,7 @@ sub run {
    my ($brik, $command, @args) = @_;
 
    if (! defined($brik) || ! defined($command)) {
-      return $self->log->info($self->help_run('run'));
+      return $self->log->info($self->brik_help_run('run'));
    }
 
    my $r = $self->call(sub {
@@ -561,7 +544,7 @@ sub run {
          die("$MSG\n");
       }
 
-      if (! $CTX->used->{$__ctx_brik}->has_command($__ctx_command)) {
+      if (! $CTX->used->{$__ctx_brik}->brik_has_command($__ctx_command)) {
          $ERR = 1;
          my $MSG = "run: Brik [$__ctx_brik] has no Command [$__ctx_command]";
          die("$MSG\n");
@@ -569,7 +552,7 @@ sub run {
 
       my $__ctx_run = $CTX->{used}->{$__ctx_brik};
 
-      $__ctx_run->init; # Will init() only if not already done
+      $__ctx_run->brik_init; # Will brik_init() only if not already done
 
       for (@__ctx_args) {
          if (/^(\$.*)$/) {

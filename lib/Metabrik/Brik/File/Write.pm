@@ -29,7 +29,7 @@ sub brik_properties {
    };
 }
 
-sub properties {
+sub brik_use_properties {
    my $self = shift;
 
    return {
@@ -48,11 +48,11 @@ sub text {
    $self->debug && $self->log->debug("text: data[$data]");
 
    if (! defined($self->output)) {
-      return $self->log->info($self->help_set('output'));
+      return $self->log->info($self->brik_help_set('output'));
    }
 
    if (! defined($data)) {
-      return $self->log->info($self->help_run('text'));
+      return $self->log->info($self->brik_help_run('text'));
    }
 
    if ($self->append) {
@@ -67,7 +67,7 @@ sub text {
    }
    elsif (! $self->append && ! $self->overwrite && -f $self->output) {
       $self->log->info("text: we will not overwrite an existing file. See:");
-      return $self->log->info($self->help_set('overwrite'));
+      return $self->log->info($self->brik_help_set('overwrite'));
    }
    else {
       my $r = open(my $out, '>', $self->output);

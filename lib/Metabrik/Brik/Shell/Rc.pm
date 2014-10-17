@@ -22,7 +22,7 @@ sub brik_properties {
    };
 }
 
-sub properties {
+sub brik_use_properties {
    my $self = shift;
 
    return {

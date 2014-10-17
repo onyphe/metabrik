@@ -44,7 +44,7 @@ sub all {
    my ($dirpattern, $filepattern) = @_;
 
    if (! defined($dirpattern) || ! defined($filepattern)) {
-      return $self->log->info($self->help_run('files'));
+      return $self->log->info($self->brik_help_run('files'));
    }
 
    my @dirs = ();

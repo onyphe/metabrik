@@ -82,35 +82,12 @@ sub brik_properties {
    };
 }
 
-sub help {
-   return {
-      'set:echo' => '<0|1>',
-      'run:splash' => '',
-      'run:cmd' => '<cmd>',
-      'run:cmdloop' => '',
-      'run:script' => '<script>',
-      'run:shell' => '<command> [ <arg1:arg2:..:argN> ]',
-      'run:system' => 'system <command> [ <arg1:arg2:..:argN> ]',
-      'run:history' => '[ <number> ]',
-      'run:write_history' => '',
-      'run:cd' => '[ <path> ]',
-      'run:pl' => '<code>',
-      'run:su' => '',
-      'run:help' => '[ <cmd> ]',
-      'run:use' => '<brik>',
-      'run:set' => '<brik> <attribute> <value>',
-      'run:get' => '[ <brik> ] [ <attribute> ]',
-      'run:run' => '<brik> <command> [ <arg1:arg2:..:argN> ]',
-      'run:exit' => '',
-   };
-}
-
-sub init {
-   my $self = shift->SUPER::init(
+sub brik_init {
+   my $self = shift->SUPER::brik_init(
       @_,
    ) or return 1; # Init already done
 
-   $self->debug && $self->log->debug("init: start");
+   $self->debug && $self->log->debug("brik_init: start");
 
    my $context = $self->context;
 
@@ -122,7 +99,7 @@ sub init {
    $self->_shell($shell);
 
    if ($context->is_used('shell::rc')) {
-      $self->debug && $self->log->debug("init: load rc file");
+      $self->debug && $self->log->debug("brik_init: load rc file");
 
       my $cmd = $context->run('shell::rc', 'load');
       for (@$cmd) {
@@ -135,7 +112,7 @@ sub init {
    $context->use('shell::history');
    $context->run('shell::history', 'load');
 
-   $self->debug && $self->log->debug("init: done");
+   $self->debug && $self->log->debug("brik_init: done");
 
    return $self;
 }
@@ -1333,7 +1310,7 @@ sub _update_prompt {
    else {
       my $cwd = $self->path_cwd;
 
-      my $prompt = "meta $cwd> ";
+      my $prompt = "Meta:$cwd> ";
       if ($^O =~ /win32/i) {
          $prompt =~ s/> /\$ /;
       }
@@ -1715,16 +1692,16 @@ sub run_help {
    }
    else {
       if ($CTX->is_used($brik)) {
-         my $attributes = $CTX->used->{$brik}->attributes;
-         my $commands = $CTX->used->{$brik}->commands;
+         my $attributes = $CTX->used->{$brik}->brik_attributes;
+         my $commands = $CTX->used->{$brik}->brik_commands;
 
          for my $attribute (keys %$attributes) {
-            my $help = $CTX->used->{$brik}->help_set($attribute);
+            my $help = $CTX->used->{$brik}->brik_help_set($attribute);
             $self->log->info($help) if defined($help);
          }
 
          for my $command (keys %$commands) {
-            my $help = $CTX->used->{$brik}->help_run($command);
+            my $help = $CTX->used->{$brik}->brik_help_run($command);
             $self->log->info($help) if defined($help);
          }
       }
@@ -1816,7 +1793,7 @@ sub comp_set {
          }
       }
 
-      my $attributes = $used->{$brik}->attributes;
+      my $attributes = $used->{$brik}->brik_attributes;
       push @comp, keys %$attributes;
    }
    # We want to complete entered Attribute
@@ -1828,7 +1805,7 @@ sub comp_set {
          }
       }
 
-      my $attributes = $used->{$brik}->attributes;
+      my $attributes = $used->{$brik}->brik_attributes;
 
       for my $a (keys %$attributes) {
          if ($a =~ /^$word/) {
@@ -1853,7 +1830,7 @@ sub run_get {
       my $used = $CTX->used or return;
 
       for my $brik (sort { $a cmp $b } keys %$used) {
-         my $attributes = $used->{$brik}->attributes or next;
+         my $attributes = $used->{$brik}->brik_attributes or next;
          for my $attribute (sort { $a cmp $b } keys %$attributes) {
             $self->log->info("$brik $attribute ".$CTX->get($brik, $attribute));
          }
@@ -1868,7 +1845,7 @@ sub run_get {
       }
 
       my %printed = ();
-      my $attributes = $used->{$brik}->attributes;
+      my $attributes = $used->{$brik}->brik_attributes;
       for my $attribute (sort { $a cmp $b } keys %$attributes) {
          my $print = "$brik $attribute ".$CTX->get($brik, $attribute);
          $self->log->info($print) if ! exists($printed{$print});
@@ -1883,7 +1860,7 @@ sub run_get {
          return $self->log->error("get: Brik [$brik] not used");
       }
 
-      if (! $used->{$brik}->has_attribute($attribute)) {
+      if (! $used->{$brik}->brik_has_attribute($attribute)) {
          return $self->log->error("get: Attribute [$attribute] does not exist for Brik [$brik]");
       }
 
@@ -1956,7 +1933,7 @@ sub comp_run {
          }
       }
 
-      my $commands = $used->{$brik}->commands;
+      my $commands = $used->{$brik}->brik_commands;
       push @comp, keys %$commands;
    }
    # We want to complete entered Command and Attributes
@@ -1968,7 +1945,7 @@ sub comp_run {
          }
       }
 
-      my $commands = $used->{$brik}->commands;
+      my $commands = $used->{$brik}->brik_commands;
 
       for my $a (keys %$commands) {
          if ($a =~ /^$word/) {
@@ -2078,7 +2055,7 @@ sub catch_comp_sub {
       #$self->debug && $self->log->debug("path[$path]");
 
       my $find = Metabrik::Brik::File::Find->new or return $self->log->error("file::fine: new");
-      $find->init;
+      $find->brik_init;
       $find->path($path);
       $find->recursive(0);
 
@@ -2146,7 +2123,7 @@ sub catch_comp {
       $self->debug && $self->log->debug("path[$path]");
 
       my $find = Metabrik::Brik::File::Find->new or return $self->log->error("file::fine: new");
-      $find->init;
+      $find->brik_init;
       $find->path($path);
       $find->recursive(0);
 

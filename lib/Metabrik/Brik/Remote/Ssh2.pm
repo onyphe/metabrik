@@ -40,7 +40,7 @@ sub brik_properties {
    };
 }
 
-sub properties {
+sub brik_use_properties {
    my $self = shift;
 
    return {
@@ -60,23 +60,23 @@ sub connect {
    }
 
    if (! defined($self->hostname)) {
-      return $self->log->info($self->help_set('hostname'));
+      return $self->log->info($self->brik_help_set('hostname'));
    }
 
    if (! defined($self->port)) {
-      return $self->log->info($self->help_set('port'));
+      return $self->log->info($self->brik_help_set('port'));
    }
 
    if (! defined($self->username)) {
-      return $self->log->info($self->help_set('username'));
+      return $self->log->info($self->brik_help_set('username'));
    }
 
    if (! defined($self->publickey)) {
-      return $self->log->info($self->help_set('publickey'));
+      return $self->log->info($self->brik_help_set('publickey'));
    }
 
    if (! defined($self->privatekey)) {
-      return $self->log->info($self->help_set('privatekey'));
+      return $self->log->info($self->brik_help_set('privatekey'));
    }
 
    my $ssh2 = Net::SSH2->new;
@@ -105,7 +105,7 @@ sub disconnect {
    my $ssh2 = $self->ssh2;
 
    if (! defined($ssh2)) {
-      return $self->log->info($self->help_run('connect'));
+      return $self->log->info($self->brik_help_run('connect'));
    }
 
    my $r = $ssh2->disconnect;
@@ -123,11 +123,11 @@ sub exec {
    my $ssh2 = $self->ssh2;
 
    if (! defined($ssh2)) {
-      return $self->log->info($self->help_run('connect'));
+      return $self->log->info($self->brik_help_run('connect'));
    }
 
    if (! defined($cmd)) {
-      return $self->log->info($self->help_run('exec'));
+      return $self->log->info($self->brik_help_run('exec'));
    }
 
    $self->debug && $self->log->debug("exec: cmd [$cmd]");
@@ -148,7 +148,7 @@ sub readline {
 
    my $ssh2 = $self->ssh2;
    if (! defined($ssh2)) {
-      return $self->log->info($self->help_run('connect'));
+      return $self->log->info($self->brik_help_run('connect'));
    }
 
    my $channel = $self->_channel;
@@ -184,7 +184,7 @@ sub readlineall {
 
    my $ssh2 = $self->ssh2;
    if (! defined($ssh2)) {
-      return $self->log->info($self->help_run('connect'));
+      return $self->log->info($self->brik_help_run('connect'));
    }
 
    my $channel = $self->_channel;
@@ -207,7 +207,7 @@ sub readall {
 
    my $ssh2 = $self->ssh2;
    if (! defined($ssh2)) {
-      return $self->log->info($self->help_run('connect'));
+      return $self->log->info($self->brik_help_run('connect'));
    }
 
    my $channel = $self->_channel;
@@ -262,11 +262,11 @@ sub cat {
    my ($file) = @_;
 
    if (! defined($self->ssh2)) {
-      return $self->log->info($self->help_run('connect'));
+      return $self->log->info($self->brik_help_run('connect'));
    }
 
    if (! defined($file)) {
-      return $self->log->info($self->help_run('cat'));
+      return $self->log->info($self->brik_help_run('cat'));
    }
 
    my $channel = $self->exec('cat '.$file);
@@ -282,11 +282,11 @@ sub load {
    my ($file) = @_;
 
    if (! defined($self->ssh2)) {
-      return $self->log->info($self->help_run('connect'));
+      return $self->log->info($self->brik_help_run('connect'));
    }
 
    if (! defined($file)) {
-      return $self->log->info($self->help_run('load'));
+      return $self->log->info($self->brik_help_run('load'));
    }
 
    my $ssh2 = $self->ssh2;
@@ -306,7 +306,7 @@ sub load {
    return $buf;
 }
 
-sub fini {
+sub brik_fini {
    my $self = shift;
 
    my $ssh2 = $self->ssh2;

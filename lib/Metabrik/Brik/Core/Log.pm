@@ -105,6 +105,8 @@ sub info {
       print "[*] ";
    }
 
+   $msg ||= 'undef';
+
    print "$msg\n";
 
    return 1;

@@ -23,9 +23,9 @@ use Metabrik::Brik::Core::Context;
 my $script = shift;
 
 my $context = Metabrik::Brik::Core::Context->new;
-$context->init or return;
+$context->brik_init or return;
 
-my $version = $context->run('core::global', 'version');
+my $version = $context->run('core::global', 'brik_version');
 
 if (defined($script)) {
    $context->use('shell::script') or return;

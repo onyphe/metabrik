@@ -27,7 +27,7 @@ sub brik_properties {
    };
 }
 
-sub properties {
+sub brik_use_properties {
    my $self = shift;
 
    return {
@@ -101,7 +101,7 @@ sub get_one {
    my ($number) = @_;
 
    if (! defined($number) || $number !~ /^\d+$/) {
-      return $self->log->info($self->help_run('get_one'));
+      return $self->log->info($self->brik_help_run('get_one'));
    }
 
    my $shell = $self->shell->_shell;
@@ -126,7 +126,7 @@ sub get_range {
    my ($range) = @_;
 
    if (! defined($range) || $range !~ /^\d+\.\.\d+$/) {
-      return $self->log->info($self->help_run('get_range'));
+      return $self->log->info($self->brik_help_run('get_range'));
    }
 
    my $shell = $self->shell->_shell;

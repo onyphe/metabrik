@@ -53,7 +53,7 @@ sub string {
    my ($string) = @_;
 
    if (! defined($string)) {
-      return $self->log->info($self->help_run('string'));
+      return $self->log->info($self->brik_help_run('string'));
    }
 
    my $status = $self->context->status;
@@ -81,7 +81,7 @@ sub tag {
    my ($tag) = @_;
 
    if (! defined($tag)) {
-      return $self->log->info($self->help_run('tag'));
+      return $self->log->info($self->brik_help_run('tag'));
    }
 
    my $context = $self->context;
@@ -89,7 +89,7 @@ sub tag {
 
    my $total = 0;
    for my $brik (@{$status->{used}}) {
-      my $tags = $context->used->{$brik}->tags;
+      my $tags = $context->used->{$brik}->brik_tags;
       for my $this (@$tags) {
          next unless $this eq $tag;
          $self->log->info(sprintf("%-20s [%s]", $brik, join(', ', @$tags)));

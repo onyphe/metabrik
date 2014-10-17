@@ -29,7 +29,7 @@ sub brik_properties {
    };
 }
 
-sub properties {
+sub brik_use_properties {
    my $self = shift;
 
    return {
@@ -43,7 +43,7 @@ sub text {
    my $self = shift;
 
    if (! defined($self->input)) {
-      return $self->log->info($self->help_set('input'));
+      return $self->log->info($self->brik_help_set('input'));
    }
 
    my $text = File::Slurp::read_file($self->input)
@@ -56,7 +56,7 @@ sub json {
    my $self = shift;
 
    if (! defined($self->input)) {
-      return $self->log->info($self->help_set('input'));
+      return $self->log->info($self->brik_help_set('input'));
    }
 
    return JSON::XS::decode_json($self->text);
@@ -66,7 +66,7 @@ sub xml {
    my $self = shift;
 
    if (! defined($self->input)) {
-      return $self->log->info($self->help_set('input'));
+      return $self->log->info($self->brik_help_set('input'));
    }
 
    my $xs = XML::Simple->new;
