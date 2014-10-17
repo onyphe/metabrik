@@ -17,6 +17,7 @@ sub brik_properties {
          all => [ ],
          string => [ qw(SCALAR) ],
          tag => [ qw(SCALAR) ],
+         not_tag => [ qw(SCALAR) ],
       },
    };
 }
@@ -56,20 +57,25 @@ sub string {
       return $self->log->info($self->brik_help_run('string'));
    }
 
-   my $status = $self->context->status;
+   my $context = $self->context;
+   my $status = $context->status;
 
    my $total = 0;
    $self->log->info("Used:");
-   for my $used (@{$status->{used}}) {
-      next unless $used =~ /$string/;
-      $self->log->info("   $used");
+   for my $brik (@{$status->{used}}) {
+      next unless $brik =~ /$string/;
+      #$self->log->info("   $brik");
+      my $tags = $context->used->{$brik}->brik_tags;
+      $self->log->info(sprintf("%-20s [%s]", $brik, join(', ', @$tags)));
       $total++;
    }
 
    $self->log->info("Not used:");
-   for my $not_used (@{$status->{not_used}}) {
-      next unless $not_used =~ /$string/;
-      $self->log->info("   $not_used");
+   for my $brik (@{$status->{not_used}}) {
+      next unless $brik =~ /$string/;
+      #$self->log->info("   $brik");
+      my $tags = $context->not_used->{$brik}->brik_tags;
+      $self->log->info(sprintf("%-20s [%s]", $brik, join(', ', @$tags)));
       $total++;
    }
 
@@ -92,6 +98,31 @@ sub tag {
       my $tags = $context->used->{$brik}->brik_tags;
       for my $this (@$tags) {
          next unless $this eq $tag;
+         $self->log->info(sprintf("%-20s [%s]", $brik, join(', ', @$tags)));
+         $total++;
+         last;
+      }
+   }
+
+   return $total;
+}
+
+sub not_tag {
+   my $self = shift;
+   my ($tag) = @_;
+
+   if (! defined($tag)) {
+      return $self->log->info($self->brik_help_run('not_tag'));
+   }
+
+   my $context = $self->context;
+   my $status = $context->status;
+
+   my $total = 0;
+   for my $brik (@{$status->{used}}) {
+      my $tags = $context->used->{$brik}->brik_tags;
+      for my $this (@$tags) {
+         next if $this eq $tag;
          $self->log->info(sprintf("%-20s [%s]", $brik, join(', ', @$tags)));
          $total++;
          last;

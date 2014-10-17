@@ -11,9 +11,6 @@ Prio:
 -> shell::exec: command(), attributes terminal => 1|0
 => run shell::exec command ls /
 
--> brikclass: version() to return $Metabrik::VERSION.$revision.
-=> can remote metabrik_version() from core::global
-
 -> write_history => put in fini() from shell:history
 
 -> brik: www::cewl => to gather keywords for brute-force attacks
@@ -23,8 +20,6 @@ Prio:
 -> file::xml
 => use file::read and decoding::xml
 
--> bug: no completion for $ in run audit::twiki url_paths $ or set, or get ...
-
 -> DESIGN: shall Commands take no argument?
 => No.
 
@@ -32,17 +27,14 @@ Changer : par | (path dans file::find)
 Séparateur officiel: |
 => No; use ARRAYREF directly
 
--> tags: support : to specify multiple tags, support ! to skip not wanted tags
-=> no, use Command not_tag
+-> tags: support : to specify multiple tags
 => search tag to display also available briks
 => search string: uniformise like search tag
 
--> help() to be removed, merged with properties()
--> Brik API: change help() format to 'set' => [], 'run' => [],
--> Brik API: add newed() to avoid recreating accessors or other stuff
+-> Brik API: add newed() Attribute to avoid recreating accessors or other stuff
 => Define our own TYPES (SCALAR, HASH, ARRAY, URL, NUMBER, ...)
 -> core::context: check_properties() for validity on use(), do it one time, sets _checked
-=> also check is some commands will overwrite base class commands
+=> also check if some commands will overwrite base class commands
 
 -> remove: run_pl() integrate into catch_run() instead.
 

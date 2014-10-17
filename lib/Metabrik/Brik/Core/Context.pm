@@ -28,6 +28,8 @@ sub brik_properties {
          is_available => [ qw(SCALAR) ],
          used => [ ],
          is_used => [ qw(SCALAR) ],
+         not_used => [ ],
+         is_not_used => [ qw(SCALAR) ],
          status => [ ],
       },
       require_modules => {
@@ -408,6 +410,57 @@ sub is_used {
    }
 
    my $used = $self->used;
+   if (exists($used->{$brik})) {
+      return 1;
+   }
+
+   return 0;
+}
+
+sub not_used {
+   my $self = shift;
+
+   my $status = $self->status;
+
+   my $r = {};
+   my @not_used = @{$status->{not_used}};
+   for my $this (@not_used) {
+      my @toks = split('::', $this);
+
+      my $repository = '';
+      my $category = '';
+      my $name = '';
+
+      # No repository defined
+      if (@toks == 2) {
+         ($category, $name) = $this =~ /^(.*?)::(.*)/;
+      }
+      elsif (@toks > 2) {
+         ($repository, $category, $name) = $this =~ /^(.*?)::(.*?)::(.*)/;
+      }
+
+      my $class = 'Metabrik::Brik::';
+      if (length($repository)) {
+         $class .= ucfirst($repository).'::';
+      }
+      $class .= ucfirst($category).'::';
+      $class .= ucfirst($name);
+
+      $r->{$this} = $class;
+   }
+
+   return $r;
+}
+
+sub is_not_used {
+   my $self = shift;
+   my ($brik) = @_;
+
+   if (! defined($brik)) {
+      return $self->log->info($self->brik_help_run('is_not_used'));
+   }
+
+   my $used = $self->not_used;
    if (exists($used->{$brik})) {
       return 1;
    }

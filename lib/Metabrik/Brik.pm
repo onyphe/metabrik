@@ -306,6 +306,9 @@ sub brik_tags {
    if ($self->brik_category eq 'core' || ($self->can('context') && $self->context->is_used($self->brik_name))) {
       push @$tags, 'used';
    }
+   else {
+      push @$tags, 'not_used';
+   }
 
    return [ sort { $a cmp $b } @$tags ];
 }
