@@ -8,8 +8,9 @@ Prio:
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetaBriky
 => Ornitorinc
 
--> shell::exec: command(), attributes terminal => 1|0
-=> run shell::exec command ls /
+-> shell::command: capture(), system(), attributes terminal => 1|0
+=> run shell::command system ls /
+=> run shell::command capture ls /
 
 -> write_history => put in fini() from shell:history
 
@@ -70,7 +71,6 @@ Séparateur officiel: |
 
 ### Future (or not):
 -> update() function to autoupdate
--> use page() and pager_internal() from Term::Shell
 
 Briks API: See remote::ssh2
 -> require_arg() to check for a method invocation
@@ -238,13 +238,7 @@ File::Tools
 Term::ShellKit::Commands
 => reuse, use, show methods/functions of a module
 
-Gather available methods/functions:
-use MetaBriky::Brik::Core::Global;
-
---8<--
-my $pkg = "MetaBriky::Brik::Core::Global";
-no strict 'refs';
-my @r = keys %{ $pkg . "::" };
-use Data::Dumper;
-print Dumper(\@r);
---8<--
+Outils similaires:
+-> pwntools
+-> scapy?
+-> metasploit

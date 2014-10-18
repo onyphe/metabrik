@@ -23,6 +23,7 @@ sub brik_properties {
          get => [ ],
          get_one => [ qw(SCALAR) ],
          get_range => [ qw(ARRAY) ],
+         show => [ ],
       },
    };
 }
@@ -143,6 +144,19 @@ sub get_range {
    }
 
    return \@history;
+}
+
+sub show {
+   my $self = shift;
+
+   my $history = $self->get;
+
+   my $count = 0;
+   for (@$history) {
+      $self->log->info("[".$count++."] $_");
+   }
+
+   return $count - 1;
 }
 
 1;

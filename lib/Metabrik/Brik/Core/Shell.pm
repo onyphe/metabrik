@@ -15,19 +15,27 @@ sub brik_properties {
       tags => [ qw(core main shell) ],
       attributes => {
          echo => [ qw(SCALAR) ],
+         pager_threshold => [ qw(SCALAR) ],
+         help_show_brik_commands => [ qw(SCALAR) ],
+         help_show_brik_attributes => [ qw(SCALAR) ],
+         comp_show_brik_attributes => [ qw(SCALAR) ],
+         comp_show_brik_commands => [ qw(SCALAR) ],
          _shell => [ qw(OBJECT) ],
       },
       attributes_default => {
          echo => 1,
+         pager_threshold => 1024,
+         help_show_brik_commands => 0,
+         help_show_brik_attributes => 0,
+         comp_show_brik_attributes => 0,
+         comp_show_brik_commands => 0,
       },
       commands => {
          splash => [ ],
-         system => [ qw(SCALAR) ],
          history  => [ qw(SCALAR) ],
          write_history  => [ ],
          cd => [ qw(SCALAR) ],
          pl => [ qw(SCALAR) ],
-         su => [ ],
          use => [ qw(SCALAR) ],
          set => [ qw(SCALAR SCALAR SCALAR) ],
          get => [ qw(SCALAR SCALAR) ],
@@ -139,14 +147,6 @@ EOF
    return 1;
 }
 
-sub system {
-   my $self = shift;
-
-   $self->_shell->run_system(@_);
-
-   return 1;
-}
-
 sub history {
    my $self = shift;
 
@@ -175,14 +175,6 @@ sub pl {
    my $self = shift;
 
    $self->_shell->run_pl(@_);
-
-   return 1;
-}
-
-sub su {
-   my $self = shift;
-
-   $self->_shell->run_su(@_);
 
    return 1;
 }
@@ -1474,24 +1466,6 @@ sub comp_shell {
    return $self->catch_comp_sub($word, $start, $line);
 }
 
-# For external commands that need a terminal (vi, for instance)
-sub run_system {
-   my $self = shift;
-   my (@args) = @_;
-
-   if (@args == 0) {
-      return $self->log->info("system <command> [ <arg1:arg2:..:argN> ]");
-   }
-
-   return system(@args);
-}
-
-sub comp_system {
-   my $self = shift;
-
-   return $self->comp_shell(@_);
-}
-
 sub run_history {
    my $self = shift;
    my ($c) = @_;
@@ -1516,11 +1490,7 @@ sub run_history {
    }
    # We just want to display history
    else {
-      my $history = $CTX->run('shell::history', 'get');
-      my $count = 0;
-      for (@$history) {
-         $self->log->info("[".$count++."] $_");
-      }
+      $CTX->run('shell::history', 'show');
    }
 
    return 1;
@@ -1575,7 +1545,12 @@ sub run_pl {
    }
 
    if ($self->echo) {
-      print CPAN::Data::Dump::dump($r)."\n";
+      if (length($r) < $self->pager_threshold) {
+         print CPAN::Data::Dump::dump($r)."\n";
+      }
+      else {
+         $self->page($r."\n");
+      }
    }
 
    return $r;
@@ -1586,27 +1561,6 @@ sub comp_pl {
    my ($word, $line, $start) = @_;
 
    return $self->catch_comp_sub($word, $start, $line);
-}
-
-sub run_su {
-   my $self = shift;
-   my ($cmd, @args) = @_;
-
-   # sudo not supported on Windows 
-   if ($^O !~ /win32/i) {
-      if (defined($cmd)) {
-         system('sudo', $cmd, @args);
-      }
-      else {
-         system('sudo', $0);
-      }
-   }
-
-   return 1;
-}
-
-sub comp_su {
-   return ();
 }
 
 sub run_reuse {
@@ -1692,16 +1646,24 @@ sub run_help {
    }
    else {
       if ($CTX->is_used($brik)) {
-         my $attributes = $CTX->used->{$brik}->brik_attributes;
-         my $commands = $CTX->used->{$brik}->brik_commands;
+         my $attributes = $CTX->run($brik, 'brik_attributes');
+         my $commands = $CTX->run($brik, 'brik_commands');
 
+         my $brik_attributes = Metabrik::Brik->brik_properties->{attributes};
          for my $attribute (keys %$attributes) {
-            my $help = $CTX->used->{$brik}->brik_help_set($attribute);
+            if (! $CTX->get('core::shell', 'help_show_brik_attributes')) {
+               next if exists($brik_attributes->{$attribute});
+            }
+            my $help = $CTX->run($brik, 'brik_help_set', $attribute);
             $self->log->info($help) if defined($help);
          }
 
+         my $brik_commands = Metabrik::Brik->brik_properties->{commands};
          for my $command (keys %$commands) {
-            my $help = $CTX->used->{$brik}->brik_help_run($command);
+            if (! $CTX->get('core::shell', 'help_show_brik_commands')) {
+               next if exists($brik_commands->{$command});
+            }
+            my $help = $CTX->run($brik, 'brik_help_run', $command);
             $self->log->info($help) if defined($help);
          }
       }
@@ -1793,8 +1755,14 @@ sub comp_set {
          }
       }
 
+      my $brik_attributes = Metabrik::Brik->brik_properties->{attributes};
       my $attributes = $used->{$brik}->brik_attributes;
-      push @comp, keys %$attributes;
+      for my $attribute (keys %$attributes) {
+         if (! $CTX->get('core::shell', 'comp_show_brik_attributes')) {
+            next if exists($brik_attributes->{$attribute});
+         }
+         push @comp, $attribute;
+      }
    }
    # We want to complete entered Attribute
    elsif ($count == 3 && length($word) > 0) {
@@ -1890,7 +1858,12 @@ sub run_run {
    }
 
    if ($self->echo) {
-      print CPAN::Data::Dump::dump($r)."\n";
+      if (length($r) < $self->pager_threshold) {
+         print CPAN::Data::Dump::dump($r)."\n";
+      }
+      else {
+         $self->page($r."\n");
+      }
    }
 
    return $r;
@@ -1933,8 +1906,14 @@ sub comp_run {
          }
       }
 
+      my $brik_commands = Metabrik::Brik->brik_properties->{commands};
       my $commands = $used->{$brik}->brik_commands;
-      push @comp, keys %$commands;
+      for my $command (keys %$commands) {
+         if (! $CTX->get('core::shell', 'comp_show_brik_commands')) {
+            next if exists($brik_commands->{$command});
+         }
+         push @comp, $command;
+      }
    }
    # We want to complete entered Command and Attributes
    elsif ($count == 3 && length($word) > 0) {

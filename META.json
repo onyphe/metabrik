@@ -89,6 +89,9 @@
       "Metabrik::Brik::Remote::Ssh2" : {
          "file" : "lib/Metabrik/Brik/Remote/Ssh2.pm"
       },
+      "Metabrik::Brik::Shell::Command" : {
+         "file" : "lib/Metabrik/Brik/Shell/Command.pm"
+      },
       "Metabrik::Brik::Shell::History" : {
          "file" : "lib/Metabrik/Brik/Shell/History.pm"
       },
