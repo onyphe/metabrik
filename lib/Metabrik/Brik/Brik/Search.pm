@@ -25,13 +25,15 @@ sub brik_properties {
 sub all {
    my $self = shift;
 
-   my $status = $self->context->status;
+   my $context = $self->context;
+   my $status = $context->status;
 
    my $total = 0;
    my $count = 0;
    $self->log->info("Used:");
-   for my $used (@{$status->{used}}) {
-      $self->log->info("   $used");
+   for my $brik (@{$status->{used}}) {
+      my $tags = $context->used->{$brik}->brik_tags;
+      $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
       $count++;
       $total++;
    }
@@ -39,8 +41,9 @@ sub all {
 
    $count = 0;
    $self->log->info("   Not used:");
-   for my $not_used (@{$status->{not_used}}) {
-      $self->log->info("   $not_used");
+   for my $brik (@{$status->{not_used}}) {
+      my $tags = $context->not_used->{$brik}->brik_tags;
+      $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
       $count++;
       $total++;
    }
@@ -65,7 +68,7 @@ sub string {
    for my $brik (@{$status->{used}}) {
       next unless $brik =~ /$string/;
       my $tags = $context->used->{$brik}->brik_tags;
-      $self->log->info(sprintf("%-20s [%s]", $brik, join(', ', @$tags)));
+      $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
       $total++;
    }
 
@@ -73,7 +76,7 @@ sub string {
    for my $brik (@{$status->{not_used}}) {
       next unless $brik =~ /$string/;
       my $tags = $context->not_used->{$brik}->brik_tags;
-      $self->log->info(sprintf("%-20s [%s]", $brik, join(', ', @$tags)));
+      $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
       $total++;
    }
 
@@ -92,15 +95,28 @@ sub tag {
    my $status = $context->status;
 
    my $total = 0;
+   $self->log->info("Used:");
    for my $brik (@{$status->{used}}) {
       my $tags = $context->used->{$brik}->brik_tags;
       for my $this (@$tags) {
          next unless $this eq $tag;
-         $self->log->info(sprintf("%-20s [%s]", $brik, join(', ', @$tags)));
+         $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
          $total++;
          last;
       }
    }
+
+   $self->log->info("Not used:");
+   for my $brik (@{$status->{not_used}}) {
+      my $tags = $context->not_used->{$brik}->brik_tags;
+      for my $this (@$tags) {
+         next unless $this eq $tag;
+         $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
+         $total++;
+         last;
+      }
+   }
+
 
    return $total;
 }
@@ -117,11 +133,23 @@ sub not_tag {
    my $status = $context->status;
 
    my $total = 0;
+   $self->log->info("Used:");
    for my $brik (@{$status->{used}}) {
       my $tags = $context->used->{$brik}->brik_tags;
       for my $this (@$tags) {
          next if $this eq $tag;
-         $self->log->info(sprintf("%-20s [%s]", $brik, join(', ', @$tags)));
+         $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
+         $total++;
+         last;
+      }
+   }
+
+   $self->log->info("Not used:");
+   for my $brik (@{$status->{not_used}}) {
+      my $tags = $context->not_used->{$brik}->brik_tags;
+      for my $this (@$tags) {
+         next if $this eq $tag;
+         $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
          $total++;
          last;
       }
