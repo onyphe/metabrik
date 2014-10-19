@@ -240,7 +240,8 @@ sub brik_repository {
       return $repository;
    }
 
-   return $self->log->fatal("brik_repository: no Repository found");
+   # Error, repository not found
+   return $self->log->fatal("brik_repository: no Repository found for Brik [$name] (invalid format?)");
 }
 
 sub brik_category {
@@ -261,7 +262,7 @@ sub brik_category {
    }
 
    # Error, category not found
-   return $self->log->fatal("brik_category: no Category found");
+   return $self->log->fatal("brik_category: no Category found for Brik [$name] (invalid format?)");
 }
 
 sub brik_name {
@@ -301,15 +302,6 @@ sub brik_tags {
 
    my $tags = $self->brik_properties->{tags};
 
-   # We add the used tags if Brik has been used.
-   # Not all Briks have a context set (core::context don't)
-   if ($self->brik_category eq 'core' || ($self->can('context') && $self->context->is_used($self->brik_name))) {
-      push @$tags, 'used';
-   }
-   else {
-      push @$tags, 'not_used';
-   }
-
    return [ sort { $a cmp $b } @$tags ];
 }
 
@@ -318,7 +310,7 @@ sub brik_has_tag {
    my ($tag) = @_;
 
    if (! defined($tag)) {
-      return $self->log->info("run ".$self->brik_name." brik_has_tag <tag>");
+      return $self->log->info($self->brik_help_run('brik_has_tag'));
    }
 
    my %h = map { $_ => 1 } @{$self->brik_tags};
@@ -338,7 +330,7 @@ sub brik_commands {
    my $classes = $self->brik_classes;
 
    for my $class (@$classes) {
-      next if (! $class->can('brik_properties'));
+      next unless $class->can('brik_properties');
 
       #$self->log->info("brik_commands: class[$class]");
 
@@ -383,7 +375,7 @@ sub brik_attributes {
    my $classes = $self->brik_classes;
 
    for my $class (@$classes) {
-      next if (! $class->can('brik_properties'));
+      next unless $class->can('brik_properties');
 
       #$self->log->info("brik_attributes: class[$class]");
 

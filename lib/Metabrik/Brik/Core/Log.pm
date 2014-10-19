@@ -12,7 +12,7 @@ use base qw(Metabrik::Brik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(core main log) ],
+      tags => [ qw(used core main log) ],
       attributes => {
          color => [ qw(SCALAR) ],
          level => [ qw(SCALAR) ],

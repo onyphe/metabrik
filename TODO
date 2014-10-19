@@ -12,6 +12,9 @@ Prio:
 => run shell::command system ls /
 => run shell::command capture ls /
 
+-> move run_shell from core::shell to shell::command
+=> replace capture()?
+
 -> write_history => put in fini() from shell:history
 
 -> brik: www::cewl => to gather keywords for brute-force attacks

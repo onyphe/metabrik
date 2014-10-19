@@ -12,7 +12,7 @@ use base qw(Metabrik::Brik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(core main shell) ],
+      tags => [ qw(used core main shell) ],
       attributes => {
          echo => [ qw(SCALAR) ],
          pager_threshold => [ qw(SCALAR) ],

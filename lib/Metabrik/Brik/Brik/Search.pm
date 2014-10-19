@@ -64,7 +64,6 @@ sub string {
    $self->log->info("Used:");
    for my $brik (@{$status->{used}}) {
       next unless $brik =~ /$string/;
-      #$self->log->info("   $brik");
       my $tags = $context->used->{$brik}->brik_tags;
       $self->log->info(sprintf("%-20s [%s]", $brik, join(', ', @$tags)));
       $total++;
@@ -73,7 +72,6 @@ sub string {
    $self->log->info("Not used:");
    for my $brik (@{$status->{not_used}}) {
       next unless $brik =~ /$string/;
-      #$self->log->info("   $brik");
       my $tags = $context->not_used->{$brik}->brik_tags;
       $self->log->info(sprintf("%-20s [%s]", $brik, join(', ', @$tags)));
       $total++;

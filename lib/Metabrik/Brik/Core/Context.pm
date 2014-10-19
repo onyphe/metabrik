@@ -10,7 +10,7 @@ use base qw(Metabrik::Brik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(core context main) ],
+      tags => [ qw(used core context main) ],
       attributes => {
          _lp => [ qw(OBJECT) ],
       },
@@ -239,6 +239,8 @@ sub find_available {
       log => $self->log,
    ) or return;
 
+   $file_find->brik_init;
+
    # Read from @INC, exclude current directory
    my @new = ();
    for (@INC) {
@@ -252,20 +254,20 @@ sub find_available {
 
    my $found = $file_find->all('Metabrik/Brik/', '.pm$') or return;
 
-   my @available = ();
+   my %available = ();
    for my $this (@{$found->{files}}) {
-      my $brik = lc($this);
+      my $brik = $this;
       $brik =~ s/\//::/g;
-      $brik =~ s/^.*::metabrik::brik::(.*?)$/$1/;
+      $brik =~ s/^.*::Metabrik::Brik::(.*?)$/$1/;
       $brik =~ s/.pm$//;
       if (length($brik)) {
-         push @available, $brik;
+         my $module = "Metabrik::Brik::$brik";
+         $brik = lc($brik);
+         $available{$brik} = $module;
       }
    }
 
-   my %h = map { $_ => 1 } @available;
-
-   return \%h;
+   return \%available;
 }
 
 sub update_available {
@@ -275,6 +277,12 @@ sub update_available {
 
    my $r = $self->call(sub {
       my %args = @_;
+
+      my $__ctx_available = $args{available};
+
+      for my $__ctx_this (keys %$__ctx_available) {
+         eval("require ".$__ctx_available->{$__ctx_this});
+      }
 
       return $CTX->{available} = $args{available};
    }, available => $h);
