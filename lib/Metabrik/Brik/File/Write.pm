@@ -17,9 +17,13 @@ sub brik_properties {
          output => [ qw(SCALAR) ],
          append => [ qw(SCALAR) ],
          overwrite => [ qw(SCALAR) ],
+         encoding => [ qw(SCALAR) ],
+         fd => [ qw(SCALAR) ],
       },
       commands => {
          text => [ qw(SCALAR SCALARREF) ],
+         open => [ ],
+         close => [ ],
       },
       require_modules => {
          'JSON::XS' => [ ],
@@ -32,13 +36,55 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
+   # encoding: see `perldoc Encode::Supported' for other types
    return {
       attributes_default => {
          output => $self->global->output || '/tmp/output.txt',
          append => 1,
          overwrite => 0,
+         encoding => [ qw(utf8) ],
       },
    };
+}
+
+sub open {
+   my $self = shift;
+
+   my $output = $self->output;
+   if (! defined($output)) {
+      return $self->log->info($self->brik_help_set('output'));
+   }
+
+   my $out;
+   my $encoding = $self->encoding;
+   if ($self->append) {
+      my $r = open($out, ">>$encoding", $output);
+      if (! defined($r)) {
+         return $self->log->error("open: open: append file [$output]: $!");
+      }
+   }
+   elsif (! $self->append && $self->overwrite) {
+      my $r = open($out, ">$encoding", $output);
+      if (! defined($r)) {
+         return $self->log->error("open: open: write file [$output]: $!");
+      }
+   }
+   elsif (! $self->append && ! $self->overwrite && -f $self->output) {
+      $self->log->info("open: we will not overwrite an existing file. See:");
+      return $self->log->info($self->brik_help_set('overwrite'));
+   }
+
+   return $self->fd($out);
+}
+
+sub close {
+   my $self = shift;
+
+   if (defined($self->fd)) {
+      close($self->fd);
+   }
+
+   return 1;
 }
 
 sub text {
@@ -55,30 +101,11 @@ sub text {
       return $self->log->info($self->brik_help_run('text'));
    }
 
-   if ($self->append) {
-      my $r = open(my $out, '>>', $self->output);
-      if (! defined($r)) {
-         return $self->log->error("text: append file [".$self->output."]: $!");
-      }
+   my $out = $self->open or return;
 
-      ref($data) eq 'SCALAR' ? print $out $$data : print $out $data;
+   ref($data) eq 'SCALAR' ? print $out $$data : print $out $data;
 
-      close($out);
-   }
-   elsif (! $self->append && ! $self->overwrite && -f $self->output) {
-      $self->log->info("text: we will not overwrite an existing file. See:");
-      return $self->log->info($self->brik_help_set('overwrite'));
-   }
-   else {
-      my $r = open(my $out, '>', $self->output);
-      if (! defined($r)) {
-         return $self->log->error("text: write file [".$self->output."]: $!");
-      }
-
-      ref($data) eq 'SCALAR' ? print $out $$data : print $out $data;
-
-      close($out);
-   }
+   $self->close;
 
    return $data;
 }

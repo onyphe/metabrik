@@ -15,8 +15,12 @@ sub brik_properties {
       tags => [ qw(main file) ],
       attributes => {
          input => [ qw(SCALAR) ],
+         encoding => [ qw(SCALAR) ],
+         fd => [ qw(SCALAR) ],
       },
       commands => {
+         open => [ ],
+         close => [ ],
          text => [ ],
          json => [ ],
          xml => [ ],
@@ -32,11 +36,44 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
+   # encoding: see `perldoc Encode::Supported' for other types
    return {
       attributes_default => {
          input => $self->global->input || '/tmp/input.txt',
+         encoding => [ qw(utf8) ],
       },
    };
+}
+
+sub open {
+   my $self = shift;
+
+   my $input = $self->input;
+   if (! defined($input)) {
+      return $self->log->info($self->brik_help_set('input'));
+   }
+
+   if (! -f $input) {
+      return $self->log->error("open: file [$input] not found");
+   }
+
+   my $encoding = $self->encoding;
+   my $r = open(my $out, "<$encoding", $input);
+   if (! defined($r)) {
+      return $self->log->error("open: open: file [$input]: $!");
+   }
+
+   return $self->fd($out);
+}
+
+sub close {
+   my $self = shift;
+
+   if (defined($self->fd)) {
+      close($self->fd);
+   }
+
+   return 1;
 }
 
 sub text {

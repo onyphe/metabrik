@@ -5,8 +5,37 @@ Prio:
 => http://www.retrojunkie.com/asciiart/animals/animals.htm
 => Beaver?
 => http://www.asciiworld.com/-Police,150-.html
-=> http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetaBriky
+=> http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetabriK
 => Ornitorinc
+
+-> network::mitm
+=> route()
+=> dns()
+=> arp()
+=> ssl()
+=> smb() (metasploit auxiliary/server/capture/smb)
+
+-> sslsplit
+=> http://www.roe.ch/SSLsplit
+=> http://blog.philippheckel.com/2013/08/04/use-sslsplit-to-transparently-sniff-tls-ssl-connections/
+
+-> certificate::pki or x509::pki
+=> use GomorCA scripts.
+
+-> ssl checks
+=> http://www.exploresecurity.com/wp-content/uploads/custom/SSL_manual_cheatsheet.html
+
+-> dns tool
+=> https://blog.skullsecurity.org/2010/call-for-testers-nbtool-0-05-and-dnscat-0-05
+=> https://github.com/iagox86/dnscat2
+
+-> system::os:
+=> add distribution Command (Ubuntu)
+=> add distribution_version Command
+=> add distribution_codename Command
+=> add distribution_description Command
+
+-> bug: search tag used, should display $context->used Briks
 
 -> shell::command: capture(), system(), attributes terminal => 1|0
 => run shell::command system ls /
@@ -66,7 +95,7 @@ Séparateur officiel: |
 
 -> make core::shell Brik to depend on the fewest module as possible
 
--> integrate cpanm into MetaBriky
+-> integrate cpanm into Metabrik
 
 -> remote::ssh2, check for exit_status when exec()
 
@@ -109,7 +138,7 @@ Step 1:
 ### DOC/PRES
 
 Name:
--> MetaBriky (formerly Plashy: Perl Awesome|Audit|Attack|All-in-one Shell (Yeaaahh))
+-> Metabrik (formerly Plashy: Perl Awesome|Audit|Attack|All-in-one Shell (Yeaaahh))
 -> y: Why the Y? Yeaaaah
 
 Rationales:
@@ -117,12 +146,17 @@ Rationales:
 -> Tired of using different programs with different syntax
 -> Tired of being lost when using Windows
 
-MetaBriky:
+-> Tired of trying to remember again and again what is the syntax for this specific command, or worst, trying to remember what is the command for doing this or this
+=> example : configuring wifi card in monitor mode
+
+Metabrik:
 -> takes the best from MetaSploit CLI, Scapy ideas, and UNIX Shells.
 -> Bind them in the darkness.
 
-MetaBriky - knowledge is in your head, detail is in the code
-MetaBriky - There is a Brik for that.
+It is like Minecraft. The more Brik you write, the more complex project you can do.
+
+Metabrik - knowledge is in your head, detail is in the code
+Metabrik - There is a Brik for that.
 > Brain has knowledge, code has details.
 
 Move everything to a Brik. Even ls, save, ..., cd ...
@@ -169,7 +203,7 @@ Developer rules:
 Usage rules:
 1. Three kind of command lines:
 - Perl line
-- MetaBriky shell line
+- Metabrik shell line
 - External command
 
 Vocabulary:

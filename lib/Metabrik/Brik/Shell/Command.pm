@@ -22,12 +22,13 @@ sub brik_properties {
 
 sub system {
    my $self = shift;
-   my ($cmd) = @_;
+   my ($cmd, @args) = @_;
 
    if (! defined($cmd)) {
       return $self->log->info($self->brik_help_run('system'));
    }
 
+   $cmd = join(' ', $cmd, @args);
    my $r = CORE::system($cmd);
 
    return defined($r) ? 1 : 0;
@@ -35,12 +36,13 @@ sub system {
 
 sub capture {
    my $self = shift;
-   my ($cmd) = @_;
+   my ($cmd, @args) = @_;
 
    if (! defined($cmd)) {
       return $self->log->info($self->brik_help_run('system'));
    }
 
+   $cmd = join(' ', $cmd, @args);
    my $r = `$cmd`;
 
    return $r;
