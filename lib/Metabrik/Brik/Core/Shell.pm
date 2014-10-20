@@ -95,15 +95,16 @@ sub brik_init {
       @_,
    ) or return 1; # Init already done
 
-   $self->debug && $self->log->debug("brik_init: start");
-
    my $context = $self->context;
 
-   $Metabrik::Ext::Shell::CTX = $context;
+   $self->debug && $self->log->debug("brik_init: start");
 
-   my $shell = Metabrik::Ext::Shell->new;
-   $shell->echo($self->echo);
-   $shell->debug($self->debug);
+   my $shell = Metabrik::Ext::Shell->new(
+      context => $context,
+      echo => $self->echo,
+      debug => $self->debug,
+   );
+
    $self->_shell($shell);
 
    if ($context->is_used('shell::rc')) {
@@ -114,11 +115,6 @@ sub brik_init {
          $self->_shell->cmd($_);
       }
    }
-
-   # XXX: should be removed in favor of doing it in rc file
-   #      when merge complete.
-   $context->use('shell::history');
-   $context->run('shell::history', 'load');
 
    $self->debug && $self->log->debug("brik_init: done");
 
@@ -1193,7 +1189,7 @@ sub DESTROY {
 1;
 
 #
-# Ext::Shell package
+# Metabrik::Ext::Shell package
 #
 package Metabrik::Ext::Shell;
 use strict;
@@ -1207,6 +1203,7 @@ our @AS = qw(
    prompt
    echo
    debug
+   context
    _aliases
 );
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
@@ -1221,9 +1218,6 @@ use IPC::Run;
 use Metabrik;
 use Metabrik::Brik::File::Find;
 
-# Exists because we cannot give an argument to Term::Shell::new()
-# Or I didn't found how to do it.
-our $CTX = {};
 our $AUTOLOAD;
 
 sub AUTOLOAD {
@@ -1256,8 +1250,23 @@ sub AUTOLOAD {
 
    # We rewrite the log accessor
    *log = sub {
-      return $CTX->{log};
+      my $self = shift;
+
+      return $self->context->{log};
    };
+}
+
+sub new {
+   my $self = shift->SUPER::new(
+      @_,
+   );
+
+   my %h = @_;
+   for my $k (keys %h) {
+      $self->{$k} = $h{$k};
+   }
+
+   return $self;
 }
 
 # Converts Windows path
@@ -1337,6 +1346,7 @@ sub init {
 
    # They are used when core::context init is performed
    # Should be placed in core::context Brik instead of here
+   # No: has to be done when core::shell Brik is inited only.
    $self->add_handler('run_core::log');
    $self->add_handler('run_core::context');
    $self->add_handler('run_core::global');
@@ -1391,8 +1401,10 @@ sub cmdloop {
 sub run_exit {
    my $self = shift;
 
-   if ($CTX->is_used('shell::history')) {
-      $CTX->run('shell::history', 'write');
+   my $context = $self->context;
+
+   if ($context->is_used('shell::history')) {
+      $context->run('shell::history', 'write');
    } 
 
    return $self->stoploop;
@@ -1434,6 +1446,8 @@ sub run_shell {
    my $self = shift;
    my (@args) = @_;
 
+   my $context = $self->context;
+
    if (@args == 0) {
       return $self->log->info("shell <command> [ <arg1:arg2:..:argN> ]");
    }
@@ -1446,7 +1460,7 @@ sub run_shell {
       return $self->log->error("run_shell: $@");
    }
 
-   $CTX->call(sub {
+   $context->call(sub {
       my %args = @_;
 
       return my $SHELL = $args{out};
@@ -1470,7 +1484,9 @@ sub run_history {
    my $self = shift;
    my ($c) = @_;
 
-   if (! $CTX->is_used('shell::history')) {
+   my $context = $self->context;
+
+   if (! $context->is_used('shell::history')) {
       return 1;
    }
 
@@ -1478,11 +1494,11 @@ sub run_history {
    if (defined($c)) {
       my $history = [];
       if ($c =~ /^\d+$/) {
-         $history = $CTX->run('shell::history', 'get_one', $c);
+         $history = $context->run('shell::history', 'get_one', $c);
          $self->cmd($history);
       }
       elsif ($c =~ /^\d+\.\.\d+$/) {
-         $history = $CTX->run('shell::history', 'get_range', $c);
+         $history = $context->run('shell::history', 'get_range', $c);
          for (@$history) {
             $self->cmd($_);
          }
@@ -1490,7 +1506,7 @@ sub run_history {
    }
    # We just want to display history
    else {
-      $CTX->run('shell::history', 'show');
+      $context->run('shell::history', 'show');
    }
 
    return 1;
@@ -1534,12 +1550,14 @@ sub comp_cd {
 sub run_pl {
    my $self = shift;
 
+   my $context = $self->context;
+
    my $line = $self->line;
    $line =~ s/^pl\s+//;
 
    $self->debug && $self->log->debug("run_pl: code[$line]");
 
-   my $r = $CTX->do($line);
+   my $r = $context->do($line);
    if (! defined($r)) {
       return $self->log->error("pl: unable to execute Code [$line]");
    }
@@ -1582,6 +1600,8 @@ sub run_use {
    my $self = shift;
    my ($brik, @args) = @_;
 
+   my $context = $self->context;
+
    if (! defined($brik)) {
       return $self->log->info("use <brik>");
    }
@@ -1590,7 +1610,7 @@ sub run_use {
    # If Brik starts with a minuscule, we want to use Brik in Metabrik sens.
    # Otherwise, it is a use command in the Perl sens.
    if ($brik =~ /^[a-z]/ && $brik =~ /::/) {
-      $r = $CTX->use($brik) or return;
+      $r = $context->use($brik) or return;
       if ($r) {
          $self->log->verbose("use: Brik [$brik] used");
       }
@@ -1608,6 +1628,8 @@ sub comp_use {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
+   my $context = $self->context;
+
    my @words = $self->line_parsed($line);
    my $count = scalar(@words);
 
@@ -1620,14 +1642,14 @@ sub comp_use {
    # We want to find available briks by using completion
    if (($count == 1)
    ||  ($count == 2 && length($word) > 0)) {
-      my $available = $CTX->available;
+      my $available = $context->available;
       if ($self->debug && ! defined($available)) {
          $self->log->debug("\ncomp_use: can't fetch available Briks");
          return ();
       }
 
       # Do not keep already used briks
-      my $used = $CTX->used;
+      my $used = $context->used;
       for my $a (keys %$available) {
          next if $used->{$a};
          push @comp, $a if $a =~ /^$word/;
@@ -1641,29 +1663,31 @@ sub run_help {
    my $self = shift;
    my ($brik) = @_;
 
+   my $context = $self->context;
+
    if (! defined($brik)) {
       return $self->SUPER::run_help;
    }
    else {
-      if ($CTX->is_used($brik)) {
-         my $attributes = $CTX->run($brik, 'brik_attributes');
-         my $commands = $CTX->run($brik, 'brik_commands');
+      if ($context->is_used($brik)) {
+         my $attributes = $context->run($brik, 'brik_attributes');
+         my $commands = $context->run($brik, 'brik_commands');
 
          my $brik_attributes = Metabrik::Brik->brik_properties->{attributes};
          for my $attribute (keys %$attributes) {
-            if (! $CTX->get('core::shell', 'help_show_brik_attributes')) {
+            if (! $context->get('core::shell', 'help_show_brik_attributes')) {
                next if exists($brik_attributes->{$attribute});
             }
-            my $help = $CTX->run($brik, 'brik_help_set', $attribute);
+            my $help = $context->run($brik, 'brik_help_set', $attribute);
             $self->log->info($help) if defined($help);
          }
 
          my $brik_commands = Metabrik::Brik->brik_properties->{commands};
          for my $command (keys %$commands) {
-            if (! $CTX->get('core::shell', 'help_show_brik_commands')) {
+            if (! $context->get('core::shell', 'help_show_brik_commands')) {
                next if exists($brik_commands->{$command});
             }
-            my $help = $CTX->run($brik, 'brik_help_run', $command);
+            my $help = $context->run($brik, 'brik_help_run', $command);
             $self->log->info($help) if defined($help);
          }
       }
@@ -1705,11 +1729,13 @@ sub run_set {
    my $self = shift;
    my ($brik, $attribute, $value) = @_;
 
+   my $context = $self->context;
+
    if (! defined($brik) || ! defined($attribute) || ! defined($value)) {
       return $self->log->info("set <brik> <attribute> <value>");
    }
 
-   my $r = $CTX->set($brik, $attribute, $value);
+   my $r = $context->set($brik, $attribute, $value);
    if (! defined($r)) {
       return $self->log->error("set: unable to set Attribute [$attribute] for Brik [$brik]");
    }
@@ -1721,8 +1747,10 @@ sub comp_set {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
+   my $context = $self->context;
+
    # Completion is for used Briks only
-   my $used = $CTX->used;
+   my $used = $context->used;
    if (! defined($used)) {
       $self->debug && $self->log->debug("comp_set: can't fetch used Briks");
       return ();
@@ -1758,7 +1786,7 @@ sub comp_set {
       my $brik_attributes = Metabrik::Brik->brik_properties->{attributes};
       my $attributes = $used->{$brik}->brik_attributes;
       for my $attribute (keys %$attributes) {
-         if (! $CTX->get('core::shell', 'comp_show_brik_attributes')) {
+         if (! $context->get('core::shell', 'comp_show_brik_attributes')) {
             next if exists($brik_attributes->{$attribute});
          }
          push @comp, $attribute;
@@ -1793,20 +1821,22 @@ sub run_get {
    my $self = shift;
    my ($brik, $attribute) = @_;
 
+   my $context = $self->context;
+
    # get is called without args, we display everything
    if (! defined($brik)) {
-      my $used = $CTX->used or return;
+      my $used = $context->used or return;
 
       for my $brik (sort { $a cmp $b } keys %$used) {
          my $attributes = $used->{$brik}->brik_attributes or next;
          for my $attribute (sort { $a cmp $b } keys %$attributes) {
-            $self->log->info("$brik $attribute ".$CTX->get($brik, $attribute));
+            $self->log->info("$brik $attribute ".$context->get($brik, $attribute));
          }
       }
    }
    # get is called with only a Brik as an arg, we show its Attributes
    elsif (defined($brik) && ! defined($attribute)) {
-      my $used = $CTX->used or return;
+      my $used = $context->used or return;
 
       if (! exists($used->{$brik})) {
          return $self->log->error("get: Brik [$brik] not used");
@@ -1815,14 +1845,14 @@ sub run_get {
       my %printed = ();
       my $attributes = $used->{$brik}->brik_attributes;
       for my $attribute (sort { $a cmp $b } keys %$attributes) {
-         my $print = "$brik $attribute ".$CTX->get($brik, $attribute);
+         my $print = "$brik $attribute ".$context->get($brik, $attribute);
          $self->log->info($print) if ! exists($printed{$print});
          $printed{$print}++;
       }
    }
    # get is called with is a Brik and an Attribute
    elsif (defined($brik) && defined($attribute)) {
-      my $used = $CTX->used or return;
+      my $used = $context->used or return;
 
       if (! exists($used->{$brik})) {
          return $self->log->error("get: Brik [$brik] not used");
@@ -1832,7 +1862,7 @@ sub run_get {
          return $self->log->error("get: Attribute [$attribute] does not exist for Brik [$brik]");
       }
 
-      $self->log->info("$brik $attribute ".$CTX->get($brik, $attribute));
+      $self->log->info("$brik $attribute ".$context->get($brik, $attribute));
    }
 
    return 1;
@@ -1848,11 +1878,13 @@ sub run_run {
    my $self = shift;
    my ($brik, $command, @args) = @_;
 
+   my $context = $self->context;
+
    if (! defined($brik) || ! defined($command)) {
       return $self->log->info("run <brik> <command> [ <arg1> <arg2> .. <argN> ]");
    }
 
-   my $r = $CTX->run($brik, $command, @args);
+   my $r = $context->run($brik, $command, @args);
    if (! defined($r)) {
       return $self->log->error("run: unable to execute Command [$command] for Brik [$brik]");
    }
@@ -1873,6 +1905,8 @@ sub comp_run {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
+   my $context = $self->context;
+
    my @words = $self->line_parsed($line);
    my $count = scalar(@words);
    my $last = $words[-1];
@@ -1880,7 +1914,7 @@ sub comp_run {
    $self->debug && $self->log->debug("comp_run: words[@words] | word[$word] line[$line] start[$start] | last[$last]");
 
    # Completion is for used Briks only
-   my $used = $CTX->used;
+   my $used = $context->used;
    if (! defined($used)) {
       $self->debug && $self->log->debug("comp_run: can't fetch used Briks");
       return ();
@@ -1909,7 +1943,7 @@ sub comp_run {
       my $brik_commands = Metabrik::Brik->brik_properties->{commands};
       my $commands = $used->{$brik}->brik_commands;
       for my $command (keys %$commands) {
-         if (! $CTX->get('core::shell', 'comp_show_brik_commands')) {
+         if (! $context->get('core::shell', 'comp_show_brik_commands')) {
             next if exists($brik_commands->{$command});
          }
          push @comp, $command;
@@ -1944,6 +1978,8 @@ sub run_script {
    my $self = shift;
    my ($script) = @_;
 
+   my $context = $self->context;
+
    if (! defined($script)) {
       return $self->log->info("script <file>");
    }
@@ -1952,9 +1988,9 @@ sub run_script {
       return $self->log->error("script: file [$script] not found");
    }
 
-   if ($CTX->is_used('shell::script')) {
-      $CTX->set('shell::script', 'file', $script);
-      my $lines = $CTX->run('shell::script', 'load');
+   if ($context->is_used('shell::script')) {
+      $context->set('shell::script', 'file', $script);
+      my $lines = $context->run('shell::script', 'load');
       for (@$lines) {
          $self->run_exit if /^exit$/;
          $self->cmd($_);
@@ -1993,6 +2029,8 @@ sub catch_comp_sub {
    # Strange, we had to reverse order for $start and $line only for catch_comp() method.
    my ($word, $start, $line) = @_;
 
+   my $context = $self->context;
+
    my @words = $self->line_parsed($line);
    my $count = scalar(@words);
    my $last = $words[-1];
@@ -2011,7 +2049,7 @@ sub catch_comp_sub {
    # We don't use $word here, because the $ is stripped. We have to use $word[-1]
    # We also check against $line, if we have a trailing space, the word was complete.
    if ($last =~ /^\$/ && $line !~ /\s+$/) {
-      my $variables = $CTX->variables;
+      my $variables = $context->variables;
 
       for my $this (@$variables) {
          $this =~ s/^\$//;
@@ -2062,6 +2100,8 @@ sub catch_comp {
    # Strange, we had to reverse order for $start and $line only for catch_comp() method.
    my ($word, $start, $line) = @_;
 
+   my $context = $self->context;
+
    my @words = $self->line_parsed($line);
    my $count = scalar(@words);
    my $last = $words[-1];
@@ -2080,7 +2120,7 @@ sub catch_comp {
    # We don't use $start here, because the $ is stripped. We have to use $word[-1]
    # We also check against $line, if we have a trailing space, the word was complete.
    if ($last =~ /^\$/ && $line !~ /\s+$/) {
-      my $variables = $CTX->variables;
+      my $variables = $context->variables;
 
       for my $this (@$variables) {
          $this =~ s/^\$//;
