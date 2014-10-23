@@ -33,7 +33,6 @@ sub brik_properties {
       commands => {
          splash => [ ],
          history  => [ qw(SCALAR) ],
-         write_history  => [ ],
          cd => [ qw(SCALAR) ],
          pl => [ qw(SCALAR) ],
          use => [ qw(SCALAR) ],
@@ -44,7 +43,6 @@ sub brik_properties {
          cmd => [ qw(SCALAR) ],
          cmdloop => [ ],
          script => [ qw(SCALAR) ],
-         reuse => [ ],
       },
       require_modules => {
          'CPAN::Data::Dump' => [ 'dump' ],
@@ -151,14 +149,6 @@ sub history {
    return 1;
 }
 
-sub write_history {
-   my $self = shift;
-
-   $self->_shell->run_write_history(@_);
-
-   return 1;
-}
-
 sub cd {
    my $self = shift;
 
@@ -235,14 +225,6 @@ sub script {
    my $self = shift;
 
    $self->_shell->run_script(@_);
-
-   return 1;
-}
-
-sub reuse {
-   my $self = shift;
-
-   $self->_shell->run_reuse(@_);
 
    return 1;
 }
@@ -1209,11 +1191,7 @@ our @AS = qw(
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 use Cwd;
-use Data::Dumper;
 use File::HomeDir qw(home);
-use IO::All;
-use CPAN::Module::Reload;
-use IPC::Run;
 
 use Metabrik;
 use Metabrik::Brik::File::Find;
@@ -1441,45 +1419,6 @@ sub comp_alias {
    return ();
 }
 
-# For shell commands that do not need a terminal
-sub run_shell {
-   my $self = shift;
-   my (@args) = @_;
-
-   my $context = $self->context;
-
-   if (@args == 0) {
-      return $self->log->info("shell <command> [ <arg1:arg2:..:argN> ]");
-   }
-
-   my $out = '';
-   eval {
-      IPC::Run::run(\@args, \undef, \$out);
-   };
-   if ($@) {
-      return $self->log->error("run_shell: $@");
-   }
-
-   $context->call(sub {
-      my %args = @_;
-
-      return my $SHELL = $args{out};
-   }, out => $out);
-
-   print $out;
-
-   return 1;
-}
-
-sub comp_shell {
-   my $self = shift;
-   my ($word, $line, $start) = @_;
-
-   # XXX: use $ENV{PATH} to gather binaries
-
-   return $self->catch_comp_sub($word, $start, $line);
-}
-
 sub run_history {
    my $self = shift;
    my ($c) = @_;
@@ -1579,21 +1518,6 @@ sub comp_pl {
    my ($word, $line, $start) = @_;
 
    return $self->catch_comp_sub($word, $start, $line);
-}
-
-sub run_reuse {
-   my $self = shift;
-
-   my $reused = CPAN::Module::Reload->check;
-   if ($reused) {
-      $self->log->info("reuse: some modules were reused");
-   }
-
-   return 1;
-}
-
-sub comp_reuse {
-   return ();
 }
 
 sub run_use {

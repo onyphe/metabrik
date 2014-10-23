@@ -17,6 +17,9 @@ sub brik_properties {
          system => [ ],
          capture => [ ],
       },
+      require_modules => {
+         'IPC::Run' => [ qw(run) ],
+      },
    };
 }
 
@@ -38,14 +41,25 @@ sub capture {
    my $self = shift;
    my ($cmd, @args) = @_;
 
+   my $context = $self->context;
+
    if (! defined($cmd)) {
-      return $self->log->info($self->brik_help_run('system'));
+      return $self->log->info($self->brik_help_run('capture'));
    }
 
-   $cmd = join(' ', $cmd, @args);
-   my $r = `$cmd`;
+   my $run = $cmd.' '.join(' ', @args);
 
-   return $r;
+   my $out = '';
+   eval {
+      # IPC::Run: does not provide string interpolation for shell
+      #IPC::Run::run([ $run ], \undef, \$out);
+      $out = `$run`;
+   };
+   if ($@) {
+      return $self->log->error("run_shell: $@");
+   }
+
+   return $out;
 }
 
 1;

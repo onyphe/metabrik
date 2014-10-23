@@ -31,9 +31,11 @@ sub brik_properties {
          not_used => [ ],
          is_not_used => [ qw(SCALAR) ],
          status => [ ],
+         reuse => [ ],
       },
       require_modules => {
          'CPAN::Lexical::Persistence' => [],
+         'CPAN::Module::Reload' => [],
          'Metabrik::Brik::Core::Global' => [],
          'Metabrik::Brik::Core::Log' => [],
          'Metabrik::Brik::Core::Shell' => [],
@@ -371,6 +373,17 @@ sub use {
    }, brik => $brik);
 
    return $r;
+}
+
+sub reuse {
+   my $self = shift;
+
+   my $reused = CPAN::Module::Reload->check;
+   if ($reused) {
+      $self->log->info("reuse: some modules were reused");
+   }
+
+   return 1;
 }
 
 sub available {
