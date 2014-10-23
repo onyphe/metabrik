@@ -1,12 +1,62 @@
 ### TODO
 
-Prio:
+### 1.00
+
+-> bug: search tag used, should display $context->used Briks
+-> bug: core::global encoding to set utf8 or anything else
+
+-> remove: run_pl() integrate into catch_run() instead.
+
+-> move: reuse() to core::context
+
+Changer : par | (path dans file::find)
+Séparateur officiel: |
+=> No; use ARRAYREF directly
+
+-> file::csv
+=> use file::read and encoding::csv (decode + encode)
+-> file::xml
+=> use file::read and encoding::xml
+
+-> shell::command: capture(), system(), attributes terminal => 1|0
+=> run shell::command system ls /
+=> run shell::command capture ls /
+
+-> move run_shell from core::shell to shell::command
+=> replace capture()?
+
+-> merge ext::shell to core::shell
+
+-> write_history => put in fini() from shell:history
+
+-> getopt for bin/metabrik
+
+-> remove: Term::Shell function that allows calling a command with just first characters
+=> example: l vs ex-load
+
+-> review: ext::shell: $used to use is_used and like
+
+-> make core::shell Brik to depend on the fewest module as possible
+
+-> integrate cpanm into Metabrik
+
+-> remote::ssh2, check for exit_status when exec()
+
+
+### LOGO
+
 -> chose ASCII art:
 => http://www.retrojunkie.com/asciiart/animals/animals.htm
 => Beaver?
 => http://www.asciiworld.com/-Police,150-.html
 => http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetabriK
 => Ornitorinc
+
+### BRIKS
+
+-> rename: numbers::iana => iana::countrycodes
+-> new: iana::servicenames
+=> http://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml
 
 -> network::mitm
 => route()
@@ -35,30 +85,10 @@ Prio:
 => add distribution_codename Command
 => add distribution_description Command
 
--> bug: search tag used, should display $context->used Briks
-
--> shell::command: capture(), system(), attributes terminal => 1|0
-=> run shell::command system ls /
-=> run shell::command capture ls /
-
--> move run_shell from core::shell to shell::command
-=> replace capture()?
-
--> write_history => put in fini() from shell:history
-
--> brik: www::cewl => to gather keywords for brute-force attacks
-
--> file::csv
-=> use file::read and decoding::csv (decode + encode)
--> file::xml
-=> use file::read and decoding::xml
+-> www::cewl => to gather keywords for brute-force attacks
 
 -> DESIGN: shall Commands take no argument?
 => No.
-
-Changer : par | (path dans file::find)
-Séparateur officiel: |
-=> No; use ARRAYREF directly
 
 -> tags: support : to specify multiple tags
 => search tag to display also available briks
@@ -69,40 +99,17 @@ Séparateur officiel: |
 -> core::context: check_properties() for validity on use(), do it one time, sets _checked
 => also check if some commands will overwrite base class commands
 
--> remove: run_pl() integrate into catch_run() instead.
+-> shell::builtins
 
--> move: reuse() to core::context
-
--> new: shell::builtins
-
--> new: system::identify
+-> system::identify
 => returns Linux/Ubuntu/...
 => or update system::os to fetch distrib information
 => new: ubuntu::os, ubuntu::package, and system::os uses ubuntu::os, same for system::package
 
--> new: use_if_not_used, run_if_used, set_if_used, get_if_used
-
--> new: getopt for bin/metabrik
-
--> echo: truncate echoed results
-
--> bug: core::global encoding to set utf8 or anything else
-
--> remove: Term::Shell function that allows calling a command with just first characters
-=> example: l vs ex-load
-
--> review: ext::shell: $used to use is_used and like
-
--> make core::shell Brik to depend on the fewest module as possible
-
--> integrate cpanm into Metabrik
-
--> remote::ssh2, check for exit_status when exec()
-
-
-
 ### Future (or not):
 -> update() function to autoupdate
+
+-> new: use_if_not_used, run_if_used, set_if_used, get_if_used
 
 Briks API: See remote::ssh2
 -> require_arg() to check for a method invocation
