@@ -28,6 +28,7 @@ sub brik_properties {
          domainname => [ qw(SCALAR) ],
          homedir => [ qw(SCALAR) ],
          port => [ qw(SCALAR) ],
+         encoding => [ qw(SCALAR) ],
       },
       attributes_default => {
          input => '/tmp/input.txt',
@@ -44,6 +45,7 @@ sub brik_properties {
          domainname => 'example.com',
          homedir => $ENV{HOME} || '/tmp',
          port => 80,
+         encoding => 'utf8',
       },
    };
 }

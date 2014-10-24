@@ -42,7 +42,7 @@ sub brik_use_properties {
          output => $self->global->output || '/tmp/output.txt',
          append => 1,
          overwrite => 0,
-         encoding => [ qw(utf8) ],
+         encoding => $self->global->encoding || 'utf8',
       },
    };
 }

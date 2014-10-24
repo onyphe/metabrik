@@ -40,7 +40,7 @@ sub brik_use_properties {
    return {
       attributes_default => {
          input => $self->global->input || '/tmp/input.txt',
-         encoding => [ qw(utf8) ],
+         encoding => $self->global->encoding || 'utf8',
       },
    };
 }

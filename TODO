@@ -2,46 +2,29 @@
 
 ### 1.00
 
--> bug: search tag used, should display $context->used Briks
--> bug: core::global encoding to set utf8 or anything else
+-> pod.
 
 -> remove: run_pl() integrate into catch_run() instead.
 
--> move: reuse() to core::context
+-> add: check_properties(), require_binaries()
 
 Changer : par | (path dans file::find)
-Séparateur officiel: |
+Separateur officiel: |
 => No; use ARRAYREF directly
 
--> file::csv
-=> use file::read and encoding::csv (decode + encode)
--> file::xml
-=> use file::read and encoding::xml
-
--> shell::command: capture(), system(), attributes terminal => 1|0
-=> run shell::command system ls /
-=> run shell::command capture ls /
-
--> move run_shell from core::shell to shell::command
-=> replace capture()?
-
 -> merge ext::shell to core::shell
-
--> write_history => put in fini() from shell:history
+-> review: ext::shell: $used to use is_used and like
+-> make core::shell Brik to depend on the fewest module as possible
 
 -> getopt for bin/metabrik
 
 -> remove: Term::Shell function that allows calling a command with just first characters
 => example: l vs ex-load
 
--> review: ext::shell: $used to use is_used and like
-
--> make core::shell Brik to depend on the fewest module as possible
-
 -> integrate cpanm into Metabrik
+=> brik: module::install, perl::install?
 
 -> remote::ssh2, check for exit_status when exec()
-
 
 ### LOGO
 
@@ -53,6 +36,11 @@ Séparateur officiel: |
 => Ornitorinc
 
 ### BRIKS
+
+-> new: file::xml
+=> use file::read and encoding::xml
+
+-> new: encoding::csv encode/decode with Attributes separator, format like CSV::Hashify
 
 -> rename: numbers::iana => iana::countrycodes
 -> new: iana::servicenames

@@ -1,24 +1,26 @@
-# If you want history to be enabled
-use shell::history
+set core::shell echo 0
 
 set core::log level 3
 
 # Change terminal title
-title "meta: The Metabrik Shell"
+use terminal::control
+run terminal::control title "meta: The Metabrik Shell"
 
 my $home = $ENV{HOME}
 my $user = $ENV{USER}
 
-my $datadir = $home."/metabrik/data"
+my $datadir = $home."/metabrik"
 
 set core::global datadir $datadir
 set core::global ctimeout 20
 set core::global rtimeout 20
 
-use http::www
-
-use file::slurp
-
+use brik::search
+use shell::history
+use www::client
+use file::read
+use file::write
+use file::csv
 use http::proxy
 
 my $publickey = $home."/.ssh/id_rsa.pub"
@@ -42,8 +44,17 @@ run core::context update_available
 
 use category::mybrik
 
-set core::shell echo 1
-
 # Define your aliases
-alias ls "shell ls -F"
-alias ll "shell ls -lF"
+alias w "run shell::command capture w"
+alias l "run shell::command capture ls -lF"
+alias perldoc "run shell::command system perldoc"
+alias top "run shell::command system top"
+alias system "run shell::command system"
+
+# Load some more Perl modules
+use Data::Dumper
+
+# If you want history to be enabled
+use shell::history
+
+set core::shell echo 1
