@@ -85,7 +85,7 @@ sub all {
       @dirs = sort { $a cmp $b } keys %uniq_dirs;
       @files = sort { $a cmp $b } keys %uniq_files;
    }
-   # In non-recusrive mode, we can use plain IO::All
+   # In non-recursive mode, we can use plain IO::All
    else {
       for my $path (@path_list) {
          $self->debug && $self->log->debug("all: path: $path");
@@ -157,7 +157,8 @@ Metabrik::Brik::File::Find - brik to find some files using pattern matching
    my $path = join(':', @INC);
 
    my $brik = Metabrik::Brik::File::Find->new;
-   $brik->recusrive(1);
+   $brik->brik_init;
+   $brik->recursive(1);
    $brik->path($path);
 
    my $found = $brik->find('/lib/Metabrik/Brik$', '.pm$');

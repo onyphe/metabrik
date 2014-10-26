@@ -41,23 +41,22 @@ sub capture {
    my $self = shift;
    my ($cmd, @args) = @_;
 
-   my $context = $self->context;
-
    if (! defined($cmd)) {
       return $self->log->info($self->brik_help_run('capture'));
    }
 
-   my $run = $cmd.' '.join(' ', @args);
+   my $run = join(' ', $cmd, @args);
 
-   my $out = '';
-   eval {
-      # IPC::Run: does not provide string interpolation for shell
+   #my $out = '';
+   #eval {
+      ## IPC::Run: does not provide string interpolation for shell
       #IPC::Run::run([ $run ], \undef, \$out);
-      $out = `$run`;
-   };
-   if ($@) {
-      return $self->log->error("run_shell: $@");
-   }
+   #};
+   #if ($@) {
+      #return $self->log->error("capture: $@");
+   #}
+
+   my $out = `$run`;
 
    return $out;
 }

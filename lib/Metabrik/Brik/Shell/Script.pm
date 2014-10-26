@@ -21,6 +21,7 @@ sub brik_properties {
       },
       commands => {
          load => [ ],
+         exec => [ qw(ARRAY) ],
       },
    };
 }
@@ -67,6 +68,30 @@ sub load {
    $self->debug && $self->log->debug("load: success");
 
    return \@lines;
+}
+
+sub exec {
+   my $self = shift;
+   my ($lines) = @_;
+
+   if (! defined($lines)) {
+      return $self->log->info($self->brik_help_run('exec'));
+   }
+
+   if (ref($lines) ne 'ARRAY') {
+      return $self->log->error("exec: must give an ARRAYREF as argument");
+   }
+
+   my $context = $self->context;
+
+   for (@$lines) {
+      if (/^exit$/) {
+         exit(0);
+      }
+      $context->run('core::shell', 'cmd', $_);
+   }
+
+   return 1;
 }
 
 1;

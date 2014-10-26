@@ -18,44 +18,57 @@ BEGIN {
    }
 }
 
+use Getopt::Long;
 use Metabrik::Brik::Core::Context;
 
-my $script = shift;
+my $script;
+my $rc;
+my $history;
+my $verbose = 2;
+my $debug = 0;
+GetOptions(
+   "script=s" => \$script,
+   "rc=s" => \$rc,
+   "history=s" => \$history,
+   "verbose=i" => \$verbose,
+   "debug=i" => \$debug,
+) or return usage();
 
 my $context = Metabrik::Brik::Core::Context->new;
-$context->brik_init or return;
 
-my $version = $context->run('core::global', 'brik_version');
+$context->brik_init
+   or die("[F] metabrik: context init: failed\n");
+
+$context->set('core::log', 'level', $verbose);
+
+$context->set('core::log', 'debug', $debug);
+$context->set('core::context', 'debug', $debug);
+$context->set('core::shell', 'debug', $debug);
+$context->set('core::global', 'debug', $debug);
 
 if (defined($script)) {
-   $context->use('shell::script') or return;
+   $context->use('shell::script')
+      or die("[F] metabrik: use: shell::script: failed\n");
 
-   #$context->set('shell::script', 'file', $script) or return;
-   #$context->set('shell::script', 'debug', 1) or return;
-   #$context->set('core::shell', 'debug', 1) or return;
+   $context->set('shell::script', 'debug', $debug);
+   $context->set('shell::script', 'file', $script);
 
-   $context->run('core::shell', 'script', $script) or return;
+   my $lines = $context->run('shell::script', 'load')
+      or die("[F] metabrik: run: shell::script: load: failed\n");
 
-   # XXX: does not work, to fix
-   #my $cmd = $context->run('shell::script', 'load');
-   #for (@$cmd) {
-      #print "DEBUG cmd[$_]\n";
-      #if (/^exit$/) {
-         #exit;
-      #}
-      #$context->run('core::shell', 'cmd', $_);
-   #}
+   $context->run('shell::script', 'exec', $lines)
+      or die("[F] metabrik: run: shell::script: exec: failed\n");
 }
 else {
-   $context->use('shell::rc') or return;
+   $context->use('shell::rc')
+      or die("[F] metabrik: use: shell::rc: failed\n");
 
-   $context->run('core::shell', 'splash');
+   $context->set('shell::rc', 'debug', $debug);
 
-   print "--[ Welcome to Metabrik - Knowledge is in your head, Detail is in the code ]--\n";
-   print "--[ Version $version ]--\n";
-   print "\n";
-
-   print "    There is a Brik for that.\n\n";
+   $context->run('core::shell', 'splash')
+      or die("[F] metabrik: run: core::shell: splash: failed\n");
 
    $context->run('core::shell', 'cmdloop');
 }
+
+exit(0);

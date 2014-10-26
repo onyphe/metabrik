@@ -2,6 +2,12 @@
 
 ### 1.00
 
+-> rename: inited() to init_done?
+=> add: _set_defa..._done, _check_require..._done
+
+-> core::shell:
+=> for each run_* write a *() method. Ex: run_run() => run(), so help_run will work
+
 -> pod.
 
 -> remove: run_pl() integrate into catch_run() instead.
@@ -17,9 +23,6 @@ Separateur officiel: |
 -> make core::shell Brik to depend on the fewest module as possible
 
 -> getopt for bin/metabrik
-
--> remove: Term::Shell function that allows calling a command with just first characters
-=> example: l vs ex-load
 
 -> integrate cpanm into Metabrik
 => brik: module::install, perl::install?

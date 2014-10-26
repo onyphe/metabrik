@@ -24,6 +24,7 @@ sub brik_properties {
          get_one => [ qw(SCALAR) ],
          get_range => [ qw(ARRAY) ],
          show => [ ],
+         exec => [ qw(SCALAR) ],
       },
    };
 }
@@ -41,7 +42,7 @@ sub brik_use_properties {
 sub load {
    my $self = shift;
 
-   my $shell = $self->shell->_shell;
+   my $shell = $self->shell;
    my $history_file = $self->history_file;
 
    if ($shell->term->can('ReadHistory')) {
@@ -64,7 +65,7 @@ sub load {
 sub write {
    my $self = shift;
 
-   my $shell = $self->shell->_shell;
+   my $shell = $self->shell;
    my $history_file = $self->history_file;
 
    if ($shell->term->can('WriteHistory')) {
@@ -82,7 +83,7 @@ sub write {
 sub get {
    my $self = shift;
 
-   my $shell = $self->shell->_shell;
+   my $shell = $self->shell;
 
    my @history = ();
    if ($shell->term->can('GetHistory')) {
@@ -105,7 +106,7 @@ sub get_one {
       return $self->log->info($self->brik_help_run('get_one'));
    }
 
-   my $shell = $self->shell->_shell;
+   my $shell = $self->shell;
 
    my $history = '';
    my @history = ();
@@ -130,7 +131,7 @@ sub get_range {
       return $self->log->info($self->brik_help_run('get_range'));
    }
 
-   my $shell = $self->shell->_shell;
+   my $shell = $self->shell;
 
    my @history = ();
    if ($shell->term->can('GetHistory')) {
@@ -157,6 +158,35 @@ sub show {
    }
 
    return $count - 1;
+}
+
+sub exec {
+   my $self = shift;
+   my ($numbers) = @_;
+
+   my $context = $self->context;
+
+   if (! defined($numbers)) {
+      return $self->log->info($self->brik_help_run('exec'));
+   }
+
+   # We want to exec some history command(s)
+   my $lines = [];
+   if ($numbers =~ /^\d+$/) {
+      $lines = $self->get_one($numbers);
+   }
+   elsif ($numbers =~ /^\d+\.\.\d+$/) {
+      $lines = $self->get_range($numbers);
+   }
+
+   for (@$lines) {
+      if (/^exit$/) {
+         exit(0);
+      }
+      $context->run('core::shell', 'cmd', $_);
+   }
+
+   return 1;
 }
 
 1;

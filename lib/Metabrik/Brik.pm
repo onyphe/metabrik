@@ -9,7 +9,7 @@ use base qw(CPAN::Class::Gomor::Hash);
 
 our @AS = qw(
    debug
-   inited
+   init_done
    context
    global
    log
@@ -34,7 +34,7 @@ sub brik_properties {
       tags => [ qw() ],
       attributes => {
          debug => [ qw(SCALAR) ],
-         inited => [ qw(SCALAR) ],
+         init_done => [ qw(SCALAR) ],
          context => [ qw(OBJECT) ],
          global => [ qw(OBJECT) ],
          log => [ qw(OBJECT) ],
@@ -42,24 +42,27 @@ sub brik_properties {
       },
       attributes_default => {
          debug => 0,
-         inited => 0,
+         init_done => 0,
       },
       commands => {
-         brik_version => [ q() ],
+         brik_version => [ ],
          brik_help_set => [ qw(SCALAR) ],
          brik_help_run => [ qw(SCALAR) ],
-         brik_class => [ qw() ],
-         brik_classes => [ qw() ],
-         brik_name => [ qw() ],
-         brik_repository => [ qw() ],
-         brik_category => [ qw() ],
-         brik_tags => [ qw() ],
+         brik_class => [ ],
+         brik_classes => [ ],
+         brik_name => [ ],
+         brik_repository => [ ],
+         brik_category => [ ],
+         brik_tags => [ ],
          brik_has_tag => [ qw(SCALAR) ],
-         brik_commands => [ qw() ],
+         brik_commands => [ ],
          brik_has_command => [ qw(SCALAR) ],
-         brik_attributes => [ qw() ],
+         brik_attributes => [ ],
          brik_has_attribute => [ qw(SCALAR) ],
-         brik_self => [ qw() ],
+         brik_self => [ ],
+         brik_set_default_attributes => [ ],
+         brik_check_require_modules => [ ],
+         brik_check_require_used => [ ],
       },
       require_modules => { },
       require_used => { },
@@ -157,6 +160,21 @@ sub new {
       }
    }
 
+   my $r = $self->brik_set_default_attributes;
+   return unless defined($r);
+
+   $r = $self->brik_check_require_modules;
+   return unless defined($r);
+
+   $r = $self->brik_check_require_used;
+   return unless defined($r);
+
+   return $self->brik_preinit;
+}
+
+sub brik_set_default_attributes {
+   my $self = shift;
+
    # Set default values for Attributes
    my $classes = $self->brik_classes;
 
@@ -182,13 +200,21 @@ sub new {
       }
    }
 
+   return 1;
+}
+
+sub brik_check_require_modules {
+   my $self = shift;
+
    # Module check
    my $modules = $self->brik_properties->{require_modules};
    for my $module (keys %$modules) {
       eval("require $module;");
       if ($@) {
          chomp($@);
-         return $self->log->error("new: you have to install Module [$module]: $@", $self->brik_class);
+         return $self->log->error("brik_check_require_modules: you have to ".
+            "install Module [$module]: $@", $self->brik_class
+         );
       }
 
       my @imports = @{$modules->{$module}};
@@ -196,12 +222,19 @@ sub new {
          eval('$module->import(@imports);');
          if ($@) {
             chomp($@);
-            return $self->log->error("new: unable to import Functions [@imports] ".
+            return $self->log->error("brik_check_require_modules: ".
+               "unable to import Functions [@imports] ".
                "from Module [$module]: $@", $self->brik_class
             );
          }
       }
    }
+
+   return 1;
+}
+
+sub brik_check_require_used {
+   my $self = shift;
 
    # Not all modules are capable of checking context against used briks
    # For instance, core::context Brik itselves.
@@ -211,7 +244,9 @@ sub new {
       my $require_used = $self->brik_properties->{require_used};
       for my $brik (keys %$require_used) {
          if (! $self->context->is_used($brik)) {
-            $self->log->error("new: you must use Brik [$brik] first", $self->brik_class);
+            $self->log->error("brik_check_require_used: you must use ".
+               "Brik [$brik] first", $self->brik_class
+            );
             $error++;
          }
       }
@@ -221,7 +256,7 @@ sub new {
       }
    }
 
-   return $self->brik_preinit;
+   return 1;
 }
 
 sub brik_repository {
@@ -419,11 +454,11 @@ sub brik_preinit {
 sub brik_init {
    my $self = shift;
 
-   if ($self->inited) {
+   if ($self->init_done) {
       return;
    }
 
-   $self->inited(1);
+   $self->init_done(1);
 
    return $self;
 }

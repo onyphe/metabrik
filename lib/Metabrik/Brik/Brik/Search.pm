@@ -40,7 +40,7 @@ sub all {
    $self->log->info("Count: $count");
 
    $count = 0;
-   $self->log->info("   Not used:");
+   $self->log->info("Not used:");
    for my $brik (@{$status->{not_used}}) {
       my $tags = $context->not_used->{$brik}->brik_tags;
       $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
