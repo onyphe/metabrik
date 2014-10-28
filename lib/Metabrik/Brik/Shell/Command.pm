@@ -13,12 +13,27 @@ sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(main shell command system) ],
+      attributes => {
+         as_array => [ ],
+         as_matrix => [ ],
+      },
       commands => {
          system => [ ],
          capture => [ ],
       },
       require_modules => {
          'IPC::Run' => [ qw(run) ],
+      },
+   };
+}
+
+sub brik_use_properties {
+   my $self = shift;
+
+   return {
+      attributes_default => {
+         as_array => 1,
+         as_matrix => 0,
       },
    };
 }
@@ -57,6 +72,18 @@ sub capture {
    #}
 
    my $out = `$run`;
+
+   # as_matrix has precedence over as_array (because as_array is the default)
+   if (! $self->as_matrix && $self->as_array) {
+      $out = [ split(/\n/, $out) ];
+   }
+   elsif ($self->as_matrix) {
+      my @matrix = ();
+      for my $this (split(/\n/, $out)) {
+         push @matrix, [ split(/\s+/, $this) ];
+      }
+      $out = \@matrix;
+   }
 
    return $out;
 }

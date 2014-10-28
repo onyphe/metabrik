@@ -99,10 +99,10 @@ sub info {
    return unless $self->level > 0;
 
    if ($self->color) {
-      print Term::ANSIColor::GREEN(), "[*] ", Term::ANSIColor::RESET();
+      print Term::ANSIColor::GREEN(), "[+] ", Term::ANSIColor::RESET();
    }
    else {
-      print "[*] ";
+      print "[+] ";
    }
 
    $msg ||= 'undef';
@@ -119,10 +119,10 @@ sub verbose {
    return unless $self->level > 1;
 
    if ($self->color) {
-      print Term::ANSIColor::YELLOW(), "[+] ", Term::ANSIColor::RESET();
+      print Term::ANSIColor::YELLOW(), "[*] ", Term::ANSIColor::RESET();
    }
    else {
-      print "[+] ";
+      print "[*] ";
    }
 
    print $self->_msg(($caller) ||= caller(), $msg);

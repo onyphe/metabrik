@@ -12,7 +12,7 @@ use base qw(Metabrik::Brik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(perl module install) ],
+      tags => [ qw(perl module install cpan) ],
       commands => {
          install => [ qw(SCALAR) ],
       },
@@ -31,10 +31,7 @@ sub install {
       return $self->log->error("install: module [$module]: invalid format");
    }
 
-   system("cpanm $module");
-
-   $self->log->info('install: don\'t forget to add this line to your shell rc file:');
-   $self->log->info('eval $(perl -I ~/perl5/lib/perl5 -Mlocal::lib)');
+   system("metabrik-cpanm $module");
 
    return 1;
 }

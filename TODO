@@ -5,6 +5,16 @@
 -> rename: inited() to init_done?
 => add: _set_defa..._done, _check_require..._done
 
+-> metabrik: --no-splash
+
+-> metabrik: create a default ~/.metabrik_rc file. Print what to do on first run:
+=> $PERL env variables, $PAGER, ...
+=> eval $(perl -I ~/perl5/metabrik -Mlocal::lib)
+=> export PERL_RL=Gnu
+=> export PAGER=less
+=> export HTTP_PROXY=
+==> print this by default, use a greetings() method. Use an attribute to turn off this greeting.
+
 -> core::shell:
 => for each run_* write a *() method. Ex: run_run() => run(), so help_run will work
 

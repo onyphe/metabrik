@@ -429,7 +429,7 @@ sub run_use {
    if ($brik =~ /^[a-z]/ && $brik =~ /::/) {
       $r = $context->use($brik) or return;
       if ($r) {
-         $self->log->verbose("use: Brik [$brik] used");
+         $self->log->verbose("use: Brik [$brik] success");
       }
 
       $self->add_handler("run_$brik");

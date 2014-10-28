@@ -12,8 +12,6 @@ my $builder = Module::Build->new(
    dist_author => 'GomoR <gomor_at_metabrik.org>',
    dist_version_from => 'lib/Metabrik.pm',
    requires => {
-      'File::HomeDir' => 0,
-      'IPC::Run' => 0,
    },
    configure_requires => {
       'Module::Build' => 0.42,

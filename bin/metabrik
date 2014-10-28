@@ -5,33 +5,30 @@
 use strict;
 use warnings;
 
-BEGIN {
-   use File::HomeDir;
-
-   my $lib = File::HomeDir->my_home."/perl5/lib/perl5";
-   $lib =~ s/\\/\//g; # Converts Windows paths
-
-   eval("use lib \"$lib\";");
-   if ($@) {
-      chomp($@);
-      die("[F] metabrik: unable to use Metabrik libs [$@]\n");
-   }
-}
-
 use Getopt::Long;
-use Metabrik::Brik::Core::Context;
+use FindBin;
+
+use lib ("$FindBin::Bin/../lib", "$FindBin::Bin/../lib/perl5");
+
+$ENV{PERL5LIB} = join(':', @INC);
+
+eval("use Metabrik::Brik::Core::Context;");
+if ($@) {
+   die("[F] metabrik: you have to set PERL5LIB environment variable like:\n".
+       'bash$ export PERL5LIB=/path/to/metabrik/lib'."\n");
+}
 
 my $script;
 my $rc;
-my $history;
 my $verbose = 2;
 my $debug = 0;
+my $no_splash = 0;
 GetOptions(
    "script=s" => \$script,
    "rc=s" => \$rc,
-   "history=s" => \$history,
    "verbose=i" => \$verbose,
    "debug=i" => \$debug,
+   "no-splash" => \$no_splash,
 ) or return usage();
 
 my $context = Metabrik::Brik::Core::Context->new;
@@ -50,6 +47,9 @@ if (defined($script)) {
    $context->use('shell::script')
       or die("[F] metabrik: use: shell::script: failed\n");
 
+   if ($rc) {
+      $context->set('shell::rc', 'rc_file', $rc)
+   }
    $context->set('shell::script', 'debug', $debug);
    $context->set('shell::script', 'file', $script);
 
@@ -63,12 +63,31 @@ else {
    $context->use('shell::rc')
       or die("[F] metabrik: use: shell::rc: failed\n");
 
+   if ($rc) {
+      $context->set('shell::rc', 'rc_file', $rc)
+   }
    $context->set('shell::rc', 'debug', $debug);
 
-   $context->run('core::shell', 'splash')
-      or die("[F] metabrik: run: core::shell: splash: failed\n");
+   unless ($no_splash) {
+      $context->run('core::shell', 'splash')
+         or die("[F] metabrik: run: core::shell: splash: failed\n");
+   }
 
    $context->run('core::shell', 'cmdloop');
 }
 
 exit(0);
+
+sub usage {
+   print<<EOF
+
+Usage: metabrik [options]
+
+   --no-splash           don't print the splash screen
+   --rc <file>           use specified rc file (default: ~/.metabrik_rc)
+   --verbose <0|1|2|3>   verbosity level (default: 2)
+   --debug <0|1>         enable debugging (default: 0)
+
+EOF
+;
+}

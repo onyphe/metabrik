@@ -18,12 +18,6 @@
          "requires" : {
             "Module::Build" : "0.42"
          }
-      },
-      "runtime" : {
-         "requires" : {
-            "File::HomeDir" : "0",
-            "IPC::Run" : "0"
-         }
       }
    },
    "provides" : {
@@ -46,14 +40,6 @@
       "CPAN::Module::Reload" : {
          "file" : "lib/CPAN/Module/Reload.pm",
          "version" : "1.08"
-      },
-      "CPAN::Term::Shell" : {
-         "file" : "lib/Metabrik/Brik/Core/Shell.pm",
-         "version" : "0.06"
-      },
-      "CPAN::Term::Shell::OnScopeLeave" : {
-         "file" : "lib/Metabrik/Brik/Core/Shell.pm",
-         "version" : "0.06"
       },
       "Metabrik" : {
          "file" : "lib/Metabrik.pm",
@@ -100,9 +86,6 @@
       },
       "Metabrik::Brik::Shell::Script" : {
          "file" : "lib/Metabrik/Brik/Shell/Script.pm"
-      },
-      "Metabrik::Ext::Shell" : {
-         "file" : "lib/Metabrik/Brik/Core/Shell.pm"
       }
    },
    "release_status" : "testing",
