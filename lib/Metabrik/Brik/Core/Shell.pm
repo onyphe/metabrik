@@ -38,18 +38,22 @@ sub brik_properties {
       },
       commands => {
          splash => [ ],
-         run_cd => [ qw(SCALAR) ],
-         run_use => [ qw(SCALAR) ],
-         run_set => [ qw(SCALAR SCALAR SCALAR) ],
-         run_get => [ qw(SCALAR SCALAR) ],
-         run_run => [ qw(SCALAR SCALAR) ],
-         run_perl => [ qw(SCALAR) ],
-         run_exit => [ ],
          cmd => [ qw(SCALAR) ],
          cmdloop => [ ],
+         run_use => [ qw(SCALAR) ],
+         run_help => [ qw(SCALAR) ],
+         run_set => [ qw(SCALAR SCALAR SCALAR) ],
+         run_get => [ qw(SCALAR) ],
+         run_run => [ qw(SCALAR SCALAR) ],
+         run_alias => [ qw(SCALAR SCALAR) ],
+         run_cd => [ qw(SCALAR) ],
+         run_perl => [ qw(SCALAR) ],
+         run_exit => [ ],
       },
       require_modules => {
-         'CPAN::Data::Dump' => [ 'dump' ],
+         'CPAN::Data::Dump' => [ qw(dump) ],
+         'File::HomeDir' => [ qw(home) ],
+         'Cwd' => [ ],
       },
    };
 }
@@ -385,7 +389,11 @@ sub run_perl {
    my $context = $self->context;
 
    my $line = $self->line;
-   $line =~ s/^pl\s+//;
+   $line =~ s/^perl\s+//;
+
+   if (! length($line)) {
+      return $self->log->info('perl <code>');
+   }
 
    $self->debug && $self->log->debug("run_perl: code[$line]");
 
@@ -406,7 +414,7 @@ sub run_perl {
    return $r;
 }
 
-sub comp_pl {
+sub comp_perl {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
@@ -420,7 +428,7 @@ sub run_use {
    my $context = $self->context;
 
    if (! defined($brik)) {
-      return $self->log->info("use <brik>");
+      return $self->log->info('use <brik>');
    }
 
    my $r;
@@ -865,7 +873,7 @@ sub catch_comp_sub {
 
       my $find = Metabrik::Brik::File::Find->new or return $self->log->error("file::fine: new");
       $find->brik_init;
-      $find->path($path);
+      $find->path([ $path ]);
       $find->recursive(0);
 
       my $found = $find->all('.*', '.*');
@@ -936,7 +944,7 @@ sub catch_comp {
 
       my $find = Metabrik::Brik::File::Find->new or return $self->log->error("file::fine: new");
       $find->brik_init;
-      $find->path($path);
+      $find->path([ $path ]);
       $find->recursive(0);
 
       my $found = $find->all('.*', '.*');

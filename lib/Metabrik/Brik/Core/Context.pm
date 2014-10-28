@@ -250,7 +250,7 @@ sub find_available {
       push @new, $_;
    }
 
-   $file_find->path(join(':', @new));
+   $file_find->path(\@new);
    $file_find->recursive(1);
    $file_find->debug(1);
 

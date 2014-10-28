@@ -59,6 +59,11 @@ provides:
     file: lib/Metabrik/Brik/Shell/Rc.pm
   Metabrik::Brik::Shell::Script:
     file: lib/Metabrik/Brik/Shell/Script.pm
+requires:
+  Cwd: '0'
+  File::Find: '0'
+  File::HomeDir: '0'
+  IO::All: '0'
 resources:
   license: http://opensource.org/licenses/artistic-license.php
 version: 1.00_05

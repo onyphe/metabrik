@@ -18,6 +18,14 @@
          "requires" : {
             "Module::Build" : "0.42"
          }
+      },
+      "runtime" : {
+         "requires" : {
+            "Cwd" : "0",
+            "File::Find" : "0",
+            "File::HomeDir" : "0",
+            "IO::All" : "0"
+         }
       }
    },
    "provides" : {

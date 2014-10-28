@@ -12,5 +12,9 @@ WriteMakefile(
    ABSTRACT_FROM => 'lib/Metabrik.pm',
    AUTHOR => 'GomoR <gomor_at_metabrik.org>',
    PREREQ_PM => {
+      'File::HomeDir' => 0,
+      'Cwd' => 0,
+      'IO::All' => 0,
+      'File::Find' => 0,
    },
 );

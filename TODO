@@ -2,11 +2,6 @@
 
 ### 1.00
 
--> rename: inited() to init_done?
-=> add: _set_defa..._done, _check_require..._done
-
--> metabrik: --no-splash
-
 -> metabrik: create a default ~/.metabrik_rc file. Print what to do on first run:
 => $PERL env variables, $PAGER, ...
 => eval $(perl -I ~/perl5/metabrik -Mlocal::lib)
@@ -15,27 +10,9 @@
 => export HTTP_PROXY=
 ==> print this by default, use a greetings() method. Use an attribute to turn off this greeting.
 
--> core::shell:
-=> for each run_* write a *() method. Ex: run_run() => run(), so help_run will work
-
 -> pod.
 
--> remove: run_pl() integrate into catch_run() instead.
-
 -> add: check_properties(), require_binaries()
-
-Changer : par | (path dans file::find)
-Separateur officiel: |
-=> No; use ARRAYREF directly
-
--> merge ext::shell to core::shell
--> review: ext::shell: $used to use is_used and like
--> make core::shell Brik to depend on the fewest module as possible
-
--> getopt for bin/metabrik
-
--> integrate cpanm into Metabrik
-=> brik: module::install, perl::install?
 
 -> remote::ssh2, check for exit_status when exec()
 

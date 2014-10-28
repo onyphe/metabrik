@@ -16,11 +16,11 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(main find) ],
       attributes => {
-         path => [ qw(SCALAR) ],
+         path => [ qw(ARRAY) ],
          recursive => [ qw(SCALAR) ],
       },
       attributes_default => {
-         path => '.',
+         path => [ '.' ],
          recursive => 1,
       },
       commands => {
@@ -51,7 +51,9 @@ sub all {
    my @files = ();
 
    my $path = $self->path;
-   my @path_list = split(':', $path);
+   if (ref($path) ne 'ARRAY') {
+      return $self->log->error("all: path must be an ARRAYREF");
+   }
 
    # Escape dirpattern if we are search for a directory hierarchy
    $dirpattern =~ s/\//\\\//g;
@@ -77,7 +79,7 @@ sub all {
 
       {
          no warnings;
-         File::Find::find($sub, @path_list);
+         File::Find::find($sub, @$path);
       };
 
       my %uniq_dirs = map { $_ => 1 } @dirs;
@@ -87,7 +89,7 @@ sub all {
    }
    # In non-recursive mode, we can use plain IO::All
    else {
-      for my $path (@path_list) {
+      for my $path (@$path) {
          $self->debug && $self->log->debug("all: path: $path");
 
          # Includes given directory
@@ -154,7 +156,7 @@ Metabrik::Brik::File::Find - brik to find some files using pattern matching
 
    use Metabrik::Brik::File::Find;
 
-   my $path = join(':', @INC);
+   my $path = [ @INC ];
 
    my $brik = Metabrik::Brik::File::Find->new;
    $brik->brik_init;
@@ -166,12 +168,23 @@ Metabrik::Brik::File::Find - brik to find some files using pattern matching
       print "$file\n";
    }
 
-   # From Metabrik shell
+   # From the Metabrik Shell
 
-   > my $path = join(':', @INC)
+   > my $path = [ @INC ];
    > set file::find path $path
    > set file::find recursive 1
    > run file::find files /lib/Metabrik/Brik$ .pm$
+
+   # From a Metabrik Brik
+
+   my $context = $self->context;
+
+   my $path = [ @INC ];
+
+   $context->use('file::find');
+   $context->set('file::find', 'path', $path);
+   $context->set('file::find', 'recursive', 1);
+   $context->run('file::find', 'files', '/lib/Metabrik/Brik$', '.pm$');
 
 =head1 DESCRIPTION
 
