@@ -17,9 +17,6 @@ lib/Metabrik/Brik/Core/Global.pm
 lib/Metabrik/Brik/Core/Log.pm
 lib/Metabrik/Brik/Core/Shell.pm
 lib/Metabrik/Brik/File/Find.pm
-lib/Metabrik/Brik/File/Read.pm
-lib/Metabrik/Brik/File/Write.pm
-lib/Metabrik/Brik/Remote/Ssh2.pm
 lib/Metabrik/Brik/Shell/Command.pm
 lib/Metabrik/Brik/Shell/History.pm
 lib/Metabrik/Brik/Shell/Rc.pm

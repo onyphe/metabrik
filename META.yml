@@ -45,12 +45,6 @@ provides:
     file: lib/Metabrik/Brik/Core/Shell.pm
   Metabrik::Brik::File::Find:
     file: lib/Metabrik/Brik/File/Find.pm
-  Metabrik::Brik::File::Read:
-    file: lib/Metabrik/Brik/File/Read.pm
-  Metabrik::Brik::File::Write:
-    file: lib/Metabrik/Brik/File/Write.pm
-  Metabrik::Brik::Remote::Ssh2:
-    file: lib/Metabrik/Brik/Remote/Ssh2.pm
   Metabrik::Brik::Shell::Command:
     file: lib/Metabrik/Brik/Shell/Command.pm
   Metabrik::Brik::Shell::History:
@@ -64,6 +58,7 @@ requires:
   File::Find: '0'
   File::HomeDir: '0'
   IO::All: '0'
+  Term::ANSIColor: '0'
 resources:
   license: http://opensource.org/licenses/artistic-license.php
 version: 1.00_05

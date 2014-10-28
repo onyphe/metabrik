@@ -16,5 +16,6 @@ WriteMakefile(
       'Cwd' => 0,
       'IO::All' => 0,
       'File::Find' => 0,
+      'Term::ANSIColor' => 0,
    },
 );

@@ -24,7 +24,8 @@
             "Cwd" : "0",
             "File::Find" : "0",
             "File::HomeDir" : "0",
-            "IO::All" : "0"
+            "IO::All" : "0",
+            "Term::ANSIColor" : "0"
          }
       }
    },
@@ -73,15 +74,6 @@
       },
       "Metabrik::Brik::File::Find" : {
          "file" : "lib/Metabrik/Brik/File/Find.pm"
-      },
-      "Metabrik::Brik::File::Read" : {
-         "file" : "lib/Metabrik/Brik/File/Read.pm"
-      },
-      "Metabrik::Brik::File::Write" : {
-         "file" : "lib/Metabrik/Brik/File/Write.pm"
-      },
-      "Metabrik::Brik::Remote::Ssh2" : {
-         "file" : "lib/Metabrik/Brik/Remote/Ssh2.pm"
       },
       "Metabrik::Brik::Shell::Command" : {
          "file" : "lib/Metabrik/Brik/Shell/Command.pm"

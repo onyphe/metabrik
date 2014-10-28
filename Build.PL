@@ -16,6 +16,7 @@ my $builder = Module::Build->new(
       'Cwd' => 0,
       'IO::All' => 0,
       'File::Find' => 0,
+      'Term::ANSIColor' => 0,
    },
    configure_requires => {
       'Module::Build' => 0.42,
