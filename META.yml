@@ -30,7 +30,7 @@ provides:
     version: '1.08'
   Metabrik:
     file: lib/Metabrik.pm
-    version: 1.00_04
+    version: 1.00_05
   Metabrik::Brik:
     file: lib/Metabrik/Brik.pm
   Metabrik::Brik::Brik::Search:
@@ -61,4 +61,4 @@ provides:
     file: lib/Metabrik/Brik/Shell/Script.pm
 resources:
   license: http://opensource.org/licenses/artistic-license.php
-version: 1.00_04
+version: 1.00_05
