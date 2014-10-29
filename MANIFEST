@@ -1,4 +1,5 @@
 bin/metabrik
+bin/metabrik-cpanm
 Build.PL
 examples/dot-metabrik_rc-sample
 examples/multiline.brik
@@ -8,7 +9,9 @@ lib/CPAN/Class/Gomor.pm
 lib/CPAN/Class/Gomor/Hash.pm
 lib/CPAN/Data/Dump.pm
 lib/CPAN/Lexical/Persistence.pm
+lib/CPAN/local/lib.pm
 lib/CPAN/Module/Reload.pm
+lib/CPAN/Term/Shell.pm
 lib/Metabrik.pm
 lib/Metabrik/Brik.pm
 lib/Metabrik/Brik/Brik/Search.pm
@@ -17,6 +20,7 @@ lib/Metabrik/Brik/Core/Global.pm
 lib/Metabrik/Brik/Core/Log.pm
 lib/Metabrik/Brik/Core/Shell.pm
 lib/Metabrik/Brik/File/Find.pm
+lib/Metabrik/Brik/Perl/Module.pm
 lib/Metabrik/Brik/Shell/Command.pm
 lib/Metabrik/Brik/Shell/History.pm
 lib/Metabrik/Brik/Shell/Rc.pm
