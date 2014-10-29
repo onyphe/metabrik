@@ -63,9 +63,12 @@ sub brik_properties {
          brik_set_default_attributes => [ ],
          brik_check_require_modules => [ ],
          brik_check_require_used => [ ],
+         brik_check_require_binaries => [ ],
+         brik_check_properties => [ ],
       },
       require_modules => { },
       require_used => { },
+      require_binaries => { },
    };
 }
 
@@ -127,13 +130,78 @@ sub brik_help_run {
    return;
 }
 
+sub brik_check_properties {
+   my $self = shift;
+
+   my $name = $self->brik_name;
+   if (! $self->can('brik_properties')) {
+      return $self->log->error("brik_check_properties: Brik [$name] ".
+         "has no brik_properties");
+   }
+
+   my $properties = $self->brik_properties;
+   my $use_properties = $self->brik_use_properties;
+
+   my $error = 0;
+
+   my %valid_keys = (
+      revision => 1,
+      tags => 1,
+      attributes => 1,
+      attributes_default => 1,
+      commands => 1,
+      require_modules => 1,
+      require_used => 1,
+      require_binaries => 1,
+   );
+   for my $key (keys %$properties) {
+      if (! exists($valid_keys{$key})) {
+         print("[-] brik_check_properties: brik_properties has invalid key [$key]\n");
+         $error++;
+      }
+      elsif ($key eq 'tags' && ref($properties->{$key}) ne 'ARRAY') {
+         print("[-] brik_check_properties: brik_properties with key [$key] is not an ARRAYREF\n");
+         $error++;
+      }
+      elsif ($key ne 'revision' && $key ne 'tags' && ref($properties->{$key}) ne 'HASH') {
+         print("[-] brik_check_properties: brik_properties with key [$key] is not a HASHREF\n");
+         $error++;
+      }
+   }
+   for my $key (keys %$use_properties) {
+      if (! exists($valid_keys{$key})) {
+         print("[-] brik_check_properties: brik_use_properties has invalid key [$key]\n");
+         $error++;
+      }
+      elsif ($key eq 'tags' && ref($use_properties->{$key}) ne 'ARRAY') {
+         print("[-] brik_check_properties: brik_use_properties with key [$key] is not an ARRAYREF\n");
+         $error++;
+      }
+      elsif ($key ne 'revision' && $key ne 'tags' && ref($use_properties->{$key}) ne 'HASH') {
+         print("[-] brik_check_properties: brik_use_properties with key [$key] is not a HASHREF\n");
+         $error++;
+      }
+   }
+
+   return $error ? 0 : 1;
+}
+
 sub new {
    my $self = shift->SUPER::new(
       @_,
    );
 
-   if (! $self->can('brik_properties')) {
-      return $self->log->error("new: Brik [".$self->brik_name."] has no brik_properties");
+   if (! $self->brik_check_properties) {
+      my $name = $self->brik_name;
+      my $msg = "new: Brik [$name] has invalid properties";
+      # It is possible we don't have a log Brik loaded yet.
+      if (defined($self->log)) {
+         return $self->log->error($msg);
+      }
+      else {
+         print("[-] $msg\n");
+         return;
+      }
    }
 
    # Build Attributes, Class::Gomor style
@@ -167,6 +235,9 @@ sub new {
    return unless defined($r);
 
    $r = $self->brik_check_require_used;
+   return unless defined($r);
+
+   $r = $self->brik_check_require_binaries;
    return unless defined($r);
 
    return $self->brik_preinit;
@@ -236,18 +307,35 @@ sub brik_check_require_modules {
 sub brik_check_require_used {
    my $self = shift;
 
+   my $context = $self->context;
+
    # Not all modules are capable of checking context against used briks
    # For instance, core::context Brik itselves.
-   if (defined($self->context) && $self->context->can('used')) {
+   if (defined($context) && $context->can('used')) {
       my $error = 0;
-      my $used = $self->context->used;
+      my $used = $context->used;
       my $require_used = $self->brik_properties->{require_used};
       for my $brik (keys %$require_used) {
-         if (! $self->context->is_used($brik)) {
-            $self->log->error("brik_check_require_used: you must use ".
-               "Brik [$brik] first", $self->brik_class
-            );
-            $error++;
+         if (! $context->is_used($brik)) {
+            if ($self->global->auto_use) {
+               my $r = $context->use($brik);
+               if (! $r) {
+                  $self->log->warning("brik_check_require_used: ".
+                     "use: Brik [$brik] failed");
+                  $error++;
+                  next;
+               }
+               else {
+                  $self->log->verbose("brik_check_require_used: ".
+                     "use: Brik [$brik] success");
+               }
+            }
+            else {
+               $self->log->error("brik_check_require_used: you must use ".
+                  "Brik [$brik] first", $self->brik_class
+               );
+               $error++;
+            }
          }
       }
 
@@ -257,6 +345,33 @@ sub brik_check_require_used {
    }
 
    return 1;
+}
+
+sub brik_check_require_binaries {
+   my $self = shift;
+
+   my $binaries = $self->brik_properties->{require_binaries};
+   my %binaries_found = ();
+   for my $binary (keys %$binaries) {
+      $binaries_found{$binary} = 0;
+      my @path = split(':', $ENV{PATH});
+      for my $path (@path) {
+         if (-f "$path/$binary") {
+            $binaries_found{$binary} = 1;
+            last;
+         }
+      }
+   }
+
+   my $error = 0;
+   for my $binary (keys %binaries_found) {
+      if (! $binaries_found{$binary}) {
+         $self->log->error("brik_check_require_modules: binary [$binary] not found in \$PATH");
+         $error++;
+      }
+   }
+
+   return $error ? 0 : 1;
 }
 
 sub brik_repository {

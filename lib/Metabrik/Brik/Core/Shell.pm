@@ -439,8 +439,6 @@ sub run_use {
       if ($r) {
          $self->log->verbose("use: Brik [$brik] success");
       }
-
-      $self->add_handler("run_$brik");
    }
    else {
       return $self->run_perl($brik, @args);

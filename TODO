@@ -12,10 +12,6 @@
 
 -> pod.
 
--> add: check_properties(), require_binaries()
-
--> remote::ssh2, check for exit_status when exec()
-
 ### LOGO
 
 -> chose ASCII art:
@@ -35,6 +31,8 @@
 -> rename: numbers::iana => iana::countrycodes
 -> new: iana::servicenames
 => http://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml
+
+-> remote::ssh2, check for exit_status when exec()
 
 -> network::mitm
 => route()

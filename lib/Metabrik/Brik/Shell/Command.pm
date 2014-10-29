@@ -16,6 +16,7 @@ sub brik_properties {
       attributes => {
          as_array => [ ],
          as_matrix => [ ],
+         capture_stderr => [ ],
       },
       commands => {
          system => [ ],
@@ -34,6 +35,7 @@ sub brik_use_properties {
       attributes_default => {
          as_array => 1,
          as_matrix => 0,
+         capture_stderr => 1,
       },
    };
 }
@@ -71,7 +73,7 @@ sub capture {
       #return $self->log->error("capture: $@");
    #}
 
-   my $out = `$run`;
+   my $out = $self->capture_stderr ? `$run 2>&1` : `$run`;
 
    # as_matrix has precedence over as_array (because as_array is the default)
    if (! $self->as_matrix && $self->as_array) {

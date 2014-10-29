@@ -32,6 +32,7 @@ sub brik_properties {
          homedir => [ qw(SCALAR) ],
          port => [ qw(SCALAR) ],
          encoding => [ qw(SCALAR) ],
+         auto_use => [ qw(SCALAR) ],
       },
       attributes_default => {
          device => 'eth0',
@@ -52,6 +53,7 @@ sub brik_properties {
          homedir => $ENV{HOME} || '/tmp',
          port => 80,
          encoding => 'utf8',
+         auto_use => 1,
       },
    };
 }

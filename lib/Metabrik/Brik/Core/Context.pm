@@ -367,6 +367,9 @@ sub use {
          die("$MSG\n");
       }
 
+      # Add Term::Shell handle so completion will work
+      $CTX->{shell}->add_handler("run_$__ctx_brik");
+
       $USE = $__ctx_brik;
 
       return $CTX->{used}->{$__ctx_brik} = $__ctx_new;
