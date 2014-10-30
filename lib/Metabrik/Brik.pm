@@ -60,6 +60,7 @@ sub brik_properties {
          brik_attributes => [ ],
          brik_has_attribute => [ qw(SCALAR) ],
          brik_self => [ ],
+         brik_create_attributes => [ ],
          brik_set_default_attributes => [ ],
          brik_check_require_modules => [ ],
          brik_check_require_used => [ ],
@@ -144,6 +145,18 @@ sub brik_check_properties {
 
    my $error = 0;
 
+   # Check all mandatory keys are present
+   my @mandatory_keys = qw(
+      tags
+   );
+   for my $key (@mandatory_keys) {
+      if (! exists($properties->{$key})) {
+         print("[-] brik_check_properties: Brik [$name]: brik_properties lacks mandatory key [$key]\n");
+         $error++;
+      }
+   }
+
+   # Check all keys are valid
    my %valid_keys = (
       revision => 1,
       tags => 1,
@@ -183,7 +196,12 @@ sub brik_check_properties {
       }
    }
 
-   return $error ? 0 : 1;
+   if ($error) {
+      print("[-] brik_check_properties: Brik [$name] has invalid properties\n");
+      return 0;
+   }
+
+   return 1;
 }
 
 sub new {
@@ -191,18 +209,29 @@ sub new {
       @_,
    );
 
-   if (! $self->brik_check_properties) {
-      my $name = $self->brik_name;
-      my $msg = "new: Brik [$name] has invalid properties";
-      # It is possible we don't have a log Brik loaded yet.
-      if (defined($self->log)) {
-         return $self->log->error($msg);
-      }
-      else {
-         print("[-] $msg\n");
-         return;
-      }
-   }
+   my $r = $self->brik_check_properties;
+   return unless $r;
+
+   $r = $self->brik_create_attributes;
+   return unless $r;
+
+   $r = $self->brik_set_default_attributes;
+   return unless $r;
+
+   $r = $self->brik_check_require_modules;
+   return unless $r;
+
+   $r = $self->brik_check_require_used;
+   return unless $r;
+
+   $r = $self->brik_check_require_binaries;
+   return unless $r;
+
+   return $self->brik_preinit;
+}
+
+sub brik_create_attributes {
+   my $self = shift;
 
    # Build Attributes, Class::Gomor style
    my $attributes = $self->brik_properties->{attributes};
@@ -228,19 +257,7 @@ sub new {
       }
    }
 
-   my $r = $self->brik_set_default_attributes;
-   return unless defined($r);
-
-   $r = $self->brik_check_require_modules;
-   return unless defined($r);
-
-   $r = $self->brik_check_require_used;
-   return unless defined($r);
-
-   $r = $self->brik_check_require_binaries;
-   return unless defined($r);
-
-   return $self->brik_preinit;
+   return 1;
 }
 
 sub brik_set_default_attributes {

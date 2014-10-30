@@ -12,7 +12,7 @@ use base qw(Metabrik::Brik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(used core main global) ],
+      tags => [ qw(core main global) ],
       attributes => { 
          device => [ qw(SCALAR) ],
          input => [ qw(SCALAR) ],

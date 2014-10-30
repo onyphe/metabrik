@@ -12,7 +12,7 @@ use base qw(CPAN::Term::Shell Metabrik::Brik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(used core main shell) ],
+      tags => [ qw(core main shell) ],
       attributes => {
          echo => [ qw(SCALAR) ],
          pager_threshold => [ qw(SCALAR) ],
@@ -153,9 +153,7 @@ sub AUTOLOAD {
    (my $alias = $AUTOLOAD) =~ s/^Metabrik::Brik::Core::Shell:://;
 
    if ($self->debug) {
-      $self->log->debug("autoload[$AUTOLOAD]");
-      $self->log->debug("alias[$alias]");
-      $self->log->debug("args[@args]");
+      $self->log->debug("autoload[$AUTOLOAD] alias[$alias] args[@args]");
    }
 
    #my $aliases = $self->_aliases;
@@ -249,14 +247,6 @@ sub init {
    # Default: 'us,ue,md,me', see `man 5 termcap' and Term::Cap
    # See also Term::ReadLine LoadTermCap() and ornaments() subs.
    $self->term->ornaments('md,me');
-
-   # They are used when core::context init is performed
-   # Should be placed in core::context Brik instead of here
-   # No: has to be done when core::shell Brik is inited only.
-   $self->add_handler('run_core::log');
-   $self->add_handler('run_core::context');
-   $self->add_handler('run_core::global');
-   $self->add_handler('run_core::shell');
 
    return $self;
 }
@@ -539,7 +529,9 @@ sub comp_help {
    # We want to find help for used briks by using completion
    if (($count == 1)
    ||  ($count == 2 && length($word) > 0)) {
-      for my $a (keys %{$self->{handlers}}) {
+      my @handlers = keys %{$self->{handlers}};
+      my @used = keys %{$self->context->used};
+      for my $a (@handlers, @used) {
          next unless length($a);
          push @comp, $a if $a =~ /^$word/;
       }

@@ -10,7 +10,7 @@ use base qw(Metabrik::Brik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(used core context main) ],
+      tags => [ qw(core context main) ],
       attributes => {
          _lp => [ qw(OBJECT) ],
       },
@@ -366,9 +366,6 @@ sub use {
          my $MSG = "use: unable to use Brik [$__ctx_brik]";
          die("$MSG\n");
       }
-
-      # Add Term::Shell handle so completion will work
-      $CTX->{shell}->add_handler("run_$__ctx_brik");
 
       $USE = $__ctx_brik;
 

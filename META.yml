@@ -28,6 +28,15 @@ provides:
   CPAN::Module::Reload:
     file: lib/CPAN/Module/Reload.pm
     version: '1.08'
+  CPAN::Term::Shell:
+    file: lib/CPAN/Term/Shell.pm
+    version: '0.06'
+  CPAN::Term::Shell::OnScopeLeave:
+    file: lib/CPAN/Term/Shell.pm
+    version: '0.06'
+  CPAN::local::lib:
+    file: lib/CPAN/local/lib.pm
+    version: '2.000014'
   Metabrik:
     file: lib/Metabrik.pm
     version: 1.00_05
@@ -45,6 +54,8 @@ provides:
     file: lib/Metabrik/Brik/Core/Shell.pm
   Metabrik::Brik::File::Find:
     file: lib/Metabrik/Brik/File/Find.pm
+  Metabrik::Brik::Perl::Module:
+    file: lib/Metabrik/Brik/Perl/Module.pm
   Metabrik::Brik::Shell::Command:
     file: lib/Metabrik/Brik/Shell/Command.pm
   Metabrik::Brik::Shell::History:
