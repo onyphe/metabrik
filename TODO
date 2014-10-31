@@ -10,11 +10,13 @@
 => export HTTP_PROXY=
 ==> print this by default, use a greetings() method. Use an attribute to turn off this greeting.
 
--> bug: at Shell: try 'core::global'
-=> should not add_handler for Briks, they are not run_* methods.
-=> help should perform completion on used Briks
+-> handle deps: IO::All and File::Find
 
--> pod.
+-> pod/help
+
+-> merge: brik::search to core::global?
+-> merge: perl::module to core::global?
+-> remove dep: file::find from core::* Briks? and move file::find to repository main?
 
 ### LOGO
 
@@ -209,6 +211,19 @@ Vocabulary:
 => Rename to use that in all code
 - Meta shell can execute Code (Perl code)
 
+Value types in properties:
+Code
+Tag
+Attribute
+Command
+Brik
+Module => Perl module
+$XXX_list => ARRRAYREF
+$XXX_hash => HASHREF
+$XXX_ref => SCALARREF
+_file|file => file
+_directory|directory => directory
+ipv4|6_address
 
 Doc:
 - core::context Brik autouses core::global Brik
@@ -216,7 +231,7 @@ Doc:
 - declare_* returns an ARRAYREF
 - require_* returns an HASHREF with ARRAYREF values
 
-### FURTURE WORK
+### FUTURE WORK
 
 staticperl, standalone Perl with libc:
 http://search.cpan.org/~mlehmann/App-Staticperl-1.43/

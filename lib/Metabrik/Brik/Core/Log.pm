@@ -14,20 +14,20 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(core main log) ],
       attributes => {
-         color => [ qw(SCALAR) ],
-         level => [ qw(SCALAR) ],
+         color => [ qw(0|1) ],
+         level => [ qw(0|1|2|3) ],
       },
       attributes_default => {
          color => 1,
          level => 1,
       },
       commands => {
-         info => [ qw(SCALAR) ],
-         verbose => [ qw(SCALAR) ],
-         warning => [ qw(SCALAR) ],
-         error => [ qw(SCALAR) ],
-         fatal => [ qw(SCALAR) ],
-         debug => [ qw(SCALAR) ],
+         info => [ qw(string) ],
+         verbose => [ qw(string) ],
+         warning => [ qw(string) ],
+         error => [ qw(string) ],
+         fatal => [ qw(string) ],
+         debug => [ qw(string) ],
       },
       require_modules => {
          'Term::ANSIColor' => [ ],

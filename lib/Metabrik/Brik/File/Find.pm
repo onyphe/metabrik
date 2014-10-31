@@ -16,15 +16,15 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(main find) ],
       attributes => {
-         path => [ qw(ARRAY) ],
-         recursive => [ qw(SCALAR) ],
+         path => [ qw($path_list) ],
+         recursive => [ qw(0|1) ],
       },
       attributes_default => {
          path => [ '.' ],
          recursive => 1,
       },
       commands => {
-         all => [ qw(SCALAR SCALAR) ],
+         all => [ qw(directory_pattern file_pattern) ],
       },
       require_modules => {
          'IO::All' => [ ],

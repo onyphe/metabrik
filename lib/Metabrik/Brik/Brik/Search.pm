@@ -15,9 +15,9 @@ sub brik_properties {
       tags => [ qw(unstable main brik search) ],
       commands => {
          all => [ ],
-         string => [ qw(SCALAR) ],
-         tag => [ qw(SCALAR) ],
-         not_tag => [ qw(SCALAR) ],
+         string => [ qw(string) ],
+         tag => [ qw(Tag) ],
+         not_tag => [ qw(Tag) ],
       },
    };
 }

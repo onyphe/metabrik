@@ -14,7 +14,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(main shell rc) ],
       attributes => {
-         rc_file => [ qw(SCALAR) ],
+         rc_file => [ qw(file) ],
       },
       commands => {
          load => [ ],

@@ -14,13 +14,13 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(main shell command system) ],
       attributes => {
-         as_array => [ ],
-         as_matrix => [ ],
-         capture_stderr => [ ],
+         as_array => [ qw(0|1) ],
+         as_matrix => [ qw(0|1) ],
+         capture_stderr => [ qw(0|1) ],
       },
       commands => {
-         system => [ ],
-         capture => [ ],
+         system => [ qw(command) ],
+         capture => [ qw(command) ],
       },
       require_modules => {
          'IPC::Run' => [ qw(run) ],

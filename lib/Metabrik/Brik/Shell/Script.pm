@@ -14,14 +14,14 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(main shell script) ],
       attributes => {
-         file => [ qw(SCALAR) ],
+         file => [ qw(file) ],
       },
       attributes_default => {
          file => 'script.brik',
       },
       commands => {
          load => [ ],
-         exec => [ qw(ARRAY) ],
+         exec => [ qw($line_list) ],
       },
    };
 }

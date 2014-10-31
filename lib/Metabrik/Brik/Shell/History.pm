@@ -14,17 +14,16 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(main shell history) ],
       attributes => {
-         shell => [ qw(OBJECT) ],
-         history_file => [ qw(SCALAR) ],
+         history_file => [ qw(file) ],
       },
       commands => {
          load => [ ],
          write => [ ],
          get => [ ],
-         get_one => [ qw(SCALAR) ],
-         get_range => [ qw(ARRAY) ],
+         get_one => [ qw(integer) ],
+         get_range => [ qw(integer_first..integer_last) ],
          show => [ ],
-         exec => [ qw(SCALAR) ],
+         exec => [ qw(integer|integer_first..integer_last) ],
       },
    };
 }

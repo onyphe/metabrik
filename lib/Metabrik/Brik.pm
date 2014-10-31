@@ -33,12 +33,12 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw() ],
       attributes => {
-         debug => [ qw(SCALAR) ],
-         init_done => [ qw(SCALAR) ],
-         context => [ qw(OBJECT) ],
-         global => [ qw(OBJECT) ],
-         log => [ qw(OBJECT) ],
-         shell => [ qw(OBJECT) ],
+         debug => [ qw(0|1) ],
+         init_done => [ qw(0|1) ],
+         context => [ qw(core::context) ],
+         global => [ qw(core::global) ],
+         log => [ qw(core::log) ],
+         shell => [ qw(core::shell) ],
       },
       attributes_default => {
          debug => 0,
@@ -46,19 +46,19 @@ sub brik_properties {
       },
       commands => {
          brik_version => [ ],
-         brik_help_set => [ qw(SCALAR) ],
-         brik_help_run => [ qw(SCALAR) ],
+         brik_help_set => [ qw(Attribute) ],
+         brik_help_run => [ qw(Command) ],
          brik_class => [ ],
          brik_classes => [ ],
          brik_name => [ ],
          brik_repository => [ ],
          brik_category => [ ],
          brik_tags => [ ],
-         brik_has_tag => [ qw(SCALAR) ],
+         brik_has_tag => [ qw(Tag) ],
          brik_commands => [ ],
-         brik_has_command => [ qw(SCALAR) ],
+         brik_has_command => [ qw(Command) ],
          brik_attributes => [ ],
-         brik_has_attribute => [ qw(SCALAR) ],
+         brik_has_attribute => [ qw(Attribute) ],
          brik_self => [ ],
          brik_create_attributes => [ ],
          brik_set_default_attributes => [ ],
@@ -95,8 +95,10 @@ sub brik_help_set {
       my $attributes = $class->brik_attributes;
 
       if (exists($attributes->{$attribute})) {
-         my $help = sprintf("set %s %-20s ", $name, $attribute);
-         $help .= join(' ', @{$attributes->{$attribute}});
+         my $help = sprintf("set %s %s ", $name, $attribute);
+         for (@{$attributes->{$attribute}}) {
+            $help .= "<$_> ";
+         }
          return $help;
       }
    }
@@ -122,8 +124,10 @@ sub brik_help_run {
       my $commands = $class->brik_commands;
 
       if (exists($commands->{$command})) {
-         my $help = sprintf("run %s %-20s ", $name, $command);
-         $help .= join(' ', @{$commands->{$command}});
+         my $help = sprintf("run %s %s ", $name, $command);
+         for (@{$commands->{$command}}) {
+            $help .= "<$_> ";
+         }
          return $help;
       }
    }
@@ -196,8 +200,98 @@ sub brik_check_properties {
       }
    }
 
+   # Check HASHREFs contains pointers to ARRAYREFs
+   for my $key (keys %$properties) {
+      next if ($key eq 'revision' || $key eq 'tags' || $key eq 'attributes_default');
+
+      for my $subkey (keys %{$properties->{$key}}) {
+         if (ref($properties->{$key}->{$subkey}) ne 'ARRAY') {
+            print("[-] brik_check_properties: brik_properties with key [$key] and subkey [$subkey] is not an ARRAYREF\n");
+            $error++;
+         }
+      }
+   }
+   for my $key (keys %$use_properties) {
+      next if ($key eq 'revision' || $key eq 'tags' || $key eq 'attributes_default');
+
+      for my $subkey (keys %{$use_properties->{$key}}) {
+         if (ref($use_properties->{$key}->{$subkey}) ne 'ARRAY') {
+            print("[-] brik_check_properties: brik_use_properties with key [$key] and subkey [$subkey] is not an ARRAYREF\n");
+            $error++;
+         }
+      }
+   }
+
    if ($error) {
-      print("[-] brik_check_properties: Brik [$name] has invalid properties\n");
+      print("[-] brik_check_properties: Brik [$name] has invalid properties ($error error(s) found)\n");
+      return 0;
+   }
+
+   return 1;
+}
+
+sub brik_check_use_properties {
+   my $self = shift;
+
+   my $name = $self->brik_name;
+   if (! $self->can('brik_use_properties')) {
+      return 1;
+   }
+
+   my $use_properties = $self->brik_use_properties;
+
+   my $error = 0;
+
+   # Check all mandatory keys are present
+   my @mandatory_keys = qw(
+   );
+   for my $key (@mandatory_keys) {
+      if (! exists($use_properties->{$key})) {
+         print("[-] brik_check_use_properties: Brik [$name]: brik_use_properties lacks mandatory key [$key]\n");
+         $error++;
+      }
+   }
+
+   # Check all keys are valid
+   my %valid_keys = (
+      revision => 1,
+      tags => 1,
+      attributes => 1,
+      attributes_default => 1,
+      commands => 1,
+      require_modules => 1,
+      require_used => 1,
+      require_binaries => 1,
+   );
+   for my $key (keys %$use_properties) {
+      if (! exists($valid_keys{$key})) {
+         print("[-] brik_check_use_properties: brik_use_properties has invalid key [$key]\n");
+         $error++;
+      }
+      elsif ($key eq 'tags' && ref($use_properties->{$key}) ne 'ARRAY') {
+         print("[-] brik_check_use_properties: brik_use_properties with key [$key] is not an ARRAYREF\n");
+         $error++;
+      }
+      elsif ($key ne 'revision' && $key ne 'tags' && ref($use_properties->{$key}) ne 'HASH') {
+         print("[-] brik_check_use_properties: brik_use_properties with key [$key] is not a HASHREF\n");
+         $error++;
+      }
+   }
+
+   # Check HASHREFs contains pointers to ARRAYREFs
+   for my $key (keys %$use_properties) {
+      next if ($key eq 'revision' || $key eq 'tags' || $key eq 'attributes_default');
+
+      for my $subkey (keys %{$use_properties->{$key}}) {
+         if (ref($use_properties->{$key}->{$subkey}) ne 'ARRAY') {
+            print("[-] brik_check_use_properties: brik_use_properties with key [$key] and subkey [$subkey] is not an ARRAYREF\n");
+            $error++;
+         }
+      }
+   }
+
+   if ($error) {
+      print("[-] brik_check_use_properties: Brik [$name] has invalid properties ($error error(s) found)\n");
       return 0;
    }
 
@@ -210,6 +304,9 @@ sub new {
    );
 
    my $r = $self->brik_check_properties;
+   return unless $r;
+
+   $r = $self->brik_check_use_properties;
    return unless $r;
 
    $r = $self->brik_create_attributes;

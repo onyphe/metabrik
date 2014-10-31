@@ -18,40 +18,41 @@ if ($@) {
        'bash$ export PERL5LIB=/path/to/metabrik/lib'."\n");
 }
 
-my $script;
-my $rc;
-my $verbose = 2;
-my $debug = 0;
-my $no_splash = 0;
+# Default values
+my %lopts = (
+   verbose => 2,
+   debug => 0,
+   no_splash => 0,
+);
 GetOptions(
-   "script=s" => \$script,
-   "rc=s" => \$rc,
-   "verbose=i" => \$verbose,
-   "debug=i" => \$debug,
-   "no-splash" => \$no_splash,
-) or return usage();
+   "script=s" => \$lopts{script},
+   "rc=s" => \$lopts{rc},
+   "verbose=i" => \$lopts{verbose},
+   "debug=i" => \$lopts{debug},
+   "no-splash" => \$lopts{no_splash},
+) or usage();
 
 my $context = Metabrik::Brik::Core::Context->new;
 
 $context->brik_init
    or die("[F] metabrik: context init: failed\n");
 
-$context->set('core::log', 'level', $verbose);
+$context->set('core::log', 'level', $lopts{verbose});
 
-$context->set('core::log', 'debug', $debug);
-$context->set('core::context', 'debug', $debug);
-$context->set('core::shell', 'debug', $debug);
-$context->set('core::global', 'debug', $debug);
+$context->set('core::log', 'debug', $lopts{debug});
+$context->set('core::context', 'debug', $lopts{debug});
+$context->set('core::shell', 'debug', $lopts{debug});
+$context->set('core::global', 'debug', $lopts{debug});
 
-if (defined($script)) {
+if (defined($lopts{script})) {
    $context->use('shell::script')
       or die("[F] metabrik: use: shell::script: failed\n");
 
-   if ($rc) {
-      $context->set('shell::rc', 'rc_file', $rc)
+   if ($lopts{rc}) {
+      $context->set('shell::rc', 'rc_file', $lopts{rc})
    }
-   $context->set('shell::script', 'debug', $debug);
-   $context->set('shell::script', 'file', $script);
+   $context->set('shell::script', 'debug', $lopts{debug});
+   $context->set('shell::script', 'file', $lopts{script});
 
    my $lines = $context->run('shell::script', 'load')
       or die("[F] metabrik: run: shell::script: load: failed\n");
@@ -63,12 +64,12 @@ else {
    $context->use('shell::rc')
       or die("[F] metabrik: use: shell::rc: failed\n");
 
-   if ($rc) {
-      $context->set('shell::rc', 'rc_file', $rc)
+   if ($lopts{rc}) {
+      $context->set('shell::rc', 'rc_file', $lopts{rc})
    }
-   $context->set('shell::rc', 'debug', $debug);
+   $context->set('shell::rc', 'debug', $lopts{debug});
 
-   unless ($no_splash) {
+   unless ($lopts{no_splash}) {
       $context->run('core::shell', 'splash')
          or die("[F] metabrik: run: core::shell: splash: failed\n");
    }
@@ -90,4 +91,6 @@ Usage: metabrik [options]
 
 EOF
 ;
+
+   exit(0);
 }

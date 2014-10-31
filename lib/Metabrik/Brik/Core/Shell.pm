@@ -14,18 +14,18 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(core main shell) ],
       attributes => {
-         echo => [ qw(SCALAR) ],
-         pager_threshold => [ qw(SCALAR) ],
-         help_show_brik_commands => [ qw(SCALAR) ],
-         help_show_brik_attributes => [ qw(SCALAR) ],
-         comp_show_brik_attributes => [ qw(SCALAR) ],
-         comp_show_brik_commands => [ qw(SCALAR) ],
-         get_show_brik_attributes => [ qw(SCALAR) ],
+         echo => [ qw(0|1) ],
+         pager_threshold => [ qw(integer) ],
+         help_show_brik_commands => [ qw(0|1) ],
+         help_show_brik_attributes => [ qw(0|1) ],
+         comp_show_brik_attributes => [ qw(0|1) ],
+         comp_show_brik_commands => [ qw(0|1) ],
+         get_show_brik_attributes => [ qw(0|1) ],
          # These are used by Term::Shell
-         #path_home => [ qw(SCALAR) ],
-         #path_cwd => [ qw(SCALAR) ],
-         #prompt => [ qw(SCALAR) ],
-         #_aliases => [ qw(SCALAR) ],
+         #path_home => [ qw(directory) ],
+         #path_cwd => [ qw(directory) ],
+         #prompt => [ qw(string) ],
+         #_aliases => [ qw(INTERNAL) ],
       },
       attributes_default => {
          echo => 1,
@@ -38,16 +38,16 @@ sub brik_properties {
       },
       commands => {
          splash => [ ],
-         cmd => [ qw(SCALAR) ],
+         cmd => [ qw(Cmd) ],
          cmdloop => [ ],
-         run_use => [ qw(SCALAR) ],
-         run_help => [ qw(SCALAR) ],
-         run_set => [ qw(SCALAR SCALAR SCALAR) ],
-         run_get => [ qw(SCALAR) ],
-         run_run => [ qw(SCALAR SCALAR) ],
-         run_alias => [ qw(SCALAR SCALAR) ],
-         run_cd => [ qw(SCALAR) ],
-         run_perl => [ qw(SCALAR) ],
+         run_use => [ qw(Brik) ],
+         run_help => [ qw(Brik) ],
+         run_set => [ qw(Brik Attribute Value) ],
+         run_get => [ qw(Brik) ],
+         run_run => [ qw(Brik Command) ],
+         run_alias => [ qw(alias Cmd) ],
+         run_cd => [ qw(directory) ],
+         run_perl => [ qw(Code) ],
          run_exit => [ ],
       },
       require_modules => {
@@ -616,11 +616,15 @@ sub comp_set {
          }
       }
 
+      my $brik_attributes = Metabrik::Brik->brik_properties->{attributes};
       my $attributes = $used->{$brik}->brik_attributes;
 
-      for my $a (keys %$attributes) {
-         if ($a =~ /^$word/) {
-            push @comp, $a;
+      for my $attribute (keys %$attributes) {
+         if (! $context->get('core::shell', 'comp_show_brik_attributes')) {
+            next if exists($brik_attributes->{$attribute});
+         }
+         if ($attribute =~ /^$word/) {
+            push @comp, $attribute;
          }
       }
    }
@@ -767,6 +771,7 @@ sub comp_run {
 
       my $brik_commands = Metabrik::Brik->brik_properties->{commands};
       my $commands = $used->{$brik}->brik_commands;
+
       for my $command (keys %$commands) {
          if (! $context->get('core::shell', 'comp_show_brik_commands')) {
             next if exists($brik_commands->{$command});
@@ -783,11 +788,15 @@ sub comp_run {
          }
       }
 
+      my $brik_commands = Metabrik::Brik->brik_properties->{commands};
       my $commands = $used->{$brik}->brik_commands;
 
-      for my $a (keys %$commands) {
-         if ($a =~ /^$word/) {
-            push @comp, $a;
+      for my $command (keys %$commands) {
+         if (! $context->get('core::shell', 'comp_show_brik_commands')) {
+            next if exists($brik_commands->{$command});
+         }
+         if ($command =~ /^$word/) {
+            push @comp, $command;
          }
       }
    }

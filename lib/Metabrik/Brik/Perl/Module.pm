@@ -14,7 +14,10 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(perl module install cpan) ],
       commands => {
-         install => [ qw(SCALAR) ],
+         install => [ qw(Module) ],
+      },
+      require_binaries => {
+         'metabrik-cpanm' => [ ],
       },
    };
 }
