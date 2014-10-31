@@ -12,11 +12,12 @@
 
 -> handle deps: IO::All and File::Find
 
--> pod/help
-
+-> merge: Metabrik/Brik.pm to main Metabrik.pm
 -> merge: brik::search to core::global?
 -> merge: perl::module to core::global?
 -> remove dep: file::find from core::* Briks? and move file::find to repository main?
+
+-> pod/help
 
 ### LOGO
 

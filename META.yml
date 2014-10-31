@@ -39,7 +39,7 @@ provides:
     version: '2.000014'
   Metabrik:
     file: lib/Metabrik.pm
-    version: 1.00_05
+    version: 1.00_06
   Metabrik::Brik:
     file: lib/Metabrik/Brik.pm
   Metabrik::Brik::Brik::Search:
@@ -72,4 +72,4 @@ requires:
   Term::ANSIColor: '0'
 resources:
   license: http://opensource.org/licenses/artistic-license.php
-version: 1.00_05
+version: 1.00_06
