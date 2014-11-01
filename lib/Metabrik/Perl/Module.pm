@@ -3,11 +3,11 @@
 #
 # perl::module Brik
 #
-package Metabrik::Brik::Perl::Module;
+package Metabrik::Perl::Module;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Brik);
+use base qw(Metabrik);
 
 sub brik_properties {
    return {
