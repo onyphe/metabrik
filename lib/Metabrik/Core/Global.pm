@@ -3,11 +3,11 @@
 #
 # core::global Brik
 #
-package Metabrik::Brik::Core::Global;
+package Metabrik::Core::Global;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Brik);
+use base qw(Metabrik);
 
 sub brik_properties {
    return {

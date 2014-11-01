@@ -3,11 +3,11 @@
 #
 # core::shell Brik
 #
-package Metabrik::Brik::Core::Shell;
+package Metabrik::Core::Shell;
 use strict;
 use warnings;
 
-use base qw(CPAN::Term::Shell Metabrik::Brik);
+use base qw(Term::Shell Metabrik);
 
 sub brik_properties {
    return {
@@ -51,7 +51,7 @@ sub brik_properties {
          run_exit => [ ],
       },
       require_modules => {
-         'CPAN::Data::Dump' => [ qw(dump) ],
+         'Data::Dump' => [ qw(dump) ],
          'File::HomeDir' => [ qw(home) ],
          'Cwd' => [ ],
       },
@@ -62,8 +62,8 @@ sub new {
    # Call Term::Shell new()
    my $self = shift->SUPER::new(@_);
 
-   # Call Metabrik::Brik new()
-   $self->Metabrik::Brik::new(@_);
+   # Call Metabrik new()
+   $self->Metabrik::new(@_);
 
    # We have to set of default_attributes again normally called by Brik::new():
    # Otherwise default attributes are not set properly because of Perl inheritance scheme
@@ -138,7 +138,7 @@ use Cwd;
 use File::HomeDir qw(home);
 
 use Metabrik;
-use Metabrik::Brik::File::Find;
+use Metabrik::File::Find;
 
 our $AUTOLOAD;
 
@@ -146,11 +146,11 @@ sub AUTOLOAD {
    my $self = shift;
    my (@args) = @_;
 
-   if ($AUTOLOAD !~ /^Metabrik::Brik::Core::Shell::run_/) {
+   if ($AUTOLOAD !~ /^Metabrik::Core::Shell::run_/) {
       return 1;
    }
 
-   (my $alias = $AUTOLOAD) =~ s/^Metabrik::Brik::Core::Shell:://;
+   (my $alias = $AUTOLOAD) =~ s/^Metabrik::Core::Shell:://;
 
    if ($self->debug) {
       $self->log->debug("autoload[$AUTOLOAD] alias[$alias] args[@args]");
@@ -394,7 +394,7 @@ sub run_code {
 
    if ($self->echo) {
       if (length($r) < $self->pager_threshold) {
-         print CPAN::Data::Dump::dump($r)."\n";
+         print Data::Dump::dump($r)."\n";
       }
       else {
          $self->page($r."\n");
@@ -486,7 +486,7 @@ sub run_help {
          my $attributes = $context->run($brik, 'brik_attributes');
          my $commands = $context->run($brik, 'brik_commands');
 
-         my $brik_attributes = Metabrik::Brik->brik_properties->{attributes};
+         my $brik_attributes = Metabrik->brik_properties->{attributes};
          for my $attribute (keys %$attributes) {
             if (! $context->get('core::shell', 'help_show_brik_attributes')) {
                next if exists($brik_attributes->{$attribute});
@@ -495,7 +495,7 @@ sub run_help {
             $self->log->info($help) if defined($help);
          }
 
-         my $brik_commands = Metabrik::Brik->brik_properties->{commands};
+         my $brik_commands = Metabrik->brik_properties->{commands};
          for my $command (keys %$commands) {
             if (! $context->get('core::shell', 'help_show_brik_commands')) {
                next if exists($brik_commands->{$command});
@@ -598,7 +598,7 @@ sub comp_set {
          }
       }
 
-      my $brik_attributes = Metabrik::Brik->brik_properties->{attributes};
+      my $brik_attributes = Metabrik->brik_properties->{attributes};
       my $attributes = $used->{$brik}->brik_attributes;
       for my $attribute (keys %$attributes) {
          if (! $context->get('core::shell', 'comp_show_brik_attributes')) {
@@ -616,7 +616,7 @@ sub comp_set {
          }
       }
 
-      my $brik_attributes = Metabrik::Brik->brik_properties->{attributes};
+      my $brik_attributes = Metabrik->brik_properties->{attributes};
       my $attributes = $used->{$brik}->brik_attributes;
 
       for my $attribute (keys %$attributes) {
@@ -720,7 +720,7 @@ sub run_run {
 
    if ($self->echo) {
       if (length($r) < $self->pager_threshold) {
-         print CPAN::Data::Dump::dump($r)."\n";
+         print Data::Dump::dump($r)."\n";
       }
       else {
          $self->page($r."\n");
@@ -769,7 +769,7 @@ sub comp_run {
          }
       }
 
-      my $brik_commands = Metabrik::Brik->brik_properties->{commands};
+      my $brik_commands = Metabrik->brik_properties->{commands};
       my $commands = $used->{$brik}->brik_commands;
 
       for my $command (keys %$commands) {
@@ -788,7 +788,7 @@ sub comp_run {
          }
       }
 
-      my $brik_commands = Metabrik::Brik->brik_properties->{commands};
+      my $brik_commands = Metabrik->brik_properties->{commands};
       my $commands = $used->{$brik}->brik_commands;
 
       for my $command (keys %$commands) {
@@ -870,7 +870,7 @@ sub catch_comp_sub {
 
       #$self->debug && $self->log->debug("path[$path]");
 
-      my $find = Metabrik::Brik::File::Find->new or return $self->log->error("file::fine: new");
+      my $find = Metabrik::File::Find->new or return $self->log->error("file::fine: new");
       $find->brik_init;
       $find->path([ $path ]);
       $find->recursive(0);
@@ -941,7 +941,7 @@ sub catch_comp {
       }
       $self->debug && $self->log->debug("path[$path]");
 
-      my $find = Metabrik::Brik::File::Find->new or return $self->log->error("file::fine: new");
+      my $find = Metabrik::File::Find->new or return $self->log->error("file::fine: new");
       $find->brik_init;
       $find->path([ $path ]);
       $find->recursive(0);

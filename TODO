@@ -10,6 +10,8 @@
 => export HTTP_PROXY=
 ==> print this by default, use a greetings() method. Use an attribute to turn off this greeting.
 
+-> Metabrik: make class Commands begin with an upper case letter?
+
 -> handle deps: IO::All and File::Find
 
 -> make bin/metabrik autonomous

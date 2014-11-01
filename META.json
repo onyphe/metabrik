@@ -1,5 +1,5 @@
 {
-   "abstract" : "formerly PerL Awesome SHell, Yeeeeaaaaaa!",
+   "abstract" : "formerly PerL Awesome SHell, Yeeeehaaaaaa!",
    "author" : [
       "GomoR <gomor_at_metabrik.org>"
    ],
@@ -66,41 +66,35 @@
          "file" : "lib/Metabrik.pm",
          "version" : "1.00_07"
       },
-      "Metabrik::Brik" : {
-         "file" : "lib/Metabrik/Brik.pm"
+      "Metabrik::Core::Context" : {
+         "file" : "lib/Metabrik/Core/Context.pm"
       },
-      "Metabrik::Brik::Brik::Search" : {
-         "file" : "lib/Metabrik/Brik/Brik/Search.pm"
+      "Metabrik::Core::Global" : {
+         "file" : "lib/Metabrik/Core/Global.pm"
       },
-      "Metabrik::Brik::Core::Context" : {
-         "file" : "lib/Metabrik/Brik/Core/Context.pm"
+      "Metabrik::Core::Log" : {
+         "file" : "lib/Metabrik/Core/Log.pm"
       },
-      "Metabrik::Brik::Core::Global" : {
-         "file" : "lib/Metabrik/Brik/Core/Global.pm"
+      "Metabrik::Core::Shell" : {
+         "file" : "lib/Metabrik/Core/Shell.pm"
       },
-      "Metabrik::Brik::Core::Log" : {
-         "file" : "lib/Metabrik/Brik/Core/Log.pm"
+      "Metabrik::File::Find" : {
+         "file" : "lib/Metabrik/File/Find.pm"
       },
-      "Metabrik::Brik::Core::Shell" : {
-         "file" : "lib/Metabrik/Brik/Core/Shell.pm"
+      "Metabrik::Perl::Module" : {
+         "file" : "lib/Metabrik/Perl/Module.pm"
       },
-      "Metabrik::Brik::File::Find" : {
-         "file" : "lib/Metabrik/Brik/File/Find.pm"
+      "Metabrik::Shell::Command" : {
+         "file" : "lib/Metabrik/Shell/Command.pm"
       },
-      "Metabrik::Brik::Perl::Module" : {
-         "file" : "lib/Metabrik/Brik/Perl/Module.pm"
+      "Metabrik::Shell::History" : {
+         "file" : "lib/Metabrik/Shell/History.pm"
       },
-      "Metabrik::Brik::Shell::Command" : {
-         "file" : "lib/Metabrik/Brik/Shell/Command.pm"
+      "Metabrik::Shell::Rc" : {
+         "file" : "lib/Metabrik/Shell/Rc.pm"
       },
-      "Metabrik::Brik::Shell::History" : {
-         "file" : "lib/Metabrik/Brik/Shell/History.pm"
-      },
-      "Metabrik::Brik::Shell::Rc" : {
-         "file" : "lib/Metabrik/Brik/Shell/Rc.pm"
-      },
-      "Metabrik::Brik::Shell::Script" : {
-         "file" : "lib/Metabrik/Brik/Shell/Script.pm"
+      "Metabrik::Shell::Script" : {
+         "file" : "lib/Metabrik/Shell/Script.pm"
       }
    },
    "release_status" : "testing",

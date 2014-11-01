@@ -3,11 +3,11 @@
 #
 # file::find Brik
 #
-package Metabrik::Brik::File::Find;
+package Metabrik::File::Find;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Brik);
+use base qw(Metabrik);
 
 use IO::All;
 
@@ -148,17 +148,17 @@ __END__
 
 =head1 NAME
 
-Metabrik::Brik::File::Find - brik to find some files using pattern matching
+Metabrik::File::Find - brik to find some files using pattern matching
 
 =head1 SYNOPSIS
 
    # From a module
 
-   use Metabrik::Brik::File::Find;
+   use Metabrik::File::Find;
 
    my $path = [ @INC ];
 
-   my $brik = Metabrik::Brik::File::Find->new;
+   my $brik = Metabrik::File::Find->new;
    $brik->brik_init;
    $brik->recursive(1);
    $brik->path($path);

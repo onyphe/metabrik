@@ -5,18 +5,79 @@
 use strict;
 use warnings;
 
-use Getopt::Long;
 use FindBin;
 
-use lib ("$FindBin::Bin/../lib", "$FindBin::Bin/../lib/perl5");
+BEGIN {
+   push @INC, "$FindBin::Bin/../lib";
+   push @INC, "$FindBin::Bin/../lib/perl5";
+   push @INC, "$FindBin::Bin/../cpan";
 
-$ENV{PERL5LIB} = join(':', @INC);
+   # Check for local::lib variables
+   if (! defined($ENV{PERL_LOCAL_LIB_ROOT})) {
+      my $inc = '';
+      for (@INC) {
+         $inc .= "-I $_ ";
+      }
+      my $res = `perl $inc -Mlocal::lib`;
+      die("[F] metabrik: add the following to your shell .rc file:\n".
+          "$res"
+      );
+   }
 
-eval("use Metabrik::Brik::Core::Context;");
-if ($@) {
-   die("[F] metabrik: you have to set PERL5LIB environment variable like:\n".
-       'bash$ export PERL5LIB=/path/to/metabrik/lib'."\n");
+   # Check for Term::ReadLine::Gnu capabilities
+   if (! defined($ENV{PERL_RL})) {
+      die("[F] metabrik: add the following to your shell .rc file:\n".
+          "export PERL_RL=Gnu".
+          "\n"
+      );
+   }
+
+   # Check for a good pager.
+   if (! defined($ENV{PAGER})) {
+      warn("[!] metabrik: you should add the following environment variable:\n".
+           "export PAGER=less".
+           "\n"
+      );
+   }
+
+   # We "manually" search for Term::ReadLine::Gnu module because 
+   # it is invalid to try to `use' or `require' it directly.
+   my $term_readline_ok = 0;
+   for my $inc (@INC) {
+      if (-f "$inc/Term/ReadLine/Gnu.pm") {
+         $term_readline_ok++;
+         last;
+      }
+   }
+   if (! $term_readline_ok) {
+      die("[F] metabrik: you have to install Term::ReadLine::Gnu. For Ubuntu:\n\n".
+          'shell$ sudo apt-get install libterm-readline-gnu-perl'.
+          "\n\n".
+          "ERROR: $@"
+      );
+   }
+
+   eval("use Lexical::Persistence;");
+   if ($@) {
+      die("[F] metabrik: you have to install Lexical::Persistance. For Ubuntu:\n\n".
+          'shell$ sudo apt-get install liblexical-persistence-perl'.
+          "\n\n".
+          "ERROR: $@"
+      );
+   }
+
+   # Everything should be fine now, but we prefer to check anyway.
+   eval("use Metabrik::Core::Context;");
+   if ($@) {
+      die("[F] metabrik: you have to set PERL5LIB environment variable like:\n\n".
+          'shell$ export PERL5LIB=/path/to/metabrik/lib'.
+          "\n\n".
+          "ERROR: $@"
+      );
+   }
 }
+
+use Getopt::Long;
 
 # Default values
 my %lopts = (
@@ -32,7 +93,7 @@ GetOptions(
    "no-splash" => \$lopts{no_splash},
 ) or usage();
 
-my $context = Metabrik::Brik::Core::Context->new;
+my $context = Metabrik::Core::Context->new;
 
 $context->brik_init
    or die("[F] metabrik: context init: failed\n");

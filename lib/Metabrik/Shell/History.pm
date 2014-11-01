@@ -3,11 +3,11 @@
 #
 # shell::history Brik
 #
-package Metabrik::Brik::Shell::History;
+package Metabrik::Shell::History;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Brik);
+use base qw(Metabrik);
 
 sub brik_properties {
    return {

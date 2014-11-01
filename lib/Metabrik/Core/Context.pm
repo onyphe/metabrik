@@ -1,11 +1,11 @@
 #
 # $Id$
 #
-package Metabrik::Brik::Core::Context;
+package Metabrik::Core::Context;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Brik);
+use base qw(Metabrik);
 
 sub brik_properties {
    return {
@@ -34,12 +34,12 @@ sub brik_properties {
          reuse => [ ],
       },
       require_modules => {
-         'CPAN::Lexical::Persistence' => [ ],
-         'CPAN::Module::Reload' => [ ],
-         'Metabrik::Brik::Core::Global' => [ ],
-         'Metabrik::Brik::Core::Log' => [ ],
-         'Metabrik::Brik::Core::Shell' => [ ],
-         'Metabrik::Brik::File::Find' => [ ],
+         'Lexical::Persistence' => [ ],
+         'Module::Reload' => [ ],
+         'Metabrik::Core::Global' => [ ],
+         'Metabrik::Core::Log' => [ ],
+         'Metabrik::Core::Shell' => [ ],
+         'Metabrik::File::Find' => [ ],
       },
    };
 }
@@ -84,7 +84,7 @@ sub new {
    );
 
    eval {
-      my $lp = CPAN::Lexical::Persistence->new;
+      my $lp = Lexical::Persistence->new;
       $lp->set_context(_ => {
          '$CTX' => 'undef',
          '$USE' => 'undef',
@@ -102,9 +102,9 @@ sub new {
 
          $CTX->{used} = {
             'core::context' => $CTX,
-            'core::global' => Metabrik::Brik::Core::Global->new,
-            'core::log' => Metabrik::Brik::Core::Log->new,
-            'core::shell' => Metabrik::Brik::Core::Shell->new,
+            'core::global' => Metabrik::Core::Global->new,
+            'core::log' => Metabrik::Core::Log->new,
+            'core::shell' => Metabrik::Core::Shell->new,
          };
          $CTX->{available} = { };
          $CTX->{set} = { };
@@ -235,7 +235,7 @@ sub variables {
 sub find_available {
    my $self = shift;
 
-   my $file_find = Metabrik::Brik::File::Find->new(
+   my $file_find = Metabrik::File::Find->new(
       context => $self,
       global => $self->global,
       log => $self->log,
@@ -254,16 +254,16 @@ sub find_available {
    $file_find->recursive(1);
    $file_find->debug(1);
 
-   my $found = $file_find->all('Metabrik/Brik/', '.pm$') or return;
+   my $found = $file_find->all('Metabrik/', '.pm$') or return;
 
    my %available = ();
    for my $this (@{$found->{files}}) {
       my $brik = $this;
       $brik =~ s/\//::/g;
-      $brik =~ s/^.*::Metabrik::Brik::(.*?)$/$1/;
+      $brik =~ s/^.*::Metabrik::(.*?)$/$1/;
       $brik =~ s/.pm$//;
       if (length($brik)) {
-         my $module = "Metabrik::Brik::$brik";
+         my $module = "Metabrik::$brik";
          $brik = lc($brik);
          $available{$brik} = $module;
       }
@@ -334,7 +334,7 @@ sub use {
       $__ctx_brik_category = ucfirst($__ctx_brik_category);
       $__ctx_brik_module = ucfirst($__ctx_brik_module);
 
-      my $__ctx_module = 'Metabrik::Brik::'.(length($__ctx_brik_repository)
+      my $__ctx_module = 'Metabrik::'.(length($__ctx_brik_repository)
          ? $__ctx_brik_repository.'::'
          : '').$__ctx_brik_category.'::'.$__ctx_brik_module;
 
@@ -378,7 +378,7 @@ sub use {
 sub reuse {
    my $self = shift;
 
-   my $reused = CPAN::Module::Reload->check;
+   my $reused = Module::Reload->check;
    if ($reused) {
       $self->log->info("reuse: some modules were reused");
    }
@@ -460,7 +460,7 @@ sub not_used {
          ($repository, $category, $name) = $this =~ /^(.*?)::(.*?)::(.*)/;
       }
 
-      my $class = 'Metabrik::Brik::';
+      my $class = 'Metabrik::';
       if (length($repository)) {
          $class .= ucfirst($repository).'::';
       }

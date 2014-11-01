@@ -3,11 +3,11 @@
 #
 # shell::rc Brik
 #
-package Metabrik::Brik::Shell::Rc;
+package Metabrik::Shell::Rc;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Brik);
+use base qw(Metabrik);
 
 sub brik_properties {
    return {

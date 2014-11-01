@@ -3,11 +3,11 @@
 #
 # core::log Brik
 #
-package Metabrik::Brik::Core::Log;
+package Metabrik::Core::Log;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Brik);
+use base qw(Metabrik);
 
 sub brik_properties {
    return {
@@ -169,13 +169,13 @@ __END__
 
 =head1 NAME
 
-Metabrik::Brik::Core::Log - logging directly on the console
+Metabrik::Core::Log - logging directly on the console
 
 =head1 SYNOPSIS
 
-   use Metabrik::Brik::Core::Log;
+   use Metabrik::Core::Log;
 
-   my $log = Metabrik::Brik::Core::Log->new(
+   my $log = Metabrik::Core::Log->new(
       level => 1,
    );
 
