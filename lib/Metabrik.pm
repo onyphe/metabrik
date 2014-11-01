@@ -541,7 +541,7 @@ sub brik_name {
    my $self = shift;
 
    my $module = lc($self->brik_class);
-   $module =~ s/^metabrik::brik:://;
+   $module =~ s/^metabrik:://;
 
    return $module;
 }

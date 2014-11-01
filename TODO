@@ -2,21 +2,8 @@
 
 ### 1.00
 
--> metabrik: create a default ~/.metabrik_rc file. Print what to do on first run:
-=> $PERL env variables, $PAGER, ...
-=> eval $(perl -I ~/perl5/metabrik -Mlocal::lib)
-=> export PERL_RL=Gnu
-=> export PAGER=less
-=> export HTTP_PROXY=
-==> print this by default, use a greetings() method. Use an attribute to turn off this greeting.
-
 -> Metabrik: make class Commands begin with an upper case letter?
 
--> handle deps: IO::All and File::Find
-
--> make bin/metabrik autonomous
-
--> merge: Metabrik/Brik.pm to main Metabrik.pm
 -> merge: brik::search to core::global?
 -> merge: perl::module to core::global?
 -> remove dep: file::find from core::* Briks? and move file::find to repository main?

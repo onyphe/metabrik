@@ -41,7 +41,7 @@ sub _msg {
 
    $msg ||= 'undef';
 
-   $brik =~ s/^metabrik::brik:://i;
+   $brik =~ s/^metabrik:://i;
 
    return lc($brik).": $msg\n";
 }

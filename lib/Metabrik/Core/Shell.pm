@@ -15,7 +15,6 @@ sub brik_properties {
       tags => [ qw(core main shell) ],
       attributes => {
          echo => [ qw(0|1) ],
-         pager_threshold => [ qw(integer) ],
          help_show_brik_commands => [ qw(0|1) ],
          help_show_brik_attributes => [ qw(0|1) ],
          comp_show_brik_attributes => [ qw(0|1) ],
@@ -29,7 +28,6 @@ sub brik_properties {
       },
       attributes_default => {
          echo => 1,
-         pager_threshold => 1024,
          help_show_brik_commands => 0,
          help_show_brik_attributes => 0,
          comp_show_brik_attributes => 0,
@@ -393,12 +391,7 @@ sub run_code {
    }
 
    if ($self->echo) {
-      if (length($r) < $self->pager_threshold) {
-         print Data::Dump::dump($r)."\n";
-      }
-      else {
-         $self->page($r."\n");
-      }
+      $self->page(Data::Dump::dump($r)."\n");
    }
 
    return $r;
@@ -719,12 +712,7 @@ sub run_run {
    }
 
    if ($self->echo) {
-      if (length($r) < $self->pager_threshold) {
-         print Data::Dump::dump($r)."\n";
-      }
-      else {
-         $self->page($r."\n");
-      }
+      $self->page(Data::Dump::dump($r)."\n");
    }
 
    return $r;
