@@ -13,33 +13,11 @@ meta-spec:
   version: '1.4'
 name: Metabrik
 provides:
-  CPAN::Class::Gomor:
-    file: lib/CPAN/Class/Gomor.pm
-    version: '1.02'
-  CPAN::Class::Gomor::Hash:
-    file: lib/CPAN/Class/Gomor/Hash.pm
-    version: '1.02'
-  CPAN::Data::Dump:
-    file: lib/CPAN/Data/Dump.pm
-    version: '1.22'
-  CPAN::Lexical::Persistence:
-    file: lib/CPAN/Lexical/Persistence.pm
-    version: '1.020'
-  CPAN::Module::Reload:
-    file: lib/CPAN/Module/Reload.pm
-    version: '1.08'
-  CPAN::Term::Shell:
-    file: lib/CPAN/Term/Shell.pm
-    version: '0.06'
-  CPAN::Term::Shell::OnScopeLeave:
-    file: lib/CPAN/Term/Shell.pm
-    version: '0.06'
-  CPAN::local::lib:
-    file: lib/CPAN/local/lib.pm
-    version: '2.000014'
   Metabrik:
     file: lib/Metabrik.pm
     version: 1.00_07
+  Metabrik::Brik::Search:
+    file: lib/Metabrik/Brik/Search.pm
   Metabrik::Core::Context:
     file: lib/Metabrik/Core/Context.pm
   Metabrik::Core::Global:
