@@ -84,7 +84,7 @@ sub brik_help_set {
    my $name = $self->brik_name;
 
    if (! defined($attribute)) {
-      #return $self->_log_info("run $name brik_help_set <attribute>");
+      return $self->_log_info("run $name brik_help_set <attribute>");
    }
 
    my $classes = $self->brik_classes;
@@ -113,7 +113,7 @@ sub brik_help_run {
    my $name = $self->brik_name;
 
    if (! defined($command)) {
-      #return $self->_log_info("run $name brik_help_run <command>");
+      return $self->_log_info("run $name brik_help_run <command>");
    }
 
    my $classes = $self->brik_classes;
