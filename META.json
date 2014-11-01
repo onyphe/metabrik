@@ -4,7 +4,7 @@
       "GomoR <gomor_at_metabrik.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.131560",
+   "generated_by" : "Module::Build version 0.421",
    "license" : [
       "artistic_1"
    ],
@@ -23,7 +23,7 @@
    "provides" : {
       "Metabrik" : {
          "file" : "lib/Metabrik.pm",
-         "version" : "1.00_07"
+         "version" : "1.00_08"
       },
       "Metabrik::Brik::Search" : {
          "file" : "lib/Metabrik/Brik/Search.pm"
@@ -65,5 +65,5 @@
          "http://opensource.org/licenses/artistic-license.php"
       ]
    },
-   "version" : "1.00_07"
+   "version" : "1.00_08"
 }
