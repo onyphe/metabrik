@@ -47,7 +47,7 @@ sub brik_properties {
          run_run => [ qw(Brik Command) ],
          run_alias => [ qw(alias Cmd) ],
          run_cd => [ qw(directory) ],
-         run_perl => [ qw(Code) ],
+         run_code => [ qw(Code) ],
          run_exit => [ ],
       },
       require_modules => {
@@ -373,23 +373,23 @@ sub comp_cd {
    return $self->catch_comp_sub($word, $start, $line);
 }
 
-sub run_perl {
+sub run_code {
    my $self = shift;
 
    my $context = $self->context;
 
    my $line = $self->line;
-   $line =~ s/^perl\s+//;
+   $line =~ s/^code\s+//;
 
    if (! length($line)) {
-      return $self->log->info('perl <code>');
+      return $self->log->info('code <code>');
    }
 
-   $self->debug && $self->log->debug("run_perl: code[$line]");
+   $self->debug && $self->log->debug("run_code: code[$line]");
 
    my $r = $context->do($line);
    if (! defined($r)) {
-      return $self->log->error("run_perl: unable to execute Code [$line]");
+      return $self->log->error("run_code: unable to execute Code [$line]");
    }
 
    if ($self->echo) {
@@ -404,7 +404,7 @@ sub run_perl {
    return $r;
 }
 
-sub comp_perl {
+sub comp_code {
    my $self = shift;
    my ($word, $line, $start) = @_;
 
@@ -431,7 +431,7 @@ sub run_use {
       }
    }
    else {
-      return $self->run_perl($brik, @args);
+      return $self->run_code($brik, @args);
    }
 
    return $r;
@@ -816,7 +816,7 @@ sub catch_run {
    my (@args) = @_;
 
    # Default to execute Perl commands
-   return $self->run_perl(@args);
+   return $self->run_code(@args);
 }
 
 # 1. $word - The word the user is trying to complete.

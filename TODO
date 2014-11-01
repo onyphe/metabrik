@@ -12,6 +12,8 @@
 
 -> handle deps: IO::All and File::Find
 
+-> make bin/metabrik autonomous
+
 -> merge: Metabrik/Brik.pm to main Metabrik.pm
 -> merge: brik::search to core::global?
 -> merge: perl::module to core::global?
@@ -223,8 +225,11 @@ $XXX_list => ARRRAYREF
 $XXX_hash => HASHREF
 $XXX_ref => SCALARREF
 _file|file => file
+glob
 _directory|directory => directory
 ipv4|6_address
+INTERNAL
+yyyy.mm.dd
 
 Doc:
 - core::context Brik autouses core::global Brik
