@@ -32,7 +32,8 @@ sub brik_properties {
          homedir => [ qw(directory) ],
          port => [ qw(port) ],
          encoding => [ qw(utf8|ascii) ],
-         auto_use => [ qw(0|1) ],
+         auto_use_on_require => [ qw(0|1) ],
+         auto_install_on_require => [ qw(0|1) ],
       },
       attributes_default => {
          device => 'eth0',
@@ -53,7 +54,8 @@ sub brik_properties {
          homedir => $ENV{HOME} || '/tmp',
          port => 80,
          encoding => 'utf8',
-         auto_use => 1,
+         auto_use_on_require => 1,
+         auto_install_on_require => 0,
       },
    };
 }

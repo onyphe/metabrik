@@ -152,7 +152,7 @@ Metabrik::File::Find - brik to find some files using pattern matching
 
 =head1 SYNOPSIS
 
-   # From a module
+   # Use a Brik from a Perl module
 
    use Metabrik::File::Find;
 
@@ -163,19 +163,20 @@ Metabrik::File::Find - brik to find some files using pattern matching
    $brik->recursive(1);
    $brik->path($path);
 
-   my $found = $brik->find('/lib/Metabrik/Brik$', '.pm$');
+   my $found = $brik->find('/lib/Metabrik$', '.pm$');
    for my $file (@$found) {
       print "$file\n";
    }
 
-   # From the Metabrik Shell
+   # Use a Brik from a the Metabrik Shell
 
    > my $path = [ @INC ];
    > set file::find path $path
    > set file::find recursive 1
-   > run file::find files /lib/Metabrik/Brik$ .pm$
+   > run file::find files /lib/Metabrik$ .pm$
+   > $RUN   # Will contain the result
 
-   # From a Metabrik Brik
+   # Use a Brik from a Metabrik Brik
 
    my $context = $self->context;
 
@@ -184,7 +185,8 @@ Metabrik::File::Find - brik to find some files using pattern matching
    $context->use('file::find');
    $context->set('file::find', 'path', $path);
    $context->set('file::find', 'recursive', 1);
-   $context->run('file::find', 'files', '/lib/Metabrik/Brik$', '.pm$');
+
+   my $result = $context->run('file::find', 'files', '/lib/Metabrik$', '.pm$');
 
 =head1 DESCRIPTION
 

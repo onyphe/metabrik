@@ -84,7 +84,7 @@ sub brik_help_set {
    my $name = $self->brik_name;
 
    if (! defined($attribute)) {
-      return $self->log->info("run $name brik_help_set <attribute>");
+      #return $self->_log_info("run $name brik_help_set <attribute>");
    }
 
    my $classes = $self->brik_classes;
@@ -113,7 +113,7 @@ sub brik_help_run {
    my $name = $self->brik_name;
 
    if (! defined($command)) {
-      return $self->log->info("run $name brik_help_run <command>");
+      #return $self->_log_info("run $name brik_help_run <command>");
    }
 
    my $classes = $self->brik_classes;
@@ -135,13 +135,100 @@ sub brik_help_run {
    return;
 }
 
+sub _log_info {
+   my $self = shift;
+   my ($msg) = @_;
+
+   chomp($msg);
+
+   if (defined($self->{log})) {
+      $self->log->info($msg);
+   }
+   else {
+      print("[+] $msg\n");
+   }
+
+   return 1;
+}
+
+sub _log_error {
+   my $self = shift;
+   my ($msg) = @_;
+
+   chomp($msg);
+
+   my $class = $self->brik_class;
+
+   if (defined($self->{log})) {
+      return $self->log->error($msg, $class);
+   }
+   else {
+      print("[-] $class: $msg\n");
+   }
+
+   return;
+}
+
+sub _log_fatal {
+   my $self = shift;
+   my ($msg) = @_;
+
+   chomp($msg);
+
+   my $class = $self->brik_class;
+
+   if (defined($self->{log})) {
+      return $self->log->fatal($msg, $class);
+   }
+   else {
+      die("[F] $class: $msg\n");
+   }
+
+   return;
+}
+
+sub _log_warning {
+   my $self = shift;
+   my ($msg) = @_;
+
+   chomp($msg);
+
+   my $class = $self->brik_class;
+
+   if (defined($self->{log})) {
+      return $self->log->warning($msg, $class);
+   }
+   else {
+      print("[!] $class: $msg\n");
+   }
+
+   return 1;
+}
+
+sub _log_verbose {
+   my $self = shift;
+   my ($msg) = @_;
+
+   chomp($msg);
+
+   my $class = $self->brik_class;
+
+   if (defined($self->{log})) {
+      return $self->log->verbose($msg, $class);
+   }
+   else {
+      print("[*] $class: $msg\n");
+   }
+
+   return 1;
+}
+
 sub brik_check_properties {
    my $self = shift;
 
    my $name = $self->brik_name;
    if (! $self->can('brik_properties')) {
-      return $self->log->error("brik_check_properties: Brik [$name] ".
-         "has no brik_properties");
+      return $self->_log_error("brik_check_properties: Brik [$name] has no brik_properties");
    }
 
    my $properties = $self->brik_properties;
@@ -396,29 +483,15 @@ sub brik_check_require_modules {
    for my $module (keys %$modules) {
       eval("require $module;");
       if ($@) {
-         chomp($@);
-         if (defined($self->{log})) {
-            return $self->log->error("brik_check_require_modules: you have to ".
-               "install Module [$module]: $@", $self->brik_class
-            );
-         }
-         else {
-            print("[-] brik_check_require_modules: you have to ".
-               "install Module [$module]: $@", $self->brik_class
-            );
-            return;
-         }
+         return $self->_log_error("brik_check_require_modules: you have to install Module [$module]");
       }
 
       my @imports = @{$modules->{$module}};
       if (@imports > 0) {
          eval('$module->import(@imports);');
          if ($@) {
-            chomp($@);
-            return $self->log->error("brik_check_require_modules: ".
-               "unable to import Functions [@imports] ".
-               "from Module [$module]: $@", $self->brik_class
-            );
+            return $self->_log_error("brik_check_require_modules: unable to import functions ".
+               "[@imports] from Module [$module]: $@");
          }
       }
    }
@@ -439,23 +512,19 @@ sub brik_check_require_used {
       my $require_used = $self->brik_properties->{require_used};
       for my $brik (keys %$require_used) {
          if (! $context->is_used($brik)) {
-            if ($self->global->auto_use) {
+            if ($self->global->auto_use_on_require) {
                my $r = $context->use($brik);
                if (! $r) {
-                  $self->log->warning("brik_check_require_used: ".
-                     "use: Brik [$brik] failed");
+                  $self->_log_warning("brik_check_require_used: use: Brik [$brik] failed");
                   $error++;
                   next;
                }
                else {
-                  $self->log->verbose("brik_check_require_used: ".
-                     "use: Brik [$brik] success");
+                  $self->_log_verbose("brik_check_require_used: use: Brik [$brik] success");
                }
             }
             else {
-               $self->log->error("brik_check_require_used: you must use ".
-                  "Brik [$brik] first", $self->brik_class
-               );
+               $self->_log_error("brik_check_require_used: you must use Brik [$brik] first");
                $error++;
             }
          }
@@ -488,7 +557,7 @@ sub brik_check_require_binaries {
    my $error = 0;
    for my $binary (keys %binaries_found) {
       if (! $binaries_found{$binary}) {
-         $self->log->error("brik_check_require_modules: binary [$binary] not found in \$PATH");
+         $self->_log_error("brik_check_require_modules: binary [$binary] not found in \$PATH");
          $error++;
       }
    }
@@ -513,7 +582,7 @@ sub brik_repository {
    }
 
    # Error, repository not found
-   return $self->log->fatal("brik_repository: no Repository found for Brik [$name] (invalid format?)");
+   return $self->_log_fatal("brik_repository: no Repository found for Brik [$name] (invalid format?)");
 }
 
 sub brik_category {
@@ -534,7 +603,7 @@ sub brik_category {
    }
 
    # Error, category not found
-   return $self->log->fatal("brik_category: no Category found for Brik [$name] (invalid format?)");
+   return $self->_log_fatal("brik_category: no Category found for Brik [$name] (invalid format?)");
 }
 
 sub brik_name {
@@ -582,7 +651,7 @@ sub brik_has_tag {
    my ($tag) = @_;
 
    if (! defined($tag)) {
-      return $self->log->info($self->brik_help_run('brik_has_tag'));
+      return $self->_log_info($self->brik_help_run('brik_has_tag'));
    }
 
    my %h = map { $_ => 1 } @{$self->brik_tags};
@@ -604,7 +673,7 @@ sub brik_commands {
    for my $class (@$classes) {
       next unless $class->can('brik_properties');
 
-      #$self->log->info("brik_commands: class[$class]");
+      #$self->_log_info("brik_commands: class[$class]");
 
       if (exists($class->brik_properties->{commands})) {
          for my $command (keys %{$class->brik_properties->{commands}}) {
@@ -613,7 +682,8 @@ sub brik_commands {
             next if $command =~ /^_/; # Internal stuff
             next if $command =~ /^(?:a|b|import|brik_init|brik_preinit|brik_fini|new|SUPER::|BEGIN|isa|can|EXPORT|AA|AS|ISA|DESTROY|__ANON__)$/; # Perl stuff
 
-            #$self->log->info("command[$command]");
+            #$self->_log_info("command[$command]");
+
             $commands->{$command} = $class->brik_properties->{commands}->{$command};
          }
       }
@@ -629,7 +699,7 @@ sub brik_has_command {
    my ($command) = @_;
 
    if (! defined($command)) {
-      return $self->log->info($self->brik_help_run('brik_has_command'));
+      return $self->_log_info($self->brik_help_run('brik_has_command'));
    }
 
    if (exists($self->brik_commands->{$command})) {
@@ -649,7 +719,7 @@ sub brik_attributes {
    for my $class (@$classes) {
       next unless $class->can('brik_properties');
 
-      #$self->log->info("brik_attributes: class[$class]");
+      #$self->_log_info("brik_attributes: class[$class]");
 
       if (exists($class->brik_properties->{attributes})) {
          for my $attribute (keys %{$class->brik_properties->{attributes}}) {
@@ -671,7 +741,7 @@ sub brik_has_attribute {
    my ($attribute) = @_;
 
    if (! defined($attribute)) {
-      return $self->log->info($self->brik_help_run('brik_has_attribute'));
+      return $self->_log_info($self->brik_help_run('brik_has_attribute'));
    }
 
    if (exists($self->brik_attributes->{$attribute})) {
@@ -725,7 +795,7 @@ __END__
 
 =head1 NAME
 
-Metabrik - formerly PerL Awesome SHell, Yeeeehaaaaaa!
+Metabrik - Knowledge is in your Head, Detail is in the Code
 
 =head1 SYNOPSIS
 
@@ -737,9 +807,75 @@ Base class for Metabrik Briks.
 
 =head2 ATTRIBUTES
 
+=head3 <debug>
+
+=head3 <init_done>
+
+=head3 <context>
+
+=head3 <global>
+
+=head3 <log>
+
+=head3 <shell>
+
 =head2 COMMANDS
 
-XXX.
+=head3 <new>
+
+=head3 <brik_version>
+
+=head3 <brik_properties>
+
+=head3 <brik_use_properties>
+
+=head3 <brik_help_set>
+
+=head3 <brik_help_run>
+
+=head3 <brik_check_properties>
+
+=head3 <brik_check_use_properties>
+
+=head3 <brik_create_attributes>
+
+=head3 <brik_set_default_attributes>
+
+=head3 <brik_check_require_modules>
+
+=head3 <brik_check_require_used>
+
+=head3 <brik_check_require_binaries>
+
+=head3 <brik_repository>
+
+=head3 <brik_category>
+
+=head3 <brik_name>
+
+=head3 <brik_class>
+
+=head3 <brik_classes>
+
+=head3 <brik_tags>
+
+=head3 <brik_has_tag>
+
+=head3 <brik_commands>
+
+=head3 <brik_has_command>
+
+=head3 <brik_attributes>
+
+=head3 <brik_has_attribute>
+
+=head3 <brik_preinit>
+
+=head3 <brik_init>
+
+=head3 <brik_self>
+
+=head3 <brik_fini>
 
 =head1 COPYRIGHT AND LICENSE
 

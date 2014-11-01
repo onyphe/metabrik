@@ -8,35 +8,32 @@ use warnings;
 use FindBin;
 
 BEGIN {
-   push @INC, "$FindBin::Bin/../lib";
-   push @INC, "$FindBin::Bin/../lib/perl5";
-   push @INC, "$FindBin::Bin/../cpan";
+   push @INC, "$FindBin::Bin/../lib"; # Metabrik Perl modules
+   push @INC, "$FindBin::Bin/../cpan"; # CPAN Perl modules Metabrik requires
+   push @INC, "$FindBin::Bin/../local"; # CPAN Perl modules Metabrik will install if needed
+   push @INC, "$FindBin::Bin/../repository"; # Metabrik main repository for Briks
 
    # Check for local::lib variables
-   if (! defined($ENV{PERL_LOCAL_LIB_ROOT})) {
-      my $inc = '';
-      for (@INC) {
-         $inc .= "-I $_ ";
-      }
-      my $res = `perl $inc -Mlocal::lib`;
-      die("[F] metabrik: add the following to your shell .rc file:\n".
-          "$res"
+   eval('use local::lib "'."$FindBin::Bin/../local".'"');
+   if ($@) {
+      die("[F] metabrik: unable to use local::lib:\n\n".
+          "ERROR: $@\n"
       );
    }
 
    # Check for Term::ReadLine::Gnu capabilities
    if (! defined($ENV{PERL_RL})) {
-      die("[F] metabrik: add the following to your shell .rc file:\n".
+      die("[F] metabrik: add the following to your shell .rc file:\n\n".
           "export PERL_RL=Gnu".
-          "\n"
+          "\n\n"
       );
    }
 
    # Check for a good pager.
    if (! defined($ENV{PAGER})) {
-      warn("[!] metabrik: you should add the following environment variable:\n".
-           "export PAGER=less".
-           "\n"
+      print("[!] metabrik: you should add the following environment variable:\n\n".
+            "export PAGER=less".
+            "\n\n"
       );
    }
 
@@ -53,7 +50,7 @@ BEGIN {
       die("[F] metabrik: you have to install Term::ReadLine::Gnu. For Ubuntu:\n\n".
           'shell$ sudo apt-get install libterm-readline-gnu-perl'.
           "\n\n".
-          "ERROR: $@"
+          "ERROR: $@\n"
       );
    }
 
@@ -62,7 +59,7 @@ BEGIN {
       die("[F] metabrik: you have to install Lexical::Persistance. For Ubuntu:\n\n".
           'shell$ sudo apt-get install liblexical-persistence-perl'.
           "\n\n".
-          "ERROR: $@"
+          "ERROR: $@\n"
       );
    }
 
@@ -72,7 +69,7 @@ BEGIN {
       die("[F] metabrik: you have to set PERL5LIB environment variable like:\n\n".
           'shell$ export PERL5LIB=/path/to/metabrik/lib'.
           "\n\n".
-          "ERROR: $@"
+          "ERROR: $@\n"
       );
    }
 }

@@ -207,7 +207,10 @@ sub call {
    };
    if ($@) {
       chomp($@);
-      return $self->log->error("call: $@");
+      my @list = caller();
+      my $file = $list[1];
+      my $line = $list[2];
+      return $self->log->error("call: $@ Source file [$file] at line [$line]");
    }
 
    return $res;

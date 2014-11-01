@@ -1,10 +1,10 @@
 {
-   "abstract" : "formerly PerL Awesome SHell, Yeeeehaaaaaa!",
+   "abstract" : "Knowledge is in your Head, Detail is in the Code",
    "author" : [
       "GomoR <gomor_at_metabrik.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.421",
+   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.131560",
    "license" : [
       "artistic_1"
    ],
@@ -16,16 +16,7 @@
    "prereqs" : {
       "configure" : {
          "requires" : {
-            "Module::Build" : "0.42"
-         }
-      },
-      "runtime" : {
-         "requires" : {
-            "Cwd" : "0",
-            "File::Find" : "0",
-            "File::HomeDir" : "0",
-            "IO::All" : "0",
-            "Term::ANSIColor" : "0"
+            "Module::Build" : "0"
          }
       }
    },
