@@ -8,7 +8,27 @@
 -> merge: perl::module to core::global?
 -> remove dep: file::find from core::* Briks? and move file::find to repository main?
 
+-> new: $SHL, $GLB, $LOG variables
+=> or: $CON, $SHE, $GLO, $LOG variables
+
 -> pod/help
+
+-> use Term::ReadLine::Gnu completion functions:
+--
+use strict;
+use warnings;
+
+use Term::ReadLine;
+
+my $term = new Term::ReadLine 'MyTerm';
+$term->Attribs->{'completion_entry_function'} = \&my_completion;
+my $ans = $term->readline('How can I help you? ');
+
+sub my_completion {
+    my ($text, $state) = @_;
+    return Term::ReadLine::Gnu->filename_completion_function($text, $state);
+}
+--
 
 ### LOGO
 

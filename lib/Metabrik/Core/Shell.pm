@@ -102,7 +102,12 @@ sub brik_init {
 sub splash {
    my $self = shift;
 
-   my $version = $self->context->run('core::global', 'brik_version');
+   my $con = $self->context;
+
+   my $version = $con->run('core::global', 'brik_version');
+
+   my $available_count = keys %{$con->available};
+   my $used_count = keys %{$con->used};
 
    # ASCII art courtesy: http://patorjk.com/software/taag/#p=testall&f=Graffiti&t=MetabriK
    print<<EOF
@@ -119,6 +124,8 @@ sub splash {
                                                  ░
 
 --[ Welcome to Metabrik - Knowledge is in your head, Detail is in the code ]--
+--[ Briks available: $available_count ]--
+--[ Briks used: $used_count ]--
 --[ Version $version ]--
 
     There is a Brik for that.
@@ -817,6 +824,9 @@ sub catch_comp_sub {
 
    my $context = $self->context;
 
+   my $attribs = $self->term->Attribs;
+   $attribs->{completion_suppress_append} = 1;
+
    my @words = $self->line_parsed($line);
    my $count = scalar(@words);
    my $last = $words[-1];
@@ -888,6 +898,9 @@ sub catch_comp {
    my ($word, $start, $line) = @_;
 
    my $context = $self->context;
+
+   my $attribs = $self->term->Attribs;
+   $attribs->{completion_suppress_append} = 1;
 
    my @words = $self->line_parsed($line);
    my $count = scalar(@words);

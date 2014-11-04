@@ -21,46 +21,57 @@ BEGIN {
       );
    }
 
-   # Check for Term::ReadLine::Gnu capabilities
-   if (! defined($ENV{PERL_RL})) {
-      die("[F] metabrik: add the following to your shell .rc file:\n\n".
-          "export PERL_RL=Gnu".
+   # We "manually" search for Term::ReadLine modules because 
+   # it is invalid to try to `use' or `require' it directly.
+   my $have_term_readline_gnu = 0;
+   my $have_term_readline_perl = 0;
+   for my $inc (@INC) {
+      if (-f "$inc/Term/ReadLine/Gnu.pm") {
+         $have_term_readline_gnu++;
+      }
+      if (-f "$inc/Term/ReadLine/Perl.pm") {
+         $have_term_readline_perl++;
+      }
+   }
+
+   # We search for metabrik-cpanm in PATH
+   my $have_metabrik_cpan = 0;
+   for my $path (split(':', $ENV{PATH})) {
+      if (-f "$path/metabrik-cpanm") {
+         $have_metabrik_cpan = 1;
+         last;
+      }
+   }
+
+   if (! $have_metabrik_cpan) {
+      die("[F] metabrik: add the bin directory to your PATH:\n\n".
+          'export PATH=$PATH:'.$FindBin::Bin.
           "\n\n"
       );
    }
 
-   # Check for a good pager.
-   if (! defined($ENV{PAGER})) {
-      print("[!] metabrik: you should add the following environment variable:\n\n".
-            "export PAGER=less".
-            "\n\n"
-      );
-   }
-
-   # We "manually" search for Term::ReadLine::Gnu module because 
-   # it is invalid to try to `use' or `require' it directly.
-   my $term_readline_ok = 0;
-   for my $inc (@INC) {
-      if (-f "$inc/Term/ReadLine/Gnu.pm") {
-         $term_readline_ok++;
-         last;
+   # Check for Term::ReadLine capabilities
+   if (! defined($ENV{PERL_RL})) {
+      if ($have_term_readline_gnu) {
+         die("[F] metabrik: add the following to your shell .rc file:\n\n".
+             "export PERL_RL=Gnu".
+             "\n\n"
+         );
+      }
+      elsif ($have_term_readline_perl) {
+         die("[F] metabrik: add the following to your shell .rc file:\n\n".
+             "export PERL_RL=Perl".
+             "\n\n"
+         );
       }
    }
-   if (! $term_readline_ok) {
-      die("[F] metabrik: you have to install Term::ReadLine::Gnu. For Ubuntu:\n\n".
-          'shell$ sudo apt-get install libterm-readline-gnu-perl'.
-          "\n\n".
-          "ERROR: $@\n"
-      );
-   }
 
+   # Check and install required dependences
    eval("use Lexical::Persistence;");
    if ($@) {
-      die("[F] metabrik: you have to install Lexical::Persistance. For Ubuntu:\n\n".
-          'shell$ sudo apt-get install liblexical-persistence-perl'.
-          "\n\n".
-          "ERROR: $@\n"
-      );
+      print("[+] metabrik: installing required dependences...\n");
+      system("metabrik-cpanm Lexical::Persistence");
+      print("[+] metabrik: installing required dependences...done\n");
    }
 
    # Everything should be fine now, but we prefer to check anyway.

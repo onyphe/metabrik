@@ -45,7 +45,10 @@ sub brik_properties {
 }
 
 # Only used to avoid compile-time errors
-my $CTX;
+my $CON;
+my $SHE;
+my $LOG;
+my $GLO;
 
 {
    no warnings;
@@ -64,7 +67,7 @@ my $CTX;
       my $r;
       eval {
          $r = $lp->call(sub {
-            return $CTX->{log};
+            return $CON->{log};
          });
       };
       if ($@) {
@@ -86,7 +89,10 @@ sub new {
    eval {
       my $lp = Lexical::Persistence->new;
       $lp->set_context(_ => {
-         '$CTX' => 'undef',
+         '$CON' => 'undef',
+         '$SHE' => 'undef',
+         '$LOG' => 'undef',
+         '$GLO' => 'undef',
          '$USE' => 'undef',
          '$SET' => 'undef',
          '$GET' => 'undef',
@@ -98,45 +104,49 @@ sub new {
       $lp->call(sub {
          my %args = @_;
 
-         $CTX = $args{self};
+         $CON = $args{self};
 
-         $CTX->{used} = {
-            'core::context' => $CTX,
+         $CON->{used} = {
+            'core::context' => $CON,
             'core::global' => Metabrik::Core::Global->new,
             'core::log' => Metabrik::Core::Log->new,
             'core::shell' => Metabrik::Core::Shell->new,
          };
-         $CTX->{available} = { };
-         $CTX->{set} = { };
+         $CON->{available} = { };
+         $CON->{set} = { };
 
-         $CTX->{log} = $CTX->{used}->{'core::log'};
-         $CTX->{global} = $CTX->{used}->{'core::global'};
-         $CTX->{shell} = $CTX->{used}->{'core::shell'};
-         $CTX->{context} = $CTX->{used}->{'core::context'};
+         $CON->{log} = $CON->{used}->{'core::log'};
+         $CON->{global} = $CON->{used}->{'core::global'};
+         $CON->{shell} = $CON->{used}->{'core::shell'};
+         $CON->{context} = $CON->{used}->{'core::context'};
 
-         # When new() was done, some Attributes were empty. We fix that here.
-         $CTX->{used}->{'core::context'}->{log} = $CTX->{log};
-         $CTX->{used}->{'core::global'}->{log} = $CTX->{log};
-         $CTX->{used}->{'core::shell'}->{log} = $CTX->{log};
-         $CTX->{used}->{'core::log'}->{log} = $CTX->{log};
+         $SHE = $CON->{shell};
+         $LOG = $CON->{log};
+         $GLO = $CON->{global};
 
          # When new() was done, some Attributes were empty. We fix that here.
-         $CTX->{used}->{'core::global'}->{context} = $CTX;
-         $CTX->{used}->{'core::log'}->{context} = $CTX;
-         $CTX->{used}->{'core::shell'}->{context} = $CTX;
-         $CTX->{used}->{'core::context'}->{context} = $CTX;
+         $CON->{used}->{'core::context'}->{log} = $CON->{log};
+         $CON->{used}->{'core::global'}->{log} = $CON->{log};
+         $CON->{used}->{'core::shell'}->{log} = $CON->{log};
+         $CON->{used}->{'core::log'}->{log} = $CON->{log};
 
          # When new() was done, some Attributes were empty. We fix that here.
-         $CTX->{used}->{'core::context'}->{global} = $CTX->{global};
-         $CTX->{used}->{'core::log'}->{global} = $CTX->{global};
-         $CTX->{used}->{'core::shell'}->{global} = $CTX->{global};
-         $CTX->{used}->{'core::global'}->{global} = $CTX->{global};
+         $CON->{used}->{'core::global'}->{context} = $CON;
+         $CON->{used}->{'core::log'}->{context} = $CON;
+         $CON->{used}->{'core::shell'}->{context} = $CON;
+         $CON->{used}->{'core::context'}->{context} = $CON;
 
          # When new() was done, some Attributes were empty. We fix that here.
-         $CTX->{used}->{'core::global'}->{shell} = $CTX->{shell};
-         $CTX->{used}->{'core::context'}->{shell} = $CTX->{shell};
-         $CTX->{used}->{'core::log'}->{shell} = $CTX->{shell};
-         $CTX->{used}->{'core::shell'}->{shell} = $CTX->{shell};
+         $CON->{used}->{'core::context'}->{global} = $CON->{global};
+         $CON->{used}->{'core::log'}->{global} = $CON->{global};
+         $CON->{used}->{'core::shell'}->{global} = $CON->{global};
+         $CON->{used}->{'core::global'}->{global} = $CON->{global};
+
+         # When new() was done, some Attributes were empty. We fix that here.
+         $CON->{used}->{'core::global'}->{shell} = $CON->{shell};
+         $CON->{used}->{'core::context'}->{shell} = $CON->{shell};
+         $CON->{used}->{'core::log'}->{shell} = $CON->{shell};
+         $CON->{used}->{'core::shell'}->{shell} = $CON->{shell};
 
          my $ERR = 0;
 
@@ -222,7 +232,7 @@ sub variables {
    my $res = $self->call(sub {
       my @__ctx_variables = ();
 
-      for my $__ctx_variable (keys %{$CTX->_lp->{context}->{_}}) {
+      for my $__ctx_variable (keys %{$CON->_lp->{context}->{_}}) {
          next if $__ctx_variable !~ /^\$/;
          next if $__ctx_variable =~ /^\$_/;
 
@@ -289,7 +299,7 @@ sub update_available {
          eval("require ".$__ctx_available->{$__ctx_this});
       }
 
-      return $CTX->{available} = $args{available};
+      return $CON->{available} = $args{available};
    }, available => $h);
 
    return $r;
@@ -327,10 +337,10 @@ sub use {
          die("$MSG\n");
       }
 
-      if ($CTX->debug) {
-         $CTX->log->debug("repository[$__ctx_brik_repository]");
-         $CTX->log->debug("category[$__ctx_brik_category]");
-         $CTX->log->debug("module[$__ctx_brik_module]");
+      if ($CON->debug) {
+         $CON->log->debug("repository[$__ctx_brik_repository]");
+         $CON->log->debug("category[$__ctx_brik_category]");
+         $CON->log->debug("module[$__ctx_brik_module]");
       }
 
       $__ctx_brik_repository = ucfirst($__ctx_brik_repository);
@@ -341,9 +351,9 @@ sub use {
          ? $__ctx_brik_repository.'::'
          : '').$__ctx_brik_category.'::'.$__ctx_brik_module;
 
-      $CTX->debug && $CTX->log->debug("module2[$__ctx_brik_module]");
+      $CON->debug && $CON->log->debug("module2[$__ctx_brik_module]");
 
-      if ($CTX->is_used($__ctx_brik)) {
+      if ($CON->is_used($__ctx_brik)) {
          $ERR = 1;
          my $MSG = "use: Brik [$__ctx_brik] already used";
          die("$MSG\n");
@@ -358,10 +368,10 @@ sub use {
       }
 
       my $__ctx_new = $__ctx_module->new(
-         context => $CTX,
-         global => $CTX->{global},
-         shell => $CTX->{shell},
-         log => $CTX->{log},
+         context => $CON,
+         global => $CON->{global},
+         shell => $CON->{shell},
+         log => $CON->{log},
       );
       #$__ctx_new->brik_init; # No init now. We wait first run() to let set() actions
       if (! defined($__ctx_new)) {
@@ -372,7 +382,7 @@ sub use {
 
       $USE = $__ctx_brik;
 
-      return $CTX->{used}->{$__ctx_brik} = $__ctx_new;
+      return $CON->{used}->{$__ctx_brik} = $__ctx_new;
    }, brik => $brik);
 
    return $r;
@@ -393,7 +403,7 @@ sub available {
    my $self = shift;
 
    my $r = $self->call(sub {
-      return $CTX->{available};
+      return $CON->{available};
    });
 
    return $r;
@@ -419,7 +429,7 @@ sub used {
    my $self = shift;
 
    my $r = $self->call(sub {
-      return $CTX->{used};
+      return $CON->{used};
    });
 
    return $r;
@@ -528,25 +538,25 @@ sub set {
 
       my $ERR = 0;
 
-      if (! $CTX->is_used($__ctx_brik)) {
+      if (! $CON->is_used($__ctx_brik)) {
          $ERR = 1;
          my $MSG = "set: Brik [$__ctx_brik] not used";
          die("$MSG\n");
       }
 
-      if (! $CTX->used->{$__ctx_brik}->brik_has_attribute($__ctx_attribute)) {
+      if (! $CON->used->{$__ctx_brik}->brik_has_attribute($__ctx_attribute)) {
          $ERR = 1;
          my $MSG = "set: Brik [$__ctx_brik] has no Attribute [$__ctx_attribute]";
          die("$MSG\n");
       }
 
       if ($__ctx_value =~ /^(\$.*)$/) {
-         $__ctx_value = eval("\$CTX->_lp->{context}->{_}->{'$1'}");
+         $__ctx_value = eval("\$CON->_lp->{context}->{_}->{'$1'}");
       }
 
-      $CTX->{used}->{$__ctx_brik}->$__ctx_attribute($__ctx_value);
+      $CON->{used}->{$__ctx_brik}->$__ctx_attribute($__ctx_value);
 
-      my $SET = $CTX->{set}->{$__ctx_brik}->{$__ctx_attribute} = $__ctx_value;
+      my $SET = $CON->{set}->{$__ctx_brik}->{$__ctx_attribute} = $__ctx_value;
 
       my $REF = \$SET;
 
@@ -572,23 +582,23 @@ sub get {
 
       my $ERR = 0;
 
-      if (! $CTX->is_used($__ctx_brik)) {
+      if (! $CON->is_used($__ctx_brik)) {
          $ERR = 1;
          my $MSG = "get: Brik [$__ctx_brik] not used";
          die("$MSG\n");
       }
 
-      if (! $CTX->used->{$__ctx_brik}->brik_has_attribute($__ctx_attribute)) {
+      if (! $CON->used->{$__ctx_brik}->brik_has_attribute($__ctx_attribute)) {
          $ERR = 1;
          my $MSG = "get: Brik [$__ctx_brik] has no Attribute [$__ctx_attribute]";
          die("$MSG\n");
       }
 
-      if (! defined($CTX->{used}->{$__ctx_brik}->$__ctx_attribute)) {
+      if (! defined($CON->{used}->{$__ctx_brik}->$__ctx_attribute)) {
          return my $GET = 'undef';
       }
 
-      my $GET = $CTX->{used}->{$__ctx_brik}->$__ctx_attribute;
+      my $GET = $CON->{used}->{$__ctx_brik}->$__ctx_attribute;
 
       my $REF = \$GET;
 
@@ -615,25 +625,25 @@ sub run {
 
       my $ERR = 0;
 
-      if (! $CTX->is_used($__ctx_brik)) {
+      if (! $CON->is_used($__ctx_brik)) {
          $ERR = 1;
          my $MSG = "run: Brik [$__ctx_brik] not used";
          die("$MSG\n");
       }
 
-      if (! $CTX->used->{$__ctx_brik}->brik_has_command($__ctx_command)) {
+      if (! $CON->used->{$__ctx_brik}->brik_has_command($__ctx_command)) {
          $ERR = 1;
          my $MSG = "run: Brik [$__ctx_brik] has no Command [$__ctx_command]";
          die("$MSG\n");
       }
 
-      my $__ctx_run = $CTX->{used}->{$__ctx_brik};
+      my $__ctx_run = $CON->{used}->{$__ctx_brik};
 
       $__ctx_run->brik_init; # Will brik_init() only if not already done
 
       for (@__ctx_args) {
          if (/^(\$.*)$/) {
-            $_ = eval("\$CTX->_lp->{context}->{_}->{'$1'}");
+            $_ = eval("\$CON->_lp->{context}->{_}->{'$1'}");
          }
       }
 
