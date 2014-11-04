@@ -15,7 +15,7 @@ name: Metabrik
 provides:
   Metabrik:
     file: lib/Metabrik.pm
-    version: 1.00_08
+    version: 1.00_09
   Metabrik::Brik::Search:
     file: lib/Metabrik/Brik/Search.pm
   Metabrik::Core::Context:
@@ -40,4 +40,4 @@ provides:
     file: lib/Metabrik/Shell/Script.pm
 resources:
   license: http://opensource.org/licenses/artistic-license.php
-version: 1.00_08
+version: 1.00_09
