@@ -118,12 +118,14 @@ alias system "run shell::command system"
 alias capture "run shell::command capture"
 alias install "run perl::module install"
 alias search "run brik::search"
-alias ls "capture ls -lF"
-alias l "ls"
+alias ls "capture ls -F"
+alias l "ls -l"
 alias w "capture w"
 alias perldoc "system perldoc"
 alias top "system top"
 alias history "run shell::history show"
+alias ! "run shell::history exec"
+alias cat "run shell::command capture cat"
 
 use shell::history
 run shell::history load

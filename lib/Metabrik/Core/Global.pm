@@ -57,7 +57,18 @@ sub brik_properties {
          auto_use_on_require => 1,
          auto_install_on_require => 0,
       },
+      commands => {
+         sleep => [ ],
+      },
    };
+}
+
+sub sleep {
+   my $self = shift;
+
+   sleep(5);
+
+   return 1;
 }
 
 1;

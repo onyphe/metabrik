@@ -8,9 +8,6 @@
 -> merge: perl::module to core::global?
 -> remove dep: file::find from core::* Briks? and move file::find to repository main?
 
--> new: $SHL, $GLB, $LOG variables
-=> or: $CON, $SHE, $GLO, $LOG variables
-
 -> pod/help
 
 -> use Term::ReadLine::Gnu completion functions:

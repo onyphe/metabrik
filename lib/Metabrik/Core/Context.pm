@@ -167,6 +167,14 @@ sub brik_init {
       @_,
    ) or return 1; # Init already done
 
+   my $on_int = sub {
+       $self->debug && $self->log->debug("INT captured");
+       return 1;
+   };
+
+   $SIG{INT} = $on_int;
+   $SIG{TERM} = $on_int;
+
    my $r = $self->update_available;
    if (! defined($r)) {
       return $self->log->error("brik_init: unable to init Brik [core::context]: ".
