@@ -172,7 +172,7 @@ sub exec {
    # We want to exec some history command(s)
    my $lines = [];
    if ($numbers =~ /^\d+$/) {
-      $lines = $self->get_one($numbers);
+      $lines = [ $self->get_one($numbers) ];
    }
    elsif ($numbers =~ /^\d+\.\.\d+$/) {
       $lines = $self->get_range($numbers);
