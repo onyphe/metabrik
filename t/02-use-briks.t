@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 7) }
+BEGIN { plan(tests => 5) }
 
 ok(sub { eval("use Metabrik::Brik::Search"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Shell::Command"); $@ ? 0 : 1 }, 1, $@);
