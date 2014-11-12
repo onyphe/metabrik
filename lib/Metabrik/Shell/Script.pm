@@ -75,7 +75,7 @@ sub exec {
    my ($lines) = @_;
 
    if (! defined($lines)) {
-      return $self->log->info($self->brik_help_run('exec'));
+      return $self->log->error($self->brik_help_run('exec'));
    }
 
    if (ref($lines) ne 'ARRAY') {

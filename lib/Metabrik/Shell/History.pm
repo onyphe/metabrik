@@ -102,7 +102,7 @@ sub get_one {
    my ($number) = @_;
 
    if (! defined($number) || $number !~ /^\d+$/) {
-      return $self->log->info($self->brik_help_run('get_one'));
+      return $self->log->error($self->brik_help_run('get_one'));
    }
 
    my $shell = $self->shell;
@@ -127,7 +127,7 @@ sub get_range {
    my ($range) = @_;
 
    if (! defined($range) || $range !~ /^\d+\.\.\d+$/) {
-      return $self->log->info($self->brik_help_run('get_range'));
+      return $self->log->error($self->brik_help_run('get_range'));
    }
 
    my $shell = $self->shell;
@@ -166,7 +166,7 @@ sub exec {
    my $context = $self->context;
 
    if (! defined($numbers)) {
-      return $self->log->info($self->brik_help_run('exec'));
+      return $self->log->error($self->brik_help_run('exec'));
    }
 
    # We want to exec some history command(s)

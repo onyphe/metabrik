@@ -45,7 +45,7 @@ sub system {
    my ($cmd, @args) = @_;
 
    if (! defined($cmd)) {
-      return $self->log->info($self->brik_help_run('system'));
+      return $self->log->error($self->brik_help_run('system'));
    }
 
    $cmd = join(' ', $cmd, @args);
@@ -59,7 +59,7 @@ sub capture {
    my ($cmd, @args) = @_;
 
    if (! defined($cmd)) {
-      return $self->log->info($self->brik_help_run('capture'));
+      return $self->log->error($self->brik_help_run('capture'));
    }
 
    my $run = join(' ', $cmd, @args);
