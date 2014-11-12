@@ -8,29 +8,8 @@ Metabrik - Do IT Once.
 
 -> merge: brik::search to core::global?
 -> merge: perl::module to core::global?
--> remove dep: file::find from core::* Briks? and move file::find to repository main?
-
--> brik_help_info => _error() in all Briks
-=> Core::Log => return 1 => 1/0
 
 -> pod/help
-
--> use Term::ReadLine::Gnu completion functions:
---
-use strict;
-use warnings;
-
-use Term::ReadLine;
-
-my $term = new Term::ReadLine 'MyTerm';
-$term->Attribs->{'completion_entry_function'} = \&my_completion;
-my $ans = $term->readline('How can I help you? ');
-
-sub my_completion {
-    my ($text, $state) = @_;
-    return Term::ReadLine::Gnu->filename_completion_function($text, $state);
-}
---
 
 ### LOGO
 
@@ -239,6 +218,8 @@ _file|file => file
 glob
 _directory|directory => directory
 ipv4|6_address
+ip_address
+port
 INTERNAL
 yyyy.mm.dd
 
@@ -249,6 +230,23 @@ Doc:
 - require_* returns an HASHREF with ARRAYREF values
 
 ### FUTURE WORK
+
+-> use Term::ReadLine::Gnu completion functions:
+--
+use strict;
+use warnings;
+
+use Term::ReadLine;
+
+my $term = new Term::ReadLine 'MyTerm';
+$term->Attribs->{'completion_entry_function'} = \&my_completion;
+my $ans = $term->readline('How can I help you? ');
+
+sub my_completion {
+    my ($text, $state) = @_;
+    return Term::ReadLine::Gnu->filename_completion_function($text, $state);
+}
+--
 
 staticperl, standalone Perl with libc:
 http://search.cpan.org/~mlehmann/App-Staticperl-1.43/

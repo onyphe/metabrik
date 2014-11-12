@@ -6,7 +6,7 @@ build_requires: {}
 configure_requires:
   Module::Build: '0'
 dynamic_config: 1
-generated_by: 'Module::Build version 0.421, CPAN::Meta::Converter version 2.142690'
+generated_by: 'Module::Build version 0.421, CPAN::Meta::Converter version 2.142060'
 license: artistic
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -26,10 +26,6 @@ provides:
     file: lib/Metabrik/Core/Log.pm
   Metabrik::Core::Shell:
     file: lib/Metabrik/Core/Shell.pm
-  Metabrik::File::Find:
-    file: lib/Metabrik/File/Find.pm
-  Metabrik::Perl::Module:
-    file: lib/Metabrik/Perl/Module.pm
   Metabrik::Shell::Command:
     file: lib/Metabrik/Shell/Command.pm
   Metabrik::Shell::History:
@@ -39,5 +35,5 @@ provides:
   Metabrik::Shell::Script:
     file: lib/Metabrik/Shell/Script.pm
 resources:
-  license: http://opensource.org/licenses/artistic-license.php
+  license: http://www.perlfoundation.org/artistic_license_1_0
 version: 1.00_09

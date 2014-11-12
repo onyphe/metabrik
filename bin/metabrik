@@ -8,6 +8,9 @@ use warnings;
 use FindBin;
 
 BEGIN {
+   my $home_local = $ENV{HOME}.'/perl5';
+
+   push @INC, $home_local; # CPAN Perl modules "standard" directory
    push @INC, "$FindBin::Bin/../lib"; # Metabrik Perl modules
    push @INC, "$FindBin::Bin/../cpan"; # CPAN Perl modules Metabrik requires
    push @INC, "$FindBin::Bin/../local"; # CPAN Perl modules Metabrik will install if needed
@@ -35,15 +38,15 @@ BEGIN {
    }
 
    # We search for metabrik-cpanm in PATH
-   my $have_metabrik_cpan = 0;
+   my $have_metabrik_cpanm = 0;
    for my $path (split(':', $ENV{PATH})) {
       if (-f "$path/metabrik-cpanm") {
-         $have_metabrik_cpan = 1;
+         $have_metabrik_cpanm = 1;
          last;
       }
    }
 
-   if (! $have_metabrik_cpan) {
+   if (! $have_metabrik_cpanm) {
       die("[F] metabrik: add the bin directory to your PATH:\n\n".
           'export PATH=$PATH:'.$FindBin::Bin.
           "\n\n"

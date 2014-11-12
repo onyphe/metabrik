@@ -35,11 +35,11 @@ sub brik_properties {
       },
       require_modules => {
          'Lexical::Persistence' => [ ],
+         'File::Find' => [ ],
          'Module::Reload' => [ ],
          'Metabrik::Core::Global' => [ ],
          'Metabrik::Core::Log' => [ ],
          'Metabrik::Core::Shell' => [ ],
-         'Metabrik::File::Find' => [ ],
       },
    };
 }
@@ -256,29 +256,51 @@ sub variables {
 sub find_available {
    my $self = shift;
 
-   my $file_find = Metabrik::File::Find->new(
-      context => $self,
-      global => $self->global,
-      log => $self->log,
-   ) or return;
-
-   $file_find->brik_init;
-
    # Read from @INC, exclude current directory
-   my @new = ();
+   my @path_list = ();
    for (@INC) {
       next if /^\.$/;
-      push @new, $_;
+      push @path_list, $_;
    }
 
-   $file_find->path(\@new);
-   $file_find->recursive(1);
-   $file_find->debug(1);
+   my $dirpattern = 'Metabrik/';
+   my $filepattern = '.pm$';
 
-   my $found = $file_find->all('Metabrik/', '.pm$') or return;
+   # Extracted from file::find Brik
+
+   # Escape if we are searching for a directory hierarchy
+   $dirpattern =~ s/\//\\\//g;
+
+   my $dir_regex = qr/$dirpattern/;
+   my $file_regex = qr/$filepattern/;
+   my $dot_regex = qr/^\.$/;
+   my $dot2_regex = qr/^\.\.$/;
+
+   my @files = ();
+
+   my $sub = sub {
+      my $dir = $File::Find::dir;
+      my $file = $_;
+      # Skip dot and double dot directories
+      if ($file =~ $dot_regex || $file =~ $dot2_regex) {
+      }
+      elsif ($dir =~ $dir_regex && $file =~ $file_regex) {
+         push @files, "$dir/$file";
+      }
+   };
+
+   {
+      no warnings;
+      File::Find::find($sub, @path_list);
+   };
+
+   my %uniq_files = map { $_ => 1 } @files;
+   @files = sort { $a cmp $b } keys %uniq_files;
+
+   # /extract
 
    my %available = ();
-   for my $this (@{$found->{files}}) {
+   for my $this (@files) {
       my $brik = $this;
       $brik =~ s/\//::/g;
       $brik =~ s/^.*::Metabrik::(.*?)$/$1/;

@@ -40,12 +40,6 @@
       "Metabrik::Core::Shell" : {
          "file" : "lib/Metabrik/Core/Shell.pm"
       },
-      "Metabrik::File::Find" : {
-         "file" : "lib/Metabrik/File/Find.pm"
-      },
-      "Metabrik::Perl::Module" : {
-         "file" : "lib/Metabrik/Perl/Module.pm"
-      },
       "Metabrik::Shell::Command" : {
          "file" : "lib/Metabrik/Shell/Command.pm"
       },
@@ -62,7 +56,7 @@
    "release_status" : "testing",
    "resources" : {
       "license" : [
-         "http://opensource.org/licenses/artistic-license.php"
+         "http://www.perlfoundation.org/artistic_license_1_0"
       ]
    },
    "version" : "1.00_09"

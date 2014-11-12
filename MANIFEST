@@ -43,8 +43,6 @@ lib/Metabrik/Core/Context.pm
 lib/Metabrik/Core/Global.pm
 lib/Metabrik/Core/Log.pm
 lib/Metabrik/Core/Shell.pm
-lib/Metabrik/File/Find.pm
-lib/Metabrik/Perl/Module.pm
 lib/Metabrik/Shell/Command.pm
 lib/Metabrik/Shell/History.pm
 lib/Metabrik/Shell/Rc.pm
