@@ -57,7 +57,7 @@ sub string {
    my ($string) = @_;
 
    if (! defined($string)) {
-      return $self->log->info($self->brik_help_run('string'));
+      return $self->log->error($self->brik_help_run('string'));
    }
 
    my $context = $self->context;
@@ -88,7 +88,7 @@ sub tag {
    my ($tag) = @_;
 
    if (! defined($tag)) {
-      return $self->log->info($self->brik_help_run('tag'));
+      return $self->log->error($self->brik_help_run('tag'));
    }
 
    my $context = $self->context;
@@ -128,7 +128,7 @@ sub not_tag {
    my ($tag) = @_;
 
    if (! defined($tag)) {
-      return $self->log->info($self->brik_help_run('not_tag'));
+      return $self->log->error($self->brik_help_run('not_tag'));
    }
 
    my $context = $self->context;

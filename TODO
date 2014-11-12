@@ -1,5 +1,7 @@
 ### TODO
 
+Metabrik - Do IT Once.
+
 ### 1.00
 
 -> Metabrik: make class Commands begin with an upper case letter?
@@ -7,6 +9,9 @@
 -> merge: brik::search to core::global?
 -> merge: perl::module to core::global?
 -> remove dep: file::find from core::* Briks? and move file::find to repository main?
+
+-> brik_help_info => _error() in all Briks
+=> Core::Log => return 1 => 1/0
 
 -> pod/help
 

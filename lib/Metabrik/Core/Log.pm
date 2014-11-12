@@ -59,7 +59,7 @@ sub warning {
 
    print $self->_msg(($caller) ||= caller(), $msg);
 
-   return 0;
+   return 1;
 }
 
 sub error {
@@ -96,7 +96,7 @@ sub info {
    my $self = shift;
    my ($msg, $caller) = @_;
 
-   return 0 unless $self->level > 0;
+   return 1 unless $self->level > 0;
 
    if ($self->color) {
       print Term::ANSIColor::GREEN(), "[+] ", Term::ANSIColor::RESET();
@@ -109,14 +109,14 @@ sub info {
 
    print "$msg\n";
 
-   return 0;
+   return 1;
 }
 
 sub verbose {
    my $self = shift;
    my ($msg, $caller) = @_;
 
-   return 0 unless $self->level > 1;
+   return 1 unless $self->level > 1;
 
    if ($self->color) {
       print Term::ANSIColor::YELLOW(), "[*] ", Term::ANSIColor::RESET();
@@ -127,7 +127,7 @@ sub verbose {
 
    print $self->_msg(($caller) ||= caller(), $msg);
 
-   return 0;
+   return 1;
 }
 
 sub debug {
@@ -147,7 +147,7 @@ sub debug {
          return $self->{debug} = $msg;
       }
       else {
-         return unless $self->level > 2;
+         return 1 unless $self->level > 2;
 
          if ($self->color) {
             print Term::ANSIColor::CYAN(), "[D] ", Term::ANSIColor::RESET();
@@ -160,7 +160,7 @@ sub debug {
       }
    }
 
-   return 0;
+   return 1;
 }
 
 1;

@@ -190,7 +190,7 @@ sub do {
    my ($code) = @_;
 
    if (! defined($code)) {
-      return $self->log->info($self->brik_help_run('do'));
+      return $self->log->error($self->brik_help_run('do'));
    }
 
    my $lp = $self->_lp;
@@ -214,7 +214,7 @@ sub call {
    my ($subref, %args) = @_;
 
    if (! defined($subref)) {
-      return $self->log->info($self->brik_help_run('call'));
+      return $self->log->error($self->brik_help_run('call'));
    }
 
    my $lp = $self->_lp;
@@ -228,7 +228,7 @@ sub call {
       my @list = caller();
       my $file = $list[1];
       my $line = $list[2];
-      return $self->log->error("call: $@ Source file [$file] at line [$line]");
+      return $self->log->error("call: $@ (source file [$file] at line [$line])");
    }
 
    return $res;
@@ -318,7 +318,7 @@ sub use {
    my ($brik) = @_;
 
    if (! defined($brik)) {
-      return $self->log->info($self->brik_help_run('use'));
+      return $self->log->error($self->brik_help_run('use'));
    }
 
    my $r = $self->call(sub {
@@ -422,7 +422,7 @@ sub is_available {
    my ($brik) = @_;
 
    if (! defined($brik)) {
-      return $self->log->info($self->brik_help_run('is_available'));
+      return $self->log->error($self->brik_help_run('is_available'));
    }
 
    my $available = $self->available;
@@ -448,7 +448,7 @@ sub is_used {
    my ($brik) = @_;
 
    if (! defined($brik)) {
-      return $self->log->info($self->brik_help_run('is_used'));
+      return $self->log->error($self->brik_help_run('is_used'));
    }
 
    my $used = $self->used;
@@ -499,7 +499,7 @@ sub is_not_used {
    my ($brik) = @_;
 
    if (! defined($brik)) {
-      return $self->log->info($self->brik_help_run('is_not_used'));
+      return $self->log->error($self->brik_help_run('is_not_used'));
    }
 
    my $used = $self->not_used;
@@ -534,7 +534,7 @@ sub set {
    my ($brik, $attribute, $value) = @_;
 
    if (! defined($brik) || ! defined($attribute) || ! defined($value)) {
-      return $self->log->info($self->brik_help_run('set'));
+      return $self->log->error($self->brik_help_run('set'));
    }
 
    my $r = $self->call(sub {
@@ -579,7 +579,7 @@ sub get {
    my ($brik, $attribute) = @_;
 
    if (! defined($brik) || ! defined($attribute)) {
-      return $self->log->info($self->brik_help_run('get'));
+      return $self->log->error($self->brik_help_run('get'));
    }
 
    my $r = $self->call(sub {
@@ -621,7 +621,7 @@ sub run {
    my ($brik, $command, @args) = @_;
 
    if (! defined($brik) || ! defined($command)) {
-      return $self->log->info($self->brik_help_run('run'));
+      return $self->log->error($self->brik_help_run('run'));
    }
 
    my $r = $self->call(sub {
