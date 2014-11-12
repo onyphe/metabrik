@@ -125,28 +125,12 @@ sub new {
          $GLO = $CON->{global};
 
          # When new() was done, some Attributes were empty. We fix that here.
-         $CON->{used}->{'core::context'}->{log} = $CON->{log};
-         $CON->{used}->{'core::global'}->{log} = $CON->{log};
-         $CON->{used}->{'core::shell'}->{log} = $CON->{log};
-         $CON->{used}->{'core::log'}->{log} = $CON->{log};
-
-         # When new() was done, some Attributes were empty. We fix that here.
-         $CON->{used}->{'core::global'}->{context} = $CON;
-         $CON->{used}->{'core::log'}->{context} = $CON;
-         $CON->{used}->{'core::shell'}->{context} = $CON;
-         $CON->{used}->{'core::context'}->{context} = $CON;
-
-         # When new() was done, some Attributes were empty. We fix that here.
-         $CON->{used}->{'core::context'}->{global} = $CON->{global};
-         $CON->{used}->{'core::log'}->{global} = $CON->{global};
-         $CON->{used}->{'core::shell'}->{global} = $CON->{global};
-         $CON->{used}->{'core::global'}->{global} = $CON->{global};
-
-         # When new() was done, some Attributes were empty. We fix that here.
-         $CON->{used}->{'core::global'}->{shell} = $CON->{shell};
-         $CON->{used}->{'core::context'}->{shell} = $CON->{shell};
-         $CON->{used}->{'core::log'}->{shell} = $CON->{shell};
-         $CON->{used}->{'core::shell'}->{shell} = $CON->{shell};
+         for (qw(core::context core::global core::shell core::log)) {
+            $CON->{used}->{$_}->{context} = $CON;
+            $CON->{used}->{$_}->{log} = $CON->{log};
+            $CON->{used}->{$_}->{global} = $CON->{global};
+            $CON->{used}->{$_}->{shell} = $CON->{shell};
+         }
 
          my $ERR = 0;
 
