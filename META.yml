@@ -1,0 +1,147 @@
+---
+abstract: 'Briks repository for Metabrik'
+author:
+  - 'GomoR <gomor_at_metabrik.org>'
+build_requires: {}
+configure_requires:
+  Module::Build: '0.42'
+dynamic_config: 1
+generated_by: 'Module::Build version 0.421, CPAN::Meta::Converter version 2.142060'
+license: artistic
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: '1.4'
+name: Metabrik-Repository
+provides:
+  Metabrik::Address::Generate:
+    file: lib/Metabrik/Address/Generate.pm
+  Metabrik::Address::Netmask:
+    file: lib/Metabrik/Address/Netmask.pm
+  Metabrik::Audit::Dns:
+    file: lib/Metabrik/Audit/Dns.pm
+  Metabrik::Audit::Drupal:
+    file: lib/Metabrik/Audit/Drupal.pm
+  Metabrik::Audit::Https:
+    file: lib/Metabrik/Audit/Https.pm
+  Metabrik::Audit::Smtp:
+    file: lib/Metabrik/Audit/Smtp.pm
+  Metabrik::Audit::Twiki:
+    file: lib/Metabrik/Audit/Twiki.pm
+  Metabrik::Convert::Video:
+    file: lib/Metabrik/Convert/Video.pm
+  Metabrik::Crypto::Aes:
+    file: lib/Metabrik/Crypto/Aes.pm
+  Metabrik::Database::Cwe:
+    file: lib/Metabrik/Database/Cwe.pm
+  Metabrik::Database::Keystore:
+    file: lib/Metabrik/Database/Keystore.pm
+  Metabrik::Database::Nvd:
+    file: lib/Metabrik/Database/Nvd.pm
+  Metabrik::Database::Redis:
+    file: lib/Metabrik/Database/Redis.pm
+  Metabrik::Database::Sqlite:
+    file: lib/Metabrik/Database/Sqlite.pm
+  Metabrik::Database::Vfeed:
+    file: lib/Metabrik/Database/Vfeed.pm
+  Metabrik::Encoding::Base64:
+    file: lib/Metabrik/Encoding/Base64.pm
+  Metabrik::Encoding::Hexa:
+    file: lib/Metabrik/Encoding/Hexa.pm
+  Metabrik::Encoding::Html:
+    file: lib/Metabrik/Encoding/Html.pm
+  Metabrik::Encoding::Json:
+    file: lib/Metabrik/Encoding/Json.pm
+  Metabrik::Encoding::Rot13:
+    file: lib/Metabrik/Encoding/Rot13.pm
+  Metabrik::Encoding::Utf8:
+    file: lib/Metabrik/Encoding/Utf8.pm
+  Metabrik::Encoding::Xml:
+    file: lib/Metabrik/Encoding/Xml.pm
+  Metabrik::Example::Template:
+    file: lib/Metabrik/Example/Template.pm
+  Metabrik::File::Compress:
+    file: lib/Metabrik/File/Compress.pm
+  Metabrik::File::Create:
+    file: lib/Metabrik/File/Create.pm
+  Metabrik::File::Csv:
+    file: lib/Metabrik/File/Csv.pm
+  Metabrik::File::Fetch:
+    file: lib/Metabrik/File/Fetch.pm
+  Metabrik::File::Find:
+    file: lib/Metabrik/File/Find.pm
+  Metabrik::File::Read:
+    file: lib/Metabrik/File/Read.pm
+  Metabrik::File::Write:
+    file: lib/Metabrik/File/Write.pm
+  Metabrik::Http::Proxy:
+    file: lib/Metabrik/Http/Proxy.pm
+  Metabrik::Iana::Countrycode:
+    file: lib/Metabrik/Iana/Countrycode.pm
+  Metabrik::Identify::Ssh:
+    file: lib/Metabrik/Identify/Ssh.pm
+  Metabrik::Log::Dual:
+    file: lib/Metabrik/Log/Dual.pm
+  Metabrik::Netbios::Name:
+    file: lib/Metabrik/Netbios/Name.pm
+  Metabrik::Network::Frame:
+    file: lib/Metabrik/Network/Frame.pm
+  Metabrik::Network::Read:
+    file: lib/Metabrik/Network/Read.pm
+  Metabrik::Network::Write:
+    file: lib/Metabrik/Network/Write.pm
+  Metabrik::Perl::Module:
+    file: lib/Metabrik/Perl/Module.pm
+  Metabrik::Remote::Ssh2:
+    file: lib/Metabrik/Remote/Ssh2.pm
+  Metabrik::Remote::Tcpdump:
+    file: lib/Metabrik/Remote/Tcpdump.pm
+  Metabrik::Repository:
+    file: lib/Metabrik/Repository.pm
+    version: '1.00'
+  Metabrik::Scanner::Nikto:
+    file: lib/Metabrik/Scanner/Nikto.pm
+  Metabrik::Scanner::Nmap:
+    file: lib/Metabrik/Scanner/Nmap.pm
+  Metabrik::Scanner::Sqlmap:
+    file: lib/Metabrik/Scanner/Sqlmap.pm
+  Metabrik::Server::Agent:
+    file: lib/Metabrik/Server/Agent.pm
+  Metabrik::Server::Agent::Server:
+    file: lib/Metabrik/Server/Agent.pm
+  Metabrik::Ssdp::Ssdp:
+    file: lib/Metabrik/Ssdp/Ssdp.pm
+  Metabrik::Ssl::Heartbleed:
+    file: lib/Metabrik/Ssl/Heartbleed.pm
+  Metabrik::String::Compress:
+    file: lib/Metabrik/String/Compress.pm
+  Metabrik::String::Parse:
+    file: lib/Metabrik/String/Parse.pm
+  Metabrik::String::Password:
+    file: lib/Metabrik/String/Password.pm
+  Metabrik::String::Uri:
+    file: lib/Metabrik/String/Uri.pm
+  Metabrik::System::Arp:
+    file: lib/Metabrik/System/Arp.pm
+  Metabrik::System::Os:
+    file: lib/Metabrik/System/Os.pm
+  Metabrik::System::Package:
+    file: lib/Metabrik/System/Package.pm
+  Metabrik::System::Route:
+    file: lib/Metabrik/System/Route.pm
+  Metabrik::System::Service:
+    file: lib/Metabrik/System/Service.pm
+  Metabrik::Terminal::Control:
+    file: lib/Metabrik/Terminal/Control.pm
+  Metabrik::Time::Universal:
+    file: lib/Metabrik/Time/Universal.pm
+  Metabrik::Www::Client:
+    file: lib/Metabrik/Www/Client.pm
+  Metabrik::Www::Googlesafebrowsing:
+    file: lib/Metabrik/Www/Googlesafebrowsing.pm
+  Metabrik::Www::Util:
+    file: lib/Metabrik/Www/Util.pm
+requires:
+  Metabrik: '1.00'
+resources:
+  license: http://www.perlfoundation.org/artistic_license_1_0
+version: '1.00'

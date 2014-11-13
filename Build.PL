@@ -1,0 +1,19 @@
+#
+# $Id$
+#
+use strict;
+use warnings;
+
+use Module::Build;
+
+my $builder = Module::Build->new(
+   module_name => 'Metabrik::Repository',
+   license => 'artistic',
+   dist_author => 'GomoR <gomor_at_metabrik.org>',
+   dist_version_from => 'lib/Metabrik/Repository.pm',
+   requires => {
+      'Metabrik' => '1.00',
+   },
+);
+
+$builder->create_build_script;
