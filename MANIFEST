@@ -6,6 +6,7 @@ lib/Metabrik/Audit/Drupal.pm
 lib/Metabrik/Audit/Https.pm
 lib/Metabrik/Audit/Smtp.pm
 lib/Metabrik/Audit/Twiki.pm
+lib/Metabrik/Brik/Search.pm
 lib/Metabrik/Convert/Video.pm
 lib/Metabrik/Crypto/Aes.pm
 lib/Metabrik/Database/Cwe.pm
@@ -89,4 +90,5 @@ t/20-use-briks-www.t
 t/21-use-briks-log.t
 t/22-use-briks-iana.t
 t/23-use-briks-perl.t
+t/24-use-briks-brik.t
 UPDATING

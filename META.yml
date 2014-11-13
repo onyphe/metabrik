@@ -27,6 +27,8 @@ provides:
     file: lib/Metabrik/Audit/Smtp.pm
   Metabrik::Audit::Twiki:
     file: lib/Metabrik/Audit/Twiki.pm
+  Metabrik::Brik::Search:
+    file: lib/Metabrik/Brik/Search.pm
   Metabrik::Convert::Video:
     file: lib/Metabrik/Convert/Video.pm
   Metabrik::Crypto::Aes:
@@ -87,6 +89,8 @@ provides:
     file: lib/Metabrik/Network/Frame.pm
   Metabrik::Network::Read:
     file: lib/Metabrik/Network/Read.pm
+  Metabrik::Network::Wlan:
+    file: lib/Metabrik/Network/Wlan.pm
   Metabrik::Network::Write:
     file: lib/Metabrik/Network/Write.pm
   Metabrik::Perl::Module:
