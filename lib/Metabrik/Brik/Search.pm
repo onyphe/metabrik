@@ -18,6 +18,8 @@ sub brik_properties {
          string => [ qw(string) ],
          tag => [ qw(Tag) ],
          not_tag => [ qw(Tag) ],
+         used => [ ],
+         not_used => [ ],
       },
    };
 }
@@ -160,6 +162,18 @@ sub not_tag {
    }
 
    return $total;
+}
+
+sub used {
+   my $self = shift;
+
+   return $self->tag('used');
+}
+
+sub not_used {
+   my $self = shift;
+
+   return $self->not_tag('used');
 }
 
 1;
