@@ -114,10 +114,13 @@ use brik::search
 
 use perl::module
 
+alias update_available "run core::context update_available"
+alias reuse "run core::context reuse"
 alias system "run shell::command system"
 alias capture "run shell::command capture"
 alias install "run perl::module install"
 alias search "run brik::search"
+alias show "run brik::search all"
 alias ls "capture ls -F"
 alias l "ls -l"
 alias w "capture w"
