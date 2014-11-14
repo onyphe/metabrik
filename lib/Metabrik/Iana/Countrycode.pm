@@ -68,11 +68,11 @@ sub country_code_types {
 sub update {
    my $self = shift;
 
-   my $url = 'http://www.iana.org/domains/root/db';
+   my $uri = 'http://www.iana.org/domains/root/db';
 
    my $context = $self->context;
 
-   $context->set('www::client', 'url', $url) or return;
+   $context->set('www::client', 'uri', $uri) or return;
    $context->run('www::client', 'get') or return;
    my $html = $context->run('www::client', 'content') or return;
 

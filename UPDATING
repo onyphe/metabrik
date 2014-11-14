@@ -1,0 +1,7 @@
+2014-11-14:
+   AFFECTS: file::read
+
+   - text Command renamed to readall
+   - readall Command must be called after an open Command
+   - json Command removed
+   - xml Command removed

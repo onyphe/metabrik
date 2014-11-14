@@ -37,7 +37,7 @@ sub capacity {
       $context->set('file::read', 'input', "$base_file$count/capacity");
       $context->run('file::read', 'open') or next;
 
-      chomp(my $data = $context->run('file::read', 'text'));
+      chomp(my $data = $context->run('file::read', 'readall'));
 
       $context->run('file::read', 'close');
 

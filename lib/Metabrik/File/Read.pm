@@ -21,14 +21,7 @@ sub brik_properties {
       commands => {
          open => [ ],
          close => [ ],
-         text => [ ],
-         json => [ ],
-         xml => [ ],
-      },
-      require_modules => {
-         'File::Slurp' => [ ],
-         'JSON::XS' => [ ],
-         'XML::Simple' => [ ],
+         readall => [ ],
       },
    };
 }
@@ -76,39 +69,20 @@ sub close {
    return 1;
 }
 
-sub text {
+sub readall {
    my $self = shift;
 
-   if (! defined($self->input)) {
-      return $self->log->error($self->brik_help_set('input'));
+   my $fd = $self->fd;
+   if (! defined($fd)) {
+      return $self->log->error($self->brik_help_run('open'));
    }
 
-   my $text = File::Slurp::read_file($self->input)
-      or return $self->log->verbose("nothing to read from input [".$self->file."]");
-
-   return $text;
-}
-
-sub json {
-   my $self = shift;
-
-   if (! defined($self->input)) {
-      return $self->log->error($self->brik_help_set('input'));
+   my $buf = '';
+   while (<$fd>) {
+      $buf .= $_;
    }
 
-   return JSON::XS::decode_json($self->text);
-}
-
-sub xml {
-   my $self = shift;
-
-   if (! defined($self->input)) {
-      return $self->log->error($self->brik_help_set('input'));
-   }
-
-   my $xs = XML::Simple->new;
-
-   return $xs->XMLin($self->text);
+   return $buf;
 }
 
 1;
