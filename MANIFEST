@@ -39,6 +39,7 @@ lib/Metabrik/Netbios/Name.pm
 lib/Metabrik/Network/Frame.pm
 lib/Metabrik/Network/Read.pm
 lib/Metabrik/Network/Wlan.pm
+lib/Metabrik/Network/Wps.pm
 lib/Metabrik/Network/Write.pm
 lib/Metabrik/Perl/Module.pm
 lib/Metabrik/Remote/Ssh2.pm

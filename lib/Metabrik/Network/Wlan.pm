@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable wifi wlan network monitor wps) ],
+      tags => [ qw(unstable wifi wlan network monitor) ],
       attributes => {
          device => [ qw(device) ],
          monitor => [ qw(device) ],
@@ -32,7 +32,6 @@ sub brik_properties {
          connect => [ ],
          start_monitor_mode => [ ],
          stop_monitor_mode => [ ],
-         crack_wps => [ ],
       },
       require_used => {
          'shell::command' => [ ],
@@ -76,6 +75,8 @@ sub _list_ap {
 
    my $cell = '';
    my $address = '';
+   my $channel = '';
+   my $frequency = '';
    my $essid = '';
    my $encryption = '';
    my $raw = [];
@@ -97,6 +98,8 @@ sub _list_ap {
 
             $cell = '';
             $address = '';
+            $channel = '';
+            $frequency = '';
             $essid = '';
             $encryption = '';
             $raw = [];
@@ -107,6 +110,16 @@ sub _list_ap {
          }
          $cell = $1;
          $address = $2;
+         next;
+      }
+
+      if ($line =~ /^\s+Channel:(\d+)/) {
+         $channel = $1;
+         next;
+      }
+
+      if ($line =~ /^\s+Frequency:(\d+\.\d+)/) {
+         $frequency = $1;
          next;
       }
 
@@ -130,7 +143,7 @@ sub _list_ap {
 
       if ($line =~ /^\s+ESSID:"(\S+)"/) {
          $essid = $1;
-         $self->log->verbose("cell [$cell] address [$address] essid[$essid] encryption[$encryption] quality[$quality]");
+         $self->log->verbose("cell [$cell] address [$address] essid[$essid] encryption[$encryption] quality[$quality] channel[$channel] frequency[$frequency]");
          next;
       }
 
@@ -139,6 +152,8 @@ sub _list_ap {
    $ap_hash->{"cell_$cell"} = {
       cell => $cell,
       address => $address,
+      channel => $channel,
+      frequency => $frequency,
       essid => $essid,
       encryption => $encryption,
       raw => $raw,
@@ -232,8 +247,11 @@ sub start_monitor_mode {
       }
 
       if (! length($monitor)) {
-         $self->log->error("start_monitor_mode: cannot start monitor mode");
-         return $r;
+         return $self->log->error("start_monitor_mode: cannot start monitor mode");
+      }
+
+      if ($monitor !~ /^[a-z]+(?:\d+)?$/) {
+         return $self->log->error("start_monitor_mode: cannot start monitor mode with monitor [$monitor]");
       }
 
       $self->monitor($monitor);
@@ -268,30 +286,6 @@ sub stop_monitor_mode {
    }
 
    return $r;
-}
-
-sub crack_wps {
-   my $self = shift;
-
-   if (! $self->_monitor_mode_started) {
-      return $self->log->error($self->brik_help_run('start_monitor_mode'));
-   }
-
-   my $monitor = $self->monitor;
-   if (! defined($monitor)) {
-      return $self->log->error($self->brik_help_set('monitor'));
-   }
-
-   # reaver is optional, so we check here.
-   my $found = $self->brik_check_require_binaries({ 'reaver' => [ ] });
-   if (! $found) {
-      return $self->log->error("start_monitor: you have to install reaver package");
-   }
-
-   my $context = $self->context;
-
-   #my $cmd = "sudo reaver -i $monitor -b $bssid_mac -vv";
-   #return $context->run('shell::command', 'system', $cmd);
 }
 
 1;

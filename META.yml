@@ -75,6 +75,8 @@ provides:
     file: lib/Metabrik/File/Read.pm
   Metabrik::File::Write:
     file: lib/Metabrik/File/Write.pm
+  Metabrik::Hardware::Battery:
+    file: lib/Metabrik/Hardware/Battery.pm
   Metabrik::Http::Proxy:
     file: lib/Metabrik/Http/Proxy.pm
   Metabrik::Iana::Countrycode:
@@ -91,6 +93,8 @@ provides:
     file: lib/Metabrik/Network/Read.pm
   Metabrik::Network::Wlan:
     file: lib/Metabrik/Network/Wlan.pm
+  Metabrik::Network::Wps:
+    file: lib/Metabrik/Network/Wps.pm
   Metabrik::Network::Write:
     file: lib/Metabrik/Network/Write.pm
   Metabrik::Perl::Module:
