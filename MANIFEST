@@ -30,6 +30,7 @@ lib/Metabrik/File/Fetch.pm
 lib/Metabrik/File/Find.pm
 lib/Metabrik/File/Read.pm
 lib/Metabrik/File/Write.pm
+lib/Metabrik/File/Xml.pm
 lib/Metabrik/Hardware/Battery.pm
 lib/Metabrik/Http/Proxy.pm
 lib/Metabrik/Iana/Countrycode.pm
