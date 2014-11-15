@@ -21,14 +21,9 @@ sub brik_properties {
          fd => [ qw(file_descriptor) ],
       },
       commands => {
-         text => [ qw($data|$data_ref) ],
          open => [ ],
+         write => [ qw($data|$data_ref) ],
          close => [ ],
-      },
-      require_modules => {
-         'JSON::XS' => [ ],
-         'XML::Simple' => [ ],
-         'Text::CSV::Hashify' => [ ],
       },
    };
 }
@@ -82,30 +77,28 @@ sub close {
 
    if (defined($self->fd)) {
       close($self->fd);
+      $self->fd(undef);
    }
 
    return 1;
 }
 
-sub text {
+sub write {
    my $self = shift;
    my ($data) = @_;
 
-   $self->debug && $self->log->debug("text: data[$data]");
-
-   if (! defined($self->output)) {
-      return $self->log->error($self->brik_help_set('output'));
-   }
-
    if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('text'));
+      return $self->log->error($self->brik_help_run('write'));
    }
 
-   my $out = $self->open or return;
+   $self->debug && $self->log->debug("write: data[$data]");
+
+   my $fd = $self->fd;
+   if (! defined($fd)) {
+      return $self->log->error($self->brik_help_run('open'));
+   }
 
    ref($data) eq 'SCALAR' ? print $out $$data : print $out $data;
-
-   $self->close;
 
    return $data;
 }

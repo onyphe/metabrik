@@ -1,7 +1,15 @@
+2014-11-15:
+   AFFECTS: file::write
+
+   - text Command renamed to write
+   - write Command must now be called after an open Command
+   - close Command must now be called manually
+
 2014-11-14:
    AFFECTS: file::read
 
    - text Command renamed to readall
-   - readall Command must be called after an open Command
+   - readall Command must now be called after an open Command
    - json Command removed
    - xml Command removed
+   - close Command must now be called manually

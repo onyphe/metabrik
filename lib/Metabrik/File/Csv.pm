@@ -15,6 +15,7 @@ sub brik_properties {
       tags => [ qw(unstable csv file) ],
       attributes => {
          input => [ qw(file) ],
+         output => [ qw(file) ],
          has_header => [ qw(0|1) ],
          format => [ qw(aoh|hoh) ],
          separator => [ qw(character) ],
@@ -39,6 +40,7 @@ sub brik_use_properties {
    return {
       attributes_default => {
          input => $self->global->input || '/tmp/input.txt',
+         output => $self->global->output || '/tmp/output.txt',
          has_header => 0,
          header => [ ],
          format => 'aoh',
@@ -115,6 +117,12 @@ sub get_col_by_name {
 sub get_col_by_number {
    my $self = shift;
    my ($data, $number) = @_;
+
+   return $self->log->info("XXX: TODO");
+}
+
+sub write {
+   my $self = shift;
 
    return $self->log->info("XXX: TODO");
 }
