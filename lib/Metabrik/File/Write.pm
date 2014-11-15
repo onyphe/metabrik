@@ -98,7 +98,7 @@ sub write {
       return $self->log->error($self->brik_help_run('open'));
    }
 
-   ref($data) eq 'SCALAR' ? print $out $$data : print $out $data;
+   ref($data) eq 'SCALAR' ? print $fd $$data : print $fd $data;
 
    return $data;
 }

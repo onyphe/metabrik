@@ -21,7 +21,7 @@ sub brik_properties {
       },
       commands => {
          read => [ qw(input_file|OPTIONAL) ],
-         write => [ qw($xml_hash output_file|OPTIONAL],
+         write => [ qw($xml_hash output_file|OPTIONAL) ],
       },
       require_used => {
          'file::read' => [ ],

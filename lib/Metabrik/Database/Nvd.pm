@@ -31,7 +31,7 @@ sub brik_properties {
       },
       require_used => {
          'file::fetch' => [ ],
-         'file::read' => [ ],
+         'file::xml' => [ ],
       },
    };
 }
@@ -147,12 +147,12 @@ sub load {
          next;
       }
 
-      $context->set('file::read', 'input', $file);
+      $context->set('file::xml', 'input', $file);
 
       $self->log->debug("load: reading file: ".$xml_files->[$c]);
 
-      my $xml = $context->run('file::read', 'xml')
-         or return $self->log->error("load: file::read: xml");
+      my $xml = $context->run('file::xml', 'read')
+         or return $self->log->error("load: file::xml: read");
 
       # Merge XML data
       if (defined($old_xml)) {
