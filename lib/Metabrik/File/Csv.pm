@@ -22,14 +22,19 @@ sub brik_properties {
          header => [ qw($column_header_list) ],
          key => [ qw(key) ],
          encoding => [ qw(utf8|ascii) ],
+         overwrite => [ qw(0|1) ],
       },
       commands => {
-         read => [ ],
+         read => [ qw(input_file|OPTIONAL) ],
+         write => [ qw(csv_struct output_file|OPTIONAL) ],
          get_col_by_name => [ qw($data|$READ column_name column_value) ],
          get_col_by_number => [ qw($data|$READ integer) ],
       },
       require_modules => {
          'Text::CSV::Hashify' => [ ],
+      },
+      require_used => {
+         'file::write' => [ ],
       },
    };
 }
@@ -46,23 +51,19 @@ sub brik_use_properties {
          format => 'aoh',
          separator => ';',
          encoding => 'utf8',
+         overwrite => 1,
       },
    };
 }
 
 sub read {
    my $self = shift;
+   my ($input) = @_;
 
-   if (! defined($self->input)) {
+   $input ||= $self->input;
+
+   if (! defined($input)) {
       return $self->log->error($self->brik_help_set('input'));
-   }
-
-   if (! defined($self->separator)) {
-      return $self->log->error($self->brik_help_set('separator'));
-   }
-
-   if (! defined($self->format)) {
-      return $self->log->error($self->brik_help_set('format'));
    }
 
    my $format = $self->format;
@@ -73,13 +74,71 @@ sub read {
    my $key = $self->key;
 
    my $data = Text::CSV::Hashify->new({
-      file => $self->input,
+      file => $input,
       format => $format,
       sep_char => $self->separator,
       key => $key,
    }) or return $self->log->error("Text::CSV::Hashify: new");
 
    return $data->all;
+}
+
+sub write {
+   my $self = shift;
+   my ($csv_struct, $output) = @_;
+
+   $output ||= $self->output;
+
+   if (! defined($output)) {
+      return $self->log->error($self->brik_help_set('output'));
+   }
+
+   # We handle handle array of hashes format (aoh) for writing
+   if (ref($csv_struct) ne 'ARRAY') {
+      return $self->log->error("write: csv structure is not ARRAY");
+   }
+
+   if (! scalar(@$csv_struct)) {
+      return $self->log->error("write: csv structure is empty, nothing to write");
+   }
+
+   if (ref($csv_struct->[0]) ne 'HASH') {
+      return $self->log->error("write: csv structure does not contain HASHes");
+   }
+
+   my $context = $self->context;
+
+   $context->save_state('file::write') or return;
+
+   $context->set('file::write', 'output', $output) or return;
+   my $fd = $context->run('file::write', 'open') or return;
+
+   my $written = '';
+
+   my $header_written = 0;
+   for my $this (@$csv_struct) {
+      if (! $header_written) {
+         my @header = keys %$this;
+         my $data = join($self->separator, @header)."\n";
+         print $fd $data;
+         $written .= $data;
+         $header_written++;
+      }
+
+      my @fields = ();
+      for my $key (keys %$this) {
+         push @fields, $this->{$key};
+      }
+      my $data = join($self->separator, @fields)."\n";
+      print $fd $data;
+      $written .= $data;
+   }
+
+   $context->run('file::write', 'close');
+
+   $context->restore_state('file::write');
+
+   return $written;
 }
 
 sub get_col_by_name {
@@ -117,12 +176,6 @@ sub get_col_by_name {
 sub get_col_by_number {
    my $self = shift;
    my ($data, $number) = @_;
-
-   return $self->log->info("XXX: TODO");
-}
-
-sub write {
-   my $self = shift;
 
    return $self->log->info("XXX: TODO");
 }

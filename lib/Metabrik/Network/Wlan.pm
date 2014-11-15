@@ -52,13 +52,13 @@ sub scan {
 
    $self->log->verbose("scan: using device [$device]");
 
-   my $old = $context->get('shell::command', 'as_matrix');
+   $context->save_state('shell::command');
    $context->set('shell::command', 'as_matrix', 0);
 
    my $cmd = "iwlist $device scan";
    my $result = $context->run('shell::command', 'capture', $cmd);
 
-   $context->set('shell::command', 'as_matrix', $old);
+   $context->restore_state('shell::command');
 
    if (length($result)) {
       return $self->_list_ap($result);
@@ -232,7 +232,7 @@ sub start_monitor_mode {
       return $self->log->error("start_monitor_mode: you have to install aircrack-ng package");
    }
 
-   my $old = $context->get('shell::command', 'as_matrix');
+   $context->save_state('shell::command') or return;
 
    my $cmd = "sudo airmon-ng start $device";
    my $r = $context->run('shell::command', 'capture', $cmd)
@@ -258,7 +258,7 @@ sub start_monitor_mode {
       $self->_monitor_mode_started(1);
    }
 
-   $context->set('shell::command', 'as_matrix', $old);
+   $context->restore_state('shell::command');
 
    return $self->monitor;
 }

@@ -29,7 +29,7 @@ sub capacity {
 
    my $base_file = '/sys/class/power_supply/BAT';
 
-   my $old = $context->get('file::read', 'input');
+   $context->save_state('file::read') or return;
 
    my $battery_hash = {};
    my $count = 0;
@@ -50,7 +50,7 @@ sub capacity {
       $count++;
    }
 
-   $context->set('file::read', 'input', $old);
+   $context->restore_state('file::read');
 
    return $battery_hash;
 }

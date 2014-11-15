@@ -36,7 +36,7 @@ sub info {
       return $self->log->error("info: cannot find file [$base_file]");
    }
 
-   my $old = $context->get('file::read', 'input');
+   $context->save_state('file::read');
 
    $context->set('file::read', 'input', $base_file);
    $context->run('file::read', 'open')
@@ -58,7 +58,7 @@ sub info {
       }
    }
 
-   $context->set('file::read', 'input', $old);
+   $context->restore_state('file::read');
 
    return $info_hash;
 }

@@ -56,7 +56,7 @@ sub read {
 
    my $context = $self->context;
 
-   my $old = $context->get('file::read', 'input');
+   $context->save_state('file::read') or return;
 
    $context->set('file::read', 'input', $input) or return;
    my $fd = $context->run('file::read', 'open') or return;
@@ -65,7 +65,7 @@ sub read {
 
    my $xml = $context->run('encoding::xml', 'decode', $data) or return;
 
-   $context->set('file::read', 'input', $old);
+   $context->restore_sate('file::read');
 
    return $xml;
 }
@@ -88,14 +88,14 @@ sub write {
 
    my $data = $context->run('encoding::xml', 'encode', $xml_hash) or return;
 
-   my $old = $context->get('file::write', 'output');
+   $context->save_state('file::write') or return;
 
    $context->set('file::write', 'output', $output) or return;
    my $fd = $context->run('file::write', 'open') or return;
    $context->run('file::write', 'write', $data) or return;
    $context->run('file::write', 'close') or return;
 
-   $context->set('file::write', 'output', $old);
+   $context->restore_state('file::write');
 
    return $data;
 }
