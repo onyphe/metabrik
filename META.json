@@ -113,11 +113,17 @@
       "Metabrik::File::Find" : {
          "file" : "lib/Metabrik/File/Find.pm"
       },
+      "Metabrik::File::Json" : {
+         "file" : "lib/Metabrik/File/Json.pm"
+      },
       "Metabrik::File::Read" : {
          "file" : "lib/Metabrik/File/Read.pm"
       },
       "Metabrik::File::Write" : {
          "file" : "lib/Metabrik/File/Write.pm"
+      },
+      "Metabrik::File::Xml" : {
+         "file" : "lib/Metabrik/File/Xml.pm"
       },
       "Metabrik::Hardware::Battery" : {
          "file" : "lib/Metabrik/Hardware/Battery.pm"
@@ -222,11 +228,8 @@
       "Metabrik::Www::Client" : {
          "file" : "lib/Metabrik/Www/Client.pm"
       },
-      "Metabrik::Www::Googlesafebrowsing" : {
-         "file" : "lib/Metabrik/Www/Googlesafebrowsing.pm"
-      },
-      "Metabrik::Www::Util" : {
-         "file" : "lib/Metabrik/Www/Util.pm"
+      "Metabrik::Xorg::Screenshot" : {
+         "file" : "lib/Metabrik/Xorg/Screenshot.pm"
       }
    },
    "release_status" : "stable",
