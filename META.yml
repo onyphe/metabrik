@@ -29,6 +29,8 @@ provides:
     file: lib/Metabrik/Audit/Twiki.pm
   Metabrik::Brik::Search:
     file: lib/Metabrik/Brik/Search.pm
+  Metabrik::Client::Www:
+    file: lib/Metabrik/Client/Www.pm
   Metabrik::Convert::Video:
     file: lib/Metabrik/Convert/Video.pm
   Metabrik::Crypto::Aes:
@@ -91,12 +93,20 @@ provides:
     file: lib/Metabrik/Identify/Ssh.pm
   Metabrik::Log::Dual:
     file: lib/Metabrik/Log/Dual.pm
-  Metabrik::Netbios::Name:
-    file: lib/Metabrik/Network/Netbios.pm
   Metabrik::Network::Frame:
     file: lib/Metabrik/Network/Frame.pm
+  Metabrik::Network::Netbios:
+    file: lib/Metabrik/Network/Netbios.pm
+  Metabrik::Network::Nikto:
+    file: lib/Metabrik/Network/Nikto.pm
+  Metabrik::Network::Nmap:
+    file: lib/Metabrik/Network/Nmap.pm
   Metabrik::Network::Read:
     file: lib/Metabrik/Network/Read.pm
+  Metabrik::Network::Sqlmap:
+    file: lib/Metabrik/Network/Sqlmap.pm
+  Metabrik::Network::Ssdp:
+    file: lib/Metabrik/Network/Ssdp.pm
   Metabrik::Network::Wlan:
     file: lib/Metabrik/Network/Wlan.pm
   Metabrik::Network::Wps:
@@ -112,18 +122,10 @@ provides:
   Metabrik::Repository:
     file: lib/Metabrik/Repository.pm
     version: '1.00'
-  Metabrik::Scanner::Nikto:
-    file: lib/Metabrik/Network/Nikto.pm
-  Metabrik::Scanner::Nmap:
-    file: lib/Metabrik/Network/Nmap.pm
-  Metabrik::Scanner::Sqlmap:
-    file: lib/Metabrik/Network/Sqlmap.pm
   Metabrik::Server::Agent:
     file: lib/Metabrik/Server/Agent.pm
   Metabrik::Server::Agent::Server:
     file: lib/Metabrik/Server/Agent.pm
-  Metabrik::Ssdp::Ssdp:
-    file: lib/Metabrik/Network/Ssdp.pm
   Metabrik::Ssl::Heartbleed:
     file: lib/Metabrik/Ssl/Heartbleed.pm
   Metabrik::String::Compress:
@@ -148,8 +150,6 @@ provides:
     file: lib/Metabrik/Terminal/Control.pm
   Metabrik::Time::Universal:
     file: lib/Metabrik/Time/Universal.pm
-  Metabrik::Www::Client:
-    file: lib/Metabrik/Client/Www.pm
   Metabrik::Xorg::Screenshot:
     file: lib/Metabrik/Xorg/Screenshot.pm
 requires:
