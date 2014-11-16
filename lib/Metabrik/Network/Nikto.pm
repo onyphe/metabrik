@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# scanner::nikto Brik
+# network::nikto Brik
 #
-package Metabrik::Scanner::Nikto;
+package Metabrik::Network::Nikto;
 use strict;
 use warnings;
 
@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable scanner nikto) ],
+      tags => [ qw(unstable network security scanner nikto) ],
       attributes => {
          target => [ qw(target) ],
          path => [ qw(url_path) ],
@@ -86,7 +86,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Scanner::Nikto - scanner::nikto Brik
+Metabrik::Network::Nikto - network::nikto Brik
 
 =head1 COPYRIGHT AND LICENSE
 

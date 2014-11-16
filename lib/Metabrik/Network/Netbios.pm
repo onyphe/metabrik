@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# netbios::name Brik
+# network::netbios Brik
 #
-package Metabrik::Netbios::Name;
+package Metabrik::Network::Netbios;
 use strict;
 use warnings;
 
@@ -52,7 +52,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Netbios::Name - netbios::name Brik
+Metabrik::Network::Netbios - network::netbios Brik
 
 =head1 COPYRIGHT AND LICENSE
 

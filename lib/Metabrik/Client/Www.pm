@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# www::client Brik
+# client::www Brik
 #
-package Metabrik::Www::Client;
+package Metabrik::Client::Www;
 use strict;
 use warnings;
 
@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable browser http www) ],
+      tags => [ qw(unstable browser http client www) ],
       attributes => {
          uri => [ qw(uri) ],
          mechanize => [ qw(OBJECT) ],
@@ -652,7 +652,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Www::Client - www::client Brik
+Metabrik::Client::Www - client::www Brik
 
 =head1 COPYRIGHT AND LICENSE
 

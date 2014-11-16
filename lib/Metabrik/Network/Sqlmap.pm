@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# scanner::sqlmap Brik
+# network::sqlmap Brik
 #
-package Metabrik::Scanner::Sqlmap;
+package Metabrik::Network::Sqlmap;
 use strict;
 use warnings;
 
@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable scanner sqlmap sql injection) ],
+      tags => [ qw(unstable network security scanner sqlmap sql injection) ],
       attributes => {
          cookie => [ qw(string) ],
          parameter => [ qw(parameter_name) ],
@@ -68,7 +68,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Scanner::Sqlmap - scanner::sqlmap Brik
+Metabrik::Network::Sqlmap - network::sqlmap Brik
 
 =head1 COPYRIGHT AND LICENSE
 

@@ -1,9 +1,9 @@
 #
 # $Id: Nmap.pm 179 2014-10-02 18:04:01Z gomor $
 #
-# scanner::nmap Brik
+# network::nmap Brik
 #
-package Metabrik::Scanner::Nmap;
+package Metabrik::Network::Nmap;
 use strict;
 use warnings;
 
@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable scanner nmap) ],
+      tags => [ qw(unstable network security scanner nmap) ],
       attributes => {
          targets => [ qw(nmap_targets) ],
          ports => [ qw(nmap_ports) ],
@@ -155,7 +155,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Scanner::Nmap - scanner::nmap Brik
+Metabrik::Network::Nmap - network::nmap Brik
 
 =head1 COPYRIGHT AND LICENSE
 

@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# ssdp::ssdp brik
+# network::ssdp brik
 #
-package Metabrik::Ssdp::Ssdp;
+package Metabrik::Network::Ssdp;
 use strict;
 use warnings;
 
@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(experimental ssdp) ],
+      tags => [ qw(experimental network ssdp) ],
       attributes => {
          device => [ qw(device) ],
       },
@@ -80,7 +80,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Ssdp::Ssdp - ssdp::ssdp Brik
+Metabrik::Network::Ssdp - network::ssdp Brik
 
 =head1 COPYRIGHT AND LICENSE
 
