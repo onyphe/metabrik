@@ -13,24 +13,14 @@ __END__
 
 =head1 NAME
 
-Metabrik::Repository - Briks repository for Metabrik
-
-=head1 SYNOPSIS
-
-   use Metabrik::Repository;
-
-   print $Metabrik::Repository::VERSION."\n";
-
-=head1 DESCRIPTION
-
-Just exports Metabrik::Repository $VERSION variable.
+Metabrik::Repository - main Metabrik repository
 
 =head1 COPYRIGHT AND LICENSE
 
 Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
 
-You may distribute this module under the terms of the Artistic license.
-See LICENSE.Artistic file in the source distribution archive.
+You may distribute this module under the terms of The BSD 3-Clause License.
+See LICENSE file in the source distribution archive.
 
 =head1 AUTHOR
 

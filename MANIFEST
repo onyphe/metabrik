@@ -66,6 +66,7 @@ lib/Metabrik/Terminal/Control.pm
 lib/Metabrik/Time/Universal.pm
 lib/Metabrik/Www/Client.pm
 lib/Metabrik/Xorg/Screenshot.pm
+LICENSE
 Makefile.PL
 MANIFEST			This list of files
 META.json

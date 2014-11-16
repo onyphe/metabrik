@@ -98,7 +98,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Example::Template - template to write a new Metabriky Brik
+Metabrik::Example::Template - example::template Brik
 
 =head1 SYNOPSIS
 
@@ -155,16 +155,12 @@ Metabrik::Example::Template - template to write a new Metabriky Brik
 
 Template to write a new Metabrik Brik.
 
-=head2 ATTRIBUTES
-
-=head2 COMMANDS
-
 =head1 COPYRIGHT AND LICENSE
 
 Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
 
-You may distribute this module under the terms of the Artistic license.
-See LICENSE.Artistic file in the source distribution archive.
+You may distribute this module under the terms of The BSD 3-Clause License.
+See LICENSE file in the source distribution archive.
 
 =head1 AUTHOR
 

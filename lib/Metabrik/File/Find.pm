@@ -148,64 +148,14 @@ __END__
 
 =head1 NAME
 
-Metabrik::File::Find - brik to find some files using pattern matching
-
-=head1 SYNOPSIS
-
-   # Use a Brik from a Perl module
-
-   use Metabrik::File::Find;
-
-   my $path = [ @INC ];
-
-   my $brik = Metabrik::File::Find->new;
-   $brik->brik_init;
-   $brik->recursive(1);
-   $brik->path($path);
-
-   my $found = $brik->find('/lib/Metabrik$', '.pm$');
-   for my $file (@$found) {
-      print "$file\n";
-   }
-
-   # Use a Brik from a the Metabrik Shell
-
-   > my $path = [ @INC ];
-   > set file::find path $path
-   > set file::find recursive 1
-   > run file::find files /lib/Metabrik$ .pm$
-   > $RUN   # Will contain the result
-
-   # Use a Brik from a Metabrik Brik
-
-   my $context = $self->context;
-
-   my $path = [ @INC ];
-
-   $context->use('file::find');
-   $context->set('file::find', 'path', $path);
-   $context->set('file::find', 'recursive', 1);
-
-   my $result = $context->run('file::find', 'files', '/lib/Metabrik$', '.pm$');
-
-=head1 DESCRIPTION
-
-Brik to find some files using pattern matching.
-
-=head2 ATTRIBUTES
-
-=head3 B<path> (directory1:directory2:..:directoryN)
-
-=head2 COMMANDS
-
-=head3 B<find> (directory, pattern)
+Metabrik::File::Find - file::find Brik
 
 =head1 COPYRIGHT AND LICENSE
 
 Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
 
-You may distribute this module under the terms of the Artistic license.
-See LICENSE.Artistic file in the source distribution archive.
+You may distribute this module under the terms of The BSD 3-Clause License.
+See LICENSE file in the source distribution archive.
 
 =head1 AUTHOR
 

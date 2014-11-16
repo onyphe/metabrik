@@ -8,7 +8,7 @@ require v5.6.1;
 WriteMakefile(
    NAME => 'Metabrik::Repository',
    VERSION_FROM => 'lib/Metabrik/Repository.pm',
-   LICENSE => 'artistic',
+   LICENSE => 'bsd',
    ABSTRACT_FROM => 'lib/Metabrik/Repository.pm',
    AUTHOR => 'GomoR <gomor_at_metabrik.org>',
    PREREQ_PM => {
