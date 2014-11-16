@@ -1,3 +1,13 @@
+20141116
+   AFFECTS: netbios::name, scanner::sqlmap, scanner::nikto, scanner::nmap, ssdp::ssdp, www::client
+
+   - netbios::name renamed to network::netbios
+   - scanner::nmap renamed to network::nmap
+   - scanner::sqlmap renamed to network::sqlmap
+   - scanner::nikto renamed to network::nikto
+   - ssdp::ssdp renamed to network::ssdp
+   - www::client renamed to client::www
+
 20141115:
    AFFECTS: file::write
 
@@ -13,3 +23,4 @@
    - json Command removed
    - xml Command removed
    - close Command must now be called manually
+

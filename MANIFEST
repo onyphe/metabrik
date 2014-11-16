@@ -7,6 +7,7 @@ lib/Metabrik/Audit/Https.pm
 lib/Metabrik/Audit/Smtp.pm
 lib/Metabrik/Audit/Twiki.pm
 lib/Metabrik/Brik/Search.pm
+lib/Metabrik/Client/Www.pm
 lib/Metabrik/Convert/Video.pm
 lib/Metabrik/Crypto/Aes.pm
 lib/Metabrik/Database/Cwe.pm
@@ -28,18 +29,23 @@ lib/Metabrik/File/Create.pm
 lib/Metabrik/File/Csv.pm
 lib/Metabrik/File/Fetch.pm
 lib/Metabrik/File/Find.pm
+lib/Metabrik/File/Json.pm
 lib/Metabrik/File/Read.pm
 lib/Metabrik/File/Write.pm
 lib/Metabrik/File/Xml.pm
-lib/Metabrik/File/Json.pm
 lib/Metabrik/Hardware/Battery.pm
+lib/Metabrik/Hardware/Fan.pm
 lib/Metabrik/Http/Proxy.pm
 lib/Metabrik/Iana/Countrycode.pm
 lib/Metabrik/Identify/Ssh.pm
 lib/Metabrik/Log/Dual.pm
-lib/Metabrik/Netbios/Name.pm
 lib/Metabrik/Network/Frame.pm
+lib/Metabrik/Network/Netbios.pm
+lib/Metabrik/Network/Nikto.pm
+lib/Metabrik/Network/Nmap.pm
 lib/Metabrik/Network/Read.pm
+lib/Metabrik/Network/Sqlmap.pm
+lib/Metabrik/Network/Ssdp.pm
 lib/Metabrik/Network/Wlan.pm
 lib/Metabrik/Network/Wps.pm
 lib/Metabrik/Network/Write.pm
@@ -47,11 +53,7 @@ lib/Metabrik/Perl/Module.pm
 lib/Metabrik/Remote/Ssh2.pm
 lib/Metabrik/Remote/Tcpdump.pm
 lib/Metabrik/Repository.pm
-lib/Metabrik/Scanner/Nikto.pm
-lib/Metabrik/Scanner/Nmap.pm
-lib/Metabrik/Scanner/Sqlmap.pm
 lib/Metabrik/Server/Agent.pm
-lib/Metabrik/Ssdp/Ssdp.pm
 lib/Metabrik/Ssl/Heartbleed.pm
 lib/Metabrik/String/Compress.pm
 lib/Metabrik/String/Parse.pm
@@ -64,11 +66,10 @@ lib/Metabrik/System/Route.pm
 lib/Metabrik/System/Service.pm
 lib/Metabrik/Terminal/Control.pm
 lib/Metabrik/Time/Universal.pm
-lib/Metabrik/Www/Client.pm
 lib/Metabrik/Xorg/Screenshot.pm
 LICENSE
 Makefile.PL
-MANIFEST			This list of files
+MANIFEST
 META.json
 META.yml
 t/01-use.t
@@ -95,4 +96,7 @@ t/21-use-briks-log.t
 t/22-use-briks-iana.t
 t/23-use-briks-perl.t
 t/24-use-briks-brik.t
+t/25-use-briks-hardware.t
+t/26-use-briks-xorg.t
+t/27-use-briks-client.t
 UPDATING

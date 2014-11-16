@@ -1,4 +1,3 @@
 use Test;
-BEGIN { plan(tests => 1) }
+BEGIN { plan(tests => 0) }
 
-ok(sub { eval("use Metabrik::Www::Client"); $@ ? 0 : 1 }, 1, $@);

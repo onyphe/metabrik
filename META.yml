@@ -81,6 +81,8 @@ provides:
     file: lib/Metabrik/File/Xml.pm
   Metabrik::Hardware::Battery:
     file: lib/Metabrik/Hardware/Battery.pm
+  Metabrik::Hardware::Fan:
+    file: lib/Metabrik/Hardware/Fan.pm
   Metabrik::Http::Proxy:
     file: lib/Metabrik/Http/Proxy.pm
   Metabrik::Iana::Countrycode:
@@ -90,7 +92,7 @@ provides:
   Metabrik::Log::Dual:
     file: lib/Metabrik/Log/Dual.pm
   Metabrik::Netbios::Name:
-    file: lib/Metabrik/Netbios/Name.pm
+    file: lib/Metabrik/Network/Netbios.pm
   Metabrik::Network::Frame:
     file: lib/Metabrik/Network/Frame.pm
   Metabrik::Network::Read:
@@ -111,17 +113,17 @@ provides:
     file: lib/Metabrik/Repository.pm
     version: '1.00'
   Metabrik::Scanner::Nikto:
-    file: lib/Metabrik/Scanner/Nikto.pm
+    file: lib/Metabrik/Network/Nikto.pm
   Metabrik::Scanner::Nmap:
-    file: lib/Metabrik/Scanner/Nmap.pm
+    file: lib/Metabrik/Network/Nmap.pm
   Metabrik::Scanner::Sqlmap:
-    file: lib/Metabrik/Scanner/Sqlmap.pm
+    file: lib/Metabrik/Network/Sqlmap.pm
   Metabrik::Server::Agent:
     file: lib/Metabrik/Server/Agent.pm
   Metabrik::Server::Agent::Server:
     file: lib/Metabrik/Server/Agent.pm
   Metabrik::Ssdp::Ssdp:
-    file: lib/Metabrik/Ssdp/Ssdp.pm
+    file: lib/Metabrik/Network/Ssdp.pm
   Metabrik::Ssl::Heartbleed:
     file: lib/Metabrik/Ssl/Heartbleed.pm
   Metabrik::String::Compress:
@@ -147,7 +149,7 @@ provides:
   Metabrik::Time::Universal:
     file: lib/Metabrik/Time/Universal.pm
   Metabrik::Www::Client:
-    file: lib/Metabrik/Www/Client.pm
+    file: lib/Metabrik/Client/Www.pm
   Metabrik::Xorg::Screenshot:
     file: lib/Metabrik/Xorg/Screenshot.pm
 requires:
