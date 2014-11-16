@@ -28,7 +28,7 @@ sub brik_properties {
       require_used => {
          'file::fetch' => [ ],
          'file::compress' => [ ],
-         'file::read' => [ ],
+         'file::xml' => [ ],
       },
    };
 }
@@ -63,9 +63,9 @@ sub load {
 
    my $context = $self->context;
 
-   $context->set('file::read', 'input', $file);
-   my $xml = $context->run('file::read', 'xml')
-      or return $self->log->error("load: file::read: xml");
+   $context->set('file::xml', 'input', $file);
+   my $xml = $context->run('file::xml', 'read')
+      or return $self->log->error("load: file::xml: read");
 
    return $self->xml($xml);
 }

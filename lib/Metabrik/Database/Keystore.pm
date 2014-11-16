@@ -41,8 +41,11 @@ sub search {
    my $context = $self->context;
 
    $context->set('file::read', 'input', $self->db);
-   my $read = $context->run('file::read', 'text')
-      or return $self->log->error("search: file::read: text");
+   $context->run('file::read', 'open') or return;
+   my $read = $context->run('file::read', 'readall')
+      or return $self->log->error("search: file::read: readall");
+   $context->run('file::read', 'close');
+
    my $decrypted = $context->run('crypto::aes', 'decrypt', $read)
       or return $self->log->error("search: crypto::aes: decrypt");
 
