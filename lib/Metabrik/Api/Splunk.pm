@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# www::splunk Brik
+# api::splunk Brik
 #
-package Metabrik::Www::Splunk;
+package Metabrik::Api::Splunk;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Api::Splunk);
+use base qw(Metabrik::Client::Www);
 
 sub brik_properties {
    return {
@@ -22,15 +22,34 @@ sub brik_properties {
          apps_local => [ ],
       },
       require_used => {
-         'api::splunk' => [ ],
+         'client::www' => [ ],
+         'encoding::xml' => [ ],
       },
    };
+}
+
+sub brik_init {
+   my $self = shift->SUPER::brik_init(
+      @_,
+   ) or return 1; # Init already done
+
+   my $username = $self->username;
+   my $password = $self->password;
+   if (! defined($username) || ! defined($password)) {
+      return $self->log->error("brik_init: you have to give username and password Attributes");
+   }
+
+   return $self;
 }
 
 sub apps_local {
    my $self = shift;
 
-   return $self->SUPER::apps_local;
+   my $uri = $self->uri.'/services/apps/local';
+
+   my $response = $self->get($uri) or return;
+
+   return $self->context->run('encoding::xml', 'decode', $response->{body});
 }
 
 1;
@@ -39,7 +58,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Www::Splunk - www::splunk Brik
+Metabrik::Api::Splunk - api::splunk Brik
 
 =head1 COPYRIGHT AND LICENSE
 
