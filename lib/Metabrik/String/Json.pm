@@ -1,9 +1,9 @@
 #
 # $Id: Json.pm 178 2014-10-02 18:03:00Z gomor $
 #
-# encoding::json Brik
+# string::json Brik
 #
-package Metabrik::Encoding::Json;
+package Metabrik::String::Json;
 use strict;
 use warnings;
 
@@ -59,7 +59,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Encoding::Json - encoding::json Brik
+Metabrik::String::Json - string::json Brik
 
 =head1 COPYRIGHT AND LICENSE
 

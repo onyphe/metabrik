@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# encoding::hexa Brik
+# string::hexa Brik
 #
-package Metabrik::Encoding::Hexa;
+package Metabrik::String::Hexa;
 use strict;
 use warnings;
 
@@ -83,7 +83,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Encoding::Hexa - encoding::hexa Brik
+Metabrik::String::Hexa - string::hexa Brik
 
 =head1 COPYRIGHT AND LICENSE
 

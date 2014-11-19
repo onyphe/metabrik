@@ -1,9 +1,9 @@
 #
 # $Id: Html.pm 178 2014-10-02 18:03:00Z gomor $
 #
-# encoding::html Brik
+# string::html Brik
 #
-package Metabrik::Encoding::Html;
+package Metabrik::String::Html;
 use strict;
 use warnings;
 
@@ -55,7 +55,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Encoding::Html - encoding::html Brik
+Metabrik::String::Html - string::html Brik
 
 =head1 COPYRIGHT AND LICENSE
 

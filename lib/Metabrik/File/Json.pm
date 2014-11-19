@@ -26,7 +26,7 @@ sub brik_properties {
       require_used => {
          'file::read' => [ ],
          'file::write' => [ ],
-         'encoding::json' => [ ],
+         'string::json' => [ ],
       },
    };
 }
@@ -63,7 +63,7 @@ sub read {
    my $data = $context->run('file::read', 'readall') or return;
    $context->run('file::read', 'close') or return;
 
-   my $json = $context->run('encoding::json', 'decode', $data) or return;
+   my $json = $context->run('string::json', 'decode', $data) or return;
 
    $context->restore_state('file::read');
 
@@ -86,7 +86,7 @@ sub write {
 
    my $context = $self->context;
 
-   my $data = $context->run('encoding::json', 'encode', $json_hash) or return;
+   my $data = $context->run('string::json', 'encode', $json_hash) or return;
 
    $context->save_state('file::write') or return;
 

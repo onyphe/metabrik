@@ -1,9 +1,9 @@
 #
 # $Id: Rot13.pm 179 2014-10-02 18:04:01Z gomor $
 #
-# encoding::rot13 Brik
+# string::rot13 Brik
 #
-package Metabrik::Encoding::Rot13;
+package Metabrik::String::Rot13;
 use strict;
 use warnings;
 
@@ -50,7 +50,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Encoding::Rot13 - encoding::rot13 Brik
+Metabrik::String::Rot13 - string::rot13 Brik
 
 =head1 COPYRIGHT AND LICENSE
 

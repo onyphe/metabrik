@@ -23,7 +23,7 @@ sub brik_properties {
       },
       require_used => {
          'client::www' => [ ],
-         'encoding::xml' => [ ],
+         'string::xml' => [ ],
       },
    };
 }
@@ -49,7 +49,7 @@ sub apps_local {
 
    my $response = $self->get($uri) or return;
 
-   return $self->context->run('encoding::xml', 'decode', $response->{body});
+   return $self->context->run('string::xml', 'decode', $response->{body});
 }
 
 1;

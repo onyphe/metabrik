@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# encoding::base64 Brik
+# string::base64 Brik
 #
-package Metabrik::Encoding::Base64;
+package Metabrik::String::Base64;
 use strict;
 use warnings;
 
@@ -55,7 +55,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Encoding::Base64 - encoding::base64 Brik
+Metabrik::String::Base64 - string::base64 Brik
 
 =head1 COPYRIGHT AND LICENSE
 

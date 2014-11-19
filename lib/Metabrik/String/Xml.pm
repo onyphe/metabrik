@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# encoding::xml Brik
+# string::xml Brik
 #
-package Metabrik::Encoding::Xml;
+package Metabrik::String::Xml;
 use strict;
 use warnings;
 
@@ -59,7 +59,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Encoding::Xml - encoding::xml Brik
+Metabrik::String::Xml - string::xml Brik
 
 =head1 COPYRIGHT AND LICENSE
 

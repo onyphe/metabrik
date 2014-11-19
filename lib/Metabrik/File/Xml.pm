@@ -26,7 +26,7 @@ sub brik_properties {
       require_used => {
          'file::read' => [ ],
          'file::write' => [ ],
-         'encoding::xml' => [ ],
+         'string::xml' => [ ],
       },
    };
 }
@@ -63,7 +63,7 @@ sub read {
    my $data = $context->run('file::read', 'readall') or return;
    $context->run('file::read', 'close') or return;
 
-   my $xml = $context->run('encoding::xml', 'decode', $data) or return;
+   my $xml = $context->run('string::xml', 'decode', $data) or return;
 
    $context->restore_sate('file::read');
 
@@ -86,7 +86,7 @@ sub write {
 
    my $context = $self->context;
 
-   my $data = $context->run('encoding::xml', 'encode', $xml_hash) or return;
+   my $data = $context->run('string::xml', 'encode', $xml_hash) or return;
 
    $context->save_state('file::write') or return;
 

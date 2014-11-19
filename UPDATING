@@ -1,3 +1,10 @@
+20141119
+   AFFECTS: encoding::base64, encoding::hexa, encoding::html, encoding::json, encoding::rot13, encoding::xml
+            encoding::utf8
+
+   - encoding::utf8 removed
+   - encoding::* renamed to string::*
+
 20141116
    AFFECTS: netbios::name, scanner::sqlmap, scanner::nikto, scanner::nmap, ssdp::ssdp, www::client
 

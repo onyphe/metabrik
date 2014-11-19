@@ -19,7 +19,7 @@ sub brik_properties {
          show => [ ],
       },
       require_used => {
-         'encoding::hexa' => [ ],
+         'string::hexa' => [ ],
       },
       require_modules => {
          'Net::Frame::Simple' => [ ],
@@ -66,11 +66,11 @@ sub from_hexa {
       return $self->log->error($self->brik_help_run('from_hexa'));
    }
 
-   if (! $context->run('encoding::hexa', 'is_hexa', $data)) {
+   if (! $context->run('string::hexa', 'is_hexa', $data)) {
       return $self->log->error('from_hexa: data is not hexa');
    }
 
-   my $raw = $context->run('encoding::hexa', 'decode', $data);
+   my $raw = $context->run('string::hexa', 'decode', $data);
 
    return Net::Frame::Simple->new(raw => $raw, firstLayer => 'ETH');
 }
