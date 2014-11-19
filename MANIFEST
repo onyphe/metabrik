@@ -66,6 +66,7 @@ lib/Metabrik/System/Route.pm
 lib/Metabrik/System/Service.pm
 lib/Metabrik/Terminal/Control.pm
 lib/Metabrik/Time/Universal.pm
+lib/Metabrik/Www/Splunk.pm
 lib/Metabrik/Xorg/Screenshot.pm
 LICENSE
 Makefile.PL
@@ -99,4 +100,5 @@ t/24-use-briks-brik.t
 t/25-use-briks-hardware.t
 t/26-use-briks-xorg.t
 t/27-use-briks-client.t
+t/28-use-briks-api.t
 UPDATING

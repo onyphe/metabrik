@@ -16,9 +16,12 @@ sub brik_properties {
       attributes => {
          uri => [ qw(uri) ],
          mechanize => [ qw(OBJECT) ],
+         ssl_verify => [ qw(0|1) ],
+         username => [ qw(username) ],
+         password => [ qw(password) ],
       },
       commands => {
-         get => [ ],
+         get => [ qw(uri|OPTIONAL) ],
          content => [ ],
          post => [ qw(SCALAR) ],
          info => [ ],
@@ -33,6 +36,7 @@ sub brik_properties {
          'Data::Dumper' => [ ],
          'IO::Socket::SSL' => [ ],
          'LWP::UserAgent' => [ ],
+         'LWP::ConnCache' => [ ],
          'URI' => [ ],
          'WWW::Mechanize' => [ ],
       },
@@ -41,27 +45,43 @@ sub brik_properties {
 
 sub get {
    my $self = shift;
+   my ($uri) = @_;
 
-   my $uri = $self->uri;
+   $uri ||= $self->uri;
    if (! defined($uri)) {
       return $self->log->error($self->brik_help_set('uri'));
    }
 
    $self->debug && $self->log->debug("get: uri[$uri]");
 
-   $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
+   my %args = ();
+   if (! $self->ssl_verify) {
+      $args{ssl_opts} = { SSL_verify_mode => 'SSL_VERIFY_NONE'};
+   }
 
-   my $mech = WWW::Mechanize->new;
+   my $mech = WWW::Mechanize->new(%args);
    $mech->agent_alias('Linux Mozilla');
-   #$mech->ssl_opts(SSL_ca_path => '/etc/ssl/certs');
-   #$mech->ssl_opts(verify_hostname => 0);
 
-   $mech->get($uri);
-   $self->log->verbose("get: GET $uri");
+   my $username = $self->username;
+   my $password = $self->password;
+   if (defined($username) && defined($password)) {
+      $mech->credentials($username, $password);
+   }
 
    $self->mechanize($mech);
 
-   return $mech;
+   $self->log->verbose("get: $uri");
+
+   my $response = $mech->get($uri);
+
+   my %response = ();
+   $response{code} = $response->code;
+   $response{body} = $response->decoded_content;
+   my $headers = $response->headers;
+   $response{headers} = { map { $_ => $headers->{$_} } keys %$headers };
+   delete $response{headers}->{'::std_case'};
+
+   return \%response;
 }
 
 sub content {
@@ -256,7 +276,7 @@ sub forms {
 }
 
 #
-# Note: works only with IO::Socket::SSL, not with Net:SSL (using Crypt::SSLeay)
+# Note: works only with IO::Socket::SSL, not with Net::SSL (using Crypt::SSLeay)
 #
 sub getcertificate {
    my $self = shift;
@@ -271,7 +291,8 @@ sub getcertificate {
    }
 
    my $ua = LWP::UserAgent->new(
-      ssl_opts => { verify_hostname => 0 }, # will do manual check
+      #ssl_opts => { verify_hostname => 0 }, # will do manual check
+      ssl_opts => { SSL_verify_mode => 'SSL_VERIFY_NONE'},
    );
    $ua->timeout($self->global->rtimeout);
    $ua->max_redirect(0);
@@ -286,6 +307,10 @@ sub getcertificate {
    my $cc = $ua->conn_cache->{cc_conns};
    if (! defined($cc)) {
       return $self->log->error("unable to retrieve connection cache");
+   }
+
+   if (scalar(@$cc) == 0) {
+      return $self->log->error("getcertificate: no connection cached");
    }
 
    my $sock = $cc->[0][0];
