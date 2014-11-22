@@ -30,9 +30,7 @@ sub brik_properties {
 }
 
 sub brik_init {
-   my $self = shift->SUPER::brik_init(
-      @_,
-   ) or return 1; # Init already done
+   my $self = shift;
 
    my $db = $self->db;
    if (! defined($db)) {
@@ -50,7 +48,7 @@ sub brik_init {
 
    $self->dbh($dbh);
 
-   return $self;
+   return $self->SUPER::brik_init;
 }
 
 sub exec {

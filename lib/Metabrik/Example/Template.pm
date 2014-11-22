@@ -9,6 +9,7 @@ use warnings;
 
 use base qw(Metabrik);
 
+# Default attribute values put here will BE inherited by subclasses
 sub brik_properties {
    return {
       revision => '$Revision$',
@@ -39,6 +40,7 @@ sub brik_properties {
    };
 }
 
+# Warning: default attribute values put here will NOT be inherited by subclasses
 sub brik_use_properties {
    my $self = shift;
 
@@ -54,13 +56,11 @@ sub brik_preinit {
 }
 
 sub brik_init {
-   my $self = shift->SUPER::brik_init(
-      @_,
-   ) or return 1; # Init already done
+   my $self = shift;
 
-   # Do your init here
+   # Do your init here, return 0 on error.
 
-   return $self;
+   return $self->SUPER::brik_init;
 }
 
 sub command1 {

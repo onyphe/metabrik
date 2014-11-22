@@ -31,9 +31,7 @@ sub brik_properties {
 }
 
 sub brik_init {
-   my $self = shift->SUPER::brik_init(
-      @_,
-   ) or return 1; # Init already done
+   my $self = shift;
 
    if (! defined($self->db)) {
       return $self->log->error($self->brik_help_set('db'));
@@ -49,7 +47,7 @@ sub brik_init {
 
    $self->vfeed($vfeed);
 
-   return $self;
+   return $self->SUPER::brik_init;
 }
 
 sub vfeed_version {

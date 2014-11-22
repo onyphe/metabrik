@@ -16,13 +16,11 @@ sub brik_properties {
       attributes_default => {
          uri => 'https://localhost:8089',
          username => 'admin',
+         password => 'changeme',
          ssl_verify => 0,
       },
       commands => {
          apps_local => [ ],
-      },
-      require_used => {
-         'api::splunk' => [ ],
       },
    };
 }

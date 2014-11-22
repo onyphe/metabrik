@@ -77,27 +77,6 @@
       "Metabrik::Database::Vfeed" : {
          "file" : "lib/Metabrik/Database/Vfeed.pm"
       },
-      "Metabrik::Encoding::Base64" : {
-         "file" : "lib/Metabrik/Encoding/Base64.pm"
-      },
-      "Metabrik::Encoding::Hexa" : {
-         "file" : "lib/Metabrik/Encoding/Hexa.pm"
-      },
-      "Metabrik::Encoding::Html" : {
-         "file" : "lib/Metabrik/Encoding/Html.pm"
-      },
-      "Metabrik::Encoding::Json" : {
-         "file" : "lib/Metabrik/Encoding/Json.pm"
-      },
-      "Metabrik::Encoding::Rot13" : {
-         "file" : "lib/Metabrik/Encoding/Rot13.pm"
-      },
-      "Metabrik::Encoding::Utf8" : {
-         "file" : "lib/Metabrik/Encoding/Utf8.pm"
-      },
-      "Metabrik::Encoding::Xml" : {
-         "file" : "lib/Metabrik/Encoding/Xml.pm"
-      },
       "Metabrik::Example::Template" : {
          "file" : "lib/Metabrik/Example/Template.pm"
       },
@@ -119,8 +98,14 @@
       "Metabrik::File::Json" : {
          "file" : "lib/Metabrik/File/Json.pm"
       },
+      "Metabrik::File::Psv" : {
+         "file" : "lib/Metabrik/File/Psv.pm"
+      },
       "Metabrik::File::Read" : {
          "file" : "lib/Metabrik/File/Read.pm"
+      },
+      "Metabrik::File::Tsv" : {
+         "file" : "lib/Metabrik/File/Tsv.pm"
       },
       "Metabrik::File::Write" : {
          "file" : "lib/Metabrik/File/Write.pm"
@@ -198,8 +183,20 @@
       "Metabrik::Ssl::Heartbleed" : {
          "file" : "lib/Metabrik/Ssl/Heartbleed.pm"
       },
+      "Metabrik::String::Base64" : {
+         "file" : "lib/Metabrik/String/Base64.pm"
+      },
       "Metabrik::String::Compress" : {
          "file" : "lib/Metabrik/String/Compress.pm"
+      },
+      "Metabrik::String::Hexa" : {
+         "file" : "lib/Metabrik/String/Hexa.pm"
+      },
+      "Metabrik::String::Html" : {
+         "file" : "lib/Metabrik/String/Html.pm"
+      },
+      "Metabrik::String::Json" : {
+         "file" : "lib/Metabrik/String/Json.pm"
       },
       "Metabrik::String::Parse" : {
          "file" : "lib/Metabrik/String/Parse.pm"
@@ -207,8 +204,14 @@
       "Metabrik::String::Password" : {
          "file" : "lib/Metabrik/String/Password.pm"
       },
+      "Metabrik::String::Rot13" : {
+         "file" : "lib/Metabrik/String/Rot13.pm"
+      },
       "Metabrik::String::Uri" : {
          "file" : "lib/Metabrik/String/Uri.pm"
+      },
+      "Metabrik::String::Xml" : {
+         "file" : "lib/Metabrik/String/Xml.pm"
       },
       "Metabrik::System::Arp" : {
          "file" : "lib/Metabrik/System/Arp.pm"

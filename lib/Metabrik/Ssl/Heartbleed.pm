@@ -45,13 +45,11 @@ sub brik_use_properties {
 }
 
 sub brik_init {
-   my $self = shift->SUPER::brik_init(
-      @_,
-   ) or return 1; # Init already done
+   my $self = shift;
 
    # Do your init here
 
-   return $self;
+   return $self->SUPER::brik_init;
 }
 
 sub command1 {

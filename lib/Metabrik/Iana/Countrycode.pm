@@ -25,7 +25,7 @@ sub brik_properties {
          load => [ ],
       },
       require_used => {
-         'www::client' => [ ],
+         'client::www' => [ ],
          'file::csv' => [ ],
          'file::write' => [ ],
       },
@@ -72,9 +72,9 @@ sub update {
 
    my $context = $self->context;
 
-   $context->set('www::client', 'uri', $uri) or return;
-   $context->run('www::client', 'get') or return;
-   my $html = $context->run('www::client', 'content') or return;
+   $context->set('client::www', 'uri', $uri) or return;
+   $context->run('client::www', 'get') or return;
+   my $html = $context->run('client::www', 'content') or return;
 
    # <tr class="iana-group-1 iana-type-2">
    #   <td><span class="domain tld"><a href="/domains/root/db/abogado.html">.abogado</a></span></td>

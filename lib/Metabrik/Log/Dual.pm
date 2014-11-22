@@ -63,9 +63,7 @@ sub brik_preinit {
 }
 
 sub brik_init {
-   my $self = shift->SUPER::brik_init(
-      @_,
-   ) or return 1; # Init already done
+   my $self = shift;
 
    print "DEBUG log::dual brik_init\n";
 
@@ -81,7 +79,7 @@ sub brik_init {
 
    $self->_fd($fd);
 
-   return $self;
+   return $self->SUPER::brik_init;
 }
 
 sub _msg {

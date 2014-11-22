@@ -13,25 +13,27 @@ sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(unstable rest api splunk) ],
+      attributes => {
+         output_mode => [ qw(json|xml) ],
+      },
       attributes_default => {
          uri => 'https://localhost:8089',
          username => 'admin',
-         ssl_verify => 0,
+         ssl_verify => 1,
+         output_mode => 'json',
       },
       commands => {
          apps_local => [ ],
       },
       require_used => {
-         'client::www' => [ ],
          'string::xml' => [ ],
+         'string::json' => [ ],
       },
    };
 }
 
 sub brik_init {
-   my $self = shift->SUPER::brik_init(
-      @_,
-   ) or return 1; # Init already done
+   my $self = shift;
 
    my $username = $self->username;
    my $password = $self->password;
@@ -39,17 +41,20 @@ sub brik_init {
       return $self->log->error("brik_init: you have to give username and password Attributes");
    }
 
-   return $self;
+   return $self->SUPER::brik_init;
 }
 
 sub apps_local {
    my $self = shift;
 
-   my $uri = $self->uri.'/services/apps/local';
+   my $mode = $self->output_mode;
+
+   my $uri = $self->uri.'/services/apps/local?output_mode='.$mode;
 
    my $response = $self->get($uri) or return;
 
-   return $self->context->run('string::xml', 'decode', $response->{body});
+   #return $self->context->run('string::xml', 'decode', $response->{body});
+   return $self->context->run('string::json', 'decode', $response->{body});
 }
 
 1;

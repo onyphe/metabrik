@@ -26,16 +26,14 @@ sub brik_properties {
 }
 
 sub brik_init {
-   my $self = shift->SUPER::brik_init(
-      @_,
-   ) or return 1; # Init already done
+   my $self = shift;
 
    my $dnet = Net::Libdnet::Route->new
       or return $self->log->error("can't create Net::Libdnet::Route object");
 
    $self->_dnet($dnet);
 
-   return $self;
+   return $self->SUPER::brik_init;
 }
 
 sub _display {

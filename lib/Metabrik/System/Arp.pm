@@ -26,9 +26,7 @@ sub brik_properties {
 }
 
 sub brik_init {
-   my $self = shift->SUPER::brik_init(
-      @_,
-   ) or return 1; # Init already done
+   my $self = shift;
 
    my $dnet = Net::Libdnet::Arp->new;
    if (! defined($dnet)) {
@@ -37,7 +35,7 @@ sub brik_init {
 
    $self->_dnet($dnet);
 
-   return $self;
+   return $self->SUPER::brik_init;
 }
 
 sub _loop {

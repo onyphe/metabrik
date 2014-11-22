@@ -20,8 +20,12 @@ sub brik_properties {
          username => [ qw(username) ],
          password => [ qw(password) ],
       },
+      attributes_default => {
+         ssl_verify => 1,
+      },
       commands => {
          get => [ qw(uri|OPTIONAL) ],
+         getcertificate => [ qw(uri|OPTIONAL) ],
          content => [ ],
          post => [ qw(SCALAR) ],
          info => [ ],
@@ -29,7 +33,6 @@ sub brik_properties {
          links => [ ],
          headers => [ ],
          status => [ ],
-         getcertificate => [ ],
          getcertificate2 => [ qw(SCALAR SCALAR) ],
       },
       require_modules => {
@@ -280,8 +283,9 @@ sub forms {
 #
 sub getcertificate {
    my $self = shift;
+   my ($uri) = @_;
 
-   my $uri = $self->uri;
+   $uri ||= $self->uri;
    if (! defined($uri)) {
       return $self->log->error($self->brik_help_set('uri'));
    }

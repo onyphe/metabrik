@@ -19,6 +19,9 @@ sub brik_properties {
          encoding => [ qw(utf8|ascii) ],
          overwrite => [ qw(0|1) ],
       },
+      attributes_default => {
+         overwrite => 1,
+      },
       commands => {
          read => [ qw(input_file|OPTIONAL) ],
          write => [ qw($json_hash output_file|OPTIONAL) ],
@@ -39,7 +42,6 @@ sub brik_use_properties {
          input => $self->global->input || '/tmp/input.txt',
          output => $self->global->output || '/tmp/output.txt',
          encoding => $self->global->encoding || 'utf8',
-         overwrite => 1,
       },
    };
 }

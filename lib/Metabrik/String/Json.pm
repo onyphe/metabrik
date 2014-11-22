@@ -31,7 +31,7 @@ sub encode {
       return $self->log->error($self->brik_help_run('encode'));
    }
 
-   if (ref($data) ne 'ARRAY' || ref($data) ne 'HASH') {
+   if (ref($data) ne 'ARRAY' && ref($data) ne 'HASH') {
       return $self->log->error("encode: you need to give data as an ARRAYREF or HASHREF");
    }
 

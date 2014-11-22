@@ -27,6 +27,9 @@ sub brik_properties {
       require_modules => {
          'List::Util' => [ 'shuffle' ],
       },
+      require_binaries => {
+         'ulimit' => [ ],
+      },
    };
 }
 
@@ -43,9 +46,7 @@ sub brik_use_properties {
 }
 
 sub brik_init {
-   my $self = shift->SUPER::brik_init(
-      @_,
-   ) or return 1; # Init already done
+   my $self = shift;
 
    # Increase the max open files limit under Linux
    if ($^O eq 'Linux') {
@@ -56,7 +57,7 @@ sub brik_init {
       mkdir($self->output_directory);
    }
 
-   return $self;
+   return $self->SUPER::brik_init;
 }
 
 sub ipv4_reserved_ranges {

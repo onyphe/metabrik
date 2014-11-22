@@ -30,9 +30,7 @@ sub brik_properties {
 }
 
 sub brik_init {
-   my $self = shift->SUPER::brik_init(
-      @_,
-   ) or return 1; # Init already done
+   my $self = shift;
 
    my ($sysname, $nodename, $release, $version, $machine) = POSIX::uname();
 
@@ -44,7 +42,7 @@ sub brik_init {
       arch => $machine,
    });
 
-   return $self;
+   return $self->SUPER::brik_init;
 }
 
 sub name {

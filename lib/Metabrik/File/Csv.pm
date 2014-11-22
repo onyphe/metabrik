@@ -24,6 +24,14 @@ sub brik_properties {
          encoding => [ qw(utf8|ascii) ],
          overwrite => [ qw(0|1) ],
       },
+      attributes_default => {
+         has_header => 0,
+         header => [ ],
+         format => 'aoh',
+         separator => ';',
+         encoding => 'utf8',
+         overwrite => 1,
+      },
       commands => {
          read => [ qw(input_file|OPTIONAL) ],
          write => [ qw(csv_struct output_file|OPTIONAL) ],
@@ -46,12 +54,6 @@ sub brik_use_properties {
       attributes_default => {
          input => $self->global->input || '/tmp/input.txt',
          output => $self->global->output || '/tmp/output.txt',
-         has_header => 0,
-         header => [ ],
-         format => 'aoh',
-         separator => ';',
-         encoding => 'utf8',
-         overwrite => 1,
       },
    };
 }
@@ -108,10 +110,13 @@ sub write {
 
    my $context = $self->context;
 
-   $context->save_state('file::write') or return;
+   $context->save_state('file::write')
+      or return $self->log->error("write: file::write save_state failed");
 
-   $context->set('file::write', 'output', $output) or return;
-   my $fd = $context->run('file::write', 'open') or return;
+   $context->set('file::write', 'output', $output)
+      or return $self->log->error('write: file::write set output failed');
+   my $fd = $context->run('file::write', 'open')
+      or return $self->log->error('write: file::write run open failed');
 
    my $written = '';
 
@@ -129,14 +134,26 @@ sub write {
       for my $key (keys %$this) {
          push @fields, $this->{$key};
       }
+
       my $data = join($self->separator, @fields)."\n";
-      print $fd $data;
+
+      my $r = $context->run('file::write', 'write', $data);
+      if (! defined($r)) {
+         $self->log->error("write: file::write write failed");
+         next;
+      }
+
       $written .= $data;
    }
 
    $context->run('file::write', 'close');
 
-   $context->restore_state('file::write');
+   $context->restore_state('file::write')
+      or return $self->log->error("write: file::write save_state failed");
+
+   if (! length($written)) {
+      return $self->log->error("write: nothing to write");
+   }
 
    return $written;
 }

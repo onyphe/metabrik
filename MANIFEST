@@ -26,6 +26,8 @@ lib/Metabrik/Example/Template.pm
 lib/Metabrik/File/Compress.pm
 lib/Metabrik/File/Create.pm
 lib/Metabrik/File/Csv.pm
+lib/Metabrik/File/Psv.pm
+lib/Metabrik/File/Tsv.pm
 lib/Metabrik/File/Fetch.pm
 lib/Metabrik/File/Find.pm
 lib/Metabrik/File/Json.pm
