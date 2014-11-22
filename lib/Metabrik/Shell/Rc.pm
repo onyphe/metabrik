@@ -129,6 +129,7 @@ alias top "system top"
 alias history "run shell::history show"
 alias ! "run shell::history exec"
 alias cat "run shell::command capture cat"
+alias pwd "run core::shell pwd"
 
 use shell::history
 run shell::history load
