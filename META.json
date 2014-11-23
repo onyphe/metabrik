@@ -214,7 +214,7 @@
          "file" : "lib/Metabrik/String/Xml.pm"
       },
       "Metabrik::System::Arp" : {
-         "file" : "lib/Metabrik/System/Arp.pm"
+         "file" : "lib/Metabrik/Network/Arp.pm"
       },
       "Metabrik::System::Os" : {
          "file" : "lib/Metabrik/System/Os.pm"
@@ -223,7 +223,7 @@
          "file" : "lib/Metabrik/System/Package.pm"
       },
       "Metabrik::System::Route" : {
-         "file" : "lib/Metabrik/System/Route.pm"
+         "file" : "lib/Metabrik/Network/Route.pm"
       },
       "Metabrik::System::Service" : {
          "file" : "lib/Metabrik/System/Service.pm"

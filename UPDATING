@@ -1,3 +1,9 @@
+20141123
+   AFFECTS: system::route, system::arp
+
+   - system::route renamed to network::route
+   - system::arp renamed to network::arp
+
 20141119
    AFFECTS: encoding::base64, encoding::hexa, encoding::html, encoding::json, encoding::rot13, encoding::xml
             encoding::utf8
