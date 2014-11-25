@@ -131,6 +131,12 @@
       "Metabrik::Log::Dual" : {
          "file" : "lib/Metabrik/Log/Dual.pm"
       },
+      "Metabrik::Network::Arp" : {
+         "file" : "lib/Metabrik/Network/Arp.pm"
+      },
+      "Metabrik::Network::Device" : {
+         "file" : "lib/Metabrik/Network/Device.pm"
+      },
       "Metabrik::Network::Frame" : {
          "file" : "lib/Metabrik/Network/Frame.pm"
       },
@@ -145,6 +151,9 @@
       },
       "Metabrik::Network::Read" : {
          "file" : "lib/Metabrik/Network/Read.pm"
+      },
+      "Metabrik::Network::Route" : {
+         "file" : "lib/Metabrik/Network/Route.pm"
       },
       "Metabrik::Network::Sqlmap" : {
          "file" : "lib/Metabrik/Network/Sqlmap.pm"
@@ -213,17 +222,11 @@
       "Metabrik::String::Xml" : {
          "file" : "lib/Metabrik/String/Xml.pm"
       },
-      "Metabrik::System::Arp" : {
-         "file" : "lib/Metabrik/Network/Arp.pm"
-      },
       "Metabrik::System::Os" : {
          "file" : "lib/Metabrik/System/Os.pm"
       },
       "Metabrik::System::Package" : {
          "file" : "lib/Metabrik/System/Package.pm"
-      },
-      "Metabrik::System::Route" : {
-         "file" : "lib/Metabrik/Network/Route.pm"
       },
       "Metabrik::System::Service" : {
          "file" : "lib/Metabrik/System/Service.pm"

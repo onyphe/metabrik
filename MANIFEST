@@ -50,6 +50,7 @@ lib/Metabrik/Network/Ssdp.pm
 lib/Metabrik/Network/Wlan.pm
 lib/Metabrik/Network/Wps.pm
 lib/Metabrik/Network/Write.pm
+lib/Metabrik/Network/Device.pm
 lib/Metabrik/Perl/Module.pm
 lib/Metabrik/Remote/Ssh2.pm
 lib/Metabrik/Remote/Tcpdump.pm

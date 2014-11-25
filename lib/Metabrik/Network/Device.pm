@@ -21,6 +21,7 @@ sub brik_properties {
       },
       commands => {
          default => [ ],
+         get => [ ],
          list => [ ],
          show => [ ],
       },
@@ -82,13 +83,16 @@ sub list {
 
       # Check Net::Libdnet::Entry::Intf for more
       #$devices->{$this}->{_get} = $get;
-      if (my $ip = $get->ip) {
+      my $ip;
+      my $cidr;
+      my $mac;
+      if ($ip = $get->ip) {
          $devices->{$this}->{ipv4} = $ip;
       }
-      if (my $cidr = $get->cidr) {
+      if ($cidr = $get->cidr) {
          $devices->{$this}->{cidr} = $cidr;
       }
-      if (my $mac = $get->linkAddr) {
+      if ($mac = $get->linkAddr) {
          $devices->{$this}->{mac} = $mac;
       }
       my @aliases = $get->aliasAddrs;
@@ -98,9 +102,30 @@ sub list {
             $devices->{$this}->{ipv6} = $aliases[0];
          }
       }
+
+      if (defined($ip) && defined($cidr)) {
+         $devices->{$this}->{subnet} = "$dot_network/$cidr";
+      }
    }
 
    return $devices;
+}
+
+sub get {
+   my $self = shift;
+   my ($device) = @_;
+
+   if (! defined($device)) {
+      return $self->log->error($self->brik_help_run('get'));
+   }
+
+   my $list = $self->list or return $self->log->error("get: list failed");
+
+   if (! exists($list->{$device})) {
+      return $self->log->error($self->brik_help_run('get'));
+   }
+
+   return $list->{$device};
 }
 
 sub default {

@@ -23,11 +23,17 @@ sub brik_properties {
          max_read => [ qw(integer_packet_count) ],
          _fd => [ qw(SCALAR) ],
       },
+      attributes_default => {
+         layer => 2,
+         max_read => 0,
+      },
       commands => {
          open => [ ],
          next => [ ],
          next_until_timeout => [ ],
          close => [ ],
+         has_timeout => [ ],
+         reset_timeout => [ ],
       },
       require_modules => {
          'Net::Frame::Dump' => [ ],
@@ -41,12 +47,10 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         layer => 2,
          rtimeout => $self->global->rtimeout,
          device => $self->global->device,
          family => $self->global->family,
          protocol => $self->global->protocol,
-         max_read => 10,
       },
    };
 }
@@ -89,7 +93,7 @@ sub next {
 
    my $next = $fd->next;
 
-   return defined($next) ? $next : 'undef';
+   return defined($next) ? $next : 0;
 }
 
 sub next_until_timeout {
@@ -120,6 +124,34 @@ sub next_until_timeout {
    $fd->timeoutReset;
 
    return \@next;
+}
+
+sub has_timeout {
+   my $self = shift;
+
+   my $fd = $self->_fd;
+   # We do not check for openness, simply returns 0 is ok to say we don't have a timeout now.
+   if (! defined($fd)) {
+      $self->log->debug("has_timeout: has_timeout [0]");
+      return 0;
+   }
+
+   my $has_timeout = $fd->timeout;
+   $self->log->debug("has_timeout: has_timeout [$has_timeout]");
+
+   return $has_timeout;
+}
+
+sub reset_timeout {
+   my $self = shift;
+
+   my $fd = $self->_fd;
+   # We do not check for openness, simply returns 1 is ok to say no need for timeout reset.
+   if (! defined($fd)) {
+      return 1;
+   }
+
+   return $fd->timeoutReset;
 }
 
 sub close {

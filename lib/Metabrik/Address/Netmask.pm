@@ -64,7 +64,9 @@ sub iplist {
    my $subnet = $self->subnet or return;
    my $block = Net::Netmask->new($subnet);
 
-   return $block->enumerate;
+   my @ip_list = $block->enumerate;
+
+   return \@ip_list;
 }
 
 sub first {

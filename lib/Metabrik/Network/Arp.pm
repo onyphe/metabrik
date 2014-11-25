@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# system::arp brik
+# network::arp Brik
 #
-package Metabrik::System::Arp;
+package Metabrik::Network::Arp;
 use strict;
 use warnings;
 
@@ -12,12 +12,14 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable arp cache) ],
+      tags => [ qw(unstable arp cache poison) ],
       attributes => {
          _dnet => [ qw(Net::Libdnet::Arp) ],
       },
       commands => {
          cache => [ ],
+         half_poison => [ ],
+         full_poison => [ ],
       },
       require_modules => {
          'Net::Libdnet::Arp' => [ ],
@@ -56,13 +58,29 @@ sub cache {
    return \%data;
 }
 
+sub half_poison {
+   my $self = shift;
+
+   $self->log->info("TODO");
+
+   return 1;
+}
+
+sub full_poison {
+   my $self = shift;
+
+   $self->log->info("TODO");
+
+   return 1;
+}
+
 1;
 
 __END__
 
 =head1 NAME
 
-Metabrik::System::Arp - system::arp Brik
+Metabrik::Network::Arp - network::arp Brik
 
 =head1 COPYRIGHT AND LICENSE
 

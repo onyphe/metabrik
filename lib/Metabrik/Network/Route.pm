@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# system::route Brik
+# network::route Brik
 #
-package Metabrik::System::Route;
+package Metabrik::Network::Route;
 use strict;
 use warnings;
 
@@ -17,6 +17,7 @@ sub brik_properties {
          _dnet => [ qw(Net::Libdnet::Route) ],
       },
       commands => {
+         list => [ ],
          show => [ ],
       },
       require_modules => {
@@ -55,13 +56,40 @@ sub show {
    return 1;
 }
 
+sub _get_list {
+   my ($entry, $data) = @_;
+
+   # We may have multiple routes to the same destination.
+   # By destination lookup
+   push @{$data->{destination}->{$entry->{route_dst}}}, {
+      destination => $entry->{route_dst},
+      gateway => $entry->{route_gw},
+   };
+   # By gateway lookup
+   push @{$data->{gateway}->{$entry->{route_gw}}}, {
+      destination => $entry->{route_dst},
+      gateway => $entry->{route_gw},
+   };
+
+   return $data;
+}
+
+sub list {
+   my $self = shift;
+
+   my $data = {};
+   $self->_dnet->loop(\&_get_list, $data);
+
+   return $data;
+}
+
 1;
 
 __END__
 
 =head1 NAME
 
-Metabrik::System::Route - system::route Brik
+Metabrik::Network::Route - network::route Brik
 
 =head1 COPYRIGHT AND LICENSE
 

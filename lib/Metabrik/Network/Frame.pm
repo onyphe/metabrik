@@ -13,12 +13,22 @@ sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(TODO frame packet network) ],
+      attributes => {
+         device => [ qw(device) ],
+         interface => [ qw(interface_info_hash) ],
+      },
       commands => {
-         from_read => [ ],
+         update_interface => [ ],
+         from_read => [ qw(frame) ],
          from_hexa => [ ],
          show => [ ],
+         mac2eui64 => [ qw(mac_address) ],
+         frame => [ qw(layers_list) ],
+         arp => [ qw(destination_ipv4_address|OPTIONAL) ],
+         eth => [ ],
       },
       require_used => {
+         'network::device' => [ ],
          'string::hexa' => [ ],
       },
       require_modules => {
@@ -33,6 +43,45 @@ sub brik_properties {
          'Net::Frame::Layer::ICMPv6' => [ ],
       },
    };
+}
+
+use Net::Frame::Layer::ARP qw(:consts);
+use Net::Frame::Layer::ETH qw(:consts);
+
+sub brik_use_properties {
+   my $self = shift;
+
+   return {
+      attributes_default => {
+         device => $self->global->device || 'eth0',
+      },
+   };
+}
+
+sub brik_init {
+   my $self = shift;
+
+   my $context = $self->context;
+
+   my $interface = $self->update_interface
+      or return $self->log->error("brik_init: network::frame update_interface failed");
+
+   $self->interface($interface);
+
+   return $self->SUPER::brik_init;
+}
+
+sub update_interface {
+   my $self = shift;
+
+   my $device = $self->device;
+
+   my $context = $self->context;
+
+   my $interface = $context->run('network::device', 'get', $device)
+      or return $self->log->error("update_interface: network::device get failed");
+
+   return $self->interface($interface);
 }
 
 sub from_read {
@@ -84,7 +133,7 @@ sub show {
    }
 
    if (ref($data) ne 'Net::Frame::Simple') {
-      return $self->log->error("from_read: data must come from from_read Command");
+      return $self->log->error("show: data must come from from_read Command");
    }
 
    my $str = $data->print;
@@ -92,6 +141,73 @@ sub show {
    print $str."\n";
 
    return 1;
+}
+
+# http://tools.ietf.org/html/rfc2373
+sub mac2eui64 {
+   my $self = shift;
+   my ($mac) = @_;
+
+   if (! defined($mac)) {
+      return $self->log->error($self->brik_help_run('mac2eui64'));
+   }
+
+   my @b  = split(':', $mac);
+   my $b0 = hex($b[0]) ^ 2;
+
+   return sprintf("fe80::%x%x:%xff:fe%x:%x%x", $b0, hex($b[1]), hex($b[2]),
+      hex($b[3]), hex($b[4]), hex($b[5]));
+}
+
+# Returns an ARP header with a set of default values
+sub arp {
+   my $self = shift;
+   my ($dst_ip) = @_;
+
+   my $interface = $self->interface;
+
+   $dst_ip ||= '127.0.0.1';
+
+   my $arp = Net::Frame::Layer::ARP->new(
+      opCode => NF_ARP_OPCODE_REQUEST,
+      srcIp => $interface->{ipv4},
+      dstIp => $dst_ip,
+      src => $interface->{mac},
+   );
+
+   return $arp;
+}
+
+sub eth {
+   my $self = shift;
+
+   my $interface = $self->interface;
+
+   my $eth = Net::Frame::Layer::ETH->new(
+      type => NF_ETH_TYPE_ARP,
+      src => $interface->{mac},
+   );
+
+   return $eth;
+}
+
+sub frame {
+   my $self = shift;
+   my ($layers) = @_;
+
+   if (! defined($layers)) {
+      return $self->log->error($self->brik_help_run('frame'));
+   }
+
+   if (ref($layers) ne 'ARRAY') {
+      return $self->log->error("frame: Argument must be ARRAY");
+   }
+
+   my $request = Net::Frame::Simple->new(
+      layers => $layers,
+   );
+
+   return $request;
 }
 
 1;
