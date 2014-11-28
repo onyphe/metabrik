@@ -21,7 +21,7 @@ sub brik_properties {
          layer => [ qw(2|3|4) ],
          filter => [ qw(pcap_filter) ],
          max_read => [ qw(integer_packet_count) ],
-         _fd => [ qw(SCALAR) ],
+         _dump => [ qw(INTERNAL) ],
       },
       attributes_default => {
          layer => 2,
@@ -64,9 +64,11 @@ sub open {
 
    my $filter = $self->filter || '';
 
-   my $fd;
+   my $dump;
    if ($self->layer == 2) {
-      $fd = Net::Frame::Dump::Online2->new(
+      $self->debug && $self->log->debug("open: timeoutOnNext: ".$self->rtimeout);
+      $self->debug && $self->log->debug("open: filter: ".$filter);
+      $dump = Net::Frame::Dump::Online2->new(
          dev => $self->device,
          timeoutOnNext => $self->rtimeout,
          filter => $filter,
@@ -76,22 +78,20 @@ sub open {
       return $self->log->error("open: not implemented");
    }
 
-   $fd->start or return $self->log->error("open: error");
+   $dump->start or return $self->log->error("open: error");
 
-   $self->_fd($fd);
-
-   return $fd;
+   return $self->_dump($dump);
 }
 
 sub next {
    my $self = shift;
 
-   my $fd = $self->_fd;
-   if (! defined($fd)) {
+   my $dump = $self->_dump;
+   if (! defined($dump)) {
       return $self->log->error($self->brik_help_run('open'));
    }
 
-   my $next = $fd->next;
+   my $next = $dump->next;
 
    return defined($next) ? $next : 0;
 }
@@ -99,29 +99,28 @@ sub next {
 sub next_until_timeout {
    my $self = shift;
 
-   my $fd = $self->_fd;
-   if (! defined($fd)) {
+   my $dump = $self->_dump;
+   if (! defined($dump)) {
       return $self->log->error($self->brik_help_run('open'));
    }
 
    my $rtimeout = $self->rtimeout;
    my $max_read = $self->max_read;
-   $self->log->verbose("next_until_timeout: will read until $rtimeout seconds or $max_read packet(s) has been read");
+   $self->log->verbose("next_until_timeout: will read until $rtimeout seconds timeout or $max_read max read packet(s) has been read");
 
    my $count = 0;
    my @next = ();
-   while (! $fd->timeout) {
+   while (! $dump->timeout) {
       if ($max_read && $count == $max_read) {
          last;
       }
 
-      if (my $next = $fd->next) {
+      if (my $next = $dump->next) {
          push @next, $next;
-         $self->log->verbose("next_until_timeout: read one packet");
+         $self->debug && $self->log->debug("next_until_timeout: read one packet");
          $count++;
       }
    }
-   $fd->timeoutReset;
 
    return \@next;
 }
@@ -129,15 +128,15 @@ sub next_until_timeout {
 sub has_timeout {
    my $self = shift;
 
-   my $fd = $self->_fd;
+   my $dump = $self->_dump;
    # We do not check for openness, simply returns 0 is ok to say we don't have a timeout now.
-   if (! defined($fd)) {
-      $self->log->debug("has_timeout: has_timeout [0]");
+   if (! defined($dump)) {
+      $self->debug && $self->log->debug("has_timeout: here: has_timeout [0]");
       return 0;
    }
 
-   my $has_timeout = $fd->timeout;
-   $self->log->debug("has_timeout: has_timeout [$has_timeout]");
+   my $has_timeout = $dump->timeout;
+   $self->debug && $self->log->debug("has_timeout: has_timeout [$has_timeout]");
 
    return $has_timeout;
 }
@@ -145,25 +144,25 @@ sub has_timeout {
 sub reset_timeout {
    my $self = shift;
 
-   my $fd = $self->_fd;
+   my $dump = $self->_dump;
    # We do not check for openness, simply returns 1 is ok to say no need for timeout reset.
-   if (! defined($fd)) {
+   if (! defined($dump)) {
       return 1;
    }
 
-   return $fd->timeoutReset;
+   return $dump->timeoutReset;
 }
 
 sub close {
    my $self = shift;
 
-   my $fd = $self->_fd;
-   if (! defined($fd)) {
+   my $dump = $self->_dump;
+   if (! defined($dump)) {
       return 1;
    }
 
-   $fd->stop;
-   $self->_fd(undef);
+   $dump->stop;
+   $self->_dump(undef);
 
    return 1;
 }
