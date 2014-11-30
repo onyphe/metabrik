@@ -14,7 +14,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable netbios) ],
       commands => {
-         nodestatus => [ qw(ipv4_address) ],
+         probe => [ qw(ipv4_address) ],
       },
       require_modules => {
          'Net::NBName' => [ ],
@@ -22,12 +22,12 @@ sub brik_properties {
    };
 }
 
-sub nodestatus {
+sub probe {
    my $self = shift;
    my ($ip) = @_;
 
    if (! defined($ip)) {
-      return $self->log->error($self->brik_help_run('nodestatus'));
+      return $self->log->error($self->brik_help_run('probe'));
    }
 
    my $nb = Net::NBName->new;

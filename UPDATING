@@ -1,3 +1,9 @@
+20141129
+   AFFECT: address::netmask, network::netbios
+
+   - address::netmask renamed to network::address
+   - network::netbios nodestatus Command renamed to probe Command
+
 20141123
    AFFECTS: system::route, system::arp
 

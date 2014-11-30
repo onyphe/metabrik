@@ -29,9 +29,6 @@
       "Metabrik::Address::Generate" : {
          "file" : "lib/Metabrik/Address/Generate.pm"
       },
-      "Metabrik::Address::Netmask" : {
-         "file" : "lib/Metabrik/Address/Netmask.pm"
-      },
       "Metabrik::Audit::Dns" : {
          "file" : "lib/Metabrik/Audit/Dns.pm"
       },
@@ -49,6 +46,9 @@
       },
       "Metabrik::Brik::Search" : {
          "file" : "lib/Metabrik/Brik/Search.pm"
+      },
+      "Metabrik::Client::Tcp" : {
+         "file" : "lib/Metabrik/Client/Tcp.pm"
       },
       "Metabrik::Client::Www" : {
          "file" : "lib/Metabrik/Client/Www.pm"
@@ -131,8 +131,14 @@
       "Metabrik::Log::Dual" : {
          "file" : "lib/Metabrik/Log/Dual.pm"
       },
+      "Metabrik::Network::Address" : {
+         "file" : "lib/Metabrik/Network/Address.pm"
+      },
       "Metabrik::Network::Arp" : {
          "file" : "lib/Metabrik/Network/Arp.pm"
+      },
+      "Metabrik::Network::Arpdiscover" : {
+         "file" : "lib/Metabrik/Network/Arpdiscover.pm"
       },
       "Metabrik::Network::Device" : {
          "file" : "lib/Metabrik/Network/Device.pm"
@@ -140,8 +146,20 @@
       "Metabrik::Network::Frame" : {
          "file" : "lib/Metabrik/Network/Frame.pm"
       },
+      "Metabrik::Network::Http" : {
+         "file" : "lib/Metabrik/Network/Http.pm"
+      },
+      "Metabrik::Network::Icmp" : {
+         "file" : "lib/Metabrik/Network/Icmp.pm"
+      },
+      "Metabrik::Network::Modbus" : {
+         "file" : "lib/Metabrik/Network/Modbus.pm"
+      },
       "Metabrik::Network::Netbios" : {
          "file" : "lib/Metabrik/Network/Netbios.pm"
+      },
+      "Metabrik::Network::Netstat" : {
+         "file" : "lib/Metabrik/Network/Netstat.pm"
       },
       "Metabrik::Network::Nikto" : {
          "file" : "lib/Metabrik/Network/Nikto.pm"
@@ -154,6 +172,9 @@
       },
       "Metabrik::Network::Route" : {
          "file" : "lib/Metabrik/Network/Route.pm"
+      },
+      "Metabrik::Network::S7comm" : {
+         "file" : "lib/Metabrik/Network/S7comm.pm"
       },
       "Metabrik::Network::Sqlmap" : {
          "file" : "lib/Metabrik/Network/Sqlmap.pm"

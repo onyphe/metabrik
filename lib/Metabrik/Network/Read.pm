@@ -34,6 +34,7 @@ sub brik_properties {
          close => [ ],
          has_timeout => [ ],
          reset_timeout => [ ],
+         reply => [ qw(frame) ],
       },
       require_modules => {
          'Net::Frame::Dump' => [ ],
@@ -123,6 +124,26 @@ sub next_until_timeout {
    }
 
    return \@next;
+}
+
+sub reply {
+   my $self = shift;
+   my ($frame) = @_;
+
+   if (! defined($frame)) {
+      return $self->log->error($self->brik_help_run('reply'));
+   }
+
+   if (ref($frame) ne 'Net::Frame::Simple') {
+      return $self->log->error("reply: frame must be Net::Frame::Simple object");
+   }
+
+   my $dump = $self->_dump;
+   if (! defined($dump)) {
+      return $self->log->error($self->brik_help_run('open'));
+   }
+
+   return $dump->getFramesFor($frame);
 }
 
 sub has_timeout {

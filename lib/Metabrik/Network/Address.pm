@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# address::netmask Brik
+# network::address Brik
 #
-package Metabrik::Address::Netmask;
+package Metabrik::Network::Address;
 use strict;
 use warnings;
 
@@ -97,7 +97,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Address::Netmask - address::netmask Brik
+Metabrik::Network::Address - network::address Brik
 
 =head1 COPYRIGHT AND LICENSE
 

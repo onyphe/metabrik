@@ -19,9 +19,16 @@ sub brik_properties {
       commands => {
          list => [ ],
          show => [ ],
+         is_router_ipv4 => [ ],
+         enable_router_ipv4 => [ ],
+         disable_router_ipv4 => [ ],
       },
       require_modules => {
          'Net::Libdnet::Route' => [ ],
+         'Metabrik::Shell::Command' => [ ],
+      },
+      require_binaries => {
+         'sysctl' => [ ],
       },
    };
 }
@@ -81,6 +88,90 @@ sub list {
    $self->_dnet->loop(\&_get_list, $data);
 
    return $data;
+}
+
+sub is_router_ipv4 {
+   my $self = shift;
+   my ($device) = @_;
+
+   $device ||= $self->global->device;
+
+   my $command = Metabrik::Shell::Command->new;
+   $command->as_matrix(0);
+   $command->as_array(0);
+   $command->capture_stderr(1);
+
+   $command->brik_init or return $self->log->error("is_router: shell::command brik_init failed");
+
+   my $cmd = "sysctl net.ipv4.conf.".$device.".forwarding";
+   chomp(my $line = $command->capture($cmd));
+
+   $self->log->verbose("is_router_ipv4: cmd [$cmd]");
+   $self->log->verbose("is_router_ipv4: returned [$line]");
+
+   my @toks = split(/\s+/, $line);
+
+   my $is_router = $toks[-1];
+
+   $self->log->info("is_router_ipv4: ".($is_router ? "YES" : "NO"));
+
+   return $is_router;
+}
+
+sub enable_router_ipv4 {
+   my $self = shift;
+   my ($device) = @_;
+
+   $device ||= $self->global->device;
+
+   my $command = Metabrik::Shell::Command->new;
+   $command->as_matrix(0);
+   $command->as_array(0);
+   $command->capture_stderr(1);
+
+   $command->brik_init or return $self->log->error("enable_router_ipv4: shell::command brik_init failed");
+
+   my $cmd = "sysctl -w net.ipv4.conf.".$device.".forwarding=1";
+   chomp(my $line = $command->capture($cmd));
+
+   $self->log->verbose("enable_router_ipv4: cmd [$cmd]"); 
+   $self->log->verbose("enable_router_ipv4: returned [$line]");
+
+   my @toks = split(/\s+/, $line);
+
+   my $is_router = $toks[-1];
+
+   $self->log->info("enable_router_ipv4: ".($is_router ? "YES" : "NO"));
+
+   return $is_router;
+}
+
+sub disable_router_ipv4 {
+   my $self = shift;
+   my ($device) = @_;
+
+   $device ||= $self->global->device;
+
+   my $command = Metabrik::Shell::Command->new;
+   $command->as_matrix(0);
+   $command->as_array(0);
+   $command->capture_stderr(1);
+
+   $command->brik_init or return $self->log->error("disable_router_ipv4: shell::command brik_init failed");
+
+   my $cmd = "sysctl -w net.ipv4.conf.".$device.".forwarding=0";
+   chomp(my $line = $command->capture($cmd));
+
+   $self->log->verbose("disable_router_ipv4: cmd [$cmd]");
+   $self->log->verbose("disable_router_ipv4: returned [$line]");
+
+   my @toks = split(/\s+/, $line);
+
+   my $is_router = $toks[-1];
+
+   $self->log->info("disable_router_ipv4: ".($is_router ? "YES" : "NO"));
+
+   return $is_router;
 }
 
 1;

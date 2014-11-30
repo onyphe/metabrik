@@ -26,6 +26,9 @@ sub brik_properties {
          frame => [ qw(layers_list) ],
          arp => [ qw(destination_ipv4_address|OPTIONAL) ],
          eth => [ ],
+         ipv4 => [ qw(protocol_id|OPTIONAL) ],
+         icmpv4 => [ ],
+         echo_icmpv4 => [ ],
       },
       require_used => {
          'network::device' => [ ],
@@ -44,9 +47,6 @@ sub brik_properties {
       },
    };
 }
-
-use Net::Frame::Layer::ARP qw(:consts);
-use Net::Frame::Layer::ETH qw(:consts);
 
 sub brik_use_properties {
    my $self = shift;
@@ -168,27 +168,63 @@ sub arp {
 
    $dst_ip ||= '127.0.0.1';
 
-   my $arp = Net::Frame::Layer::ARP->new(
-      opCode => NF_ARP_OPCODE_REQUEST,
+   my $hdr = Net::Frame::Layer::ARP->new(
+      #opCode => NF_ARP_OPCODE_REQUEST,  # Default
       srcIp => $interface->{ipv4},
       dstIp => $dst_ip,
       src => $interface->{mac},
    );
 
-   return $arp;
+   return $hdr;
 }
 
+# Returns an Ethernet header with a set of default values
 sub eth {
    my $self = shift;
 
    my $interface = $self->interface;
 
-   my $eth = Net::Frame::Layer::ETH->new(
-      type => NF_ETH_TYPE_ARP,
+   my $hdr = Net::Frame::Layer::ETH->new(
+      type => 0x0800,  # IPv4
       src => $interface->{mac},
    );
 
-   return $eth;
+   return $hdr;
+}
+
+sub ipv4 {
+   my $self = shift;
+   my ($protocol) = @_;
+
+   my $interface = $self->interface;
+
+   my $hdr = Net::Frame::Layer::IPv4->new(
+      #protocol => NF_IPv4_PROTOCOL_TCP,  # Default
+      src => $interface->{ipv4},
+   );
+
+   return $hdr;
+}
+
+sub icmpv4 {
+   my $self = shift;
+
+   my $hdr = Net::Frame::Layer::ICMPv4->new;
+
+   return $hdr;
+}
+
+sub echo_icmpv4 {
+   my $self = shift;
+   my ($data) = @_;
+
+   $data ||= 'echo';
+
+   my $hdr = Net::Frame::Layer::ICMPv4::Echo->new(
+      payload => $data,
+   );
+
+   return $hdr;
 }
 
 sub frame {
