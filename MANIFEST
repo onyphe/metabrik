@@ -1,5 +1,6 @@
 Build.PL
 lib/Metabrik/Address/Generate.pm
+lib/Metabrik/Api/Splunk.pm
 lib/Metabrik/Audit/Dns.pm
 lib/Metabrik/Audit/Drupal.pm
 lib/Metabrik/Audit/Https.pm
@@ -16,6 +17,9 @@ lib/Metabrik/Database/Nvd.pm
 lib/Metabrik/Database/Redis.pm
 lib/Metabrik/Database/Sqlite.pm
 lib/Metabrik/Database/Vfeed.pm
+lib/Metabrik/Email/Mbox.pm
+lib/Metabrik/Email/Message.pm
+lib/Metabrik/Email/Send.pm
 lib/Metabrik/Example/Template.pm
 lib/Metabrik/File/Compress.pm
 lib/Metabrik/File/Create.pm
@@ -25,6 +29,7 @@ lib/Metabrik/File/Find.pm
 lib/Metabrik/File/Json.pm
 lib/Metabrik/File/Psv.pm
 lib/Metabrik/File/Read.pm
+lib/Metabrik/File/Text.pm
 lib/Metabrik/File/Tsv.pm
 lib/Metabrik/File/Write.pm
 lib/Metabrik/File/Xml.pm
@@ -35,9 +40,10 @@ lib/Metabrik/Iana/Countrycode.pm
 lib/Metabrik/Identify/Ssh.pm
 lib/Metabrik/Log/Dual.pm
 lib/Metabrik/Network/Address.pm
-lib/Metabrik/Network/Arpdiscover.pm
 lib/Metabrik/Network/Arp.pm
+lib/Metabrik/Network/Arpdiscover.pm
 lib/Metabrik/Network/Device.pm
+lib/Metabrik/Network/Dns.pm
 lib/Metabrik/Network/Frame.pm
 lib/Metabrik/Network/Http.pm
 lib/Metabrik/Network/Icmp.pm
@@ -49,8 +55,11 @@ lib/Metabrik/Network/Nmap.pm
 lib/Metabrik/Network/Read.pm
 lib/Metabrik/Network/Route.pm
 lib/Metabrik/Network/S7comm.pm
+lib/Metabrik/Network/Smtp.pm
 lib/Metabrik/Network/Sqlmap.pm
 lib/Metabrik/Network/Ssdp.pm
+lib/Metabrik/Network/Tor.pm
+lib/Metabrik/Network/Whois.pm
 lib/Metabrik/Network/Wlan.pm
 lib/Metabrik/Network/Wps.pm
 lib/Metabrik/Network/Write.pm
@@ -110,4 +119,5 @@ t/25-use-briks-hardware.t
 t/26-use-briks-xorg.t
 t/27-use-briks-client.t
 t/28-use-briks-api.t
+t/29-use-briks-email.t
 UPDATING

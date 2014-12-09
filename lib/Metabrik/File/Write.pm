@@ -20,9 +20,13 @@ sub brik_properties {
          encoding => [ qw(utf8|ascii) ],
          fd => [ qw(file_descriptor) ],
       },
+      attributes_default => {
+         append => 1,
+         overwrite => 0,
+      },
       commands => {
-         open => [ ],
-         write => [ qw($data|$data_ref) ],
+         open => [ qw(output_file|OPTIONAL) ],
+         write => [ qw($data|$data_ref|$data_list) ],
          close => [ ],
       },
    };
@@ -35,8 +39,6 @@ sub brik_use_properties {
    return {
       attributes_default => {
          output => $self->global->output || '/tmp/output.txt',
-         append => 1,
-         overwrite => 0,
          encoding => $self->global->encoding || 'utf8',
       },
    };
@@ -44,8 +46,9 @@ sub brik_use_properties {
 
 sub open {
    my $self = shift;
+   my ($output) = @_;
 
-   my $output = $self->output;
+   $output ||= $self->output;
    if (! defined($output)) {
       return $self->log->error($self->brik_help_set('output'));
    }
@@ -98,7 +101,14 @@ sub write {
       return $self->log->error($self->brik_help_run('open'));
    }
 
-   ref($data) eq 'SCALAR' ? print $fd $$data : print $fd $data;
+   if (ref($data) eq 'ARRAY') {
+      for my $this (@$data) {
+         print $fd $this;
+      }
+   }
+   else {
+      ref($data) eq 'SCALAR' ? print $fd $$data : print $fd $data;
+   }
 
    return $data;
 }
