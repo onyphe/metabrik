@@ -53,7 +53,7 @@ sub read {
    $read->input($input);
    $read->encoding($self->encoding);
    $read->open or return $self->log->error("read: open failed");
-   my $data = $self->read or return $self->log->error("read: read failed");
+   my $data = $read->readall or return $self->log->error("read: read failed");
    $read->close;
 
    return $data;
@@ -75,7 +75,7 @@ sub write {
    $self->debug && $self->log->debug("write: data[$data]");
 
    $self->open($output) or return $self->log->error("write: open failed");
-   $self->write($data) or return $self->log->error("write: write failed");
+   $self->SUPER::write($data) or return $self->log->error("write: write failed");
    $self->close;
 
    return 1;

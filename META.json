@@ -29,6 +29,9 @@
       "Metabrik::Address::Generate" : {
          "file" : "lib/Metabrik/Address/Generate.pm"
       },
+      "Metabrik::Api::Splunk" : {
+         "file" : "lib/Metabrik/Api/Splunk.pm"
+      },
       "Metabrik::Audit::Dns" : {
          "file" : "lib/Metabrik/Audit/Dns.pm"
       },
@@ -59,6 +62,9 @@
       "Metabrik::Crypto::Aes" : {
          "file" : "lib/Metabrik/Crypto/Aes.pm"
       },
+      "Metabrik::Crypto::Gpg" : {
+         "file" : "lib/Metabrik/Crypto/Gpg.pm"
+      },
       "Metabrik::Database::Cwe" : {
          "file" : "lib/Metabrik/Database/Cwe.pm"
       },
@@ -76,6 +82,15 @@
       },
       "Metabrik::Database::Vfeed" : {
          "file" : "lib/Metabrik/Database/Vfeed.pm"
+      },
+      "Metabrik::Email::Mbox" : {
+         "file" : "lib/Metabrik/Email/Mbox.pm"
+      },
+      "Metabrik::Email::Message" : {
+         "file" : "lib/Metabrik/Email/Message.pm"
+      },
+      "Metabrik::Email::Send" : {
+         "file" : "lib/Metabrik/Email/Send.pm"
       },
       "Metabrik::Example::Template" : {
          "file" : "lib/Metabrik/Example/Template.pm"
@@ -103,6 +118,9 @@
       },
       "Metabrik::File::Read" : {
          "file" : "lib/Metabrik/File/Read.pm"
+      },
+      "Metabrik::File::Text" : {
+         "file" : "lib/Metabrik/File/Text.pm"
       },
       "Metabrik::File::Tsv" : {
          "file" : "lib/Metabrik/File/Tsv.pm"
@@ -143,6 +161,9 @@
       "Metabrik::Network::Device" : {
          "file" : "lib/Metabrik/Network/Device.pm"
       },
+      "Metabrik::Network::Dns" : {
+         "file" : "lib/Metabrik/Network/Dns.pm"
+      },
       "Metabrik::Network::Frame" : {
          "file" : "lib/Metabrik/Network/Frame.pm"
       },
@@ -176,11 +197,20 @@
       "Metabrik::Network::S7comm" : {
          "file" : "lib/Metabrik/Network/S7comm.pm"
       },
+      "Metabrik::Network::Smtp" : {
+         "file" : "lib/Metabrik/Network/Smtp.pm"
+      },
       "Metabrik::Network::Sqlmap" : {
          "file" : "lib/Metabrik/Network/Sqlmap.pm"
       },
       "Metabrik::Network::Ssdp" : {
          "file" : "lib/Metabrik/Network/Ssdp.pm"
+      },
+      "Metabrik::Network::Tor" : {
+         "file" : "lib/Metabrik/Network/Tor.pm"
+      },
+      "Metabrik::Network::Whois" : {
+         "file" : "lib/Metabrik/Network/Whois.pm"
       },
       "Metabrik::Network::Wlan" : {
          "file" : "lib/Metabrik/Network/Wlan.pm"
@@ -233,6 +263,9 @@
       },
       "Metabrik::String::Password" : {
          "file" : "lib/Metabrik/String/Password.pm"
+      },
+      "Metabrik::String::Random" : {
+         "file" : "lib/Metabrik/String/Random.pm"
       },
       "Metabrik::String::Rot13" : {
          "file" : "lib/Metabrik/String/Rot13.pm"
