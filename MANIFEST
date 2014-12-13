@@ -39,6 +39,7 @@ lib/Metabrik/Hardware/Fan.pm
 lib/Metabrik/Http/Proxy.pm
 lib/Metabrik/Iana/Countrycode.pm
 lib/Metabrik/Identify/Ssh.pm
+lib/Metabrik/Image/Jpg.pm
 lib/Metabrik/Log/Dual.pm
 lib/Metabrik/Network/Address.pm
 lib/Metabrik/Network/Arp.pm
@@ -122,4 +123,5 @@ t/26-use-briks-xorg.t
 t/27-use-briks-client.t
 t/28-use-briks-api.t
 t/29-use-briks-email.t
+t/30-use-briks-image.t
 UPDATING

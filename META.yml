@@ -93,6 +93,8 @@ provides:
     file: lib/Metabrik/Iana/Countrycode.pm
   Metabrik::Identify::Ssh:
     file: lib/Metabrik/Identify/Ssh.pm
+  Metabrik::Image::Jpg:
+    file: lib/Metabrik/Image/Jpg.pm
   Metabrik::Log::Dual:
     file: lib/Metabrik/Log/Dual.pm
   Metabrik::Network::Address:
