@@ -33,6 +33,8 @@ provides:
     file: lib/Metabrik/Client/Tcp.pm
   Metabrik::Client::Www:
     file: lib/Metabrik/Client/Www.pm
+  Metabrik::Convert::Number:
+    file: lib/Metabrik/Convert/Number.pm
   Metabrik::Convert::Video:
     file: lib/Metabrik/Convert/Video.pm
   Metabrik::Crypto::Aes:
@@ -97,6 +99,8 @@ provides:
     file: lib/Metabrik/Image/Jpg.pm
   Metabrik::Log::Dual:
     file: lib/Metabrik/Log/Dual.pm
+  Metabrik::Lookup::Ethernet:
+    file: lib/Metabrik/Lookup/Ethernet.pm
   Metabrik::Network::Address:
     file: lib/Metabrik/Network/Address.pm
   Metabrik::Network::Arp:

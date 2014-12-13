@@ -9,6 +9,7 @@ lib/Metabrik/Audit/Twiki.pm
 lib/Metabrik/Brik/Search.pm
 lib/Metabrik/Client/Tcp.pm
 lib/Metabrik/Client/Www.pm
+lib/Metabrik/Convert/Number.pm
 lib/Metabrik/Convert/Video.pm
 lib/Metabrik/Crypto/Aes.pm
 lib/Metabrik/Crypto/Gpg.pm 
@@ -41,6 +42,7 @@ lib/Metabrik/Iana/Countrycode.pm
 lib/Metabrik/Identify/Ssh.pm
 lib/Metabrik/Image/Jpg.pm
 lib/Metabrik/Log/Dual.pm
+lib/Metabrik/Lookup/Ethernet.pm
 lib/Metabrik/Network/Address.pm
 lib/Metabrik/Network/Arp.pm
 lib/Metabrik/Network/Arpdiscover.pm
@@ -124,4 +126,5 @@ t/27-use-briks-client.t
 t/28-use-briks-api.t
 t/29-use-briks-email.t
 t/30-use-briks-image.t
+t/31-use-briks-lookup.t
 UPDATING
