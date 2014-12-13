@@ -15,7 +15,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable whois as country cymru) ],
       commands => {
-         lookup => [ ],
+         lookup => [ qw(ipv4_address) ],
       },
       require_binaries => {
          'dig', => [ ],

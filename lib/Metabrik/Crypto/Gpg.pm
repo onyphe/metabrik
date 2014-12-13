@@ -18,15 +18,19 @@ sub brik_properties {
          secret_keyring => [ qw(file.gpg) ],
          passphrase => [ qw(passphrase) ],
          type_key => [ qw(RSA|DSA) ],
-         length_key => [ qw(1024|2048|4096) ],
+         type_subkey => [ qw(RSA|ELG-E) ],
+         length_key => [ qw(1024|2048|3072|4096) ],
+         length_subkey => [ qw(1024|2048|3072|4096) ],
          expire_key => [ qw(count_y|0) ],
          _gnupg => [ qw(INTERNAL) ],
       },
       attributes_default => {
          public_keyring => $ENV{HOME}."/.gnupg/pubring.gpg",
          secret_keyring =>  $ENV{HOME}."/.gnupg/secring.gpg",
-         type_key => 'RSA',
+         type_key => 'DSA',
+         type_subkey => 'ELG-E',
          length_key => 2048,
+         length_subkey => 3072,
          expire_key => '5y',
       },
       commands => {
@@ -39,6 +43,7 @@ sub brik_properties {
          generate_key => [ qw(email description|OPTIONAL comment|OPTIONAL) ],
          encrypt => [ qw($data email_recipient_list) ],
          decrypt => [ qw($data) ],
+         export_keys => [ qw(key_id) ],
       },
       require_modules => {
          'IO::Handle' => [ ],
@@ -84,7 +89,9 @@ sub generate_key {
    $comment ||= $email;
 
    my $type_key = $self->type_key;
+   my $type_subkey = $self->type_subkey;
    my $length_key = $self->length_key;
+   my $length_subkey = $self->length_subkey;
    my $expire_key = $self->expire_key;
 
    my $filename = Metabrik::String::Random->new_from_brik($self)->filename
@@ -96,17 +103,17 @@ sub generate_key {
 
    # If key is RSA, subkey will be RSA.
    # If key is DSA, subkey will be Elgamal.
-   my $subkey = $type_key;
-   if ($type_key eq 'DSA') {
-      $subkey = 'Elgamal';
-   }
+   #my $subkey = $type_key;
+   #if ($type_key eq 'DSA') {
+      #$subkey = 'Elgamal';
+   #}
 
    $text->write([
       '%echo Generating a standard key', "\n",
       "Key-Type: $type_key", "\n",
       "Key-Length: $length_key", "\n",
-      "Subkey-Type: $type_key", "\n",
-      "Subkey-Length: $length_key", "\n",
+      "Subkey-Type: $type_subkey", "\n",
+      "Subkey-Length: $length_subkey", "\n",
       "Name-Real: $description", "\n",
       "Name-Email: $email", "\n",
       "Expire-Date: $expire_key", "\n",
@@ -137,9 +144,16 @@ sub generate_key {
     
    my @out = <$stdout>;
    close($stdout);
+   my @err = <$stderr>;
+   close($stderr);
    waitpid($pid, 0);
 
    unlink($filename);
+
+   for my $this (@err) {
+      chomp($this);
+      $self->log->verbose("generate_key: $this");
+   }
 
    return \@out;
 }
@@ -283,7 +297,6 @@ sub list_secret_keys {
    waitpid($pid, 0);
 
    return \@lines;
-
 }
 
 sub get_secret_keys {
@@ -300,11 +313,12 @@ sub get_secret_keys {
 
    my $gnupg = $self->_gnupg;
 
-   my $saved = $gnupg->options->copy;
+   # XXX: does not work
+   #my $saved = $gnupg->options->copy;
 
    my @keys = $gnupg->get_secret_keys(@$keys);
 
-   $gnupg->options($saved);
+   #$gnupg->options($saved);
 
    return \@keys;
 }
@@ -416,6 +430,40 @@ sub decrypt {
    # Then data to decrypt
    print $stdin @data;
    close($stdin);
+
+   my @lines = <$stdout>;
+   close($stdout);
+   waitpid($pid, 0);
+
+   return \@lines;
+}
+
+sub export_keys {
+   my $self = shift;
+   my ($key_id) = @_;
+
+   if (! defined($key_id)) {
+      return $self->log->error($self->brik_help_run('export_keys'));
+   }
+
+   my $gnupg = $self->_gnupg;
+
+   my $stdin = IO::Handle->new;
+   my $stdout = IO::Handle->new;
+   my $stderr = IO::Handle->new;
+   my $handles = GnuPG::Handles->new(
+      stdin => $stdin,
+      stdout => $stdout,
+      stderr => $stderr,
+   );
+
+   my $pid = $gnupg->export_keys(
+      handles => $handles,
+      command_args => $key_id,
+   );
+   if (! $pid) {
+      return $self->log->error("export_keys: export_keys failed");
+   }
 
    my @lines = <$stdout>;
    close($stdout);
