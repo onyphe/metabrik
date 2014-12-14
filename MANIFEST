@@ -43,6 +43,7 @@ lib/Metabrik/Identify/Ssh.pm
 lib/Metabrik/Image/Jpg.pm
 lib/Metabrik/Log/Dual.pm
 lib/Metabrik/Lookup/Ethernet.pm
+lib/Metabrik/Lookup/Ip.pm
 lib/Metabrik/Network/Address.pm
 lib/Metabrik/Network/Arp.pm
 lib/Metabrik/Network/Arpdiscover.pm

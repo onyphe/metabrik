@@ -158,6 +158,9 @@
       "Metabrik::Lookup::Ethernet" : {
          "file" : "lib/Metabrik/Lookup/Ethernet.pm"
       },
+      "Metabrik::Lookup::Ip" : {
+         "file" : "lib/Metabrik/Lookup/Ip.pm"
+      },
       "Metabrik::Network::Address" : {
          "file" : "lib/Metabrik/Network/Address.pm"
       },
