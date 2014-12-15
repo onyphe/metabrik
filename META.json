@@ -179,6 +179,9 @@
       "Metabrik::Network::Frame" : {
          "file" : "lib/Metabrik/Network/Frame.pm"
       },
+      "Metabrik::Network::Ftp" : {
+         "file" : "lib/Metabrik/Network/Ftp.pm"
+      },
       "Metabrik::Network::Http" : {
          "file" : "lib/Metabrik/Network/Http.pm"
       },
