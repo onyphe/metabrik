@@ -28,6 +28,28 @@ sub brik_properties {
    };
 }
 
+sub brik_init {
+   my $self = shift;
+
+   my $context = $self->context;
+   my $shell = $self->shell;
+
+   $self->debug && $self->log->debug("brik_init: start");
+
+   if ($context->is_used('shell::rc')) {
+      $self->debug && $self->log->debug("brik_init: load rc file");
+
+      my $cmd = $context->run('shell::rc', 'load');
+      for (@$cmd) {
+         $shell->cmd($_);
+      }
+   }
+
+   $self->debug && $self->log->debug("brik_init: done");
+
+   return $self->SUPER::brik_init;
+}
+
 sub load {
    my $self = shift;
 
