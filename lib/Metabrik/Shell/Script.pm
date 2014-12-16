@@ -7,7 +7,7 @@ package Metabrik::Shell::Script;
 use strict;
 use warnings;
 
-our $VERSION = '1.02';
+our $VERSION = '1.03';
 
 use base qw(Metabrik);
 
@@ -85,12 +85,13 @@ sub exec {
    }
 
    my $context = $self->context;
+   my $shell = $self->shell;
 
    for (@$lines) {
-      if (/^exit$/) {
-         exit(0);
+      if (/^\s*exit\s*(\d+)\s*;/) {
+         exit($1);
       }
-      $context->run('core::shell', 'cmd', $_);
+      $shell->cmd($_);
    }
 
    return 1;
