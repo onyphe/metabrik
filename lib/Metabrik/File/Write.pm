@@ -19,10 +19,12 @@ sub brik_properties {
          overwrite => [ qw(0|1) ],
          encoding => [ qw(utf8|ascii) ],
          fd => [ qw(file_descriptor) ],
+         unbuffered => [ qw(0|1) ],
       },
       attributes_default => {
          append => 1,
          overwrite => 0,
+         unbuffered => 0,
       },
       commands => {
          open => [ qw(output_file|OPTIONAL) ],
@@ -72,6 +74,13 @@ sub open {
       return $self->log->error($self->brik_help_set('overwrite'));
    }
 
+   if ($self->unbuffered) {
+      my $previous_default = select(STDOUT);
+      select($out);
+      $|++;
+      select($previous_default);          
+   }
+
    return $self->fd($out);
 }
 
@@ -103,7 +112,7 @@ sub write {
 
    if (ref($data) eq 'ARRAY') {
       for my $this (@$data) {
-         print $fd $this;
+         print $fd $this."\n";
       }
    }
    else {

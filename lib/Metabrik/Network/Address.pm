@@ -16,15 +16,12 @@ sub brik_properties {
       attributes => {
          subnet => [ qw(subnet) ],
       },
-      attributes_default => {
-         subnet => '192.168.0.0/24',
-      },
       commands => {
-         match => [ qw(ipv4_address) ],
-         first => [ ],
-         last => [ ],
-         block => [ ],
-         iplist => [ ],
+         match => [ qw(ipv4_address subnet|OPTIONAL) ],
+         ipv4_list => [ qw(subnet|OPTIONAL) ],
+         network_address => [ qw(subnet|OPTIONAL) ],
+         broadcast_address => [ qw(subnet|OPTIONAL) ],
+         range_to_cidr => [ qw(first_address last_address) ],
       },
       require_modules => {
          'Net::Netmask' => [ ],
@@ -34,34 +31,36 @@ sub brik_properties {
 
 sub match {
    my $self = shift;
-   my ($ip) = @_;
+   my ($ip, $subnet) = @_;
 
-   my $subnet = $self->subnet or return;
+   $subnet ||= $self->subnet;
+   if (! defined($subnet)) {
+      return $self->log->error($self->brik_help_run('match'));
+   }
+
    my $block = Net::Netmask->new($subnet);
 
    if ($block->match($ip)) {
-      print "$ip is in the same subnet as $subnet\n";
+      $self->log->info("match: $ip is in the same subnet as $subnet");
+      return 1;
    }
    else {
-      print "$ip is NOT in the same subnet as $subnet\n";
+      $self->log->info("match: $ip is NOT in the same subnet as $subnet");
+      return 0;
    }
 
-   return 1;
+   return;
 }
 
-sub block {
+sub ipv4_list {
    my $self = shift;
+   my ($subnet) = @_;
 
-   my $subnet = $self->subnet or return;
-   my $block = Net::Netmask->new($subnet);
+   $subnet ||= $self->subnet;
+   if (! defined($subnet)) {
+      return $self->log->error($self->brik_help_run('ipv4_list'));
+   }
 
-   return $block;
-}
-
-sub iplist {
-   my $self = shift;
-
-   my $subnet = $self->subnet or return;
    my $block = Net::Netmask->new($subnet);
 
    my @ip_list = $block->enumerate;
@@ -69,26 +68,53 @@ sub iplist {
    return \@ip_list;
 }
 
-sub first {
+sub network_address {
    my $self = shift;
+   my ($subnet) = @_;
 
-   my $subnet = $self->subnet or return;
+   $subnet ||= $self->subnet;
+   if (! defined($subnet)) {
+      return $self->log->error($self->brik_help_run('network_address'));
+   }
+
    my $block = Net::Netmask->new($subnet);
+   my $first = $block->first;
 
-   print $block->first."\n";
-
-   return 1;
+   return $first;
 }
 
-sub last {
+sub broadcast_address {
    my $self = shift;
+   my ($subnet) = @_;
 
-   my $subnet = $self->subnet or return;
+   $subnet ||= $self->subnet;
+   if (! defined($subnet)) {
+      return $self->log->error($self->brik_help_run('broadcast_address'));
+   }
+
    my $block = Net::Netmask->new($subnet);
+   my $last = $block->last;
 
-   print $block->last."\n"; 
+   return $last;
+}
 
-   return 1;
+sub range_to_cidr {
+   my $self = shift;
+   my ($first, $last) = @_;
+
+   if (! defined($first) || ! defined($last)) {
+      return $self->log->error($self->brik_help_run('range_to_subnet'));
+   }
+
+   my @blocks = Net::Netmask::range2cidrlist($first, $last);
+
+   my @res = ();
+   for my $block (@blocks) {
+      my $new = Net::Netmask->new($block);
+      push @res, $new->base."/".$new->bits;
+   }
+
+   return \@res;
 }
 
 1;

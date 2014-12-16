@@ -17,11 +17,16 @@ sub brik_properties {
          input => [ qw(file) ],
          encoding => [ qw(utf8|ascii) ],
          fd => [ qw(file_descriptor) ],
+         as_array => [ qw(0|1) ],
+      },
+      attributes_default => {
+         as_array => 0,
       },
       commands => {
          open => [ ],
          close => [ ],
          readall => [ ],
+         read_until_blank_line => [ ],
       },
    };
 }
@@ -77,12 +82,52 @@ sub readall {
       return $self->log->error($self->brik_help_run('open'));
    }
 
-   my $buf = '';
-   while (<$fd>) {
-      $buf .= $_;
+   if ($self->as_array) {
+      my @out = ();
+      while (<$fd>) {
+         chomp;
+         push @out, $_;
+      }
+      return \@out;
+   }
+   else {
+      my $out = '';
+      while (<$fd>) {
+         $out .= $_;
+      }
+      return $out;
    }
 
-   return $buf;
+   return;
+}
+
+sub read_until_blank_line {
+   my $self = shift;
+
+   my $fd = $self->fd;
+   if (! defined($fd)) {
+      return $self->log->error($self->brik_help_run('open'));
+   }
+
+   if ($self->as_array) {
+      my @out = ();
+      while (<$fd>) {
+         last if /^\s*$/;
+         chomp;
+         push @out, $_;
+      }
+      return \@out;
+   }
+   else {
+      my $out = '';
+      while (<$fd>) {
+         last if /^\s*$/;
+         $out .= $_;
+      }
+      return $out;
+   }
+
+   return;
 }
 
 1;
