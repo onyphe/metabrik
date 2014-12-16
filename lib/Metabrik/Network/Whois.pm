@@ -16,18 +16,62 @@ sub brik_properties {
       tags => [ qw(unstable whois as country cymru) ],
       commands => {
          lookup => [ qw(ipv4_address) ],
+         update => [ ],
       },
       require_binaries => {
          'dig', => [ ],
       },
+      require_modules => {
+         'Metabrik::Client::Www' => [ ],
+         'Metabrik::File::Text' => [ ],
+      },
    };
 }
 
-# ftp.arin.net/pub/stats/arin/delegated-arin-extended-latest
-# ftp.ripe.net/ripe/stats/delegated-ripencc-latest
-# ftp.afrinic.net/pub/stats/afrinic/delegated-afrinic-latest
-# ftp.apnic.net/pub/stats/apnic/delegated-apnic-latest
-# ftp.lacnic.net/pub/stats/lacnic/delegated-lacnic-latest
+sub update {
+   my $self = shift;
+
+   my @urls = qw(
+      ftp://ftp.arin.net/pub/stats/arin/delegated-arin-extended-latest
+      ftp://ftp.ripe.net/ripe/stats/delegated-ripencc-latest
+      ftp://ftp.afrinic.net/pub/stats/afrinic/delegated-afrinic-latest
+      ftp://ftp.apnic.net/pub/stats/apnic/delegated-apnic-latest
+      ftp://ftp.lacnic.net/pub/stats/lacnic/delegated-lacnic-latest
+   );
+
+   my @whois = qw(
+      ftp://ftp.ripe.net/ripe/dbase/split/ripe.db.inetnum.gz
+      ftp://ftp.afrinic.net/dbase/afrinic.db.gz
+      ftp://ftp.apnic.net/apnic/whois-data/APNIC/split/apnic.db.inetnum.gz
+      http://ftp.apnic.net/apnic/dbase/data/jpnic.db.gz
+      http://ftp.apnic.net/apnic/dbase/data/krnic.db.gz
+      http://ftp.apnic.net/apnic/dbase/data/twnic.in.gz
+      http://ftp.apnic.net/apnic/dbase/data/twnic.pn.gz
+   );
+
+   my $www = Metabrik::Client::Www->new_from_brik($self);
+
+   for my $url (@urls) {
+      $self->log->verbose("update: GETing url [$url]");
+      my $get = $www->get($url);
+      if (! defined($get)) {
+         $self->log->warning("update: can't GET file url [$url]");
+         next;
+      }
+
+      (my $filename = $url) =~ s/^.*\/(.*?)$/$1/;
+
+      my $text = Metabrik::File::Text->new_from_brik($self);
+      $text->append(0);
+      $text->overwrite(1);
+      $text->output($self->global->datadir."/$filename.whois");
+      $text->write($get->{body});
+      last;
+   }
+
+   return 1;
+}
+
 # http://www.team-cymru.org/Services/ip-to-asn.html
 sub lookup {
    my $self = shift;
