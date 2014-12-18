@@ -47,6 +47,12 @@ sub brik_init {
 
    $self->debug && $self->log->debug("brik_init: done");
 
+   $SIG{INT} = sub {
+      $self->debug && $self->log->debug("init: INT caught");
+      $shell->run_exit;
+      exit(0);
+   };
+
    return $self->SUPER::brik_init;
 }
 
