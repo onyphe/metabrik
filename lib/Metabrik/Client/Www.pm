@@ -75,7 +75,13 @@ sub get {
 
    $self->log->verbose("get: $uri");
 
-   my $response = $mech->get($uri);
+   my $response;
+   eval {
+      $response = $mech->get($uri);
+   };
+   if ($@) {
+      return $self->log->error("get: unable to get uri [$uri]");
+   }
 
    my %response = ();
    $response{code} = $response->code;

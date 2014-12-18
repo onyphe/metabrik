@@ -55,8 +55,15 @@ sub open {
       return $self->log->error("open: file [$input] not found");
    }
 
+   my $r;
+   my $out;
    my $encoding = $self->encoding;
-   my $r = open(my $out, "<$encoding", $input);
+   if ($encoding eq 'ascii') {
+      $r = open($out, '<', $input);
+   }
+   else {
+      $r = open($out, "<$encoding", $input);
+   }
    if (! defined($r)) {
       return $self->log->error("open: open: file [$input]: $!");
    }
