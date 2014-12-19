@@ -563,7 +563,7 @@ sub getcertificate2 {
       return $self->log->error($errs);
    }
 
-   set_fd($ssl, fileno(Net::SSLeay::SSLCAT_S));
+   set_fd($ssl, fileno(Net::SSLeay::SSLCAT_S()));
    if ($errs = print_errs('fileno')) {
       return $self->log->error($errs);
    }

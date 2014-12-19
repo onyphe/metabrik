@@ -7,12 +7,12 @@ package Metabrik::File::Compress;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command);
 
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable compress unzip uncompress) ],
+      tags => [ qw(unstable compress unzip gunzip uncompress) ],
       attributes => {
          input => [ qw(file) ],
          output => [ qw(file) ],
@@ -20,12 +20,11 @@ sub brik_properties {
       },
       commands => {
          unzip => [ ],
-      },
-      require_used => {
-         'shell::command' => [ ],
+         gunzip => [ ],
       },
       require_binaries => {
          'unzip' => [ ],
+         'gunzip' => [ ],
       },
    };
 }
@@ -42,21 +41,42 @@ sub brik_use_properties {
 
 sub unzip {
    my $self = shift;
-   my ($destdir) = @_;
+   my ($file, $destdir) = @_;
 
-   my $input = $self->input;
-   if (! defined($input)) {
+   $file ||= $self->input;
+   if (! defined($file)) {
       return $self->log->error($self->brik_help_set('input'));
    }
 
-   my $dir = $self->destdir;
-   if (! defined($dir)) {
+   $destdir ||= $self->destdir;
+   if (! defined($destdir)) {
       return $self->log->error($self->brik_help_set('destdir'));
    }
 
-   my $cmd = "unzip -o $input -d $dir/";
+   my $cmd = "unzip -o $file -d $destdir/";
 
-   return $self->context->run('shell::command', 'system', $cmd);
+   return $self->system($cmd);
+}
+
+sub gunzip {
+   my $self = shift;
+   my ($file, $destdir) = @_;
+
+   $file ||= $self->input;
+   if (! defined($file)) {
+      return $self->log->error($self->brik_help_set('input'));
+   }
+
+   $destdir ||= $self->destdir;
+   if (! defined($destdir)) {
+      return $self->log->error($self->brik_help_set('destdir'));
+   }
+
+   (my $file_out = $file) =~ s/.gz$//;
+
+   my $cmd = "gunzip -c $file > $file_out";
+
+   return $self->system($cmd);
 }
 
 1;

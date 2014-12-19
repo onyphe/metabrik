@@ -7,7 +7,7 @@ package Metabrik::File::Fetch;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command);
 
 sub brik_properties {
    return {
@@ -18,21 +18,22 @@ sub brik_properties {
       },
       commands => {
          get => [ qw(uri) ],
-      },
-      require_used => {
-         'shell::command' => [ ],
+         md5sum => [ qw(file|OPTIONAL) ],
+         sha1sum => [ qw(file|OPTIONAL) ],
       },
       require_binaries => {
          'wget' => [ ],
+         'md5sum' => [ ],
+         'sha1sum' => [ ],
       },
    };
 }
 
 sub get {
    my $self = shift;
-   my ($uri) = @_;
+   my ($uri, $output) = @_;
 
-   my $output = $self->output;
+   $output ||= $self->output;
    if (! defined($output)) {
       return $self->log->error($self->brik_help_set('output'));
    }
@@ -43,7 +44,39 @@ sub get {
 
    my $cmd = "wget --output-document=$output $uri";
 
-   return $self->context->run('shell::command', 'system', $cmd);
+   return $self->system($cmd);
+}
+
+sub md5sum {
+   my $self = shift;
+   my ($file) = @_;
+
+   $file ||= $self->output;
+   if (! defined($file)) {
+      return $self->log->error($self->brik_help_set('output'));
+   }
+
+   my $cmd = "md5sum $file";
+   $self->as_matrix(1);
+   my $buf = $self->capture($cmd);
+
+   return $buf->[0][0];
+}
+
+sub sha1sum {
+   my $self = shift;
+   my ($file) = @_;
+
+   $file ||= $self->output;
+   if (! defined($file)) {
+      return $self->log->error($self->brik_help_set('output'));
+   }
+
+   my $cmd = "sha1sum $file";
+   $self->as_matrix(1);
+   my $buf = $self->capture($cmd);
+
+   return $buf->[0][0];
 }
 
 1;

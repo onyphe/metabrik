@@ -18,16 +18,24 @@ sub brik_properties {
          cxn_pool => [ qw(Sniff|Static|Static::NoPing) ],
          date => [ qw(date) ],
          index_name => [ qw(index_name) ],
-         type_entry => [ qw(type_entry) ],
+         type_document => [ qw(type_document) ],
+         bulk_mode => [ qw(0|1) ],
+         from => [ qw(number) ],
+         size => [ qw(count) ],
          _elk => [ qw(INTERNAL) ],
+         _bulk => [ qw(INTERNAL) ],
       },
       attributes_default => {
          nodes => [ qw(localhost:9200) ],
          cxn_pool => 'Sniff',
+         bulk_mode => 0,
+         from => 0,
+         size => 10,
       },
       commands => {
          open => [ ],
          index => [ qw(document index|OPTIONAL type|OPTIONAL) ],
+         index_bulk => [ qw(document) ],
          search => [ qw($query_hash index|OPTIONAL) ],
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
          get => [ qw(id index|OPTIONAL type|OPTIONAL) ],
@@ -40,6 +48,7 @@ sub brik_properties {
 
 sub open {
    my $self = shift;
+   my ($index, $type) = @_;
 
    my $nodes = $self->nodes;
    my $cxn_pool = $self->cxn_pool;
@@ -50,6 +59,28 @@ sub open {
    );
    if (! defined($elk)) {
       return $self->log->error("open: connection failed");
+   }
+
+   if ($self->bulk_mode) {
+      $index ||= $self->index_name;
+      if (! defined($index)) {
+         return $self->log->error($self->brik_help_set('index_name'));
+      }
+
+      $type ||= $self->type_document;
+      if (! defined($type)) {
+         return $self->log->error($self->brik_help_set('type_document'));
+      }
+
+      my $bulk = $elk->bulk_helper(
+         index => $index,
+         type => $type,
+      );
+      if (! defined($bulk)) {
+         return $self->log->error("open: bulk connection failed");
+      }
+
+      return $self->_bulk($bulk);
    }
 
    return $self->_elk($elk);
@@ -77,9 +108,9 @@ sub index {
       return $self->log->error($self->brik_help_set('index_name'));
    }
 
-   $type ||= $self->type_entry;
+   $type ||= $self->type_document;
    if (! defined($type)) {
-      return $self->log->error($self->brik_help_set('type_entry'));
+      return $self->log->error($self->brik_help_set('type_document'));
    }
 
    my $r = $elk->index(
@@ -91,6 +122,14 @@ sub index {
    $self->log->verbose("index: indexation done");
 
    return $r;
+}
+
+sub index_bulk {
+   my $self = shift;
+   my ($doc) = @_;
+
+   # No check for speed improvements
+   return $self->_bulk->index({ source => $doc });
 }
 
 sub count {
@@ -107,9 +146,9 @@ sub count {
       return $self->log->error($self->brik_help_set('index_name'));
    }
 
-   $type ||= $self->type_entry;
+   $type ||= $self->type_document;
    if (! defined($type)) {
-      return $self->log->error($self->brik_help_set('type_entry'));
+      return $self->log->error($self->brik_help_set('type_document'));
    }
 
    my $r = $elk->search(
@@ -125,6 +164,8 @@ sub count {
 
    return $r;
 }
+
+# http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-multi-match-query.html
 
 sub search {
    my $self = shift;
@@ -150,12 +191,10 @@ sub search {
 
    my $r = $elk->search(
       index => $index,
-      # from => 0,
-      # size => $number_of_items, then you increment the from to the number of returned result and stop when the number of result is less than size you wanted. Or you can use Scrolled Search
+      from => $self->from,
+      size => $self->size,
       body => {
-         query => {
-            match => $query,
-         },
+         query => $query,
       },
    );
 
@@ -180,9 +219,9 @@ sub get {
       return $self->log->error($self->brik_help_set('index_name'));
    }
 
-   $type ||= $self->type_entry;
+   $type ||= $self->type_document;
    if (! defined($type)) {
-      return $self->log->error($self->brik_help_set('type_entry'));
+      return $self->log->error($self->brik_help_set('type_document'));
    }
 
    my $r = $elk->get(
