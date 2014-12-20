@@ -27,7 +27,7 @@ sub brik_properties {
          unbuffered => 0,
       },
       commands => {
-         open => [ qw(output_file|OPTIONAL) ],
+         open => [ qw(file|OPTIONAL) ],
          write => [ qw($data|$data_ref|$data_list) ],
          close => [ ],
       },

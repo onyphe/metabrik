@@ -7,31 +7,30 @@ package Metabrik::Database::Nvd;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::File::Fetch);
 
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable cve cpe) ],
+      tags => [ qw(unstable cve cpe nvd nist) ],
       attributes => {
-         uri_recent => [ qw($uri_list) ],
-         uri_modified => [ qw($uri_list) ],
-         uri_others => [ qw($uri_list) ],
-         xml_recent => [ qw($xml_list) ],
-         xml_modified => [ qw($xml_list) ],
-         xml_others => [ qw($xml_list) ],
-         xml => [ qw($xml) ],
+         datadir => [ qw(datadir) ],
+         loaded_xml => [ qw(loaded_xml) ],
       },
       commands => {
-         update => [ qw(recent|modified|others) ],
-         load => [ qw(recent|modified|others file_pattern) ],
-         search => [ qw(cve_pattern) ],
-         search_by_cpe => [ qw(cpe_pattern) ],
-         getxml => [ qw(cve_id) ],
+         update => [ qw(recent|modified|others|all RETURN:xml_filenames) ],
+         load => [ qw(recent|modified|others|all year|OPTIONAL RETURN:xml) ],
+         search_all => [ qw(RETURN:all_entries_list) ],
+         cve_search => [ qw(pattern RETURN:entries_list) ],
+         cpe_search => [ qw(pattern RETURN:entries_list) ],
+         get_cve_xml => [ qw(cve_id RETURN:entry_xml) ],
+         to_hash => [ qw(entry_xml RETURN:entry_hash) ],
+         to_string => [ qw(entry_hash RETURN:lines_list) ],
+         print => [ qw(entry_hash) ],
       },
-      require_used => {
-         'file::fetch' => [ ],
-         'file::xml' => [ ],
+      require_modules => {
+         'Metabrik::File::Xml' => [ ],
+         'Metabrik::File::Compress' => [ ],
       },
    };
 }
@@ -39,169 +38,229 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
-   my $datadir = $self->global->datadir;
-
    return {
-      # http://nvd.nist.gov/download.cfm
-      # nvdcve-2.0-modified.xml includes all recently published and recently updated vulnerabilities
-      # nvdcve-2.0-recent.xml includes all recently published vulnerabilities
-      # nvdcve-2.0-2002.xml includes vulnerabilities prior to and including 2002.
       attributes_default => {
-         uri_recent => [ 'http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-recent.xml', ],
-         uri_modified => [ 'http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-modified.xml', ],
-         uri_others => [ qw(
-            http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2002.xml
-            http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2003.xml
-            http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2004.xml
-            http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2005.xml
-            http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2006.xml
-            http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2007.xml
-            http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2008.xml
-            http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2009.xml
-            http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2010.xml
-            http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2011.xml
-            http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2012.xml
-            http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2013.xml
-            http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2014.xml
-         ) ],
-         xml_recent => [ "$datadir/nvdcve-2.0-recent.xml", ],
-         xml_modified => [ "$datadir/nvdcve-2.0-modified.xml", ],
-         xml_others => [
-            "$datadir/nvdcve-2.0-2002.xml",
-            "$datadir/nvdcve-2.0-2003.xml",
-            "$datadir/nvdcve-2.0-2004.xml",
-            "$datadir/nvdcve-2.0-2005.xml",
-            "$datadir/nvdcve-2.0-2006.xml",
-            "$datadir/nvdcve-2.0-2007.xml",
-            "$datadir/nvdcve-2.0-2008.xml",
-            "$datadir/nvdcve-2.0-2009.xml",
-            "$datadir/nvdcve-2.0-2010.xml",
-            "$datadir/nvdcve-2.0-2011.xml",
-            "$datadir/nvdcve-2.0-2012.xml",
-            "$datadir/nvdcve-2.0-2013.xml",
-            "$datadir/nvdcve-2.0-2014.xml",
-         ],
+         datadir => $self->global->datadir.'/nvd',
       },
    };
 }
+
+sub brik_init {
+   my $self = shift;
+
+   my $datadir = $self->datadir;
+   if (! -d $datadir) {
+      mkdir($datadir);
+   }
+
+   return $self->SUPER::brik_init(@_);
+}
+
+# http://nvd.nist.gov/download.cfm
+# nvdcve-2.0-Modified.xml.gz includes all recently published and recently updated vulnerabilities.
+# nvdcve-2.0-Recent.xml.gz includes all recently published vulnerabilities.
+# nvdcve-2.0-2002.xml includes vulnerabilities prior to and including 2002.
+my $resource = {
+   uri => 'http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-NAME.xml.gz',
+   gz => 'nvdcve-2.0-NAME.xml.gz',
+   xml => 'nvdcve-2.0-NAME.xml',
+};
 
 sub update {
    my $self = shift;
    my ($type) = @_;
 
-   my $context = $self->context;
-
-   if (! defined($type)) {
-      return $self->log->error($self->brik_help_run('update'));
-   }
+   $type ||= 'recent';
 
    if ($type ne 'recent'
    &&  $type ne 'modified'
-   &&  $type ne 'others') {
+   &&  $type ne 'others'
+   &&  $type ne 'all') {
       return $self->log->error($self->brik_help_run('update'));
    }
 
-   my $datadir = $self->global->datadir;
-   my $xml_method = "xml_$type";
-   my $xml_files = $self->$xml_method;
-   my $uri_method = "uri_$type";
-   my $uri_list = $self->$uri_method;
-   my $count = scalar @$xml_files;
+   if ($type eq 'all') {
+      my @output = ();
+      push @output, $self->update('recent');
+      push @output, $self->update('modified');
+      push @output, @{$self->update('others')};
+      return \@output;
+   }
 
-   for my $c (0..$count-1) {
-      $context->set('file::fetch', 'output', $xml_files->[$c]);
-      $context->run('file::fetch', 'get', $uri_list->[$c])
-         or $self->log->warning("update: file::fetch: get: uri[".$uri_list->[$c]."]");
+   my $datadir = $self->datadir;
+
+   my $compress = Metabrik::File::Compress->new_from_brik($self);
+
+   if ($type eq 'recent') {
+      (my $uri = $resource->{uri}) =~ s/NAME/Recent/;
+      (my $gz = $resource->{gz}) =~ s/NAME/Recent/;
+      (my $xml = $resource->{xml}) =~ s/NAME/Recent/;
+      my $output = "$datadir/$gz";
+      $self->get($uri, $output) or return $self->log->error("update: get failed");
+      $compress->gunzip($output, $datadir.'/'.$xml) or return $self->log->error("update: gunzip failed");
+      return $datadir.'/'.$xml;
+   }
+   elsif ($type eq 'modified') {
+      (my $uri = $resource->{uri}) =~ s/NAME/Modified/;
+      (my $gz = $resource->{gz}) =~ s/NAME/Modified/;
+      (my $xml = $resource->{xml}) =~ s/NAME/Modified/;
+      my $output = "$datadir/$gz";
+      $self->get($uri, $output) or return $self->log->error("update: get failed");
+      $compress->gunzip($output, $datadir.'/'.$xml) or return $self->log->error("update: gunzip failed");
+      return $datadir.'/'.$xml;
+   }
+   elsif ($type eq 'others') {
+      my @output = ();
+      for my $year (2002..2014) {
+         (my $uri = $resource->{uri}) =~ s/NAME/$year/;
+         (my $gz = $resource->{gz}) =~ s/NAME/$year/;
+         (my $xml = $resource->{xml}) =~ s/NAME/$year/;
+         my $output = "$datadir/$gz";
+         $self->get($uri, $output) or return $self->log->error("update: get failed");
+         $compress->gunzip($output, $datadir.'/'.$xml) or return $self->log->error("update: gunzip failed");
+         push @output, $datadir.'/'.$xml;
+      }
+      return \@output;
+   }
+
+   # Error
+   return;
+}
+
+sub _merge_xml {
+   my $self = shift;
+   my ($old, $new, $type) = @_;
+
+   # Return $new, nothing to merge
+   if (! defined($old)) {
+      return $new;
+   }
+
+   $self->log->verbose("_merge_xml: merging XML");
+
+   for my $k (keys %{$new->{entry}}) {
+      # Check if it already exists
+      if (exists $old->{entry}->{$k}) {
+         # It exists. Do we load recent or modified data?
+         # If so, it takes precedence, and we overwrite it.
+         if ($type eq 'recent' || $type eq 'modified') {
+            $old->{entry}->{$k} = $new->{entry}->{$k};
+         }
+      }
+      # We add it directly if it does not exist yet.
+      else {
+         $old->{entry}->{$k} = $new->{entry}->{$k};
+      }
+   }
+
+   # Return merged data into $old
+   return $old;
+}
+
+sub load {
+   my $self = shift;
+   my ($type, $year) = @_;
+
+   $type ||= 'recent';
+
+   if ($type ne 'recent'
+   &&  $type ne 'modified'
+   &&  $type ne 'others'
+   &&  $type ne 'all') {
+      return $self->log->error($self->brik_help_run('load'));
+   }
+
+   if ($type eq 'all') {
+      $self->load('recent') or return;
+      $self->load('modified') or return;
+      return $self->load('others');
+   }
+
+   my $datadir = $self->datadir;
+
+   my $brik_xml = Metabrik::File::Xml->new_from_brik($self);
+
+   my $old = $self->loaded_xml;
+
+   if ($type eq 'recent') {
+      (my $xml = $resource->{xml}) =~ s/NAME/Recent/;
+      my $file = $datadir.'/'.$xml;
+
+      my $new = $brik_xml->read($file) or return $self->log->error("load: read failed");
+
+      my $merged = $self->_merge_xml($old, $new, $type);
+
+      return $self->loaded_xml($merged);
+   }
+   elsif ($type eq 'modified') {
+      (my $xml = $resource->{xml}) =~ s/NAME/Modified/;
+      my $file = $datadir.'/'.$xml;
+
+      my $new = $brik_xml->read($file) or return $self->log->error("load: read failed");
+
+      my $merged = $self->_merge_xml($old, $new, $type);
+
+      return $self->loaded_xml($merged);
+   }
+   elsif ($type eq 'others') {
+      my $merged = $old;
+      my @years = defined($year) ? ( $year ) : ( 2002..2014 );
+      for my $year (@years) {
+         (my $xml = $resource->{xml}) =~ s/NAME/$year/;
+         my $file = $datadir.'/'.$xml;
+
+         my $new = $brik_xml->read($file) or return $self->log->error("load: read failed");
+
+         $merged = $self->_merge_xml($merged, $new, $type);
+      }
+
+      return $self->loaded_xml($merged);
+   }
+
+   # Error
+   return;
+}
+
+sub to_string {
+   my $self = shift;
+   my ($h) = @_;
+
+   my @buf = ();
+   push @buf, "CVE: ".$h->{cve_id};
+   push @buf, "CWE: ".$h->{cwe_id};
+   push @buf, "Published datetime: ".$h->{published_datetime};
+   push @buf, "Last modified datetime: ".$h->{last_modified_datetime};
+   push @buf, "URL: ".$h->{url};
+   push @buf, "Summary: ".($h->{summary} || '(undef)');
+   push @buf, "Vuln product:";
+   for my $vuln_product (@{$h->{vuln_product}}) {
+      push @buf, "   $vuln_product";
+   }
+
+   return \@buf;
+}
+
+sub print {
+   my $self = shift;
+   my ($h) = @_;
+
+   if (! defined($h)) {
+      return $self->log->error($self->brik_help_run('print'));
+   }
+
+   my $lines = $self->to_string($h);
+   for my $line (@$lines) {
+      print $line."\n";
    }
 
    return 1;
 }
 
-sub load {
-   my $self = shift;
-   my ($type, $pattern) = @_;
-
-   my $context = $self->context;
-
-   if (! defined($type)) {
-      return $self->log->error($self->brik_help_run('load'));
-   }
-
-   if ($type ne 'recent'
-   &&  $type ne 'modified'
-   &&  $type ne 'others') {
-      return $self->log->error($self->brik_help_run('load'));
-   }
-
-   my $datadir = $self->global->datadir;
-   my $xml_method = "xml_$type";
-   my $xml_files = $self->$xml_method;
-   my $count = scalar @$xml_files;
-
-   my $old_xml = $self->xml;
-   for my $c (0..$count-1) {
-      my $file = $xml_files->[$c];
-
-      # If file does not match user pattern, we don't load it
-      if (defined($pattern) && $file !~ /$pattern/) {
-         next;
-      }
-
-      $context->set('file::xml', 'input', $file);
-
-      $self->log->debug("load: reading file: ".$xml_files->[$c]);
-
-      my $xml = $context->run('file::xml', 'read')
-         or return $self->log->error("load: file::xml: read");
-
-      # Merge XML data
-      if (defined($old_xml)) {
-         print "DEBUG Merging\n";
-         for my $k (keys %{$xml->{entry}}) {
-            # Check if it already exists
-            if (exists $old_xml->{entry}->{$k}) {
-               # It exists. Do we load recent or modified data?
-               # If so, it takes precedence, and we overwrite it.
-               if ($type eq 'recent' || $type eq 'modified') {
-                  $old_xml->{entry}->{$k} = $xml->{entry}->{$k};
-               }
-            }
-            # We add it directly if it does not exist yet.
-            else {
-               $old_xml->{entry}->{$k} = $xml->{entry}->{$k};
-            }
-         }
-      }
-      # There was nothing previously, we write everything.
-      else {
-         $old_xml = $xml;
-      }
-   }
-
-   return $self->xml($old_xml);
-}
-
-sub show {
+sub to_hash {
    my $self = shift;
    my ($h) = @_;
 
-   my $buf = "CVE: ".$h->{cve_id}."\n";
-   $buf .= "CWE: ".$h->{cwe_id}."\n";
-   $buf .= "Published datetime: ".$h->{published_datetime}."\n";
-   $buf .= "Last modified datetime: ".$h->{last_modified_datetime}."\n";
-   $buf .= "URL: ".$h->{url}."\n";
-   $buf .= "Summary: ".($h->{summary} || '(undef)')."\n";
-   $buf .= "Vuln product:\n";
-   for my $vuln_product (@{$h->{vuln_product}}) {
-      $buf .= "   $vuln_product\n";
-   }
-
-   return $buf;
-}
-
-sub _to_hash {
-   my $self = shift;
-   my ($h, $cve) = @_;
+   my $cve = $h->{'vuln:cve-id'};
 
    my $published_datetime = $h->{'vuln:published-datetime'};
    my $last_modified_datetime = $h->{'vuln:last-modified-datetime'};
@@ -232,63 +291,85 @@ sub _to_hash {
    };
 }
 
-sub search {
+sub search_all {
+   my $self = shift;
+
+   my $xml = $self->loaded_xml;
+   if (! defined($xml)) {
+      return $self->log->error($self->brik_help_run('load'));
+   }
+
+   my $entries = $xml->{entry};
+   if (! defined($entries)) {
+      return $self->log->error("cve_search: no entry found");
+   }
+
+   my @entries = ();
+   for my $cve (keys %$entries) {
+      my $this = $self->to_hash($entries->{$cve});
+      push @entries, $this;
+   }
+
+   return \@entries;
+}
+
+sub cve_search {
    my $self = shift;
    my ($pattern) = @_;
 
-   my $xml = $self->xml;
+   my $xml = $self->loaded_xml;
    if (! defined($xml)) {
       return $self->log->error($self->brik_help_run('load'));
    }
 
    if (! defined($pattern)) {
-      return $self->log->error($self->brik_help_run('search'));
+      return $self->log->error($self->brik_help_run('cve_search'));
    }
 
    my $entries = $xml->{entry};
    if (! defined($entries)) {
-      return $self->log->error("nothing in this xml file");
+      return $self->log->error("cve_search: no entry found");
    }
 
    my @entries = ();
    for my $cve (keys %$entries) {
-      my $this = $self->_to_hash($entries->{$cve}, $cve);
+      my $this = $self->to_hash($entries->{$cve});
 
       if ($this->{cve_id} =~ /$pattern/ || $this->{summary} =~ /$pattern/i) {
          push @entries, $this;
-         print $self->show($this)."\n";
+         $self->print($this);
       }
    }
 
    return \@entries;
 }
 
-sub search_by_cpe {
+sub cpe_search {
    my $self = shift;
    my ($cpe) = @_;
 
-   my $xml = $self->xml;
+   my $xml = $self->loaded_xml;
    if (! defined($xml)) {
       return $self->log->error($self->brik_help_run('load'));
    }
 
    if (! defined($cpe)) {
-      return $self->log->error($self->brik_help_run('search_by_cpe'));
+      return $self->log->error($self->brik_help_run('cpe_search'));
    }
 
    my $entries = $xml->{entry};
    if (! defined($entries)) {
-      return $self->log->error("nothing in this xml file");
+      return $self->log->error("cpe_search: no entry found");
    }
 
    my @entries = ();
    for my $cve (keys %$entries) {
-      my $this = $self->_to_hash($entries->{$cve}, $cve);
+      my $this = $self->to_hash($entries->{$cve});
 
       for my $vuln_product (@{$this->{vuln_product}}) {
          if ($vuln_product =~ /$cpe/i) {
             push @entries, $this;
-            print $self->show($this)."\n";
+            $self->print($this);
             last;
          }
       }
@@ -297,11 +378,11 @@ sub search_by_cpe {
    return \@entries;
 }
 
-sub getxml {
+sub get_cve_xml {
    my $self = shift;
    my ($cve_id) = @_;
 
-   my $xml = $self->xml;
+   my $xml = $self->loaded_xml;
    if (! defined($xml)) {
       return $self->log->error($self->brik_help_run('load'));
    }

@@ -7,7 +7,7 @@ package Metabrik::File::Xml;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::File::Read);
 
 sub brik_properties {
    return {
@@ -16,17 +16,18 @@ sub brik_properties {
       attributes => {
          input => [ qw(file) ],
          output => [ qw(file) ],
-         encoding => [ qw(utf8|ascii) ],
          overwrite => [ qw(0|1) ],
+      },
+      attributes_default => {
+         overwrite => 1,
       },
       commands => {
          read => [ qw(input_file|OPTIONAL) ],
          write => [ qw($xml_hash output_file|OPTIONAL) ],
       },
-      require_used => {
-         'file::read' => [ ],
-         'file::write' => [ ],
-         'string::xml' => [ ],
+      require_modules => {
+         'Metabrik::File::Write' => [ ],
+         'Metabrik::String::Xml' => [ ],
       },
    };
 }
@@ -36,10 +37,9 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         input => $self->global->input || '/tmp/input.txt',
-         output => $self->global->output || '/tmp/output.txt',
+         input => $self->global->input || '/tmp/input.xml',
+         output => $self->global->output || '/tmp/output.xml',
          encoding => $self->global->encoding || 'utf8',
-         overwrite => 1,
       },
    };
 }
@@ -54,48 +54,33 @@ sub read {
       return $self->log->error($self->brik_help_set('input'));
    }
 
-   my $context = $self->context;
+   $self->open($input) or return $self->log->error("read: open failed");
+   my $data = $self->readall or return $self->log->error("read: readall failed");
+   $self->close;
 
-   $context->save_state('file::read') or return;
+   my $xml = Metabrik::String::Xml->new_from_brik($self);
+   my $decode = $xml->decode($data) or return $self->log->error("read: decode failed");
 
-   $context->set('file::read', 'input', $input) or return;
-   my $fd = $context->run('file::read', 'open') or return;
-   my $data = $context->run('file::read', 'readall') or return;
-   $context->run('file::read', 'close') or return;
-
-   my $xml = $context->run('string::xml', 'decode', $data) or return;
-
-   $context->restore_sate('file::read');
-
-   return $xml;
+   return $decode;
 }
 
 sub write {
    my $self = shift;
    my ($xml_hash, $output) = @_;
 
+   $output ||= $self->output;
+
    if (! defined($xml_hash)) {
       return $self->log->error($self->brik_help_run('write'));
    }
 
-   $output ||= $self->output;
+   my $xml = Metabrik::String::Xml->new_from_brik($self);
+   my $data = $xml->encode($xml_hash) or return $self->log->error("write: encode failed");
 
-   if (! defined($output)) {
-      return $self->log->error($self->brik_help_set('output'));
-   }
-
-   my $context = $self->context;
-
-   my $data = $context->run('string::xml', 'encode', $xml_hash) or return;
-
-   $context->save_state('file::write') or return;
-
-   $context->set('file::write', 'output', $output) or return;
-   my $fd = $context->run('file::write', 'open') or return;
-   $context->run('file::write', 'write', $data) or return;
-   $context->run('file::write', 'close') or return;
-
-   $context->restore_state('file::write');
+   my $write = Metabrik::File::Write->new_from_brik($self);
+   $write->open($output) or return $self->log->error("write: open failed");
+   $write->write($data) or return $self->log->error("write: write failed");
+   $write->close;
 
    return $data;
 }

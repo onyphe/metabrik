@@ -17,7 +17,7 @@ sub brik_properties {
          output => [ qw(file) ],
       },
       commands => {
-         get => [ qw(uri) ],
+         get => [ qw(uri output|OPTIONAL) ],
          md5sum => [ qw(file|OPTIONAL) ],
          sha1sum => [ qw(file|OPTIONAL) ],
       },

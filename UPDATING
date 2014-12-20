@@ -1,3 +1,12 @@
+20141220
+   AFFECT: database::nvd
+
+   - removed Attributes uri_* and xml_*
+   - renamed xml Attribute to loaded_xml
+   - search Command renamed to cve_search
+   - getxml Command renamed to get_cve_xml
+   - search_by_cpe Command renamed to cpe_search
+
 20141216
    AFFECT: network::address
 

@@ -23,7 +23,7 @@ sub brik_properties {
          as_array => 0,
       },
       commands => {
-         open => [ ],
+         open => [ qw(file|OPTIONAL) ],
          close => [ ],
          readall => [ ],
          read_until_blank_line => [ ],
@@ -34,30 +34,26 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
-   # encoding: see `perldoc Encode::Supported' for other types
    return {
       attributes_default => {
-         input => $self->global->input || '/tmp/input.txt',
-         encoding => $self->global->encoding || 'utf8',
+         input => $self->global->input,
+         encoding => $self->global->encoding,
       },
    };
 }
 
 sub open {
    my $self = shift;
+   my ($input) = @_;
 
-   my $input = $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_set('input'));
-   }
-
+   $input ||= $self->input;
    if (! -f $input) {
       return $self->log->error("open: file [$input] not found");
    }
 
    my $r;
    my $out;
-   my $encoding = $self->encoding;
+   my $encoding = $self->encoding || 'ascii';
    if ($encoding eq 'ascii') {
       $r = open($out, '<', $input);
    }

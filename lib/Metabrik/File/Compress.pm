@@ -19,8 +19,8 @@ sub brik_properties {
          destdir => [ qw(directory) ],
       },
       commands => {
-         unzip => [ ],
-         gunzip => [ ],
+         unzip => [ qw(input|OPTIONAL destdir|OPTIONAL) ],
+         gunzip => [ qw(input|OPTIONAL output|OPTIONAL) ],
       },
       require_binaries => {
          'unzip' => [ ],
@@ -41,10 +41,10 @@ sub brik_use_properties {
 
 sub unzip {
    my $self = shift;
-   my ($file, $destdir) = @_;
+   my ($input, $destdir) = @_;
 
-   $file ||= $self->input;
-   if (! defined($file)) {
+   $input ||= $self->input;
+   if (! defined($input)) {
       return $self->log->error($self->brik_help_set('input'));
    }
 
@@ -53,28 +53,29 @@ sub unzip {
       return $self->log->error($self->brik_help_set('destdir'));
    }
 
-   my $cmd = "unzip -o $file -d $destdir/";
+   my $cmd = "unzip -o $input -d $destdir/";
 
    return $self->system($cmd);
 }
 
 sub gunzip {
    my $self = shift;
-   my ($file, $destdir) = @_;
+   my ($input, $output) = @_;
 
-   $file ||= $self->input;
-   if (! defined($file)) {
+   $input ||= $self->input;
+   if (! defined($input)) {
       return $self->log->error($self->brik_help_set('input'));
    }
 
-   $destdir ||= $self->destdir;
-   if (! defined($destdir)) {
-      return $self->log->error($self->brik_help_set('destdir'));
+   my $file_out;
+   if (defined($output)) {
+      $file_out = $output;
+   }
+   else {
+      ($file_out = $input) =~ s/.gz$//;
    }
 
-   (my $file_out = $file) =~ s/.gz$//;
-
-   my $cmd = "gunzip -c $file > $file_out";
+   my $cmd = "gunzip -c $input > $file_out";
 
    return $self->system($cmd);
 }

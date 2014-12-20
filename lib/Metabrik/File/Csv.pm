@@ -52,8 +52,8 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         input => $self->global->input || '/tmp/input.txt',
-         output => $self->global->output || '/tmp/output.txt',
+         input => $self->global->input,
+         output => $self->global->output,
       },
    };
 }
@@ -121,9 +121,15 @@ sub write {
    my $written = '';
 
    my $header_written = 0;
+   my %order = ();
    for my $this (@$csv_struct) {
       if (! $header_written) {
-         my @header = keys %$this;
+         my $idx = 0;
+         for my $k (sort { $a cmp $b } keys %$this) {
+            $order{$k} = $idx;
+            $idx++;
+         }
+         my @header = sort { $a cmp $b } keys %$this;
          my $data = join($self->separator, @header)."\n";
          print $fd $data;
          $written .= $data;
@@ -131,8 +137,8 @@ sub write {
       }
 
       my @fields = ();
-      for my $key (keys %$this) {
-         push @fields, $this->{$key};
+      for my $key (sort { $a cmp $b } keys %$this) {
+         $fields[$order{$key}] = $this->{$key};
       }
 
       my $data = join($self->separator, @fields)."\n";

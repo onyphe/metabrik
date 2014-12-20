@@ -7,7 +7,7 @@ package Metabrik::Xorg::Screenshot;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command);
 
 sub brik_properties {
    return {
@@ -20,11 +20,8 @@ sub brik_properties {
          output => 'screenshot.png',
       },
       commands => {
-         active_window => [ ],
-         full_screen => [ ],
-      },
-      require_used => {
-         'shell::command' => [ ],
+         active_window => [ qw(output_file|OPTIONAL) ],
+         full_screen => [ qw(output_file|OPTIONAL) ],
       },
       require_binaries => {
          'scrot' => [ ],
@@ -34,26 +31,30 @@ sub brik_properties {
 
 sub active_window {
    my $self = shift;
+   my ($output) = @_;
 
-   my $output = $self->output;
-   my $context = $self->context;
+   $output ||= $self->output;
 
-   $self->log->verbose("Saving to file [$output]");
+   $self->log->verbose("active_window: saving to file [$output]");
 
    my $cmd = "scrot --focused --border $output";
-   return $context->run('shell::command', 'system', $cmd);
+   $self->system($cmd);
+
+   return $output;
 }
 
 sub full_screen {
    my $self = shift;
+   my ($output) = @_;
 
-   my $output = $self->output;
-   my $context = $self->context;
+   $output ||= $self->output;
 
-   $self->log->verbose("Saving to file [$output]");
+   $self->log->verbose("full_screen: saving to file [$output]");
 
    my $cmd = "scrot $output";
-   return $context->run('shell::command', 'system', $cmd);
+   $self->system($cmd);
+
+   return $output;
 }
 
 1;
