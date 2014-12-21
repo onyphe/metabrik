@@ -1,5 +1,5 @@
 #
-# $Id: Video.pm 179 2014-10-02 18:04:01Z gomor $
+# $Id$
 #
 # convert::video Brik
 #

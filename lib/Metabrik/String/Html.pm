@@ -1,5 +1,5 @@
 #
-# $Id: Html.pm 178 2014-10-02 18:03:00Z gomor $
+# $Id$
 #
 # string::html Brik
 #

@@ -1,5 +1,5 @@
 #
-# $Id: Package.pm 177 2014-10-02 18:02:40Z gomor $
+# $Id$
 #
 # system::package Brik
 #

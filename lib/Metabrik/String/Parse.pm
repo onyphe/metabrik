@@ -1,5 +1,5 @@
 #
-# $Id: Parse.pm 142 2014-09-29 20:23:55Z gomor $
+# $Id$
 #
 # string::parse Brik
 #

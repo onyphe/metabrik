@@ -1,5 +1,5 @@
 #
-# $Id: Rot13.pm 179 2014-10-02 18:04:01Z gomor $
+# $Id$
 #
 # string::rot13 Brik
 #

@@ -1,5 +1,5 @@
 #
-# $Id: Repository.pm 138 2014-09-29 19:48:37Z gomor $
+# $Id$
 #
 package Metabrik::Repository;
 use strict;
