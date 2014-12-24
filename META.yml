@@ -163,7 +163,7 @@ provides:
     file: lib/Metabrik/Remote/Tcpdump.pm
   Metabrik::Repository:
     file: lib/Metabrik/Repository.pm
-    version: '1.00'
+    version: '1.03'
   Metabrik::Server::Agent:
     file: lib/Metabrik/Server/Agent.pm
   Metabrik::Server::Agent::Server:
@@ -214,4 +214,4 @@ requires:
   Metabrik: '1.00'
 resources:
   license: http://opensource.org/licenses/BSD-3-Clause
-version: '1.00'
+version: '1.03'
