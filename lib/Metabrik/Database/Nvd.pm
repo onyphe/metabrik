@@ -301,7 +301,7 @@ sub search_all {
 
    my $entries = $xml->{entry};
    if (! defined($entries)) {
-      return $self->log->error("cve_search: no entry found");
+      return $self->log->error("search_all: no entry found");
    }
 
    my @entries = ();

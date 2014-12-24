@@ -7,6 +7,8 @@ package Metabrik::Network::Whois;
 use strict;
 use warnings;
 
+# XXX: use IP::Country
+
 use base qw(Metabrik::Shell::Command);
 
 sub brik_properties {
