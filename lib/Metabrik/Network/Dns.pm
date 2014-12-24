@@ -16,16 +16,18 @@ sub brik_properties {
       tags => [ qw(unstable dns nameserver) ],
       attributes => {
          nameserver => [ qw(ip_address) ],
+         port => [ qw(port) ],
          use_recursion => [ qw(0|1) ],
          try => [ qw(try_number) ],
       },
       attributes_default => {
          nameserver => '8.8.4.4',
+         port => 53,
          use_recursion => 0,
          try => 3,
       },
       commands => {
-         lookup => [ qw(hostname|ip_address nameserver|OPTIONAL) ],
+         lookup => [ qw(hostname|ip_address nameserver|OPTIONAL port|OPTIONAL) ],
          check_version => [ qw(hostname|ip_address) ],
       },
       require_modules => {
@@ -36,19 +38,23 @@ sub brik_properties {
 
 sub lookup {
    my $self = shift;
-   my ($host, $nameserver) = @_;
+   my ($host, $nameserver, $port) = @_;
 
    if (! defined($host)) {
       return $self->log->error($self->brik_help_run('lookup'));
    }
 
    $nameserver ||= $self->nameserver;
+   $port ||= $self->port;
 
    my $dns = Net::DNS::Resolver->new(
       nameservers => [ $nameserver, ],
+      port => $port,
       recurse => $self->use_recursion,
       searchlist => [],
       debug => $self->debug ? 1 : 0,
+      tcp_timeout => 5, #$self->global->rtimeout,
+      udp_timeout => 5, #$self->global->rtimeout,
    );
    if (! defined($dns)) {
       return $self->log->error("lookup: Net::DNS::Resolver new failed");
@@ -75,8 +81,11 @@ sub lookup {
       my $h = {
          name => $rr->name,
          type => $rr->type,
-         #address => $rr->address,
+         raw => $rr,
       };
+      if (defined($rr->address)) {
+         $h->{address} = $rr->address;
+      }
       push @res, $h;
    }
 

@@ -93,6 +93,9 @@ sub update {
    return 1;
 }
 
+# API RIPE search : http://rest.db.ripe.net/search?query-string=195.6.223.152/29
+# https://github.com/RIPE-NCC/whois/wiki/WHOIS-REST-API
+
 # http://www.team-cymru.org/Services/ip-to-asn.html
 sub lookup {
    my $self = shift;

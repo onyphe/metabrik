@@ -55,8 +55,12 @@ sub open {
       return $self->log->error($self->brik_help_set('output'));
    }
 
-   my $out;
    my $encoding = $self->encoding;
+   if ($encoding eq 'ascii') {
+      $encoding = '';
+   }
+
+   my $out;
    if ($self->append) {
       my $r = open($out, ">>$encoding", $output);
       if (! defined($r)) {

@@ -75,6 +75,8 @@ lib/Metabrik/Remote/Ssh2.pm
 lib/Metabrik/Remote/Tcpdump.pm
 lib/Metabrik/Repository.pm
 lib/Metabrik/Server/Agent.pm
+lib/Metabrik/Server/Dns.pm
+lib/Metabrik/Server/Http.pm
 lib/Metabrik/Ssl/Heartbleed.pm
 lib/Metabrik/String/Base64.pm
 lib/Metabrik/String/Compress.pm

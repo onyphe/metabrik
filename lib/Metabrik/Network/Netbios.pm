@@ -37,6 +37,19 @@ sub probe {
 
    my $ns = $nb->node_status($ip);
    if ($ns) {
+      #for my $rr ($ns->names) {
+          #if ($rr->suffix == 0 && $rr->G eq "GROUP") {
+              #$domain = $rr->name;
+          #}
+          #if ($rr->suffix == 3 && $rr->G eq "UNIQUE") {
+              #$user = $rr->name;
+          #}
+          #if ($rr->suffix == 0 && $rr->G eq "UNIQUE") {
+              #$machine = $rr->name unless $rr->name =~ /^IS~/;
+          #}
+      #}
+      #$mac_address = $ns->mac_address;
+      #print "$mac_address $domain\\$machine $user";
       print $ns->as_string;
       return $nb;
    }
