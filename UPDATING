@@ -1,3 +1,12 @@
+20141227
+   AFFECT: time::universal
+
+   - renamed timezone_list Command to list_timezones
+   - renamed timezone_search Command to search_timezone
+   - localtime now returns a HASHREF instead of a string
+   - timezone_search now returns an ARRAYREF instead of a string
+   - removed timezone_show Command
+
 20141220
    AFFECT: database::nvd
 

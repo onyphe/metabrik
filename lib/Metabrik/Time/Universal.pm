@@ -20,10 +20,9 @@ sub brik_properties {
          timezone => [ 'Europe/Paris' ],
       },
       commands => {
-         timezone_list => [ ],
-         timezone_show => [ ],
-         timezone_search => [ qw(string) ],
-         localtime => [ ],
+         list_timezones => [ ],
+         search_timezone => [ qw(string) ],
+         localtime => [ qw(timezone|OPTIONAL) ],
       },
       require_modules => {
          'DateTime' => [ ],
@@ -32,32 +31,19 @@ sub brik_properties {
    };
 }
 
-sub timezone_list {
+sub list_timezones {
    return DateTime::TimeZone->all_names;
 }
 
-sub timezone_show {
-   my $self = shift;
-
-   my $list = $self->timezone_list;
-
-   my $string = '';
-   for my $this (@$list) {
-      $string .= "$this\n";
-   }
-
-   return $string;
-}
-
-sub timezone_search {
+sub search_timezone {
    my $self = shift;
    my ($pattern) = @_;
 
    if (! defined($pattern)) {
-      return $self->log->error($self->brik_help_run('timezone_search'));
+      return $self->log->error($self->brik_help_run('search_timezone'));
    }
 
-   my $list = $self->timezone_list;
+   my $list = $self->list_timezones;
 
    my @found = ();
    for my $this (@$list) {
@@ -66,22 +52,35 @@ sub timezone_search {
       }
    }
 
-   return join("\n", @found);
+   return \@found;
 }
 
 sub localtime {
    my $self = shift;
+   my ($timezone) = @_;
 
-   my $timezone = $self->timezone;
+   $timezone ||= $self->timezone;
    if (! defined($timezone)) {
       return $self->log->error($self->brik_help_set('timezone'));
    }
 
-   my $dt = DateTime->now(
-      time_zone => $timezone,
-   );
+   my $time = {};
+   if (ref($timezone) eq 'ARRAY') {
+      for my $tz (@$timezone) {
+         my $dt = DateTime->now(
+            time_zone => $tz,
+         );
+         $time->{$tz} = "$dt";
+      }
+   }
+   else {
+      my $dt = DateTime->now(
+         time_zone => $timezone,
+      );
+      $time->{$timezone} = "$dt";
+   }
 
-   return "$dt";
+   return $time;
 }
 
 1;
