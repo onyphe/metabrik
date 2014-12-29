@@ -147,6 +147,8 @@ provides:
     file: lib/Metabrik/Network/Ssdp.pm
   Metabrik::Network::Tor:
     file: lib/Metabrik/Network/Tor.pm
+  Metabrik::Network::Traceroute:
+    file: lib/Metabrik/Network/Traceroute.pm
   Metabrik::Network::Whois:
     file: lib/Metabrik/Network/Whois.pm
   Metabrik::Network::Wlan:

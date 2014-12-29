@@ -65,6 +65,7 @@ lib/Metabrik/Network/S7comm.pm
 lib/Metabrik/Network/Smtp.pm
 lib/Metabrik/Network/Sqlmap.pm
 lib/Metabrik/Network/Ssdp.pm
+lib/Metabrik/Network/Traceroute.pm
 lib/Metabrik/Network/Tor.pm
 lib/Metabrik/Network/Whois.pm
 lib/Metabrik/Network/Wlan.pm

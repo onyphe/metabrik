@@ -14,25 +14,30 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable network security scanner nikto) ],
       attributes => {
-         target => [ qw(target) ],
-         path => [ qw(url_path) ],
-         port => [ qw(integer) ],
+         uri => [ qw(uri) ],
          args => [ qw(nikto_arguments) ],
-         save_output => [ qw(0|1) ],
-         use_ssl => [ qw(0|1) ],
+         output => [ qw(output_file.html) ],
       },
       attributes_default => {
-         target => '127.0.0.1',
-         port => 80,
+         uri => 'http://127.0.0.1/',
          args => '-Display V -Format html',
-         save_output => 0,
-         use_ssl => 0,
-         path => '/',
+         output => 'last.html',
       },
       commands => {
-         start => [ ],
+         start => [ qw(uri|OPTIONAL) ],
       },
    };
+}
+
+sub brik_init {
+   my $self = shift;
+
+   my $dir = $self->global->datadir.'/nikto';
+   if (! -d $dir) {
+      mkdir($dir);
+   }
+
+   return $self->SUPER::brik_init(@_);
 }
 
 sub _nikto_parse {
@@ -54,24 +59,32 @@ sub _nikto_parse {
 # nikto -host 127.0.0.1 -port 80 -root /path -Display V -Format html -ssl -output /home/gomor/metabrik/nikto.html
 sub start {
    my $self = shift;
+   my ($uri, $output) = @_;
+
+   $output ||= $self->output;
+   $uri ||= $self->uri;
+   if (! defined($uri)) {
+      return $self->log->error($self->brik_help_set('uri'));
+   }
+
+   my $target = Metabrik::String::Uri->new_from_brik($self);
+   my $p = $target->parse($uri);
+
+   my $host = $p->{host};
+   my $port = $p->{port};
+   my $path = $p->{path};
+   my $use_ssl = $target->is_https_scheme($p);
 
    my $args = $self->args;
-   my $target = $self->target;
-   my $port = $self->port;
-   my $save_output = $self->save_output;
-   my $path = $self->path;
-   my $use_ssl = $self->use_ssl;
 
    my $datadir = $self->global->datadir;
  
-   my $cmd = "nikto -host $target -port $port -root $path $args";
+   my $cmd = "nikto -host $host -port $port -root $path $args";
    if ($use_ssl) {
       $cmd .= " -ssl";
    }
-   if ($save_output) {
-      $cmd .= " -output $datadir/nikto.html";
-      $cmd .= ' 2>&1 | tee '."$datadir/nikto.txt";
-   }
+
+   $cmd .= " -output $datadir/nikto/$output 2>&1 | tee $datadir/nikto/$output.txt";
 
    my $result = `$cmd`; 
 

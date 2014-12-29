@@ -14,10 +14,10 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable uri string) ],
       attributes => {
-         uri => [ qw(URI) ],
+         uri => [ qw(uri) ],
       },
       commands => {
-         parse => [ qw(uri) ],
+         parse => [ qw(uri|OPTIONAL) ],
          scheme => [ ],
          host => [ ],
          port => [ ],
@@ -32,25 +32,53 @@ sub brik_properties {
          authority => [ ],
          query_form => [ ],
          userinfo => [ ],
+         is_https_scheme => [ ],
       },
       require_modules => {
-         URI => [ ],
+         'URI' => [ ],
       },
    };
 }
 
 sub parse {
    my $self = shift;
-   my ($uri) = @_;
+   my ($string) = @_;
 
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('parse'));
+   $string ||= $self->uri;
+   if (! defined($string)) {
+      return $self->log->error($self->brik_help_set('uri'));
    }
 
-   my $parse = URI->new($uri);
-   $self->uri($parse);
+   my $uri = URI->new($string);
 
-   return $parse;
+   return {
+      scheme => $uri->scheme || '',
+      host => $uri->host || '',
+      port => $uri->port || 80,
+      path => $uri->path || '/',
+      opaque => $uri->opaque || '',
+      fragment => $uri->fragment || '',
+      query => $uri->query || '',
+      path_query => $uri->path_query || '',
+      query_form => $uri->query_form || '',
+      userinfo => $uri->userinfo || '',
+      authority => $uri->authority || '',
+   };
+}
+
+sub is_https_scheme {
+   my $self = shift;
+   my ($parsed) = @_;
+
+   if (! defined($parsed)) {
+      return $self->log->error($self->brik_help_run('is_https_scheme'));
+   }
+
+   if (exists($parsed->{scheme}) && $parsed->{scheme} eq 'https') {
+      return 1;
+   }
+
+   return 0;
 }
 
 sub _this {

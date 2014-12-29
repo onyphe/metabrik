@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 25) }
+BEGIN { plan(tests => 26) }
 
 ok(sub { eval("use Metabrik::Network::Frame"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Write"); $@ ? 0 : 1 }, 1, $@);
@@ -26,3 +26,4 @@ ok(sub { eval("use Metabrik::Network::Smtp"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Tor"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Whois"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Ftp"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::Network::Traceroute"); $@ ? 0 : 1 }, 1, $@);
