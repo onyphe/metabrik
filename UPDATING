@@ -1,3 +1,8 @@
+20141229
+   AFFECT: string::uri
+
+   - parse Command returns an HASHREF instead of a URI object
+
 20141227
    AFFECT: time::universal
 
