@@ -1,3 +1,13 @@
+20141231
+   AFFECT: file::csv
+
+   - switching from using Text::CSV::Hashify to Text::CSV
+   - renamed has_header Attribute to first_line_is_header
+   - changed default for Attribute first_line_is_header from 0 to 1
+   - removed key Attribute
+   - removed format Attribute
+   - read Command can now returns an ARRAY of HASHes or an ARRAY of ARRAYs
+
 20141229
    AFFECT: string::uri
 
