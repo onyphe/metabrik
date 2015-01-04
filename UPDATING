@@ -1,3 +1,16 @@
+20150104
+   AFFECT: database::cwe, database::keystore, file::json, iana::countrycode, log::dual
+
+   NOTE: require_used property is now deprecated
+
+   - database::cwe update Command returns destination datadir i/o status code
+   - database::keystore search Command returns ARRAYREF i/o status code
+   - file::json write Command returns output filename i/o string
+   - iana::countrycode country_code_types Command must take an argument containing data
+   - iana::countrycode load Command returns ARRAYREF i/o HASHREF
+   - iana::countrycode save Command must take a data argument
+   - log::dual error Command returns undef to state an error condition
+
 20141231
    AFFECT: file::csv
 

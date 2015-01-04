@@ -7,21 +7,17 @@ package Metabrik::Audit::Https;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command);
 
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(https audit ssl openssl) ],
+      tags => [ qw(unstable https audit ssl openssl) ],
       attributes => {
          uri => [ qw(uri) ],
       },
       commands => {
-         check_ssl3_support => [ ],
-      },
-      require_used => {
-         'string::uri' => [ ],
-         'shell::command' => [ ],
+         check_ssl3_support => [ qw(uri|OPTIONAL) ],
       },
       require_binaries => {
          'printf' => [ ],
@@ -47,7 +43,6 @@ sub check_ssl3_support {
    my ($uri) = @_;
 
    $uri ||= $self->uri;
-
    if (! defined($uri)) {
       return $self->log->error($self->brik_help_run('check_ssl3_support'));
    }
@@ -56,17 +51,21 @@ sub check_ssl3_support {
       return $self->log->error("check_ssl3_support: uri [$uri] invalid format");
    }
 
-   my $context = $self->context;
+   my $string_uri = Metabrik::String::Uri->new_from_brik($self);
 
-   $context->run('string::uri', 'parse', $uri) or return;
-   my $host = $context->run('string::uri', 'host') or return;
-   my $port = $context->run('string::uri', 'port') or return;
+   my $hash = $string_uri->parse($uri)
+      or return $self->log->error("check_ssl3_support: parse failed");
+
+   my $host = $hash->{host};
+   my $port = $hash->{port};
 
    my $cmd = "printf \"GET / HTTP/1.0\r\n\r\n\" | openssl s_client -host $host -port $port -ssl3";
 
-   $context->set('shell::command', 'capture_stderr', 1);
-   my $buf = $context->run('shell::command', 'capture', $cmd)
-      or return $self->log->error("check_ssl3_support: shell::command error");
+   $self->as_array(1);
+   $self->as_matrix(0);
+   $self->capture_stderr(1);
+   my $buf = $self->capture($cmd)
+      or return $self->log->error("check_ssl3_support: capture failed");
 
    my $check = {
       ssl_version3_support => 1,
@@ -93,7 +92,7 @@ Metabrik::Audit::Https - audit::https Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

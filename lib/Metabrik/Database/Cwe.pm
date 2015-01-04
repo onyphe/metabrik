@@ -7,7 +7,7 @@ package Metabrik::Database::Cwe;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::File::Fetch);
 
 sub brik_properties {
    return {
@@ -22,13 +22,28 @@ sub brik_properties {
       },
       commands => {
          update => [ ],
-         load => [ ],
+         load => [ qw(cwe_xml_file) ],
          search => [ qw(cwe_pattern) ],
       },
-      require_used => {
-         'file::fetch' => [ ],
-         'file::compress' => [ ],
-         'file::xml' => [ ],
+      require_modules => {
+         'Metabrik::File::Compress' => [ ],
+         'Metabrik::File::Xml' => [ ],
+      },
+   };
+}
+
+sub brik_use_properties {
+   my $self = shift;
+
+   my $dir = $self->global->datadir.'/database-cwe';
+   if (! -d $dir) {
+      mkdir($dir)
+         or return $self->log->error("brik_use_properties: mkdir for dir [$dir] failed");
+   }
+
+   return {
+      attributes_default => {
+         file => $dir.'/2000.xml',
       },
    };
 }
@@ -36,36 +51,38 @@ sub brik_properties {
 sub update {
    my $self = shift;
 
-   my $datadir = $self->global->datadir;
-   my $context = $self->context;
+   my $datadir = $self->global->datadir.'/database-cwe';
 
-   $context->set('file::fetch', 'output', "$datadir/2000.xml.zip");
-   $context->run('file::fetch', 'get', 'http://cwe.mitre.org/data/xml/views/2000.xml.zip')
-      or return $self->log->error("update: file::fetch: get: can't fetch file");
+   my $uri = 'http://cwe.mitre.org/data/xml/views/2000.xml.zip';
+   my $file = "$datadir/2000.xml.zip";
 
-   $context->set('file::compress', 'input', "$datadir/2000.xml.zip");
-   $context->set('file::compress', 'destdir', $datadir);
+   $self->get($uri, $file)
+      or return $self->log->error("update: get failed");
 
-   $context->run('file::compress', 'unzip')
-      or return $self->log->error("update: file::compress: unzip: can't unzip file");
+   my $file_compress = Metabrik::File::Compress->new_from_brik($self);
 
-   return 1;
+   $file_compress->unzip($file, $datadir)
+      or return $self->log->error("update: unzip failed");
+
+   return $datadir;
 }
 
 sub load {
    my $self = shift;
+   my ($file) = @_;
 
-   my $file = $self->file;
-
-   if (! -f $file) {
-      return $self->log->error($self->brik_help_run('update'));
+   $file ||= $self->file;
+   if (! defined($file)) {
+      return $self->log->error($self->brik_help_run('load'));
    }
 
-   my $context = $self->context;
+   if (! -f $file) {
+      return $self->log->error("load: file [$file] not found");
+   }
 
-   $context->set('file::xml', 'input', $file);
-   my $xml = $context->run('file::xml', 'read')
-      or return $self->log->error("load: file::xml: read");
+   my $file_xml = Metabrik::File::Xml->new_from_brik($self);
+
+   my $xml = $file_xml->read($file);
 
    return $self->xml($xml);
 }
@@ -195,7 +212,7 @@ Metabrik::Database::Cwe - database::cwe Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

@@ -22,7 +22,7 @@ sub brik_properties {
          _fd => [ qw(INTERNAL) ],
       },
       commands => {
-         open => [ ],
+         open => [ qw(layer|OPTIONAL arg2|OPTIONAL arg3|OPTIONAL) ],
          send => [ qw($data) ],
          lsend => [ qw($data) ],
          nsend => [ qw($data) ],
@@ -55,6 +55,9 @@ sub brik_use_properties {
 
 sub open {
    my $self = shift;
+   my ($layer, $arg2, $arg3) = @_;
+
+   $layer ||= $self->layer;
 
    my $family = $self->family eq 'ipv6'
       ? Net::Write::Layer::NW_AF_INET6()
@@ -66,18 +69,22 @@ sub open {
 
    my $fd;
    if ($self->layer == 2) {
+      $arg2 ||= $self->device;
+
       $fd = Net::Write::Layer2->new(
-         dev => $self->device,
+         dev => $arg2
       ) or return $self->log->error("open: layer2: error");
 
-      $self->log->verbose("open: layer2: success. Will use device [".$self->device."]");
+      $self->log->verbose("open: layer2: success. Will use device [$arg2]");
    }
    elsif ($self->layer == 3) {
-      if (! defined($self->target)) {
+      $arg2 ||= $self->target;
+      if (! defined($arg2)) {
          return $self->log->error($self->brik_help_set('target'));
       }
+
       $fd = Net::Write::Layer3->new(
-         dst => $self->target,
+         dst => $arg2,
          protocol => Net::Write::Layer::NW_IPPROTO_RAW(),
          family => $family,
       ) or return $self->log->error("open: layer3: error");
@@ -85,11 +92,13 @@ sub open {
       $self->log->verbose("open: layer3: success");
    }
    elsif ($self->layer == 4) {
+      $arg2 ||= $self->target;
       if (! defined($self->target)) {
          return $self->log->error($self->brik_help_set('target'));
       }
+
       $fd = Net::Write::Layer4->new(
-         dst => $self->target,
+         dst => $arg2,
          protocol => $protocol,
          family => $family,
       ) or return $self->log->error("open: layer4: error");
@@ -243,7 +252,7 @@ Metabrik::Network::Write - network::write Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

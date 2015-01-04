@@ -28,7 +28,7 @@ sub brik_properties {
          max_read => 0,
       },
       commands => {
-         open => [ ],
+         open => [ qw(layer|OPTIONAL arg2|OPTIONAL arg3|OPTIONAL) ],
          next => [ ],
          next_until_timeout => [ ],
          close => [ ],
@@ -58,6 +58,9 @@ sub brik_use_properties {
 
 sub open {
    my $self = shift;
+   my ($layer, $arg2, $arg3) = @_;
+
+   $layer ||= 2;
 
    my $family = $self->family eq 'ipv6' ? 'ip6' : 'ip';
 
@@ -66,13 +69,17 @@ sub open {
    my $filter = $self->filter || '';
 
    my $dump;
-   if ($self->layer == 2) {
+   if ($layer == 2) {
+      $arg2 ||= $self->device;
+      $arg3 ||= $filter;
+
       $self->debug && $self->log->debug("open: timeoutOnNext: ".$self->rtimeout);
       $self->debug && $self->log->debug("open: filter: ".$filter);
+
       $dump = Net::Frame::Dump::Online2->new(
-         dev => $self->device,
+         dev => $arg2,
          timeoutOnNext => $self->rtimeout,
-         filter => $filter,
+         filter => $arg3,
       );
    }
    elsif ($self->layer != 3) {
@@ -198,7 +205,7 @@ Metabrik::Network::Read - network::read Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

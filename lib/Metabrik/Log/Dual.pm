@@ -118,7 +118,9 @@ sub error {
    print $fd $buffer;
    print $buffer;
 
-   return 0;
+   # Returning undef is my official way of stating an error occured:
+   # Number 0 is for stating a false condition occured, not not error.
+   return;
 }
 
 sub fatal {
@@ -220,7 +222,7 @@ Metabrik::Log::Dual - log::dual Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

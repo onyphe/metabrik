@@ -38,6 +38,7 @@ lib/Metabrik/File/Write.pm
 lib/Metabrik/File/Xml.pm
 lib/Metabrik/Hardware/Battery.pm
 lib/Metabrik/Hardware/Fan.pm
+lib/Metabrik/Hardware/Temperature.pm
 lib/Metabrik/Http/Proxy.pm
 lib/Metabrik/Iana/Countrycode.pm
 lib/Metabrik/Identify/Ssh.pm
@@ -134,3 +135,5 @@ t/29-use-briks-email.t
 t/30-use-briks-image.t
 t/31-use-briks-lookup.t
 UPDATING
+Changes
+README

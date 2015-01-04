@@ -32,7 +32,7 @@ sub brik_init {
 
    my $dnet = Net::Libdnet::Arp->new;
    if (! defined($dnet)) {
-      return $self->log->error("unable to create Net::Libdnet::Arp object");
+      return $self->log->error("brik_init: unable to create Net::Libdnet::Arp object");
    }
 
    $self->_dnet($dnet);
@@ -84,7 +84,7 @@ Metabrik::Network::Arp - network::arp Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

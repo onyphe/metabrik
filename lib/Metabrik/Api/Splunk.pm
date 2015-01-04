@@ -25,9 +25,8 @@ sub brik_properties {
       commands => {
          apps_local => [ ],
       },
-      require_used => {
-         'string::xml' => [ ],
-         'string::json' => [ ],
+      require_modules => {
+         'Metabrik::String::Json' => [ ],
       },
    };
 }
@@ -51,10 +50,12 @@ sub apps_local {
 
    my $uri = $self->uri.'/services/apps/local?output_mode='.$mode;
 
-   my $response = $self->get($uri) or return;
+   my $response = $self->get($uri)
+      or return $self->log->error("apps_local: get failed");
 
-   #return $self->context->run('string::xml', 'decode', $response->{body});
-   return $self->context->run('string::json', 'decode', $response->{body});
+   my $string_json = Metabrik::String::Json->new_from_brik($self);
+
+   return $string_json->decode($response->{body});
 }
 
 1;
@@ -67,7 +68,7 @@ Metabrik::Api::Splunk - api::splunk Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

@@ -7,7 +7,7 @@ package Metabrik::System::Service;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command);
 
 sub brik_properties {
    return {
@@ -18,9 +18,6 @@ sub brik_properties {
          start => [ qw(service_name) ],
          stop => [ qw(service_name) ],
          restart => [ qw(service_name) ],
-      },
-      require_used => {
-         'shell::command' => [ ],
       },
       require_binaries => {
          'service', => [ ],
@@ -36,7 +33,7 @@ sub status {
       return $self->log->error($self->brik_help_run('status'));
    }
 
-   return $self->context->run('shell::command', 'system', "service $name status");
+   return $self->system("service $name status");
 }
 
 sub start {
@@ -47,7 +44,7 @@ sub start {
       return $self->log->error($self->brik_help_run('start'));
    }
 
-   return $self->context->run('shell::command', 'system', "sudo service $name start");
+   return $self->system("sudo service $name start");
 }
 
 sub stop {
@@ -58,7 +55,7 @@ sub stop {
       return $self->log->error($self->brik_help_run('stop'));
    }
 
-   return $self->context->run('shell::command', 'system', "sudo service $name stop");
+   return $self->system("sudo service $name stop");
 }
 
 sub restart {
@@ -86,7 +83,7 @@ Metabrik::System::Service - system::service Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

@@ -7,21 +7,20 @@ package Metabrik::Database::Keystore;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::File::Text);
 
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable) ],
+      tags => [ qw(unstable database keystore) ],
       attributes => {
          db => [ qw(keystore_db) ],
       },
       commands => {
          search => [ qw(pattern) ],
       },
-      require_used => {
-         'crypto::aes' => [ ],
-         'file::read' => [ ],
+      require_modules => {
+         'Metabrik::Crypto::Aes' => [ ],
       },
    };
 }
@@ -38,23 +37,21 @@ sub search {
       return $self->log->error($self->brik_help_run('search'));
    }
 
-   my $context = $self->context;
+   my $read = $self->read($self->db)
+      or return $self->log->error("search: read failed");
 
-   $context->set('file::read', 'input', $self->db);
-   $context->run('file::read', 'open') or return;
-   my $read = $context->run('file::read', 'readall')
-      or return $self->log->error("search: file::read: readall");
-   $context->run('file::read', 'close');
+   my $crypto_aes = Metabrik::Crypto::Aes->new_from_brik($self);
 
-   my $decrypted = $context->run('crypto::aes', 'decrypt', $read)
-      or return $self->log->error("search: crypto::aes: decrypt");
+   my $decrypted = $crypto_aes->decrypt($read)
+      or return $self->log->error("search: decrypt failed");
 
+   my @results = ();
    my @lines = split(/\n/, $decrypted);
    for (@lines) {
-      print "$_\n" if /$pattern/i;
+      push @results, $_ if /$pattern/i;
    }
 
-   return 1;
+   return \@results;
 }
 
 1;
@@ -67,7 +64,7 @@ Metabrik::Database::Keystore - database::keystore Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

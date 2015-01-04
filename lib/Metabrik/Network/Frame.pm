@@ -30,10 +30,6 @@ sub brik_properties {
          icmpv4 => [ ],
          echo_icmpv4 => [ ],
       },
-      require_used => {
-         'network::device' => [ ],
-         'string::hexa' => [ ],
-      },
       require_modules => {
          'Net::Frame::Simple' => [ ],
          'Net::Frame::Layer::ARP' => [ ],
@@ -44,6 +40,8 @@ sub brik_properties {
          'Net::Frame::Layer::UDP' => [ ],
          'Net::Frame::Layer::ICMPv4' => [ ],
          'Net::Frame::Layer::ICMPv6' => [ ],
+         'Metabrik::String::Hexa' => [ ],
+         'Metabrik::Network::Device' => [ ],
       },
    };
 }
@@ -61,10 +59,8 @@ sub brik_use_properties {
 sub brik_init {
    my $self = shift;
 
-   my $context = $self->context;
-
    my $interface = $self->update_interface
-      or return $self->log->error("brik_init: network::frame update_interface failed");
+      or return $self->log->error("brik_init: update_interface failed, you may not have a global device set");
 
    $self->interface($interface);
 
@@ -73,13 +69,14 @@ sub brik_init {
 
 sub update_interface {
    my $self = shift;
+   my ($device) = @_;
 
-   my $device = $self->device;
+   $device ||= $self->device;
 
-   my $context = $self->context;
+   my $network_device = Metabrik::Network::Device->new_from_brik($self);
 
-   my $interface = $context->run('network::device', 'get', $device)
-      or return $self->log->error("update_interface: network::device get failed");
+   my $interface = $network_device->get($device)
+      or return $self->log->error("update_interface: get failed");
 
    return $self->interface($interface);
 }
@@ -109,17 +106,18 @@ sub from_hexa {
    my $self = shift;
    my ($data) = @_;
 
-   my $context = $self->context;
-
    if (! defined($data)) {
       return $self->log->error($self->brik_help_run('from_hexa'));
    }
 
-   if (! $context->run('string::hexa', 'is_hexa', $data)) {
+   my $string_hexa = Metabrik::String::Hexa->new_from_brik_init($self);
+
+   if (! $string_hexa->is_hexa($data)) {
       return $self->log->error('from_hexa: data is not hexa');
    }
 
-   my $raw = $context->run('string::hexa', 'decode', $data);
+   my $raw = $string_hexa->decode($data)
+      or return $self->log->error("from_hexa: decode failed");
 
    return Net::Frame::Simple->new(raw => $raw, firstLayer => 'ETH');
 }
@@ -256,7 +254,7 @@ Metabrik::Network::Frame - network::frame Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

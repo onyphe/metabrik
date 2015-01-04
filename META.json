@@ -21,7 +21,8 @@
       },
       "runtime" : {
          "requires" : {
-            "Metabrik" : "1.00"
+            "Metabrik" : "1.04",
+            "perl" : "v5.6.1"
          }
       }
    },
@@ -143,6 +144,9 @@
       "Metabrik::Hardware::Fan" : {
          "file" : "lib/Metabrik/Hardware/Fan.pm"
       },
+      "Metabrik::Hardware::Temperature" : {
+         "file" : "lib/Metabrik/Hardware/Temperature.pm"
+      },
       "Metabrik::Http::Proxy" : {
          "file" : "lib/Metabrik/Http/Proxy.pm"
       },
@@ -253,7 +257,7 @@
       },
       "Metabrik::Repository" : {
          "file" : "lib/Metabrik/Repository.pm",
-         "version" : "1.03"
+         "version" : "1.04"
       },
       "Metabrik::Server::Agent" : {
          "file" : "lib/Metabrik/Server/Agent.pm"
@@ -328,8 +332,8 @@
    "release_status" : "stable",
    "resources" : {
       "license" : [
-         "http://opensource.org/licenses/BSD-3-Clause"
+         "http://opensource.org/licenses/bsd-license.php"
       ]
    },
-   "version" : "1.03"
+   "version" : "1.04"
 }

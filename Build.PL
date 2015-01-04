@@ -12,7 +12,8 @@ my $builder = Module::Build->new(
    dist_author => 'GomoR <gomor_at_metabrik.org>',
    dist_version_from => 'lib/Metabrik/Repository.pm',
    requires => {
-      'Metabrik' => '1.00',
+      'perl' => '5.6.1',
+      'Metabrik' => '1.04',
    },
 );
 

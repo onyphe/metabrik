@@ -30,10 +30,6 @@ sub brik_properties {
          'Module::Name1' => [ qw(Function1) ],
          'Module::Name2' => [ qw() ],
       },
-      require_used => {
-         'Brik1' => [ ],
-         'Brik2' => [ ],
-      },
       require_binaries => {
          'binary', => [ ],
       },
@@ -157,7 +153,7 @@ Template to write a new Metabrik Brik.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

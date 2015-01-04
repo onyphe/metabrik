@@ -20,16 +20,14 @@ sub brik_properties {
          try => 2,
       },
       commands => {
-         scan => [ ],
+         scan => [ qw(subnet|OPTIONAL) ],
       },
-      require_used => {
-         'network::arp' => [ ],
-         'network::write' => [ ],
-         'network::read' => [ ],
-         'network::address' => [ ],
+      require_modules => {
+         'Metabrik::Network::Arp' => [ ],
+         'Metabrik::Network::Write' => [ ],
+         'Metabrik::Network::Read' => [ ],
+         'Metabrik::Network::Address' => [ ],
       },
-      #require_modules => {
-      #},
    };
 }
 
@@ -60,18 +58,18 @@ sub scan {
    my $self = shift;
    my ($subnet) = @_;
 
-   my $context = $self->context;
-
-   my $arp_cache = $context->run('network::arp', 'cache')
-      or return $self->log->error("scan: network::arp cache failed");
+   my $network_arp = Metabrik::Network::Arp->new_from_brik_init($self);
+   my $network_address = Metabrik::Network::Address->new_from_brik_init($self);
 
    my $interface = $self->interface;
 
    $subnet ||= $interface->{subnet};
 
-   $context->set('network::address', 'subnet', $subnet);
-   my $ip_list = $context->run('network::address', 'iplist')
-      or return $self->log->error("scan: network::address iplist failed");
+   my $arp_cache = $network_arp->cache
+      or return $self->log->error("scan: cache failed");
+
+   my $ip_list = $network_address->ipv4_list($subnet)
+      or return $self->log->error("scan: ipv4_list failed");
 
    my $reply_cache = {};
    my $local_arp_cache = {};
@@ -98,21 +96,16 @@ sub scan {
       }
    }
 
-   $context->save_state('network::write');
+   my $network_write = Metabrik::Network::Write->new_from_brik($self);
 
-   $context->set('network::write', 'device', $self->device);
-   $context->set('network::write', 'layer', 2);
-   my $write = $context->run('network::write', 'open')
-      or return $self->log->error("scan: network::write open failed");
+   my $write = $network_write->open(2, $self->device)
+      or return $self->log->error("scan: open failed");
 
-   $context->save_state('network::read');
+   my $network_read = Metabrik::Network::Read->new_from_brik($self);
 
-   $context->set('network::read', 'device', $self->device);
-   $context->set('network::read', 'layer', 2);
    my $filter = 'arp and src net '.$subnet.' and dst host '.$interface->{ipv4};
-   $context->set('network::read', 'filter', $filter);
-   my $read = $context->run('network::read', 'open')
-      or return $self->log->error("scan: network::read open failed");
+   my $read = $network_read->open(2, $self->device, $filter)
+      or return $self->log->error("scan: open failed");
 
    # We will send frames 3 times max
    my $try = $self->try;
@@ -122,13 +115,13 @@ sub scan {
          $self->debug && $self->log->debug($r->print);
          my $dst_ip = $r->ref->{ARP}->dstIp;
          if (! exists($reply_cache->{$dst_ip})) {
-            $context->run('network::write', 'send', $r->raw)
-               or $self->log->warning("scan: network::write send failed");
+            $network_write->send($r->raw)
+               or $self->log->warning("scan: send failed");
          }
       }
 
       # Then we wait for all replies until a timeout occurs
-      my $h_list = $context->run('network::read', 'next_until_timeout');
+      my $h_list = $network_read->next_until_timeout;
       for my $h (@$h_list) {
          my $r = $self->from_read($h);
          #$self->log->verbose("scan: read next returned some stuff".$r->print);
@@ -148,14 +141,11 @@ sub scan {
          }
       }
 
-      $context->run('network::read', 'reset_timeout');
+      $network_read->reset_timeout;
    }
 
-   $context->run('network::write', 'close');
-   $context->run('network::read', 'close');
-
-   $context->restore_state('network::write');
-   $context->restore_state('network::read');
+   $network_write->close;
+   $network_read->close;
 
    for (keys %$reply_cache) {
       $self->log->verbose(sprintf("%-16s => %s", $_, $reply_cache->{$_}));
@@ -174,7 +164,7 @@ Metabrik::Network::Arpdiscover - network::arpdiscover Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

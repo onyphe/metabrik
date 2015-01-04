@@ -7,7 +7,7 @@ package Metabrik::Network::Wlan;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command);
 
 sub brik_properties {
    return {
@@ -26,15 +26,12 @@ sub brik_properties {
          monitor => 'mon0',
       },
       commands => {
-         scan => [ ],
-         set_bitrate => [ qw(bitrate|$self::bitrate) ],
-         set_wepkey => [ qw(bitrate|$self::key) ],
-         connect => [ ],
+         scan => [ qw(device|OPTIONAL) ],
+         set_bitrate => [ qw(bitrate|OPTIONAL device|OPTIONAL) ],
+         set_wepkey => [ qw(key|OPTIONAL device|OPTIONAL) ],
+         connect => [ qw(device|OPTIONAL essid|OPTIONAL) ],
          start_monitor_mode => [ ],
          stop_monitor_mode => [ ],
-      },
-      require_used => {
-         'shell::command' => [ ],
       },
       require_binaries => {
          'sudo', => [ ],
@@ -46,21 +43,17 @@ sub brik_properties {
 
 sub scan {
    my $self = shift;
+   my ($device) = @_;
 
-   my $device = $self->device;
-   my $context = $self->context;
+   $device ||= $self->device;
 
    $self->log->verbose("scan: using device [$device]");
 
-   $context->save_state('shell::command');
-   $context->set('shell::command', 'as_matrix', 0);
-
    my $cmd = "iwlist $device scan";
-   my $result = $context->run('shell::command', 'capture', $cmd);
 
-   $context->restore_state('shell::command');
+   my $result = $self->capture($cmd);
 
-   if (length($result)) {
+   if (@$result > 0) {
       return $self->_list_ap($result);
    }
 
@@ -165,22 +158,26 @@ sub _list_ap {
 
 sub connect {
    my $self = shift;
+   my ($device, $essid) = @_;
 
-   my $essid = $self->essid;
+   $device ||= $self->device;
+
+   $essid ||= $self->essid;
    if (! defined($essid)) {
       return $self->log->error($self->brik_help_set('essid'));
    }
 
-   my $context = $self->context;
-   my $device = $self->device;
-
    my $cmd = "iwconfig $device essid $essid";
-   my $r = $context->run('shell::command', 'capture', $cmd)
-      or return;
+
+   $self->capture_stderr(1);
+
+   my $r = $self->capture($cmd)
+      or return $self->log->error("connect: capture failed");
 
    $self->log->verbose("connect: $r");
 
-   $self->set_bitrate or return;
+   $self->set_bitrate
+      or return $self->log->error("connect: set_bitrate failed");
 
    # For WEP, we can use:
    # "iwconfig $device key $key"
@@ -190,41 +187,45 @@ sub connect {
 
 sub set_bitrate {
    my $self = shift;
-   my ($value) = @_;
+   my ($bitrate, $device) = @_;
 
-   $value ||= $self->bitrate;
-   if (! defined($value)) {
+   $bitrate ||= $self->bitrate;
+   if (! defined($bitrate)) {
       return $self->log->error($self->brik_help_set('bitrate'));
    }
 
-   my $context = $self->context;
-   my $device = $self->device;
+   $device ||= $self->device;
 
-   my $cmd = "iwconfig $device rate $value";
-   return $context->run('shell::command', 'capture', $cmd);
+   $self->capture_stderr(1);
+
+   my $cmd = "iwconfig $device rate $bitrate";
+
+   return $self->capture($cmd);
 }
 
 sub set_wepkey {
    my $self = shift;
-   my ($value) = @_;
+   my ($key, $device) = @_;
 
-   $value ||= $self->key;
-   if (! defined($value)) {
+   $key ||= $self->key;
+   if (! defined($key)) {
       return $self->log->error($self->brik_help_set('key'));
    }
 
-   my $context = $self->context;
-   my $device = $self->device;
+   $device ||= $self->device;
 
-   my $cmd = "iwconfig $device key $value";
-   return $context->run('shell::command', 'capture', $cmd);
+   my $cmd = "iwconfig $device key $key";
+
+   $self->capture_stderr(1);
+
+   return $self->capture($cmd);
 }
 
 sub start_monitor_mode {
    my $self = shift;
+   my ($device) = @_;
 
-   my $context = $self->context;
-   my $device = $self->device;
+   $device ||= $self->device;
 
    # airmon-ng is optional, so we check here.
    my $found = $self->brik_check_require_binaries({ 'airmon-ng' => [ ] });
@@ -232,11 +233,12 @@ sub start_monitor_mode {
       return $self->log->error("start_monitor_mode: you have to install aircrack-ng package");
    }
 
-   $context->save_state('shell::command') or return;
-
    my $cmd = "sudo airmon-ng start $device";
-   my $r = $context->run('shell::command', 'capture', $cmd)
-      or return;
+
+   $self->capture_stderr(1);
+
+   my $r = $self->capture($cmd);
+
    if (defined($r)) {
       my $monitor = '';
       for my $line (@$r) {
@@ -258,20 +260,18 @@ sub start_monitor_mode {
       $self->_monitor_mode_started(1);
    }
 
-   $context->restore_state('shell::command');
-
    return $self->monitor;
 }
 
 sub stop_monitor_mode {
    my $self = shift;
+   my ($monitor) = @_;
 
    if (! $self->_monitor_mode_started) {
       return $self->log->error($self->brik_help_run('start_monitor_mode'));
    }
 
-   my $context = $self->context;
-   my $monitor = $self->monitor;
+   $monitor ||= $self->monitor;
 
    # airmon-ng is optional, so we check here.
    my $found = $self->brik_check_require_binaries({ 'airmon-ng' => [ ] });
@@ -280,7 +280,11 @@ sub stop_monitor_mode {
    }
 
    my $cmd = "sudo airmon-ng stop $monitor";
-   my $r = $context->run('shell::command', 'capture', $cmd);
+
+   $self->capture_stderr(1);
+
+   my $r = $self->capture($cmd);
+
    if (defined($r)) {
       $self->_monitor_mode_started(0);
    }
@@ -298,7 +302,7 @@ Metabrik::Network::Wlan - network::wlan Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

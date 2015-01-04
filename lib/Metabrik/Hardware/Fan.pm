@@ -7,7 +7,7 @@ package Metabrik::Hardware::Fan;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::File::Text);
 
 sub brik_properties {
    return {
@@ -19,16 +19,11 @@ sub brik_properties {
          #speed => [ ],
          #level => [ ],
       },
-      require_used => {
-         'file::read' => [ ],
-      },
    };
 }
 
 sub info {
    my $self = shift;
-
-   my $context = $self->context;
 
    my $base_file = '/proc/acpi/ibm/fan';
 
@@ -36,13 +31,9 @@ sub info {
       return $self->log->error("info: cannot find file [$base_file]");
    }
 
-   $context->save_state('file::read');
-
-   $context->set('file::read', 'input', $base_file);
-   $context->run('file::read', 'open')
-      or return;
-   my $data = $context->run('file::read', 'readall');
-   $context->run('file::read', 'close');
+   my $data = $self->read($base_file)
+      or return $self->log->error("info: read failed");
+   chomp($data);
 
    my $info_hash = {};
 
@@ -58,8 +49,6 @@ sub info {
       }
    }
 
-   $context->restore_state('file::read');
-
    return $info_hash;
 }
 
@@ -73,7 +62,7 @@ Metabrik::Hardware::Fan - hardware::fan Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

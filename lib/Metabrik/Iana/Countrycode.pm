@@ -7,7 +7,7 @@ package Metabrik::Iana::Countrycode;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Client::Www);
 
 sub brik_properties {
    return {
@@ -16,18 +16,15 @@ sub brik_properties {
       attributes => {
          input => [ qw(file) ],
          output => [ qw(file) ],
-         _data => [ ],
       },
       commands => {
-         country_code_types => [ ],
          update => [ ],
-         save => [ ],
-         load => [ ],
+         save => [ qw($csv_struct output|OPTIONAL) ],
+         load => [ qw(input|OPTIONAL) ],
+         country_code_types => [ qw($csv_struct) ],
       },
-      require_used => {
-         'client::www' => [ ],
-         'file::csv' => [ ],
-         'file::write' => [ ],
+      require_modules => {
+         'Metabrik::File::Csv' => [ ],
       },
    };
 }
@@ -35,24 +32,30 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
+   my $dir = $self->global->datadir.'/iana-countrycode';
+   if (! -d $dir) {
+      mkdir($dir)
+         or return $self->log->error("brik_use_properties: mkdir failed for dir [$dir]");
+   }
+
    return {
       attributes_default => {
-         input => $self->global->datadir."/iana-country-codes.csv",
-         output => $self->global->datadir."/iana-country-codes.csv",
+         input => $dir.'/country-codes.csv',
+         output => $dir.'/country-codes.csv',
       },
    };
 }
 
 sub country_code_types {
    my $self = shift;
+   my ($data) = @_;
 
-   my $data = $self->_data;
    if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('update'));
+      return $self->log->error($self->brik_help_run('country_code_types'));
    }
 
    my %list = ();
-   for my $this (keys %$data) {
+   for my $this (@$data) {
       $list{$data->{$this}->{type}}++;
    }
 
@@ -70,11 +73,8 @@ sub update {
 
    my $uri = 'http://www.iana.org/domains/root/db';
 
-   my $context = $self->context;
-
-   $context->set('client::www', 'uri', $uri) or return;
-   $context->run('client::www', 'get') or return;
-   my $html = $context->run('client::www', 'content') or return;
+   my $get = $self->get($uri) or return $self->log->error("update: get failed");
+   my $html = $get->{body};
 
    # <tr class="iana-group-1 iana-type-2">
    #   <td><span class="domain tld"><a href="/domains/root/db/abogado.html">.abogado</a></span></td>
@@ -83,8 +83,7 @@ sub update {
    #   <td>Top Level Domain Holdings Limited</td>
    # </tr>
 
-   my %cc = ();
-
+   my @cc = ();
    while ($html =~ m{<tr class="iana-group-\d+\s+iana-type-\d+">(.*?)</tr>}gcs) {
       my $this = $1;
 
@@ -99,7 +98,7 @@ sub update {
       #print "type[$type]\n";
       #print "sponsor[$sponsor]\n";
 
-      $cc{$tld} = {
+      push @cc, {
          tld => $tld,
          country => $country,
          type => $type,
@@ -107,69 +106,50 @@ sub update {
       };
    }
 
-   $self->_data(\%cc);
-
-   return \%cc;
+   return \@cc;
 }
 
 sub save {
    my $self = shift;
+   my ($data, $output) = @_;
 
-   my $context = $self->context;
-
-   my $data = $self->_data;
    if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('update'));
+      return $self->log->error($self->brik_help_run('save'));
    }
 
-   my $headers = join(';', qw(tld country type sponsor));
-   my @lines = ();
-   for my $this (keys %$data) {
-      my @elts = ();
-      push @elts, $data->{$this}->{tld};
-      push @elts, $data->{$this}->{country};
-      push @elts, $data->{$this}->{type};
-      push @elts, $data->{$this}->{sponsor};
-      push @lines, join(';', @elts);
+   $output ||= $self->output;
+   if (! defined($output)) {
+      return $self->log->error($self->brik_help_run('save'));
    }
 
-   $context->set('file::write', 'output', $self->output);
-   $context->set('file::write', 'overwrite', 1);
-   $context->set('file::write', 'append', 0);
-   $context->set('file::write', 'encoding', 'utf8');
+   my $file_csv = Metabrik::File::Csv->new_from_brik($self);
+   $file_csv->overwrite(1);
+   $file_csv->encoding('utf8');
 
-   my $out = $context->run('file::write', 'open');
-   if (! defined($out)) {
-      return $self->log->error('save: run open');
-   }
+   $file_csv->write($data, $output)
+      or return $self->log->error("save: write failed");
 
-   print $out "$headers\n";
-   for my $this (@lines) {
-      print $out "$this\n";
-   }
-
-   $context->run('file::write', 'close');
-
-   return $self->output;
+   return $output;
 }
 
 sub load {
    my $self = shift;
+   my ($input) = @_;
 
-   my $input = $self->input;
-   my $context = $self->context;
-
+   $input ||= $self->input;
+   if (! defined($input)) {
+      return $self->log->error($self->brik_help_set('input'));
+   }
    if (! -f $input) {
       return $self->log->error("load: file [$input] not found");
    }
 
-   $context->set('file::csv', 'input', $input);
-   $context->set('file::csv', 'has_header', 1);
-   $context->set('file::csv', 'format', 'hoh');
-   $context->set('file::csv', 'key', 'tld');
-   $context->set('file::csv', 'encoding', 'utf8');
+   my $file_csv = Metabrik::File::Csv->new_from_brik($self);
+   $file_csv->first_line_is_header(1);
 
-   return $context->run('file::csv', 'read');
+   my $csv = $file_csv->read($input);
+
+   return $csv;
 }
 
 1;
@@ -182,7 +162,7 @@ Metabrik::Iana::Countrycode - iana::countrycode Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

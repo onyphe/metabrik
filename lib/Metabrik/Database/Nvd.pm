@@ -111,7 +111,7 @@ sub update {
    }
    elsif ($type eq 'others') {
       my @output = ();
-      for my $year (2002..2014) {
+      for my $year (2002..2015) {
          (my $uri = $resource->{uri}) =~ s/NAME/$year/;
          (my $gz = $resource->{gz}) =~ s/NAME/$year/;
          (my $xml = $resource->{xml}) =~ s/NAME/$year/;
@@ -204,7 +204,7 @@ sub load {
    }
    elsif ($type eq 'others') {
       my $merged = $old;
-      my @years = defined($year) ? ( $year ) : ( 2002..2014 );
+      my @years = defined($year) ? ( $year ) : ( 2002..2015 );
       for my $year (@years) {
          (my $xml = $resource->{xml}) =~ s/NAME/$year/;
          my $file = $datadir.'/'.$xml;
@@ -404,7 +404,7 @@ Metabrik::Database::Nvd - database::nvd Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

@@ -7,23 +7,21 @@ package Metabrik::System::Package;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command);
 
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(experimental package) ],
+      tags => [ qw(unstable system package) ],
       commands => {
          search => [ qw(string) ],
          install => [ qw(package) ],
          update => [ ],
          upgrade => [ ],
       },
-      require_used => {
-         'shell::command' => [ ],
-      },
       require_binaries => {
          'aptitude' => [ ],
+         'apt-get' => [ ],
       },
    };
 }
@@ -38,7 +36,7 @@ sub search {
 
    my $cmd = "aptitude search $package";
 
-   return $self->context->run('shell::command', 'system', $cmd);
+   return $self->capture($cmd);
 }
 
 sub install {
@@ -51,7 +49,7 @@ sub install {
 
    my $cmd = "sudo apt-get install $package";
 
-   return $self->context->run('shell::command', 'system', $cmd);
+   return $self->system($cmd);
 }
 
 sub update {
@@ -59,15 +57,15 @@ sub update {
 
    my $cmd = "sudo apt-get update";
 
-   return $self->context->run('shell::command', 'system', $cmd);
+   return $self->system($cmd);
 }
 
 sub upgrade {
    my $self = shift;
 
-   my $cmd = "sudo apt-get upgrade";
+   my $cmd = "sudo apt-get dist-upgrade";
 
-   return $self->context->run('shell::command', 'system', $cmd);
+   return $self->system($cmd);
 }
 
 1;
@@ -80,7 +78,7 @@ Metabrik::System::Package - system::package Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.
