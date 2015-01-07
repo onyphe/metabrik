@@ -14,6 +14,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable network security scanner nmap) ],
       attributes => {
+         datadir => [ qw(datadir) ],
          targets => [ qw(nmap_targets) ],
          ports => [ qw(nmap_ports) ],
          args => [ qw(nmap_args) ],
@@ -41,6 +42,30 @@ sub brik_properties {
          'nmap' => [ ],
       },
    };
+}
+
+sub brik_use_properties {
+   my $self = shift;
+
+   my $datadir = $self->log->datadir.'/network-nmap';
+
+   return {
+      attributes_default => {
+         datadir => $datadir,
+      },
+   };
+}
+
+sub brik_init {
+   my $self = shift;
+
+   my $dir = $self->datadir;
+   if (! -d $dir) {
+      mkdir($dir)
+         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
+   }
+
+   return $self->SUPER::brik_init(@_);
 }
 
 sub _nmap_parse {
@@ -95,7 +120,7 @@ sub tcp_syn {
    my $service_scan = $self->service_scan;
    my $save_output = $self->save_output;
 
-   my $datadir = $self->global->datadir;
+   my $datadir = $self->datadir;
 
    my $cmd = "sudo nmap -v -sS --max-retries $max_retries --min-rate $rate --max-rate $rate $args";
    if ($service_scan) {
@@ -126,7 +151,7 @@ sub tcp_connect {
    my $service_scan = $self->service_scan;
    my $save_output = $self->save_output;
 
-   my $datadir = $self->global->datadir;
+   my $datadir = $self->datadir;
  
    my $cmd = "sudo nmap -v -sT --max-retries $max_retries --min-rate $rate --max-rate $rate $args";
    if ($service_scan) {
@@ -155,7 +180,7 @@ sub udp {
    my $service_scan = $self->service_scan;
    my $save_output = $self->save_output;
 
-   my $datadir = $self->global->datadir;
+   my $datadir = $self->datadir;
 
    my $cmd = "sudo nmap -v -sU --max-retries $max_retries --min-rate $rate --max-rate $rate $args";
    if ($service_scan) {

@@ -14,6 +14,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable iana countrycode cc) ],
       attributes => {
+         datadir => [ qw(datadir) ],
          input => [ qw(file) ],
          output => [ qw(file) ],
       },
@@ -32,18 +33,27 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
-   my $dir = $self->global->datadir.'/iana-countrycode';
-   if (! -d $dir) {
-      mkdir($dir)
-         or return $self->log->error("brik_use_properties: mkdir failed for dir [$dir]");
-   }
+   my $datadir = $self->global->datadir.'/iana-countrycode';
 
    return {
       attributes_default => {
-         input => $dir.'/country-codes.csv',
-         output => $dir.'/country-codes.csv',
+         datadir => $datadir,
+         input => $datadir.'/country-codes.csv',
+         output => $datadir.'/country-codes.csv',
       },
    };
+}
+
+sub brik_init {
+   my $self = shift;
+
+   my $dir = $self->datadir;
+   if (! -d $dir) {
+      mkdir($dir)
+         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
+   }
+
+   return $self->SUPER::brik_init(@_);
 }
 
 sub country_code_types {

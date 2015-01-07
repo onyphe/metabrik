@@ -14,9 +14,9 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable server http) ],
       attributes => {
+         datadir => [ qw(datadir) ],
          hostname => [ qw(listen_hostname) ],
          port => [ qw(listen_port) ],
-         root_directory => [ qw(root_directory) ],
          _http => [ qw(INTERNAL) ],
       },
       attributes_default => {
@@ -24,7 +24,7 @@ sub brik_properties {
          port => 8888,
       },
       commands => {
-         start => [ qw(listen_hostname|OPTIONAL listen_port|OPTIONAL root_directory|OPTIONAL) ],
+         start => [ qw(listen_hostname|OPTIONAL listen_port|OPTIONAL datadir|OPTIONAL) ],
       },
       require_modules => {
          'HTTP::Server::Brick' => [ ],
@@ -35,20 +35,17 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
+   my $datadir = $self->global->datadir.'/server-http';
+
    return {
       attributes_default => {
-         root_directory => $self->global->datadir.'/http',
+         datadir => $datadir,
       },
    };
 }
 
 sub brik_init {
    my $self = shift;
-
-   if (! -d $self->root_directory) {
-      mkdir($self->root_directory)
-         or return $self->log->error("brik_init: cannot create directory");
-   }
 
    my $restore = $SIG{INT};
 
@@ -59,7 +56,7 @@ sub brik_init {
       return 1;
    };
 
-   return $self->SUPER::brik_init;
+   return $self->SUPER::brik_init(@_);
 }
 
 sub start {
@@ -68,7 +65,7 @@ sub start {
 
    $hostname ||= $self->hostname;
    $port ||= $self->port;
-   $root ||= $self->root_directory;
+   $root ||= $self->datadir;
 
    my $http = HTTP::Server::Brick->new(
       port => $port,

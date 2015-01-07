@@ -14,6 +14,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable server dns) ],
       attributes => {
+         datadir => [ qw(datadir) ],
          hostname => [ qw(listen_hostname) ],
          port => [ qw(listen_port) ],
          a => [ qw(a_hash) ],
@@ -43,9 +44,12 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
+   my $datadir = $self->global->data.'/server-dns';
+
    return {
       attributes_default => {
-         cache_file => $self->global->datadir.'/dns/cache.db',
+         datadir => $datadir,
+         cache_file => $datadir.'/cache.db',
       },
    };
 }
@@ -53,10 +57,10 @@ sub brik_use_properties {
 sub brik_init {
    my $self = shift;
 
-   my $dns_directory = $self->global->datadir.'/dns';
-   if (! -d $dns_directory) {
-      mkdir($dns_directory)
-         or return $self->log->error("brik_init: cannot create directory");
+   my $dir = $self->datadir;
+   if (! -d $dir) {
+      mkdir($dir)
+         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
    }
 
    $SIG{INT} = sub {
@@ -65,7 +69,7 @@ sub brik_init {
       exit(1);
    };
 
-   return $self->SUPER::brik_init;
+   return $self->SUPER::brik_init(@_);
 }
 
 sub start {

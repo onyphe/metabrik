@@ -1,3 +1,11 @@
+20150107
+   AFFECT: address:generate, convert::video, file::compress, server::http
+
+   - address::generate output_directory Attribute renamed to datadir
+   - conver::video output_directory Attribute renamed to datadir
+   - file::compress destdir Attribute renamed to datadir
+   - server::http root_directory Attribute renamed to datadir
+
 20150104
    AFFECT: database::cwe, database::keystore, file::json, iana::countrycode, log::dual
 

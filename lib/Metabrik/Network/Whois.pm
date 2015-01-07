@@ -16,6 +16,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable whois as country cymru) ],
       attributes => {
+         datadir => [ qw(datadir) ],
          input_whois => [ qw(input_file.whois) ],
          eof => [ qw(0|1) ],
          _read => [ qw(INTERNAL) ],
@@ -41,11 +42,26 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
+   my $datadir = $self->global->datadir.'/network-whois';
+
    return {
       attributes_default => {
-         input_whois => $self->global->datadir."/input_file.whois",
+         datadir => $datadir,
+         input_whois => $datadir."/input_file.whois",
       },
    };
+}
+
+sub brik_init {
+   my $self = shift;
+
+   my $dir = $self->datadir;
+   if (! -d $dir) {
+      mkdir($dir)
+         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
+   }
+
+   return $self->SUPER::brik_init(@_);
 }
 
 sub update {
@@ -86,7 +102,7 @@ sub update {
       my $text = Metabrik::File::Text->new_from_brik($self);
       $text->append(0);
       $text->overwrite(1);
-      $text->output($self->global->datadir."/$filename.whois");
+      $text->output($self->datadir."/$filename.whois");
       $text->write($get->{body});
    }
 

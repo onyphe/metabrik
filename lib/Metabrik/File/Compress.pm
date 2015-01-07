@@ -14,12 +14,12 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable compress unzip gunzip uncompress) ],
       attributes => {
+         datadir => [ qw(directory) ],
          input => [ qw(file) ],
          output => [ qw(file) ],
-         destdir => [ qw(directory) ],
       },
       commands => {
-         unzip => [ qw(input|OPTIONAL destdir|OPTIONAL) ],
+         unzip => [ qw(input|OPTIONAL datadir|OPTIONAL) ],
          gunzip => [ qw(input|OPTIONAL output|OPTIONAL) ],
       },
       require_binaries => {
@@ -32,28 +32,38 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
+   my $datadir = $self->global->data.'/file-compress';
+
    return {
       attributes_default => {
-         destdir => $self->global->datadir,
+         datadir => $datadir,
       },
    };
 }
 
+sub brik_init {
+   my $self = shift;
+
+   my $dir = $self->datadir;
+   if (! -d $dir) {
+      return $self->log->error("brik_init: mkdir failed for dir [$dir]");
+   }
+
+   return $self->SUPER::brik_init(@_);
+}
+
 sub unzip {
    my $self = shift;
-   my ($input, $destdir) = @_;
+   my ($input, $datadir) = @_;
 
    $input ||= $self->input;
    if (! defined($input)) {
       return $self->log->error($self->brik_help_set('input'));
    }
 
-   $destdir ||= $self->destdir;
-   if (! defined($destdir)) {
-      return $self->log->error($self->brik_help_set('destdir'));
-   }
+   $datadir ||= $self->datadir;
 
-   my $cmd = "unzip -o $input -d $destdir/";
+   my $cmd = "unzip -o $input -d $datadir/";
 
    return $self->system($cmd);
 }

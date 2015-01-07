@@ -14,6 +14,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable cve cwe) ],
       attributes => {
+         datadir => [ qw(datadir) ],
          file => [ qw(file) ],
          xml => [ qw($xml_data) ],
       },
@@ -35,23 +36,32 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
-   my $dir = $self->global->datadir.'/database-cwe';
-   if (! -d $dir) {
-      mkdir($dir)
-         or return $self->log->error("brik_use_properties: mkdir for dir [$dir] failed");
-   }
+   my $datadir = $self->global->datadir.'/database-cwe';
 
    return {
       attributes_default => {
-         file => $dir.'/2000.xml',
+         datadir => $datadir,
+         file => $datadir.'/2000.xml',
       },
    };
+}
+
+sub brik_init {
+   my $self = shift;
+
+   my $dir = $self->datadir;
+   if (! -d $dir) {
+      mkdir($dir)
+         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
+   }
+
+   return $self->SUPER::new(@_);
 }
 
 sub update {
    my $self = shift;
 
-   my $datadir = $self->global->datadir.'/database-cwe';
+   my $datadir = $self->datadir;
 
    my $uri = 'http://cwe.mitre.org/data/xml/views/2000.xml.zip';
    my $file = "$datadir/2000.xml.zip";

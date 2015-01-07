@@ -14,6 +14,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable network security scanner nikto) ],
       attributes => {
+         datadir => [ qw(datadir) ],
          uri => [ qw(uri) ],
          args => [ qw(nikto_arguments) ],
          output => [ qw(output_file.html) ],
@@ -29,12 +30,25 @@ sub brik_properties {
    };
 }
 
+sub brik_use_properties {
+   my $self = shift;
+
+   my $datadir = $self->global->datadir.'/network-nikto';
+
+   return {
+      attributes_default => {
+         datadir => $datadir,
+      },
+   };
+}
+
 sub brik_init {
    my $self = shift;
 
-   my $dir = $self->global->datadir.'/nikto';
+   my $dir = $self->datadir;
    if (! -d $dir) {
-      mkdir($dir);
+      mkdir($dir)
+         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
    }
 
    return $self->SUPER::brik_init(@_);
@@ -77,14 +91,14 @@ sub start {
 
    my $args = $self->args;
 
-   my $datadir = $self->global->datadir;
+   my $datadir = $self->datadir;
  
    my $cmd = "nikto -host $host -port $port -root $path $args";
    if ($use_ssl) {
       $cmd .= " -ssl";
    }
 
-   $cmd .= " -output $datadir/nikto/$output 2>&1 | tee $datadir/nikto/$output.txt";
+   $cmd .= " -output $datadir/$output 2>&1 | tee $datadir/$output.txt";
 
    my $result = `$cmd`; 
 

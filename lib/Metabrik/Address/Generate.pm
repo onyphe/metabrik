@@ -14,7 +14,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable address ipv4 routable reserved) ],
       attributes => {
-         output_directory => [ qw(directory) ],
+         datadir => [ qw(directory) ],
          file_count => [ qw(integer) ],
          ip_count => [ qw(integer) ],
       },
@@ -36,9 +36,11 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
+   my $datadir = $self->global->datadir;
+
    return {
       attributes_default => {
-         output_directory => $self->global->datadir.'/address-generate',
+         datadir => $datadir.'/address-generate',
          file_count => 1000,
          ip_count => 0,
       },
@@ -53,8 +55,10 @@ sub brik_init {
       `ulimit -n 2048`;
    }
 
-   if (! -d $self->output_directory) {
-      mkdir($self->output_directory);
+   my $dir = $self->datadir;
+   if (! -d $dir) {
+      mkdir($dir)
+         or return $self->log->error("brik_init: mkdir failed for [$dir]");
    }
 
    return $self->SUPER::brik_init;
@@ -106,7 +110,7 @@ sub ipv4_routable_ranges {
 sub ipv4_generate_space {
    my $self = shift;
 
-   my $output_directory = $self->output_directory;
+   my $datadir = $self->datadir;
    my $file_count = $self->file_count;
    my $ip_count = $self->ip_count;
 
@@ -118,15 +122,15 @@ sub ipv4_generate_space {
    if ($n > 0) {
       for (0..$n) {
          my $file = sprintf("ip4-space-%03d.txt", $_);
-         open($new, '>', "$output_directory/$file")
-            or return $self->log->error("ipv4_generate_space: open: file [$output_directory/$file]: $!");
+         open($new, '>', "$datadir/$file")
+            or return $self->log->error("ipv4_generate_space: open: file [$datadir/$file]: $!");
          push @chunks, $new;
       }
    }
    else {
       my $file = sprintf("ip4-space.txt", $_);
-      open($new, '>', "$output_directory/$file")
-         or return $self->log->error("ipv4_generate_space: open: file [$output_directory/$file]: $!");
+      open($new, '>', "$datadir/$file")
+         or return $self->log->error("ipv4_generate_space: open: file [$datadir/$file]: $!");
       push @chunks, $new;
    }
 

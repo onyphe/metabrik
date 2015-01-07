@@ -14,20 +14,47 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable string random) ],
       attributes_default => {
+         datadir => [ qw(datadir) ],
          charset => [ 'A'..'K', 'M'..'Z', 'a'..'k', 'm'..'z', 2..9, '_', '-' ],
          length => 20,
          count => 1,
       },
       commands => {
-         filename => [ ],
+         filename => [ qw(datadir|OPTIONAL) ],
       },
    };
 }
 
-sub filename {
+sub brik_use_properties {
    my $self = shift;
 
-   my $datadir = $self->global->datadir;
+   my $datadir = $self->global->datadir.'/string-random';
+
+   return {
+      attributes_default => {
+         datadir => $datadir,
+      },
+   };
+}
+
+sub brik_init {
+   my $self = shift;
+
+   my $dir = $self->datadir;
+   if (! -d $dir) {
+      mkdir($dir)
+         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
+   }
+
+   return $self->SUPER::brik_init(@_);
+}
+
+sub filename {
+   my $self = shift;
+   my ($datadir) = @_;
+
+   $datadir ||= $self->datadir;
+
    my $random = $self->generate;
 
    return "$datadir/".$random->[0];
