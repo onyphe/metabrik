@@ -24,20 +24,24 @@ sub brik_properties {
          count => 5,
       },
       commands => {
-         generate => [ ],
+         generate => [ qw(length|OPTIONAL count|OPTIONAL) ],
+         prompt => [ ],
       },
       require_modules => {
          'String::Random' => [ ],
+         'Term::ReadPassword' => [ ],
       },
    };
 }
 
 sub generate {
    my $self = shift;
+   my ($length, $count) = @_;
+
+   $length ||= $self->length;
+   $count ||= $self->count;
 
    my $charset = $self->charset;
-   my $length = $self->length;
-   my $count = $self->count;
 
    my $rand = String::Random->new;
    $rand->{A} = $charset;
@@ -48,6 +52,21 @@ sub generate {
    }
 
    return \@passwords;
+}
+
+sub prompt {
+   my $self = shift;
+
+   my $password;
+   while (1) {
+      my $this = Term::ReadPassword::read_password('password: ');
+      if (defined($this)) {
+         $password = $this;
+         last;
+      }
+   }
+
+   return $password;
 }
 
 1;

@@ -13,7 +13,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Repository - main Metabrik repository
+Metabrik::Repository - Metabrik Briks repository
 
 =head1 COPYRIGHT AND LICENSE
 

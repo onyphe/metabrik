@@ -51,6 +51,8 @@ provides:
     file: lib/Metabrik/Database/Nvd.pm
   Metabrik::Database::Redis:
     file: lib/Metabrik/Database/Redis.pm
+  Metabrik::Database::Sinfp3:
+    file: lib/Metabrik/Database/Sinfp3.pm
   Metabrik::Database::Sqlite:
     file: lib/Metabrik/Database/Sqlite.pm
   Metabrik::Database::Vfeed:
@@ -141,6 +143,8 @@ provides:
     file: lib/Metabrik/Network/Route.pm
   Metabrik::Network::S7comm:
     file: lib/Metabrik/Network/S7comm.pm
+  Metabrik::Network::Sinfp3:
+    file: lib/Metabrik/Network/Sinfp3.pm
   Metabrik::Network::Smtp:
     file: lib/Metabrik/Network/Smtp.pm
   Metabrik::Network::Sqlmap:

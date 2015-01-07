@@ -51,6 +51,7 @@ sub brik_properties {
          'GnuPG::Handles' => [ ],
          'Metabrik::File::Text' => [ ],
          'Metabrik::String::Random' => [ ],
+         'Metabrik::String::Password' => [ ],
       },
       require_binaries => {
          'rngd' => [ ],  # apt-get install rng-tools
@@ -183,7 +184,11 @@ sub delete_key {
       handles => $handles,
    );
 
-   my @lines = <$stdout>;
+   my @lines = ();
+   while (<$stdout>) {
+      chomp;
+      push @lines, $_;
+   }
    close($stdout);
    waitpid($pid, 0);
 
@@ -220,7 +225,11 @@ sub import_keys {
    print $stdin $data;
    close($stdin);
 
-   my @lines = <$stdout>;
+   my @lines = ();
+   while (<$stdout>) {
+      chomp;
+      push @lines, $_;
+   }
    close($stdout);
    waitpid($pid, 0);
 
@@ -247,7 +256,11 @@ sub list_public_keys {
       return $self->log->error("list_public_keys: list_public_keys failed");
    }
 
-   my @lines = <$stdout>;
+   my @lines = ();
+   while (<$stdout>) {
+      chomp;
+      push @lines, $_;
+   }
    close($stdout);
    waitpid($pid, 0);
 
@@ -292,7 +305,11 @@ sub list_secret_keys {
       return $self->log->error("list_secret_keys: list_secret_keys failed");
    }
 
-   my @lines = <$stdout>;
+   my @lines = ();
+   while (<$stdout>) {
+      chomp;
+      push @lines, $_;
+   }
    close($stdout);
    waitpid($pid, 0);
 
@@ -373,7 +390,11 @@ sub encrypt {
    print $stdin @data;
    close($stdin);
 
-   my @lines = <$stdout>;
+   my @lines = ();
+   while (<$stdout>) {
+      chomp;
+      push @lines, $_;
+   }
    close($stdout);
    waitpid($pid, 0);
 
@@ -388,9 +409,11 @@ sub decrypt {
       return $self->log->error($self->brik_help_run('decrypt'));
    }
 
-   my $passphrase = $self->passphrase;
+   my $string_password = Metabrik::String::Password->new_from_brik($self);
+
+   my $passphrase = $string_password->prompt;
    if (! defined($passphrase)) {
-      return $self->log->error($self->brik_help_set('passphrase'));
+      return $self->log->error("decrypt: invalid passphrase entered");
    }
 
    my @data = ();
@@ -431,7 +454,11 @@ sub decrypt {
    print $stdin @data;
    close($stdin);
 
-   my @lines = <$stdout>;
+   my @lines = ();
+   while (<$stdout>) {
+      chomp;
+      push @lines, $_;
+   }
    close($stdout);
    waitpid($pid, 0);
 
@@ -465,7 +492,11 @@ sub export_keys {
       return $self->log->error("export_keys: export_keys failed");
    }
 
-   my @lines = <$stdout>;
+   my @lines = ();
+   while (<$stdout>) {
+      chomp;
+      push @lines, $_;
+   }
    close($stdout);
    waitpid($pid, 0);
 

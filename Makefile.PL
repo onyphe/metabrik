@@ -12,7 +12,7 @@ WriteMakefile(
    ABSTRACT_FROM => 'lib/Metabrik/Repository.pm',
    AUTHOR => 'GomoR <gomor_at_metabrik.org>',
    PREREQ_PM => {
-      'perl' => '5.6.1',
       'Metabrik' => '1.04',
    },
+   MIN_PERL_VERSION => '5.6.1',
 );
