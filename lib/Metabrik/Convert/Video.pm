@@ -18,6 +18,10 @@ sub brik_properties {
          input => [ qw(file) ],
          output_pattern => [ qw(file_pattern) ],
       },
+      attributes_default => {
+         input => 'VIDEO.MP4',
+         output_pattern => 'image_%04d.jpg',
+      },
       commands => {
          to_jpg => [ ],
       },
@@ -25,32 +29,6 @@ sub brik_properties {
          'ffmpeg' => [ ],
       },
    };
-}
-
-sub brik_use_properties {
-   my $self = shift;
-
-   my $datadir = $self->global->datadir.'/convert-video';
-
-   return {
-      attributes_default => {
-         datadir => $datadir,
-         input => 'VIDEO.MP4',
-         output_pattern => 'image_%04d.jpg',
-      },
-   };
-}
-
-sub brik_init {
-   my $self = shift;
-
-   my $dir = $self->datadir;
-   if (! -d $dir) {
-      mkdir($dir)
-         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
-   }
-
-   return $self->SUPER::brik_init(@_);
 }
 
 sub to_jpg {

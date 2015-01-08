@@ -24,11 +24,13 @@ sub brik_properties {
          get => [ qw(device) ],
          list => [ ],
          show => [ ],
+         internet_address => [ ],
       },
       require_modules => {
          'Net::Libdnet::Intf' => [ ],
          'Net::Pcap' => [ ],
          'Net::Frame::Device' => [ ],
+         'Metabrik::Client::Www' => [ ],
       },
    };
 }
@@ -183,6 +185,23 @@ sub show {
    }
 
    return 1;
+}
+
+sub internet_address {
+   my $self = shift;
+
+   my $client_www = Metabrik::Client::Www->new_from_brik($self) or return;
+
+   #my $url = 'http://ip.nu';
+   my $url = 'http://www.whatsmyip.net/';
+   my $get = $client_www->get($url)
+      or return $self->log->error("internet_address: get failed");
+
+   my $html = $get->{body};
+
+   my ($ip) = $html =~ /(\d+\.\d+\.\d+\.\d+)/;
+
+   return $ip || undef;
 }
 
 1;

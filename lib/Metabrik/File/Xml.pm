@@ -58,7 +58,7 @@ sub read {
    my $data = $self->readall or return $self->log->error("read: readall failed");
    $self->close;
 
-   my $xml = Metabrik::String::Xml->new_from_brik($self);
+   my $xml = Metabrik::String::Xml->new_from_brik($self) or return;
    my $decode = $xml->decode($data) or return $self->log->error("read: decode failed");
 
    return $decode;
@@ -74,10 +74,10 @@ sub write {
       return $self->log->error($self->brik_help_run('write'));
    }
 
-   my $xml = Metabrik::String::Xml->new_from_brik($self);
+   my $xml = Metabrik::String::Xml->new_from_brik($self) or return;
    my $data = $xml->encode($xml_hash) or return $self->log->error("write: encode failed");
 
-   my $write = Metabrik::File::Write->new_from_brik($self);
+   my $write = Metabrik::File::Write->new_from_brik($self) or return;
    $write->open($output) or return $self->log->error("write: open failed");
    $write->write($data) or return $self->log->error("write: write failed");
    $write->close;

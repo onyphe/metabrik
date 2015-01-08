@@ -25,30 +25,6 @@ sub brik_properties {
    };
 }
 
-sub brik_use_properties {
-   my $self = shift;
-
-   my $datadir = $self->global->datadir.'/string-random';
-
-   return {
-      attributes_default => {
-         datadir => $datadir,
-      },
-   };
-}
-
-sub brik_init {
-   my $self = shift;
-
-   my $dir = $self->datadir;
-   if (! -d $dir) {
-      mkdir($dir)
-         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
-   }
-
-   return $self->SUPER::brik_init(@_);
-}
-
 sub filename {
    my $self = shift;
    my ($datadir) = @_;

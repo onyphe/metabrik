@@ -29,29 +29,6 @@ sub brik_properties {
    };
 }
 
-sub brik_use_properties {
-   my $self = shift;
-
-   my $datadir = $self->global->data.'/file-compress';
-
-   return {
-      attributes_default => {
-         datadir => $datadir,
-      },
-   };
-}
-
-sub brik_init {
-   my $self = shift;
-
-   my $dir = $self->datadir;
-   if (! -d $dir) {
-      return $self->log->error("brik_init: mkdir failed for dir [$dir]");
-   }
-
-   return $self->SUPER::brik_init(@_);
-}
-
 sub unzip {
    my $self = shift;
    my ($input, $datadir) = @_;

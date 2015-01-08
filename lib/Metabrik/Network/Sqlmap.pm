@@ -21,48 +21,27 @@ sub brik_properties {
          args => [ qw(sqlmap_arguments) ],
          output_file => [ qw(file) ],
       },
+      attributes_default => {
+         request_file => 'sqlmap_request.txt',
+         parameter => 'parameter',
+         args => '--ignore-proxy -v 3 --level=5 --risk=3 --user-agent "Mozilla"',
+      },
       commands => {
          start => [ ],
       },
    };
 }
 
-sub brik_use_properties {
-   my $self = shift;
-
-   my $datadir = $self->global->datadir.'/network-sqlmap';
-
-   return {
-      attributes_default => {
-         datadir => $datadir,
-         request_file => $datadir.'/sqlmap_request.txt',
-         parameter => 'parameter',
-         args => '--ignore-proxy -v 3 --level=5 --risk=3 --user-agent "Mozilla"',
-      },
-   };
-}
-
-sub brik_init {
-   my $self = shift;
-
-   my $dir = $self->datadir;
-   if (! -d $dir) {
-      mkdir($dir)
-         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
-   }
-
-   return $self->SUPER::brik_init(@_);
-}
-
 # python /usr/share/sqlmap-dev/sqlmap.py -p PARAMETER -r /root/XXX/outil_sqlmap/request.raw --ignore-proxy -v 3 --level=5 --risk=3 --user-agent "Mozilla" 2>&1 | tee /root/XXX/outil_sqlmap/XXX.txt
 sub start {
    my $self = shift;
 
+   my $datadir = $self->datadir;
    my $args = $self->args;
    my $cookie = $self->cookie;
    my $parameter = $self->parameter;
-   my $request_file = $self->request_file;
-   my $output_file = $self->output_file;
+   my $request_file = $datadir.'/'.$self->request_file;
+   my $output_file = $datadir.'/'.$self->output_file;
 
    if (! -f $request_file) {
       return $self->log->error("start: request file [$request_file] not found");

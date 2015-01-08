@@ -19,7 +19,7 @@ sub brik_properties {
          xml => [ qw($xml_data) ],
       },
       attributes_default => {
-         file => "/tmp/2000.xml",
+         file => '2000.xml',
       },
       commands => {
          update => [ ],
@@ -31,31 +31,6 @@ sub brik_properties {
          'Metabrik::File::Xml' => [ ],
       },
    };
-}
-
-sub brik_use_properties {
-   my $self = shift;
-
-   my $datadir = $self->global->datadir.'/database-cwe';
-
-   return {
-      attributes_default => {
-         datadir => $datadir,
-         file => $datadir.'/2000.xml',
-      },
-   };
-}
-
-sub brik_init {
-   my $self = shift;
-
-   my $dir = $self->datadir;
-   if (! -d $dir) {
-      mkdir($dir)
-         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
-   }
-
-   return $self->SUPER::new(@_);
 }
 
 sub update {
@@ -82,17 +57,15 @@ sub load {
    my ($file) = @_;
 
    $file ||= $self->file;
-   if (! defined($file)) {
-      return $self->log->error($self->brik_help_run('load'));
-   }
-
    if (! -f $file) {
       return $self->log->error("load: file [$file] not found");
    }
 
+   my $datadir = $self->datadir;
+
    my $file_xml = Metabrik::File::Xml->new_from_brik($self);
 
-   my $xml = $file_xml->read($file);
+   my $xml = $file_xml->read($datadir.'/'.$file);
 
    return $self->xml($xml);
 }

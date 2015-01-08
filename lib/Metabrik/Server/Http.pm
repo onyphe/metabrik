@@ -32,18 +32,6 @@ sub brik_properties {
    };
 }
 
-sub brik_use_properties {
-   my $self = shift;
-
-   my $datadir = $self->global->datadir.'/server-http';
-
-   return {
-      attributes_default => {
-         datadir => $datadir,
-      },
-   };
-}
-
 sub brik_init {
    my $self = shift;
 

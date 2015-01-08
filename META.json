@@ -1,5 +1,5 @@
 {
-   "abstract" : "main Metabrik repository",
+   "abstract" : "Metabrik Briks repository",
    "author" : [
       "GomoR <gomor_at_metabrik.org>"
    ],
@@ -21,7 +21,7 @@
       },
       "runtime" : {
          "requires" : {
-            "Metabrik" : "1.04",
+            "Metabrik" : "1.05",
             "perl" : "v5.6.1"
          }
       }
@@ -263,7 +263,7 @@
       },
       "Metabrik::Repository" : {
          "file" : "lib/Metabrik/Repository.pm",
-         "version" : "1.04"
+         "version" : "1.05"
       },
       "Metabrik::Server::Agent" : {
          "file" : "lib/Metabrik/Server/Agent.pm"
@@ -338,8 +338,8 @@
    "release_status" : "stable",
    "resources" : {
       "license" : [
-         "http://opensource.org/licenses/bsd-license.php"
+         "http://opensource.org/licenses/BSD-3-Clause"
       ]
    },
-   "version" : "1.04"
+   "version" : "1.05"
 }

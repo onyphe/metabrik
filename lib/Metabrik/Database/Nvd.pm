@@ -35,30 +35,6 @@ sub brik_properties {
    };
 }
 
-sub brik_use_properties {
-   my $self = shift;
-
-   my $datadir = $self->global->datadir.'/database-nvd';
-
-   return {
-      attributes_default => {
-         datadir => $datadir,
-      },
-   };
-}
-
-sub brik_init {
-   my $self = shift;
-
-   my $dir = $self->datadir;
-   if (! -d $dir) {
-      mkdir($dir)
-         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
-   }
-
-   return $self->SUPER::brik_init(@_);
-}
-
 # http://nvd.nist.gov/download.cfm
 # nvdcve-2.0-Modified.xml.gz includes all recently published and recently updated vulnerabilities.
 # nvdcve-2.0-Recent.xml.gz includes all recently published vulnerabilities.
@@ -92,7 +68,7 @@ sub update {
 
    my $datadir = $self->datadir;
 
-   my $compress = Metabrik::File::Compress->new_from_brik($self);
+   my $compress = Metabrik::File::Compress->new_from_brik($self) or return;
 
    if ($type eq 'recent') {
       (my $uri = $resource->{uri}) =~ s/NAME/Recent/;
@@ -181,7 +157,7 @@ sub load {
 
    my $datadir = $self->datadir;
 
-   my $brik_xml = Metabrik::File::Xml->new_from_brik($self);
+   my $brik_xml = Metabrik::File::Xml->new_from_brik($self) or return;
 
    my $old = $self->loaded_xml;
 

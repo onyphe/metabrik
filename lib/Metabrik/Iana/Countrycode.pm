@@ -18,6 +18,10 @@ sub brik_properties {
          input => [ qw(file) ],
          output => [ qw(file) ],
       },
+      attributes_default => {
+         input => 'country-codes.csv',
+         output => 'country-codes.csv',
+      },
       commands => {
          update => [ ],
          save => [ qw($csv_struct output|OPTIONAL) ],
@@ -28,32 +32,6 @@ sub brik_properties {
          'Metabrik::File::Csv' => [ ],
       },
    };
-}
-
-sub brik_use_properties {
-   my $self = shift;
-
-   my $datadir = $self->global->datadir.'/iana-countrycode';
-
-   return {
-      attributes_default => {
-         datadir => $datadir,
-         input => $datadir.'/country-codes.csv',
-         output => $datadir.'/country-codes.csv',
-      },
-   };
-}
-
-sub brik_init {
-   my $self = shift;
-
-   my $dir = $self->datadir;
-   if (! -d $dir) {
-      mkdir($dir)
-         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
-   }
-
-   return $self->SUPER::brik_init(@_);
 }
 
 sub country_code_types {
@@ -128,18 +106,18 @@ sub save {
    }
 
    $output ||= $self->output;
-   if (! defined($output)) {
-      return $self->log->error($self->brik_help_run('save'));
-   }
+
+   my $datadir = $self->datadir;
 
    my $file_csv = Metabrik::File::Csv->new_from_brik($self);
    $file_csv->overwrite(1);
    $file_csv->encoding('utf8');
 
-   $file_csv->write($data, $output)
+   my $output_file = $datadir.'/'.$output;
+   $file_csv->write($data, $output_file)
       or return $self->log->error("save: write failed");
 
-   return $output;
+   return $output_file;
 }
 
 sub load {
@@ -147,17 +125,16 @@ sub load {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_set('input'));
-   }
    if (! -f $input) {
       return $self->log->error("load: file [$input] not found");
    }
 
+   my $datadir = $self->datadir;
+
    my $file_csv = Metabrik::File::Csv->new_from_brik($self);
    $file_csv->first_line_is_header(1);
 
-   my $csv = $file_csv->read($input);
+   my $csv = $file_csv->read($datadir.'/'.$input);
 
    return $csv;
 }

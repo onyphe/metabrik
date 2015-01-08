@@ -18,6 +18,10 @@ sub brik_properties {
          file_count => [ qw(integer) ],
          ip_count => [ qw(integer) ],
       },
+      attributes_default => {
+         file_count => 1000,
+         ip_count => 0,
+      },
       commands => {
          ipv4_reserved_ranges => [ ],
          ipv4_private_ranges => [ ],
@@ -33,20 +37,6 @@ sub brik_properties {
    };
 }
 
-sub brik_use_properties {
-   my $self = shift;
-
-   my $datadir = $self->global->datadir;
-
-   return {
-      attributes_default => {
-         datadir => $datadir.'/address-generate',
-         file_count => 1000,
-         ip_count => 0,
-      },
-   };
-}
-
 sub brik_init {
    my $self = shift;
 
@@ -55,13 +45,7 @@ sub brik_init {
       `ulimit -n 2048`;
    }
 
-   my $dir = $self->datadir;
-   if (! -d $dir) {
-      mkdir($dir)
-         or return $self->log->error("brik_init: mkdir failed for [$dir]");
-   }
-
-   return $self->SUPER::brik_init;
+   return $self->SUPER::brik_init(@_);
 }
 
 sub ipv4_reserved_ranges {

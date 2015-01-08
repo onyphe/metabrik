@@ -31,6 +31,7 @@ sub brik_properties {
          hostname => '127.0.0.1',
          port => 2053,
          recursive_mode => 1,
+         cache_file => 'cache.db',
       },
       commands => {
          start => [ qw(listen_hostname|OPTIONAL listen_port|OPTIONAL) ],
@@ -41,27 +42,8 @@ sub brik_properties {
    };
 }
 
-sub brik_use_properties {
-   my $self = shift;
-
-   my $datadir = $self->global->data.'/server-dns';
-
-   return {
-      attributes_default => {
-         datadir => $datadir,
-         cache_file => $datadir.'/cache.db',
-      },
-   };
-}
-
 sub brik_init {
    my $self = shift;
-
-   my $dir = $self->datadir;
-   if (! -d $dir) {
-      mkdir($dir)
-         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
-   }
 
    $SIG{INT} = sub {
       $self->log->verbose("brik_init: INT caught, exiting.");
@@ -128,7 +110,7 @@ sub start {
          expire => '1d',             # expire time of cache
          init => 1,                  # clear cache at startup
          unlink => 1,                # destroy cache on exit
-         file => $self->cache_file,  # cache
+         file => $self->datadir.'/'.$self->cache_file,  # cache
       },
       SERVER => {
          address => $hostname,

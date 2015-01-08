@@ -22,6 +22,7 @@ sub brik_properties {
          _read => [ qw(INTERNAL) ],
       },
       attributes_default => {
+         input_whois => 'input_file.whois',
          eof => 0,
       },
       commands => {
@@ -37,31 +38,6 @@ sub brik_properties {
          'Metabrik::File::Text' => [ ],
       },
    };
-}
-
-sub brik_use_properties {
-   my $self = shift;
-
-   my $datadir = $self->global->datadir.'/network-whois';
-
-   return {
-      attributes_default => {
-         datadir => $datadir,
-         input_whois => $datadir."/input_file.whois",
-      },
-   };
-}
-
-sub brik_init {
-   my $self = shift;
-
-   my $dir = $self->datadir;
-   if (! -d $dir) {
-      mkdir($dir)
-         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
-   }
-
-   return $self->SUPER::brik_init(@_);
 }
 
 sub update {
@@ -155,7 +131,7 @@ sub whois_next_record {
 
    my $read = $self->_read;
    if (! defined($read)) {
-      $input ||= $self->input_whois;
+      $input ||= $self->datadir.'/'.$self->input_whois;
       if (! -f $input) {
          return $self->log->error("read_next_record: file [$input] does not exist");
       }

@@ -22,6 +22,7 @@ sub brik_properties {
       attributes_default => {
          target => 'www.example.com',
          port => 80,
+         db => 'sinfp3.db',
       },
       commands => {
          active => [ qw(target|OPTIONAL tcp_port|OPTIONAL) ],
@@ -40,38 +41,6 @@ sub brik_properties {
    };
 }
 
-sub brik_use_properties {
-   my $self = shift;
-
-   my $dir = $self->global->datadir.'/network-sinfp3';
-   my $db = $dir.'/sinfp3.db';
-
-   return {
-      attributes_default => {
-         datadir => $dir,
-         db => $db,
-      },
-   };
-}
-
-sub brik_init {
-   my $self = shift;
-
-   my $dir = $self->datadir;
-   my $db = $self->db;
-
-   if (! -d $dir) {
-      mkdir($dir)
-         or return $self->log->error("brik_init: mkdir failed for dir [$dir]");
-   }
-
-   if (! -f $db) {
-      return $self->log->error("brik_init: SinFP3 db file [$db] not found");
-   }
-
-   return $self->SUPER::brik_init(@_);
-}
-
 sub active {
    my $self = shift;
    my ($target, $port) = @_;
@@ -79,7 +48,11 @@ sub active {
    $target ||= $self->target;
    $port ||= $self->port;
 
-   my $file = $self->db;
+   my $datadir = $self->datadir;
+   my $file = $datadir.'/'.$self->db;
+   if (! -f $file) {
+      return $self->log->error("active: SinFP3 db file [$file] not found");
+   }
 
    my $log = Net::SinFP3::Log::Console->new(
       level => $self->log->level,
