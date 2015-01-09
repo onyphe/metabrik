@@ -30,6 +30,7 @@ lib/Metabrik/File/Create.pm
 lib/Metabrik/File/Csv.pm
 lib/Metabrik/File/Fetch.pm
 lib/Metabrik/File/Find.pm
+lib/Metabrik/File/Ini.pm
 lib/Metabrik/File/Json.pm
 lib/Metabrik/File/Psv.pm
 lib/Metabrik/File/Read.pm
@@ -86,6 +87,7 @@ lib/Metabrik/String/Base64.pm
 lib/Metabrik/String/Compress.pm
 lib/Metabrik/String/Hexa.pm
 lib/Metabrik/String/Html.pm
+lib/Metabrik/String/Ini.pm
 lib/Metabrik/String/Json.pm
 lib/Metabrik/String/Parse.pm
 lib/Metabrik/String/Password.pm

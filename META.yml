@@ -75,6 +75,8 @@ provides:
     file: lib/Metabrik/File/Fetch.pm
   Metabrik::File::Find:
     file: lib/Metabrik/File/Find.pm
+  Metabrik::File::Ini:
+    file: lib/Metabrik/File/Ini.pm
   Metabrik::File::Json:
     file: lib/Metabrik/File/Json.pm
   Metabrik::File::Psv:
@@ -190,6 +192,8 @@ provides:
     file: lib/Metabrik/String/Hexa.pm
   Metabrik::String::Html:
     file: lib/Metabrik/String/Html.pm
+  Metabrik::String::Ini:
+    file: lib/Metabrik/String/Ini.pm
   Metabrik::String::Json:
     file: lib/Metabrik/String/Json.pm
   Metabrik::String::Parse:
