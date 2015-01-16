@@ -69,6 +69,9 @@
       "Metabrik::Crypto::Gpg" : {
          "file" : "lib/Metabrik/Crypto/Gpg.pm"
       },
+      "Metabrik::Crypto::X509" : {
+         "file" : "lib/Metabrik/Crypto/X509.pm"
+      },
       "Metabrik::Database::Cwe" : {
          "file" : "lib/Metabrik/Database/Cwe.pm"
       },

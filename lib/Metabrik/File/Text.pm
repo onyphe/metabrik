@@ -75,7 +75,10 @@ sub write {
    $self->debug && $self->log->debug("write: data[$data]");
 
    $self->open($output) or return $self->log->error("write: open failed");
-   $self->SUPER::write($data) or return $self->log->error("write: write failed");
+   my $r = $self->SUPER::write($data);
+   if (! defined($r)) {
+      return $self->log->error("write: write failed");
+   }
    $self->close;
 
    return 1;

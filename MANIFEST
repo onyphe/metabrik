@@ -13,6 +13,7 @@ lib/Metabrik/Convert/Number.pm
 lib/Metabrik/Convert/Video.pm
 lib/Metabrik/Crypto/Aes.pm
 lib/Metabrik/Crypto/Gpg.pm 
+lib/Metabrik/Crypto/X509.pm
 lib/Metabrik/Database/Cwe.pm
 lib/Metabrik/Database/Elasticsearch.pm
 lib/Metabrik/Database/Keystore.pm

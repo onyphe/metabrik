@@ -20,9 +20,9 @@ sub brik_properties {
          use_recursion => [ qw(0|1) ],
          try => [ qw(try_number) ],
       },
+         #nameserver => '8.8.4.4',
+         #port => 53,
       attributes_default => {
-         nameserver => '8.8.4.4',
-         port => 53,
          use_recursion => 0,
          try => 3,
       },
@@ -38,39 +38,52 @@ sub brik_properties {
 
 sub lookup {
    my $self = shift;
-   my ($host, $nameserver, $port) = @_;
+   my ($host, $type, $nameserver) = @_;
 
    if (! defined($host)) {
       return $self->log->error($self->brik_help_run('lookup'));
    }
 
    $nameserver ||= $self->nameserver;
-   $port ||= $self->port;
+   $type ||= 'A';
 
-   my $dns = Net::DNS::Resolver->new(
-      nameservers => [ $nameserver, ],
-      port => $port,
+   my $port = $self->port || 53;
+
+   my %args = (
       recurse => $self->use_recursion,
       searchlist => [],
       debug => $self->debug ? 1 : 0,
       tcp_timeout => 5, #$self->global->rtimeout,
       udp_timeout => 5, #$self->global->rtimeout,
    );
+
+   if (defined($nameserver)) {
+      $args{nameservers} = [ $nameserver ];
+   }
+
+   if (defined($port)) {
+      $args{port} = $port;
+   }
+
+   my $dns = Net::DNS::Resolver->new(%args);
    if (! defined($dns)) {
       return $self->log->error("lookup: Net::DNS::Resolver new failed");
    }
 
+   $self->log->verbose("lookup: host [$host] for type [$type]");
+
    my $try = $self->try;
    my $packet;
    for (1..$try) {
-      $packet = $dns->search($host);
+      $packet = $dns->query($host, $type);
       if (defined($packet)) {
          last;
       }
+      sleep(1);
    }
 
    if (! defined($packet)) {
-      return $self->log->error("lookup: search failed");
+      return $self->log->error("lookup: query failed [".$dns->errorstring."]");
    }
 
    $self->debug && $self->log->debug("lookup: ".$packet->string);
@@ -78,14 +91,18 @@ sub lookup {
    my @res = ();
    my @answers = $packet->answer;
    for my $rr (@answers) {
+      $self->log->verbose("lookup: ".$rr->string);
+
       my $h = {
-         name => $rr->name,
          type => $rr->type,
-         raw => $rr,
+         ttl => $rr->ttl,
+         name => $rr->name,
+         string => $rr->string,
       };
-      if (defined($rr->address)) {
+      if ($rr->can('address')) {
          $h->{address} = $rr->address;
       }
+
       push @res, $h;
    }
 

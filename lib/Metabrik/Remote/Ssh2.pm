@@ -20,10 +20,11 @@ sub brik_properties {
          publickey => [ qw(file) ],
          privatekey => [ qw(file) ],
          ssh2 => [ qw(Net::SSH2) ],
+         use_publickey => [ qw(0|1) ],
          _channel => [ qw(INTERNAL) ],
       },
       commands => {
-         connect => [ ],
+         connect => [ qw(hostname|OPTIONAL port|OPTIONAL username|OPTIONAL) ],
          cat => [ qw(file) ],
          exec => [ qw(command) ],
          readall => [ ],
@@ -36,6 +37,7 @@ sub brik_properties {
       require_modules => {
          'IO::Scalar' => [ ],
          'Net::SSH2' => [ ],
+         'Metabrik::String::Password' => [ ],
       },
    };
 }
@@ -48,53 +50,70 @@ sub brik_use_properties {
          hostname => $self->global->hostname || 'localhost',
          port => 22,
          username => $self->global->username || 'root',
+         use_publickey => 1,
       },
    };
 }
 
 sub connect {
    my $self = shift;
+   my ($hostname, $port, $username) = @_;
 
    if (defined($self->ssh2)) {
       return $self->log->verbose("connect: already connected");
    }
 
-   if (! defined($self->hostname)) {
+   $hostname ||= $self->hostname;
+   if (! defined($hostname)) {
       return $self->log->error($self->brik_help_set('hostname'));
    }
 
-   if (! defined($self->port)) {
+   $port ||= $self->port;
+   if (! defined($port)) {
       return $self->log->error($self->brik_help_set('port'));
    }
 
+   $username ||= $self->username;
    if (! defined($self->username)) {
       return $self->log->error($self->brik_help_set('username'));
    }
 
-   if (! defined($self->publickey)) {
+   if ($self->use_publickey && ! defined($self->publickey)) {
       return $self->log->error($self->brik_help_set('publickey'));
    }
 
-   if (! defined($self->privatekey)) {
+   if ($self->use_publickey && ! defined($self->privatekey)) {
       return $self->log->error($self->brik_help_set('privatekey'));
    }
 
    my $ssh2 = Net::SSH2->new;
-   my $ret = $ssh2->connect($self->hostname, $self->port);
+   my $ret = $ssh2->connect($hostname, $port);
    if (! $ret) {
       return $self->log->error("connect: can't connect via SSH2: $!");
    }
 
-   $ret = $ssh2->auth(
-      username => $self->username,
-      publickey => $self->publickey,
-      privatekey => $self->privatekey,
-   );
+   my $publickey = $self->publickey;
+   my $privatekey = $self->privatekey;
+
+   if ($self->use_publickey) {
+      #$ret = $ssh2->auth_publickey($username, $publickey, $privatekey);
+      $ret = $ssh2->auth(
+         username => $username,
+         publickey => $publickey,
+         privatekey => $privatekey,
+      );
+   }
+   else {
+      my $string_password = Metabrik::String::Password->new_from_brik($self) or return;
+      my $password = $string_password->prompt;
+
+      $ret = $ssh2->auth_password($username, $password);
+   }
    if (! $ret) {
-      return $self->log->error("connect: can't authenticate via SSH2: $!");
+      return $self->log->error("connect: authentication failed: $!");
    }
 
-   $self->log->verbose("connect: ssh2 connected to [".$self->hostname."]");
+   $self->log->verbose("connect: ssh2 connected to [".$self->hostname."]:$port");
 
    return $self->ssh2($ssh2);
 }

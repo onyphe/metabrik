@@ -29,13 +29,16 @@ sub brik_properties {
          lookup => [ qw(ipv4_address) ],
          update => [ ],
          whois_next_record => [ qw(file.whois|OPTIONAL) ],
+         domain => [ qw(domain) ],
       },
       require_binaries => {
          'dig', => [ ],
       },
       require_modules => {
+         'Net::Whois::Raw' => [ ],
          'Metabrik::Client::Www' => [ ],
          'Metabrik::File::Text' => [ ],
+         'Metabrik::String::Parse' => [ ],
       },
    };
 }
@@ -175,6 +178,28 @@ sub whois_next_record {
    }
 
    return \%record;
+}
+
+sub domain {
+   my $self = shift;
+   my ($domain) = @_;
+
+   if (! defined($domain)) {
+      return $self->log->error($self->brik_help_run('domain'));
+   }
+
+   if ($domain !~ /^\S+\.\S+$/) {
+      return $self->log->error("domain: invalid format for domain [$domain]");
+   }
+
+   my $info = Net::Whois::Raw::whois($domain)
+      or return $self->log->error("domain: whois failed");
+
+   my $parse_string = Metabrik::String::Parse->new_from_brik($self) or return;
+   my $lines = $parse_string->to_array($info)
+      or return $self->log->error("domain: to_array failed");
+
+   return $lines;
 }
 
 1;

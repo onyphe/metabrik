@@ -19,14 +19,17 @@ sub brik_properties {
          ssl_verify => [ qw(0|1) ],
          username => [ qw(username) ],
          password => [ qw(password) ],
+         ignore_body => [ qw(0|1) ],
       },
       # For SSL verify stuff, better to look at AnyEvent::TLS.
       attributes_default => {
          ssl_verify => 1,
+         ignore_body => 0,
       },
       commands => {
          get => [ qw(uri|OPTIONAL) ],
          getcertificate => [ qw(uri|OPTIONAL) ],
+         trace_redirect => [ qw(uri|OPTIONAL) ],
          content => [ ],
          post => [ qw(SCALAR) ],
          info => [ ],
@@ -91,7 +94,9 @@ sub get {
 
    my %response = ();
    $response{code} = $response->code;
-   $response{body} = $response->decoded_content;
+   if (! $self->ignore_body) {
+      $response{body} = $response->decoded_content;
+   }
 
    my $headers = $response->headers;
    $response{headers} = { map { $_ => $headers->{$_} } keys %$headers };
@@ -286,6 +291,63 @@ sub forms {
    }
 
    return $mech;
+}
+
+sub trace_redirect {
+   my $self = shift;
+   my ($uri, $username, $password) = @_;
+
+   $uri ||= $self->uri;
+   if (! defined($uri)) {
+      return $self->log->error($self->brik_help_set('uri'));
+   }
+
+   my %args = ();
+   if (! $self->ssl_verify) {
+      $args{ssl_opts} = { SSL_verify_mode => 'SSL_VERIFY_NONE'};
+   }
+
+   my $lwp = LWP::UserAgent->new(%args);
+   $lwp->timeout($self->global->rtimeout);
+   $lwp->agent('Mozilla/5.0');
+   $lwp->max_redirect(0);
+   $lwp->env_proxy;
+
+   $username ||= $self->username;
+   $password ||= $self->password;
+   if (defined($username) && defined($password)) {
+      $lwp->credentials($username, $password);
+   }
+
+   my @results = ();
+
+   my $location = $uri;
+   # Max 20 redirects
+   for (1..20) {
+      $self->log->verbose("trace_redirect: $location");
+
+      my $response;
+      eval {
+         $response = $lwp->get($location);
+      };
+      if ($@) {
+         return $self->log->error("trace_redirect: unable to get uri [$uri]");
+      }
+
+      my $this = {
+         uri => $location,
+         code => $response->code,
+      };
+      push @results, $this;
+
+      if ($this->{code} != 302 && $this->{code} != 301) {
+         last;
+      }
+
+      $location = $this->{location} = $response->headers->{location};
+   }
+
+   return \@results;
 }
 
 #

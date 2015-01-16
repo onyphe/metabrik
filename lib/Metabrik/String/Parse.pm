@@ -15,8 +15,8 @@ sub brik_properties {
       tags => [ qw(unstable parse string) ],
       commands => {
          identify => [ qw(string) ],
-         to_array => [ qw(0|1) ],
-         to_matrix => [ qw(0|1) ],
+         to_array => [ qw($data) ],
+         to_matrix => [ qw($data) ],
       },
    };
 }
