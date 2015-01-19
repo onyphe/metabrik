@@ -39,9 +39,12 @@ sub brik_properties {
          search => [ qw($query_hash index|OPTIONAL) ],
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
          get => [ qw(id index|OPTIONAL type|OPTIONAL) ],
+         www_search => [ qw(query index|OPTIONAL) ],
       },
       require_modules => {
          'Search::Elasticsearch' => [ ],
+         'Metabrik::Client::Www' => [ ],
+         'Metabrik::String::Json' => [ ],
       },
    };
 }
@@ -231,6 +234,45 @@ sub get {
    );
 
    return $r;
+}
+
+sub www_search {
+   my $self = shift;
+   my ($query, $index_name) = @_;
+
+   if (! defined($query)) {
+      return $self->log->error($self->brik_help_run('www_search'));
+   }
+
+   $index_name ||= $self->index_name;
+   if (! defined($index_name)) {
+      return $self->log->error($self->brik_help_set('index_name'));
+   }
+
+   my $size = $self->size;
+
+   my $client_www = Metabrik::Client::Www->new_from_brik($self) or return;
+
+   my $nodes = $self->nodes;
+   for my $node (@$nodes) {
+      # http://localhost:9200/INDEX/_search/?size=SIZE&q=QUERY
+      my $url = "$node/$index_name/_search/?size=$size&q=".$query;
+
+      my $get = $client_www->get($url);
+      if (! defined($get)) {
+         $self->log->warning("www_search: get failed");
+         next;
+      }
+
+      my $body = $get->{body};
+      my $string_json = Metabrik::String::Json->new_from_brik($self) or return;
+      my $decoded = $string_json->decode($body)
+         or return $self->log->error("www_search: decode failed");
+
+      return $decoded;
+   }
+
+   return;
 }
 
 1;

@@ -34,6 +34,7 @@ sub brik_properties {
          ca_sign_csr => [ qw(name csr_file) ],
          csr_new => [ qw(base_file use_passphrase|OPTIONAL) ],
          cert_hash => [ qw(cert_file) ],
+         cert_verify => [ qw(name cert_file) ],
       },
       require_modules => {
          'Metabrik::File::Text' => [ ],
@@ -270,6 +271,30 @@ sub cert_hash {
    }
 
    my $cmd = "openssl x509 -noout -hash -in $cert_file";
+
+   return $self->capture($cmd);
+}
+
+sub cert_verify {
+   my $self = shift;
+   my ($name, $cert_file) = @_;
+
+   if (! defined($name)) {
+      return $self->log->error($self->brik_help_run('cert_verify'));
+   }
+   if (! defined($cert_file)) {
+      return $self->log->error($self->brik_help_run('cert_verify'));
+   }
+
+   if (! -f $cert_file) {
+      return $self->log->error("cert_verify: file [$cert_file] not found");
+   }
+
+   $self->set_ca_attributes($name) or return;
+
+   my $ca_directory = $self->ca_directory;
+
+   my $cmd = "openssl verify -CApath $ca_directory $cert_file";
 
    return $self->capture($cmd);
 }
