@@ -76,8 +76,10 @@ sub capture {
    #}
 
    my $out = $self->capture_stderr ? `$run 2>&1` : `$run`;
-   if ($? || ! defined($out)) {
-      return $self->log->error("capture: exec failed with error [$!]");
+   $out ||= 'undef';
+   chomp($out);
+   if ($?) {
+      return $self->log->error("capture: exec failed [$out]");
    }
 
    # as_matrix has precedence over as_array (because as_array is the default)
