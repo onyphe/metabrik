@@ -18,9 +18,11 @@ sub brik_properties {
          encoding => [ qw(utf8|ascii) ],
          fd => [ qw(file_descriptor) ],
          as_array => [ qw(0|1) ],
+         eof => [ qw(0|1) ],
       },
       attributes_default => {
          as_array => 0,
+         eof => 0,
       },
       commands => {
          open => [ qw(file|OPTIONAL) ],
@@ -119,6 +121,9 @@ sub read_until_blank_line {
          chomp;
          push @out, $_;
       }
+      if (eof($fd)) {
+         $self->eof(1);
+      }
       return \@out;
    }
    else {
@@ -126,6 +131,9 @@ sub read_until_blank_line {
       while (<$fd>) {
          last if /^\s*$/;
          $out .= $_;
+      }
+      if (eof($fd)) {
+         $self->eof(1);
       }
       return $out;
    }

@@ -22,6 +22,7 @@ lib/Metabrik/Database/Redis.pm
 lib/Metabrik/Database/Sqlite.pm
 lib/Metabrik/Database/Sinfp3.pm
 lib/Metabrik/Database/Vfeed.pm
+lib/Metabrik/Database/Ripe.pm
 lib/Metabrik/Email/Mbox.pm
 lib/Metabrik/Email/Message.pm
 lib/Metabrik/Email/Send.pm
