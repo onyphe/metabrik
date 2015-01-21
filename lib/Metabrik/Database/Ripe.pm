@@ -52,6 +52,7 @@ sub update {
 
    my $file_fetch = Metabrik::File::Fetch->new_from_brik($self) or return;
 
+   my @fetched = ();
    for my $url (@urls) {
       $self->log->verbose("update: fetching url [$url]");
 
@@ -61,7 +62,7 @@ sub update {
       my $output = $self->datadir."/$filename";
       my $get = $file_fetch->get($url, $output);
       if (! defined($get)) {
-         $self->log->warning("update: can't fetching file url [$url]");
+         $self->log->warning("update: can't fetch url [$url]");
          next;
       }
 
@@ -73,9 +74,10 @@ sub update {
          $self->log->warning("update: can't gunzip file [$output]");
          next;
       }
+      push @fetched, $unzipped;
    }
 
-   return 1;
+   return \@fetched;
 }
 
 sub next_record {

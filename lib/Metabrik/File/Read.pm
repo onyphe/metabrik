@@ -19,16 +19,19 @@ sub brik_properties {
          fd => [ qw(file_descriptor) ],
          as_array => [ qw(0|1) ],
          eof => [ qw(0|1) ],
+         count => [ qw(count) ],
       },
       attributes_default => {
          as_array => 0,
          eof => 0,
+         count => 1,
       },
       commands => {
          open => [ qw(file|OPTIONAL) ],
          close => [ ],
          readall => [ ],
          read_until_blank_line => [ ],
+         read_line => [ qw(count|OPTIONAL) ],
       },
    };
 }
@@ -93,6 +96,7 @@ sub readall {
          chomp;
          push @out, $_;
       }
+      $self->eof(1);
       return \@out;
    }
    else {
@@ -100,6 +104,7 @@ sub readall {
       while (<$fd>) {
          $out .= $_;
       }
+      $self->eof(1);
       return $out;
    }
 
@@ -131,6 +136,49 @@ sub read_until_blank_line {
       while (<$fd>) {
          last if /^\s*$/;
          $out .= $_;
+      }
+      if (eof($fd)) {
+         $self->eof(1);
+      }
+      return $out;
+   }
+
+   return;
+}
+
+sub read_line {
+   my $self = shift;
+   my ($count) = @_;
+
+   my $fd = $self->fd;
+   if (! defined($fd)) {
+      return $self->log->error($self->brik_help_run('open'));
+   }
+
+   $count ||= $self->count;
+
+   if ($self->as_array) {
+      my @out = ();
+      my $this = 1;
+      while (<$fd>) {
+         chomp;
+         push @out, $_;
+         last if $this == $count;
+         $count++;
+      }
+      if (eof($fd)) {
+         $self->eof(1);
+      }
+      return \@out;
+   }
+   else {
+      my $out = '';
+      my $this = 1;
+      while (<$fd>) {
+         last if /^\s*$/;
+         $out .= $_;
+         last if $this == $count;
+         $count++;
       }
       if (eof($fd)) {
          $self->eof(1);
