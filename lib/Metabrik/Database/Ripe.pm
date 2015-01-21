@@ -7,7 +7,10 @@ package Metabrik::Database::Ripe;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+# API RIPE search : http://rest.db.ripe.net/search?query-string=193.6.223.152/24
+# https://github.com/RIPE-NCC/whois/wiki/WHOIS-REST-API
+
+use base qw(Metabrik);
 
 sub brik_properties {
    return {
@@ -15,8 +18,11 @@ sub brik_properties {
       tags => [ qw(unstable database ripe netname country as) ],
       attributes => {
          datadir => [ qw(datadir) ],
-         input => [ qw(input_file.ripe) ],
+         input => [ qw(ripe.db) ],
          _read => [ qw(INTERNAL) ],
+      },
+      attributes_default => {
+         input => 'ripe.db',
       },
       commands => {
          update => [ ],
@@ -72,17 +78,11 @@ sub update {
    return 1;
 }
 
-# API RIPE search : http://rest.db.ripe.net/search?query-string=195.6.223.152/29
-# https://github.com/RIPE-NCC/whois/wiki/WHOIS-REST-API
-
 sub next_record {
    my $self = shift;
    my ($input) = @_;
 
-   $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_set('input'));
-   }
+   $input ||= $self->datadir.'/'.$self->input;
    if (! -f $input) {
       return $self->log->error("next_record: file [$input] does not exist");
    }

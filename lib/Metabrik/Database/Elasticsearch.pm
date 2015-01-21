@@ -26,7 +26,7 @@ sub brik_properties {
          _bulk => [ qw(INTERNAL) ],
       },
       attributes_default => {
-         nodes => [ qw(localhost:9200) ],
+         nodes => [ qw(http://localhost:9200) ],
          cxn_pool => 'Sniff',
          bulk_mode => 0,
          from => 0,
