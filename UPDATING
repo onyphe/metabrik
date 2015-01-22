@@ -1,3 +1,9 @@
+20150122
+   AFFECT: database::elasticsearch, file::csv
+
+   - database::elasticsearch open Command now returns connected nodes as an ARRAYREF
+   - file::csv read Command now returns partial data in case of incomplete read
+
 20150116
    AFFECT: network::dns
 

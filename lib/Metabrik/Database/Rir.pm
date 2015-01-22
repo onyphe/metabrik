@@ -96,16 +96,29 @@ sub next_record {
 
    my $line;
    while ($line = $read->read_line) {
+      next if $line =~ /^\s*#/;  # Skip comments
+
       chomp($line);
 
-      $self->log->verbose("next_record: line[$line]");
+      $self->debug && $self->log->debug("next_record: line[$line]");
 
       my @t = split(/\|/, $line);
+
       my $cc = $t[1];
-      my $type = $t[2];
-      $self->log->verbose("next_record: type [$type]");
+      if (! defined($cc)) {
+         $self->log->verbose("next_record: skipping line [$line]");
+         next;
+      }
       next if ($cc eq '*');
+
+      my $type = $t[2];
+      if (! defined($type)) {
+         $self->log->verbose("next_record: skipping line [$line]");
+         next;
+      }
       next if ($type ne 'asn' && $type ne 'ipv4' && $type ne 'ipv6');
+
+      # XXX: TODO, convert IPv4 to int and add $count, then convert to x-subnet
 
       my $rir = $t[0];
       my $value = $t[3];
@@ -113,7 +126,13 @@ sub next_record {
       my $date = $t[5];
       my $status = $t[6];
 
-      $date =~ s/^(\d{4})(\d{2])(\d{2})$/$1-$2-$3/;
+      if ($date !~ /^\d{8}$/) {
+         $self->log->verbose("next_record: invalid date [$date] for line [$line]");
+         $date = '1970-01-01';
+      }
+      else {
+         $date =~ s/^(\d{4})(\d{2})(\d{2})$/$1-$2-$3/;
+      }
 
       my $h = {
          raw => $line,
@@ -121,7 +140,8 @@ sub next_record {
          cc => $cc,
          type => $type,
          value => $value,
-         date => $date,
+         count => $count,
+         'rir-date' => $date,
          status => $status,
       };
 

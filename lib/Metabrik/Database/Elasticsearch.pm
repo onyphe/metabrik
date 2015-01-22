@@ -33,13 +33,14 @@ sub brik_properties {
          size => 10,
       },
       commands => {
-         open => [ ],
+         open => [ qw(index|OPTIONAL type|OPTIONAL) ],
          index => [ qw(document index|OPTIONAL type|OPTIONAL) ],
          index_bulk => [ qw(document) ],
          search => [ qw($query_hash index|OPTIONAL) ],
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
          get => [ qw(id index|OPTIONAL type|OPTIONAL) ],
          www_search => [ qw(query index|OPTIONAL) ],
+         delete => [ qw(index) ],
       },
       require_modules => {
          'Search::Elasticsearch' => [ ],
@@ -64,6 +65,8 @@ sub open {
       return $self->log->error("open: connection failed");
    }
 
+   $self->_elk($elk);
+
    if ($self->bulk_mode) {
       $index ||= $self->index_name;
       if (! defined($index)) {
@@ -86,7 +89,7 @@ sub open {
       return $self->_bulk($bulk);
    }
 
-   return $self->_elk($elk);
+   return $nodes;
 }
 
 sub index {
@@ -273,6 +276,26 @@ sub www_search {
    }
 
    return;
+}
+
+sub delete {
+   my $self = shift;
+   my ($index) = @_;
+
+   my $elk = $self->_elk;
+   if (! defined($elk)) {
+      return $self->log->error($self->brik_help_run('open'));
+   }
+
+   if (! defined($index)) {
+      return $self->log->error($self->brik_help_run('delete'));
+   }
+
+   my $r = $elk->indices->delete(
+      index => $index,
+   );
+
+   return $r;
 }
 
 1;

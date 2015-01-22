@@ -102,7 +102,8 @@ sub read {
 
    if (! $csv->eof) {
       my $error_str = "".$csv->error_diag();
-      return $self->log->error("read: $error_str");
+      $self->log->error("read: incomplete: error [$error_str]");
+      return \@rows;
    }
 
    $read->close;
