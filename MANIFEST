@@ -9,6 +9,7 @@ lib/Metabrik/Audit/Twiki.pm
 lib/Metabrik/Brik/Search.pm
 lib/Metabrik/Client/Tcp.pm
 lib/Metabrik/Client/Www.pm
+lib/Metabrik/Client/Whois.pm
 lib/Metabrik/Convert/Number.pm
 lib/Metabrik/Convert/Video.pm
 lib/Metabrik/Crypto/Aes.pm
