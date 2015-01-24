@@ -33,7 +33,7 @@ sub brik_properties {
 sub brik_init {
    my $self = shift;
 
-   my $so = Metabrik::System::Os->new_from_brik($self) or return;
+   my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
 
    my $distrib = $so->distribution
       or return $self->log->error("brik_init: distribution failed");
@@ -41,10 +41,10 @@ sub brik_init {
    my $sp;
    my $name = $distrib->{name};
    if ($name eq 'Ubuntu') {
-      $sp = Metabrik::System::Ubuntu::Package->new_from_brik($self) or return;
+      $sp = Metabrik::System::Ubuntu::Package->new_from_brik_init($self) or return;
    }
    elsif ($name eq 'FreeBSD') {
-      $sp = Metabrik::System::Freebsd::Package->new_from_brik($self) or return;
+      $sp = Metabrik::System::Freebsd::Package->new_from_brik_init($self) or return;
    }
 
    if (! defined($sp)) {
