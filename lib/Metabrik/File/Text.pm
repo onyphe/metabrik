@@ -16,6 +16,7 @@ sub brik_properties {
       attributes => {
          input => [ qw(file) ],
          output => [ qw(file) ],
+         as_array => [ qw(0|1) ],
       },
       commands => {
          read => [ qw(file) ],
@@ -36,6 +37,7 @@ sub brik_use_properties {
          input => $self->global->input || '/tmp/input.txt',
          output => $self->global->output || '/tmp/output.txt',
          encoding => $self->global->encoding || 'utf8',
+         as_array => 0,
       },
    };
 }
@@ -52,6 +54,7 @@ sub read {
    my $read = Metabrik::File::Read->new_from_brik($self);
    $read->input($input);
    $read->encoding($self->encoding);
+   $read->as_array($self->as_array);
    $read->open or return $self->log->error("read: open failed");
    my $data = $read->readall or return $self->log->error("read: read failed");
    $read->close;

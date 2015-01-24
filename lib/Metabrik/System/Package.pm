@@ -7,23 +7,53 @@ package Metabrik::System::Package;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik);
 
 sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(unstable system package) ],
+      attributes => {
+         _sp => [ qw(INTERNAL) ],
+      },
       commands => {
          search => [ qw(string) ],
          install => [ qw(package) ],
          update => [ ],
          upgrade => [ ],
       },
-      require_binaries => {
-         'aptitude' => [ ],
-         'apt-get' => [ ],
+      require_modules => {
+         'Metabrik::System::Os' => [ ],
+         'Metabrik::System::Ubuntu::Package' => [ ],
+         'Metabrik::System::Freebsd::Package' => [ ],
       },
    };
+}
+
+sub brik_init {
+   my $self = shift;
+
+   my $so = Metabrik::System::Os->new_from_brik($self) or return;
+
+   my $distrib = $so->distribution
+      or return $self->log->error("brik_init: distribution failed");
+
+   my $sp;
+   my $name = $distrib->{name};
+   if ($name eq 'Ubuntu') {
+      $sp = Metabrik::System::Ubuntu::Package->new_from_brik($self) or return;
+   }
+   elsif ($name eq 'FreeBSD') {
+      $sp = Metabrik::System::Freebsd::Package->new_from_brik($self) or return;
+   }
+
+   if (! defined($sp)) {
+      return $self->log->error("brik_init: cannot determine system distribution");
+   }
+
+   $self->_sp($sp);
+
+   return $self->SUPER::brik_init(@_);
 }
 
 sub search {
@@ -34,9 +64,7 @@ sub search {
       return $self->log->error($self->brik_help_run('search'));
    }
 
-   my $cmd = "aptitude search $package";
-
-   return $self->capture($cmd);
+   return $self->_sp->search($package);
 }
 
 sub install {
@@ -47,25 +75,19 @@ sub install {
       return $self->log->error($self->brik_help_run('install'));
    }
 
-   my $cmd = "sudo apt-get install $package";
-
-   return $self->system($cmd);
+   return $self->_sp->install($package);
 }
 
 sub update {
    my $self = shift;
 
-   my $cmd = "sudo apt-get update";
-
-   return $self->system($cmd);
+   return $self->_sp->update;
 }
 
 sub upgrade {
    my $self = shift;
 
-   my $cmd = "sudo apt-get dist-upgrade";
-
-   return $self->system($cmd);
+   return $self->_sp->upgrade;
 }
 
 1;

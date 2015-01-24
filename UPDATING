@@ -1,3 +1,11 @@
+20150124
+   AFFECT: database::elasticsearch, system::os
+
+   - database::elasticsearch search Command renamed to query
+   - database::elasticsearch new Command: search using query string
+   => http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax
+   - system::os arch Command now returns an ARRAYREF with arch name and number of bits
+
 20150122
    AFFECT: database::elasticsearch, file::csv
 

@@ -36,11 +36,14 @@ sub brik_properties {
          open => [ qw(index|OPTIONAL type|OPTIONAL) ],
          index => [ qw(document index|OPTIONAL type|OPTIONAL) ],
          index_bulk => [ qw(document) ],
-         search => [ qw($query_hash index|OPTIONAL) ],
+         query => [ qw($query_hash index|OPTIONAL) ],
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
          get => [ qw(id index|OPTIONAL type|OPTIONAL) ],
          www_search => [ qw(query index|OPTIONAL) ],
          delete => [ qw(index) ],
+         search => [ qw(query_string) ],
+         # XXX: ./bin/plugin -install lmenezes/elasticsearch-kopf
+         #install_plugin => [ qw(plugin) ],
       },
       require_modules => {
          'Search::Elasticsearch' => [ ],
@@ -172,8 +175,7 @@ sub count {
 }
 
 # http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-multi-match-query.html
-
-sub search {
+sub query {
    my $self = shift;
    my ($query, $index) = @_;
 
@@ -293,6 +295,42 @@ sub delete {
 
    my $r = $elk->indices->delete(
       index => $index,
+   );
+
+   return $r;
+}
+
+sub search {
+   my $self = shift;
+   my ($query, $index) = @_;
+
+   my $elk = $self->_elk;
+   if (! defined($elk)) {
+      return $self->log->error($self->brik_help_run('open'));
+   }
+
+   if (! defined($query)) {
+      return $self->log->error($self->brik_help_run('search'));
+   }
+
+   my $dsl_query = {
+      query_string => {
+         query => $query,
+      },
+   };
+
+   $index ||= $self->index_name;
+   if (defined($index)) {
+      $dsl_query->{query_string}->{query} = $index;
+   }
+
+   my $r = $elk->search(
+      index => $index,
+      from => $self->from,
+      size => $self->size,
+      body => {
+         query => $dsl_query,
+      },
    );
 
    return $r;

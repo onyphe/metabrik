@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable os uname) ],
+      tags => [ qw(unstable os uname linux freebsd distribution) ],
       attributes => {
          _uname => [ qw(INTERNAL) ],
       },
@@ -22,9 +22,11 @@ sub brik_properties {
          version => [ ],
          hostname => [ ],
          arch => [ ],
+         distribution => [ ],
       },
       require_modules => {
          'POSIX' => [ ],
+         'Metabrik::File::Text' => [ ],
       },
    };
 }
@@ -42,7 +44,7 @@ sub brik_init {
       arch => $machine,
    });
 
-   return $self->SUPER::brik_init;
+   return $self->SUPER::brik_init(@_);
 }
 
 sub name {
@@ -72,7 +74,65 @@ sub hostname {
 sub arch {
    my $self = shift;
 
-   return $self->_uname->{arch};
+   my $x86_64 = [ qw(x86 64) ];
+   my $x86_32 = [ qw(x86 32) ];
+
+   # Possible other values:
+   # ia64, pc98, powerpc, powerpc64, sparc64
+
+   my $arch = $self->_uname->{arch};
+   if ($arch eq 'amd64' || $arch eq 'x86_64') {
+      return $x86_64;
+   }
+   elsif ($arch eq 'i386' || $arch eq 'i685') {
+      return $x86_32;
+   }
+   else {
+      # We don't know, return raw result
+      return [ $arch ];
+   }
+
+   # Error
+   return;
+}
+
+sub distribution {
+   my $self = shift;
+
+   my $name = $self->name;
+   my $release = $self->release;
+
+   if ($name eq 'Linux') {
+      my $ft = Metabrik::File::Text->new_from_brik($self) or return;
+      $ft->as_array(1);
+
+      # Ubuntu case
+      if (-f '/etc/lsb-release') {
+         my $lines = $ft->read('/etc/lsb-release')
+            or return $self->log->error("distribution: read failed");
+
+         my %info = ();
+         for my $line (@$lines) {
+            my ($k, $v) = split('\s*=\s*', $line);
+            $info{$k} = $v;
+         }
+
+         return {
+            name => $info{DISTRIB_ID},                 # Ubuntu
+            release => $info{DISTRIB_RELEASE},         # 14.10
+            codename => $info{DISTRIB_CODENAME},       # utopic
+            description => $info{DISTRIB_DESCRIPTION}, # Ubuntu 14.10
+         };
+      }
+   }
+
+   # Default
+   return {
+      name => $name,
+      release => $release,
+      codename => $name,
+      description => "$name $release",
+   };
 }
 
 1;

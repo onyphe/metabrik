@@ -7,8 +7,6 @@ package Metabrik::Database::Rir;
 use strict;
 use warnings;
 
-# XXX: use IP::Country?
-
 # Some history:
 # http://www.apnic.net/about-APNIC/organization/history-of-apnic/history-of-the-regional-internet-registries
 
@@ -29,6 +27,7 @@ sub brik_properties {
       commands => {
          update => [ ],
          next_record => [ qw(input|OPTIONAL) ],
+         ip_to_asn => [ qw(ipv4_address) ],
       },
       require_modules => {
          'Metabrik::File::Fetch' => [ ],
@@ -149,6 +148,13 @@ sub next_record {
    }
 
    return;
+}
+
+sub ip_to_asn {
+   my $self = shift;
+   my ($ip) = @_;
+
+   return $self;
 }
 
 1;
