@@ -87,6 +87,12 @@
       "Metabrik::Database::Redis" : {
          "file" : "lib/Metabrik/Database/Redis.pm"
       },
+      "Metabrik::Database::Ripe" : {
+         "file" : "lib/Metabrik/Database/Ripe.pm"
+      },
+      "Metabrik::Database::Rir" : {
+         "file" : "lib/Metabrik/Database/Rir.pm"
+      },
       "Metabrik::Database::Sinfp3" : {
          "file" : "lib/Metabrik/Database/Sinfp3.pm"
       },
@@ -176,6 +182,9 @@
       },
       "Metabrik::Lookup::Ip" : {
          "file" : "lib/Metabrik/Lookup/Ip.pm"
+      },
+      "Metabrik::Lookup::Protocol" : {
+         "file" : "lib/Metabrik/Lookup/Protocol.pm"
       },
       "Metabrik::Network::Address" : {
          "file" : "lib/Metabrik/Network/Address.pm"
@@ -322,6 +331,9 @@
       "Metabrik::String::Xml" : {
          "file" : "lib/Metabrik/String/Xml.pm"
       },
+      "Metabrik::System::Freebsd::Package" : {
+         "file" : "lib/Metabrik/System/Freebsd/Package.pm"
+      },
       "Metabrik::System::Os" : {
          "file" : "lib/Metabrik/System/Os.pm"
       },
@@ -330,6 +342,9 @@
       },
       "Metabrik::System::Service" : {
          "file" : "lib/Metabrik/System/Service.pm"
+      },
+      "Metabrik::System::Ubuntu::Package" : {
+         "file" : "lib/Metabrik/System/Ubuntu/Package.pm"
       },
       "Metabrik::Terminal::Control" : {
          "file" : "lib/Metabrik/Terminal/Control.pm"
@@ -347,7 +362,7 @@
    "release_status" : "stable",
    "resources" : {
       "license" : [
-         "http://opensource.org/licenses/BSD-3-Clause"
+         "http://opensource.org/licenses/bsd-license.php"
       ]
    },
    "version" : "1.05"

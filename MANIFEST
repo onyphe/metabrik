@@ -102,6 +102,8 @@ lib/Metabrik/String/Xml.pm
 lib/Metabrik/System/Os.pm
 lib/Metabrik/System/Package.pm
 lib/Metabrik/System/Service.pm
+lib/Metabrik/System/Freebsd/Package.pm
+lib/Metabrik/System/Ubuntu/Package.pm
 lib/Metabrik/Terminal/Control.pm
 lib/Metabrik/Time/Universal.pm
 lib/Metabrik/Www/Splunk.pm
