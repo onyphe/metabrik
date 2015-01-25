@@ -16,6 +16,7 @@ sub brik_properties {
       attributes => {
          datadir => [ qw(datadir) ],
          input => [ qw(input) ],
+         _load => [ qw(INTERNAL) ],
       },
       attributes_default => {
          separator => ',',
@@ -24,9 +25,9 @@ sub brik_properties {
       commands => {
          update => [ qw(output|OPTIONAL) ],
          load => [ qw(input|OPTIONAL) ],
-         int => [ qw(int_number) ],
-         hex => [ qw(hex_number) ],
-         string => [ qw(ip_type) ],
+         from_dec => [ qw(dec_number) ],
+         from_hex => [ qw(hex_number) ],
+         from_string => [ qw(protocol_string) ],
       },
       require_modules => {
          'Metabrik::File::Fetch' => [ ],
@@ -44,17 +45,19 @@ sub update {
 
    $output ||= $self->datadir.'/'.$file;
 
-   my $ff = Metabrik::File::Fetch->new_from_brik($self) or return;
+   my $ff = Metabrik::File::Fetch->new_from_brik_init($self) or return;
    $ff->get($url, $output)
       or return $self->log->error("update: get failed");
 
    # We have to rewrite the CSV file, cause some entries are multiline.
-   my $ft = Metabrik::File::Text->new_from_brik($self) or return;
+   my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
    $ft->overwrite(1);
    $ft->append(0);
-   my $text = $ft->read($file)
+   my $text = $ft->read($output)
       or return $self->log->error("update: read failed");
 
+   # Some lines are split on multi-lines, we put into a single line
+   # for each record.
    my @new = split(/\r\n/, $text);
    for (@new) {
       s/\n/ /g;
@@ -71,12 +74,77 @@ sub load {
 
    $input ||= $self->datadir.'/'.$self->input;
    if (! -f $input) {
-      return $self->log->error($self->brik_help_set('input'));
+      return $self->log->error("load: file [$input] not found");
    }
 
-   my $data = $self->read($input);
+   my $data = $self->read($input)
+      or return $self->log->error("load: read failed");
 
-   return $data;
+   return $self->_load($data);
+}
+
+sub from_dec {
+   my $self = shift;
+   my ($dec) = @_;
+
+   if (! defined($dec)) {
+      return $self->log->error($self->brik_help_run('from_dec'));
+   }
+
+   my $data = $self->_load || $self->load;
+   if (! defined($data)) {
+      return $self->log->error("from_dec: load failed");
+   }
+
+   for my $this (@$data) {
+      if ($this->{Decimal} == $dec) {
+         return $this->{Keyword};
+      }
+   }
+
+   # No match
+   return;
+}
+
+sub from_hex {
+   my $self = shift;
+   my ($hex) = @_;
+
+   if (! defined($hex)) {
+      return $self->log->error($self->brik_help_run('from_hex'));
+   }
+
+   my $dec = hex($hex);
+
+   return $self->from_dec($dec);
+}
+
+sub from_string {
+   my $self = shift;
+   my ($string) = @_;
+
+   if (! defined($string)) {
+      return $self->log->error($self->brik_help_run('from_string'));
+   }
+
+   my $data = $self->_load || $self->load;
+   if (! defined($data)) {
+      return $self->log->error("from_string: load failed");
+   }
+
+   my @match = ();
+   for my $this (@$data) {
+      if ($this->{Keyword} =~ /$string/i) {
+         $self->log->verbose("from_string: match with [".$this->{Keyword}."]");
+         push @match, $this->{Decimal};
+      }
+      elsif ($this->{Protocol} =~ /$string/i) {
+         $self->log->verbose("from_string: match with [".$this->{Protocol}."]");
+         push @match, $this->{Decimal};
+      }
+   }
+
+   return \@match;
 }
 
 1;
