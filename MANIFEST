@@ -53,6 +53,7 @@ lib/Metabrik/Log/Dual.pm
 lib/Metabrik/Lookup/Ethernet.pm
 lib/Metabrik/Lookup/Ip.pm
 lib/Metabrik/Lookup/Protocol.pm
+lib/Metabrik/Lookup/Service.pm
 lib/Metabrik/Network/Address.pm
 lib/Metabrik/Network/Arp.pm
 lib/Metabrik/Network/Arpdiscover.pm

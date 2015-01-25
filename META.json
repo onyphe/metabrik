@@ -54,6 +54,9 @@
       "Metabrik::Client::Tcp" : {
          "file" : "lib/Metabrik/Client/Tcp.pm"
       },
+      "Metabrik::Client::Whois" : {
+         "file" : "lib/Metabrik/Client/Whois.pm"
+      },
       "Metabrik::Client::Www" : {
          "file" : "lib/Metabrik/Client/Www.pm"
       },
@@ -185,6 +188,9 @@
       },
       "Metabrik::Lookup::Protocol" : {
          "file" : "lib/Metabrik/Lookup/Protocol.pm"
+      },
+      "Metabrik::Lookup::Service" : {
+         "file" : "lib/Metabrik/Lookup/Service.pm"
       },
       "Metabrik::Network::Address" : {
          "file" : "lib/Metabrik/Network/Address.pm"
