@@ -186,6 +186,9 @@
       "Metabrik::Lookup::Ip" : {
          "file" : "lib/Metabrik/Lookup/Ip.pm"
       },
+      "Metabrik::Lookup::Oui" : {
+         "file" : "lib/Metabrik/Lookup/Oui.pm"
+      },
       "Metabrik::Lookup::Protocol" : {
          "file" : "lib/Metabrik/Lookup/Protocol.pm"
       },
