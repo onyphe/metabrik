@@ -15,9 +15,11 @@ sub brik_properties {
       tags => [ qw(unstable arp scan discover) ],
       attributes => {
          try => [ qw(try_count) ],
+         timeout => [ qw(timeout_seconds) ],
       },
       attributes_default => {
          try => 2,
+         timeout => 2,
       },
       commands => {
          scan => [ qw(subnet|OPTIONAL) ],
@@ -58,8 +60,8 @@ sub scan {
    my $self = shift;
    my ($subnet) = @_;
 
-   my $network_arp = Metabrik::Network::Arp->new_from_brik_init($self);
-   my $network_address = Metabrik::Network::Address->new_from_brik_init($self);
+   my $network_arp = Metabrik::Network::Arp->new_from_brik_init($self) or return;
+   my $network_address = Metabrik::Network::Address->new_from_brik_init($self) or return;
 
    my $interface = $self->interface;
 
@@ -96,12 +98,13 @@ sub scan {
       }
    }
 
-   my $network_write = Metabrik::Network::Write->new_from_brik($self);
+   my $network_write = Metabrik::Network::Write->new_from_brik_init($self) or return;
 
    my $write = $network_write->open(2, $self->device)
       or return $self->log->error("scan: open failed");
 
-   my $network_read = Metabrik::Network::Read->new_from_brik($self);
+   my $network_read = Metabrik::Network::Read->new_from_brik_init($self) or return;
+   $network_read->rtimeout($self->timeout);
 
    my $filter = 'arp and src net '.$subnet.' and dst host '.$interface->{ipv4};
    my $read = $network_read->open(2, $self->device, $filter)
@@ -133,7 +136,7 @@ sub scan {
          my $src_ip = $r->ref->{ARP}->srcIp;
          if (! exists($reply_cache->{$src_ip})) {
             my $mac = $r->ref->{ARP}->src;
-            $self->log->info("scan2: received mac [$mac] for ipv4 [$src_ip]");
+            $self->log->info("scan: received mac [$mac] for ipv4 [$src_ip]");
             $reply_cache->{$src_ip} = $r->ref->{ARP}->src;
 
             # Put it in ARP cache table for next round
@@ -147,11 +150,18 @@ sub scan {
    $network_write->close;
    $network_read->close;
 
+   my %results = ();
    for (keys %$reply_cache) {
-      $self->log->verbose(sprintf("%-16s => %s", $_, $reply_cache->{$_}));
+      my $mac = $reply_cache->{$_};
+      my $ip4 = $_;
+      my $ip6 = $network_arp->mac2eui64($mac);
+      $self->log->verbose(sprintf("%-16s => %s  [%s]", $ip4, $mac, $ip6));
+      $results{$ip4} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
+      $results{$mac} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
+      $results{$ip6} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
    }
 
-   return $reply_cache;
+   return \%results;
 }
 
 1;

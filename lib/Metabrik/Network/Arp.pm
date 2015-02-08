@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable arp cache poison) ],
+      tags => [ qw(unstable arp cache poison eui64) ],
       attributes => {
          _dnet => [ qw(Net::Libdnet::Arp) ],
       },
@@ -20,6 +20,7 @@ sub brik_properties {
          cache => [ ],
          half_poison => [ ],
          full_poison => [ ],
+         mac2eui64 => [ qw(mac_address) ],
       },
       require_modules => {
          'Net::Libdnet::Arp' => [ ],
@@ -37,7 +38,7 @@ sub brik_init {
 
    $self->_dnet($dnet);
 
-   return $self->SUPER::brik_init;
+   return $self->SUPER::brik_init(@_);
 }
 
 sub _loop {
@@ -72,6 +73,26 @@ sub full_poison {
    $self->log->info("TODO");
 
    return 1;
+}
+
+# Taken from Net::SinFP3
+sub mac2eui64 {
+   my $self = shift;
+   my ($mac) = @_;
+
+   if (! defined($mac)) {
+      return $self->log->error($self->brik_help_run('mac2eui64'));
+   }
+
+   if ($mac !~ /^[0-9a-z]{2}:[0-9a-z]{2}:[0-9a-z]{2}:[0-9a-z]{2}:[0-9a-z]{2}:[0-9a-z]{2}$/i) {
+      return $self->log->error("mac2eui64: invalid MAC address [$mac]");
+   }
+
+   my @b  = split(':', $mac);
+   my $b0 = hex($b[0]) ^ 2;
+
+   return sprintf("fe80::%x%x:%xff:fe%x:%x%x", $b0, hex($b[1]), hex($b[2]),
+      hex($b[3]), hex($b[4]), hex($b[5]));
 }
 
 1;

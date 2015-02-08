@@ -32,31 +32,36 @@ sub probe {
 
    my $nb = Net::NBName->new;
    if (! $nb) {
-      return $self->log->error("can't new() Net::NBName: $!");
+      return $self->log->error("probe: Net::NBName new failed");
    }
+
+   my %result = ();
 
    my $ns = $nb->node_status($ip);
    if ($ns) {
-      #for my $rr ($ns->names) {
-          #if ($rr->suffix == 0 && $rr->G eq "GROUP") {
-              #$domain = $rr->name;
-          #}
-          #if ($rr->suffix == 3 && $rr->G eq "UNIQUE") {
-              #$user = $rr->name;
-          #}
-          #if ($rr->suffix == 0 && $rr->G eq "UNIQUE") {
-              #$machine = $rr->name unless $rr->name =~ /^IS~/;
-          #}
-      #}
-      #$mac_address = $ns->mac_address;
-      #print "$mac_address $domain\\$machine $user";
-      print $ns->as_string;
-      return $nb;
+      my ($domain, $user, $machine);
+      for my $rr ($ns->names) {
+         if ($rr->suffix == 0 && $rr->G eq "GROUP") {
+            $domain = $rr->name;
+         }
+         if ($rr->suffix == 3 && $rr->G eq "UNIQUE") {
+            $user = $rr->name;
+         }
+         if ($rr->suffix == 0 && $rr->G eq "UNIQUE") {
+            $machine = $rr->name unless $rr->name =~ /^IS~/;
+         }
+      }
+
+      $result{mac} = $ns->mac_address;
+      $result{domain} = $domain;
+      $result{user} = $user;
+      $result{machine} = $machine;
+
+      my $raw = $ns->as_string;
+      $result{raw} = [ split(/\n/, $raw) ];
    }
 
-   print "no response\n";
-
-   return $nb;
+   return \%result;
 }
 
 1;
