@@ -39,10 +39,8 @@ sub brik_init {
    if ($context->is_used('shell::rc')) {
       $self->debug && $self->log->debug("brik_init: load rc file");
 
-      my $cmd = $context->run('shell::rc', 'load');
-      for (@$cmd) {
-         $shell->cmd($_);
-      }
+      my $lines = $context->run('shell::rc', 'load');
+      $shell->cmdloop($lines);
    }
 
    $self->debug && $self->log->debug("brik_init: done");
@@ -66,31 +64,10 @@ sub load {
    }
 
    my @lines = ();
-   my @multilines = ();
    open(my $in, '<', $file)
          or return $self->log->error("load: can't open file [$file]: $!");
-   while (defined(my $this = <$in>)) {
-      chomp($this);
-      next if ($this =~ /^\s*#/);  # Skip comments
-      next if ($this =~ /^\s*$/);  # Skip blank lines
-
-      push @multilines, $this;
-
-      # First line of a multiline
-      if ($this =~ /\\\s*$/) {
-         next;
-      }
-
-      # Multiline edition finished, we can remove the `\' char before joining
-      for (@multilines) {
-         s/\\\s*$//;
-      }
-
-      $self->debug && $self->log->debug("load: multilines[@multilines]");
-
-      my $line = join('', @multilines);
-      @multilines = ();
-
+   while (defined(my $line = <$in>)) {
+      chomp($line);
       push @lines, $line;
    }
    close($in);
@@ -115,12 +92,7 @@ sub exec {
    my $context = $self->context;
    my $shell = $self->shell;
 
-   for (@$lines) {
-      if (/^\s*exit\s*(\d+)\s*;/) {
-         exit($1);
-      }
-      $shell->cmd($_);
-   }
+   $shell->cmdloop($lines);
 
    return 1;
 }
