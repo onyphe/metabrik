@@ -287,7 +287,7 @@
       },
       "Metabrik::Repository" : {
          "file" : "lib/Metabrik/Repository.pm",
-         "version" : "1.05"
+         "version" : "1.06"
       },
       "Metabrik::Server::Agent" : {
          "file" : "lib/Metabrik/Server/Agent.pm"
@@ -374,5 +374,5 @@
          "http://opensource.org/licenses/bsd-license.php"
       ]
    },
-   "version" : "1.05"
+   "version" : "1.06"
 }

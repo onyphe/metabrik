@@ -42,7 +42,9 @@ sub unzip {
 
    my $cmd = "unzip -o $input -d $datadir/";
 
-   return $self->system($cmd);
+   $self->system($cmd) or return;
+
+   return $datadir;
 }
 
 sub gunzip {
@@ -64,7 +66,9 @@ sub gunzip {
 
    my $cmd = "gunzip -c $input > $file_out";
 
-   return $self->system($cmd);
+   $self->system($cmd) or return;
+
+   return $file_out;
 }
 
 1;

@@ -20,11 +20,13 @@ sub brik_properties {
          as_array => [ qw(0|1) ],
          eof => [ qw(0|1) ],
          count => [ qw(count) ],
+         strip_crlf => [ qw(0|1) ],
       },
       attributes_default => {
          as_array => 0,
          eof => 0,
          count => 1,
+         strip_crlf => 1,
       },
       commands => {
          open => [ qw(file|OPTIONAL) ],
@@ -90,10 +92,14 @@ sub readall {
       return $self->log->error($self->brik_help_run('open'));
    }
 
+   my $strip_crlf = $self->strip_crlf;
+
    if ($self->as_array) {
       my @out = ();
       while (<$fd>) {
-         chomp;
+         if ($strip_crlf) {
+            s/[\r\n]*$//;
+         }
          push @out, $_;
       }
       $self->eof(1);
@@ -119,11 +125,15 @@ sub read_until_blank_line {
       return $self->log->error($self->brik_help_run('open'));
    }
 
+   my $strip_crlf = $self->strip_crlf;
+
    if ($self->as_array) {
       my @out = ();
       while (<$fd>) {
          last if /^\s*$/;
-         chomp;
+         if ($strip_crlf) {
+            s/[\r\n]*$//;
+         }
          push @out, $_;
       }
       if (eof($fd)) {
@@ -157,11 +167,15 @@ sub read_line {
 
    $count ||= $self->count;
 
+   my $strip_crlf = $self->strip_crlf;
+
    if ($self->as_array) {
       my @out = ();
       my $this = 1;
       while (<$fd>) {
-         chomp;
+         if ($strip_crlf) {
+            s/[\r\n]*$//;
+         }
          push @out, $_;
          last if $this == $count;
          $count++;
@@ -176,6 +190,9 @@ sub read_line {
       my $this = 1;
       while (<$fd>) {
          last if /^\s*$/;
+         if ($strip_crlf) {
+            s/[\r\n]*$//;
+         }
          $out .= $_;
          last if $this == $count;
          $count++;

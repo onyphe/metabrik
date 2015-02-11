@@ -17,6 +17,7 @@ sub brik_properties {
          input => [ qw(file) ],
          output => [ qw(file) ],
          as_array => [ qw(0|1) ],
+         strip_crlf => [ qw(0|1) ],
       },
       commands => {
          read => [ qw(file) ],
@@ -38,6 +39,7 @@ sub brik_use_properties {
          output => $self->global->output || '/tmp/output.txt',
          encoding => $self->global->encoding || 'utf8',
          as_array => 0,
+         strip_crlf => 0,
       },
    };
 }
@@ -55,6 +57,7 @@ sub read {
    $read->input($input);
    $read->encoding($self->encoding);
    $read->as_array($self->as_array);
+   $read->strip_crlf($self->strip_crlf);
    $read->open or return $self->log->error("read: open failed");
    my $data = $read->readall or return $self->log->error("read: read failed");
    $read->close;
