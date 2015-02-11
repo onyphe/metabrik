@@ -7,7 +7,7 @@ package Metabrik::Shell::Script;
 use strict;
 use warnings;
 
-our $VERSION = '1.05';
+our $VERSION = '1.06';
 
 use base qw(Metabrik);
 
@@ -22,7 +22,7 @@ sub brik_properties {
          file => 'script.brik',
       },
       commands => {
-         load => [ ],
+         load => [ qw(input_file|OPTIONAL) ],
          exec => [ qw($line_list) ],
       },
    };
@@ -51,13 +51,14 @@ sub brik_init {
       exit(0);
    };
 
-   return $self->SUPER::brik_init;
+   return $self->SUPER::brik_init(@_);
 }
 
 sub load {
    my $self = shift;
+   my ($file) = @_;
 
-   my $file = $self->file;
+   $file ||= $self->file;
 
    if (! -f $file) {
       return $self->log->info("load: can't find file [$file]");
