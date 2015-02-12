@@ -24,9 +24,6 @@ sub brik_properties {
          system => [ qw(command) ],
          capture => [ qw(command) ],
       },
-      require_modules => {
-         'IPC::Run' => [ qw(run) ],
-      },
    };
 }
 
@@ -65,15 +62,6 @@ sub capture {
    }
 
    my $run = join(' ', $cmd, @args);
-
-   #my $out = '';
-   #eval {
-      ## IPC::Run: does not provide string interpolation for shell
-      #IPC::Run::run([ $run ], \undef, \$out);
-   #};
-   #if ($@) {
-      #return $self->log->error("capture: $@");
-   #}
 
    my $out = $self->capture_stderr ? `$run 2>&1` : `$run`;
    $out ||= 'undef';
