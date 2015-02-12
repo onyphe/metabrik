@@ -16,11 +16,12 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(main shell rc) ],
       attributes => {
-         rc_file => [ qw(file) ],
+         file => [ qw(file) ],
          create_default => [ qw(0|1) ],
       },
       commands => {
-         load => [ ],
+         load => [ qw(input_file|OPTIONAL) ],
+         exec => [ qw($line_list) ],
          write_default => [ ],
       },
    };
@@ -31,7 +32,7 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         rc_file => $self->global->homedir.'/.metabrik_rc',
+         file => $self->global->homedir.'/.metabrik_rc',
          create_default => 1,
       },
    };
@@ -39,20 +40,21 @@ sub brik_use_properties {
 
 sub load {
    my $self = shift;
+   my ($file) = @_;
 
-   my $rc_file = $self->rc_file;
+   $file ||= $self->file;
 
-   if (! -f $rc_file && $self->create_default) {
+   if (! -f $file && $self->create_default) {
       $self->write_default;
    }
 
-   if (! -f $rc_file && ! $self->create_default) {
-      return $self->log->error("load: can't find rc file [$rc_file]");
+   if (! -f $file && ! $self->create_default) {
+      return $self->log->error("load: can't find rc file [$file]");
    }
 
    my @lines = ();
-   open(my $in, '<', $rc_file)
-         or return $self->log->error("local: can't open rc file [$rc_file]: $!");
+   open(my $in, '<', $file)
+         or return $self->log->error("local: can't open rc file [$file]: $!");
    while (defined(my $line = <$in>)) {
       chomp($line);
       push @lines, $line;
@@ -64,11 +66,31 @@ sub load {
    return \@lines;
 }
 
+sub exec {
+   my $self = shift;
+   my ($lines) = @_;
+
+   if (! defined($lines)) {
+      return $self->log->error($self->brik_help_run('exec'));
+   }
+
+   if (ref($lines) ne 'ARRAY') {
+      return $self->log->error("exec: must give an ARRAYREF as argument");
+   }
+
+   my $context = $self->context;
+   my $shell = $self->shell;
+
+   $shell->cmdloop($lines);
+
+   return 1;
+}
+
 sub write_default {
    my $self = shift;
    my ($file) = @_;
 
-   $file ||= $self->rc_file;
+   $file ||= $self->file;
 
    if (-f $file) {
       return $self->log->error("create: file [$file] already exists");
