@@ -29,7 +29,7 @@ sub brik_properties {
       require_modules => {
          'Net::Libdnet::Intf' => [ ],
          'Net::Pcap' => [ ],
-         'Net::Frame::Device' => [ ],
+         'Net::Routing' => [ ],
          'Metabrik::Client::Www' => [ ],
       },
    };
@@ -45,72 +45,14 @@ sub _to_dot_quad {
 sub list {
    my $self = shift;
 
-   my $devices = {};
-
    my $dev = {};
    my $err = '';
-   Net::Pcap::findalldevs($dev, \$err);
-   if (length($err)) {
+   my @devs = Net::Pcap::findalldevs($dev, \$err);
+   if (length($err) || @devs == 0) {
       return $self->log->error("list: findalldevs failed with error [$err]");
    }
 
-   for my $this (keys %$dev) {
-      $devices->{$this}->{device} = $this;
-
-      my $network;
-      my $mask;
-      $err = '';
-      if (Net::Pcap::lookupnet($this, \$network, \$mask, \$err) < 0) {
-         $self->enable_warnings && $self->log->warning("list: lookupnet failed for device [$this] with error [$err]");
-         $err = '';
-         next;
-      }
-
-      my $dot_network = $self->_to_dot_quad($network);
-      my $dot_mask = $self->_to_dot_quad($mask);
-
-      $devices->{$this}->{network} = $dot_network;
-      $devices->{$this}->{mask} = $dot_mask;
-
-      my $intf = Net::Libdnet::Intf->new;
-      if (! defined($intf)) {
-         $self->enable_warnings && $self->log->warning("list: Net::Libdnet::Intf new failed for device [$this]");
-         next;
-      }
-      my $get = $intf->get($this);
-      if (! defined($get)) {
-         $self->enable_warnings && $self->log->warning("list: Net::Libdnet::Intf get failed for device [$this]");
-         next;
-      }
-
-      # Check Net::Libdnet::Entry::Intf for more
-      #$devices->{$this}->{_get} = $get;
-      my $ip;
-      my $cidr;
-      my $mac;
-      if ($ip = $get->ip) {
-         $devices->{$this}->{ipv4} = $ip;
-      }
-      if ($cidr = $get->cidr) {
-         $devices->{$this}->{cidr} = $cidr;
-      }
-      if ($mac = $get->linkAddr) {
-         $devices->{$this}->{mac} = $mac;
-      }
-      my @aliases = $get->aliasAddrs;
-      if (@aliases > 0) {
-         # IPv6 are within aliases. First one if the main IPv6 address.
-         if (defined($aliases[0])) {
-            $devices->{$this}->{ipv6} = $aliases[0];
-         }
-      }
-
-      if (defined($ip) && defined($cidr)) {
-         $devices->{$this}->{subnet} = "$dot_network/$cidr";
-      }
-   }
-
-   return $devices;
+   return \@devs;
 }
 
 sub get {
@@ -121,13 +63,61 @@ sub get {
       return $self->log->error($self->brik_help_run('get'));
    }
 
-   my $list = $self->list or return $self->log->error("get: list failed");
-
-   if (! exists($list->{$device})) {
-      return $self->log->error($self->brik_help_run('get'));
+   my $intf = Net::Libdnet::Intf->new;
+   if (! defined($intf)) {
+      $self->enable_warnings
+         && $self->log->warning("list: Net::Libdnet::Intf new failed for device [$device]");
+      next;
    }
 
-   return $list->{$device};
+   my $get = $intf->get($device);
+   if (! defined($get)) {
+      $self->enable_warnings
+         && $self->log->warning("list: Net::Libdnet::Intf get failed for device [$device]");
+      next;
+   }
+
+   my $network;
+   my $mask;
+   my $err = '';
+   if (Net::Pcap::lookupnet($device, \$network, \$mask, \$err) < 0) {
+      $self->enable_warnings
+         && $self->log->warning("list: lookupnet failed for device [$device] with error [$err]");
+   }
+
+   my $dot_network = $self->_to_dot_quad($network);
+   #my $dot_mask = $self->_to_dot_quad($mask);
+
+   my $dev = {
+      interface => $device,
+   };
+
+   # Check Net::Libdnet::Entry::Intf for more
+   my $ip;
+   my $cidr;
+   my $mac;
+   if ($ip = $get->ip) {
+      $dev->{ipv4} = $ip;
+   }
+   if ($cidr = $get->cidr) {
+      $dev->{cidr} = $cidr;
+   }
+   if ($mac = $get->linkAddr) {
+      $dev->{mac} = $mac;
+   }
+   my @aliases = $get->aliasAddrs;
+   if (@aliases > 0) {
+      # IPv6 are within aliases. First one if the main IPv6 address.
+      if (defined($aliases[0])) {
+         $dev->{ipv6} = $aliases[0];
+      }
+   }
+
+   if (defined($ip) && defined($cidr)) {
+      $dev->{subnet} = "$dot_network/$cidr";
+   }
+
+   return $dev;
 }
 
 sub default {
@@ -136,31 +126,33 @@ sub default {
 
    $destination ||= '8.8.8.8'; # Default route to Internet Google DNS nameserver
 
-   my $get;
-   if (defined($destination)) {
-      my $intf = Net::Libdnet::Intf->new;
-      if (! defined($intf)) {
-         return $self->log->error("default: Net::Libdnet::Intf new failed");
-      }
+   my $family = Net::Routing::NR_FAMILY_INET4();
 
-      $get = $intf->getSrcIntfFromDst($destination);
+   my $nr = Net::Routing->new(
+      target => $destination,
+      family => $family,
+   );
+   if (! defined($nr)) {
+      return $self->log->error("default: new failed: $Net::Routing::Error");
    }
+
+   my $list = $nr->get
+      or return $self->log->error("default: get failed: $Net::Routing::Error");
+   # Only one possibility, that's great
+   if (@$list == 1) {
+      return $list->[0]->{interface};
+   }
+   # Or we return every possible interface
    else {
-      my $intf = Net::Libdnet::Intf->new;
-      if (! defined($intf)) {
-         return $self->log->error("default: Net::Libdnet::Intf new failed");
+      my %interfaces = ();
+      for my $i (@$list) {
+         $interfaces{$i->{interface}}++;
       }
-
-      $get = $intf->get;
+      return [ keys %interfaces ];
    }
 
-   if (! defined($get)) {
-      return $self->log->error("default: get failed");
-   }
-
-   my $list = $self->list or return $self->log->error("default: list failed");
-
-   return $list->{$get};
+   # Error
+   return;
 }
 
 sub show {
@@ -169,19 +161,15 @@ sub show {
    my $devices = $self->list or return $self->log->error("show: list failed");
 
    for my $this (keys %$devices) {
-      my $device = Net::Libdnet::Intf->new;
+      my $device = $self->get($this);
       if (! defined($device)) {
-         $self->enable_warnings && $self->log->warning("show: Net::Libdnet::Intf new failed for device [$this]");
+         $self->enable_warnings
+            && $self->log->warning("show: get failed for device [$this]");
          next;
       }
 
-      my $get = $device->get($this);
-      if (! defined($get)) {
-         $self->enable_warnings && $self->log->warning("show: Net::Libdnet::Intf get failed for device [$this]");
-         next;
-      }
-
-      print $get->print."\n";
+      # XXX: to complete
+      printf("interface: %s  ipv4: %s\n", $device->{interface}, $device->{ipv4});
    }
 
    return 1;

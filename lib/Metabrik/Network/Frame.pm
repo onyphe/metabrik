@@ -20,7 +20,7 @@ sub brik_properties {
       commands => {
          update_interface => [ ],
          from_read => [ qw(frame) ],
-         from_hexa => [ ],
+         from_hexa => [ qw(hexa first_layer|OPTIONAL) ],
          show => [ ],
          mac2eui64 => [ qw(mac_address) ],
          frame => [ qw(layers_list) ],
@@ -104,11 +104,13 @@ sub from_read {
 
 sub from_hexa {
    my $self = shift;
-   my ($data) = @_;
+   my ($data, $first_layer) = @_;
 
    if (! defined($data)) {
       return $self->log->error($self->brik_help_run('from_hexa'));
    }
+
+   $first_layer ||= 'IPv4';
 
    my $string_hexa = Metabrik::String::Hexa->new_from_brik_init($self);
 
@@ -119,7 +121,7 @@ sub from_hexa {
    my $raw = $string_hexa->decode($data)
       or return $self->log->error("from_hexa: decode failed");
 
-   return Net::Frame::Simple->new(raw => $raw, firstLayer => 'ETH');
+   return Net::Frame::Simple->new(raw => $raw, firstLayer => $first_layer);
 }
 
 sub show {

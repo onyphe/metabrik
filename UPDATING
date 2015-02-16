@@ -1,3 +1,10 @@
+20150216
+   AFFECT: network::device
+
+   - list Command returns an ARRAY of available devices
+   - get Command returns a HASH of attributes for a given device
+   - default Command returns default device name or a list of possible default names
+
 20150210
    AFFECT: file::compress
 
