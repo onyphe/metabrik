@@ -105,6 +105,7 @@ sub distribution {
    if ($name eq 'Linux') {
       my $ft = Metabrik::File::Text->new_from_brik($self) or return;
       $ft->as_array(1);
+      $ft->strip_crlf(1);
 
       # Ubuntu case
       if (-f '/etc/lsb-release') {
@@ -116,6 +117,9 @@ sub distribution {
             my ($k, $v) = split('\s*=\s*', $line);
             $info{$k} = $v;
          }
+
+         $info{DISTRIB_DESCRIPTION} =~ s/^"//;
+         $info{DISTRIB_DESCRIPTION} =~ s/"$//;
 
          return {
             name => $info{DISTRIB_ID},                 # Ubuntu

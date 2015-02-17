@@ -1,3 +1,9 @@
+20150217
+   AFFECT: network::frame
+
+   - interface Attribute renamed to device_info
+   - update_interface Command renamed to update_device_info
+
 20150216
    AFFECT: network::device
 

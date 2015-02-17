@@ -12,21 +12,24 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(TODO frame packet network) ],
+      tags => [ qw(unstable network frame packet ip tcp udp icmp eth ethernet arp) ],
       attributes => {
          device => [ qw(device) ],
-         interface => [ qw(interface_info_hash) ],
+         device_info => [ qw(device_info_hash) ],
       },
       commands => {
-         update_interface => [ ],
+         update_device_info => [ ],
          from_read => [ qw(frame) ],
          from_hexa => [ qw(hexa first_layer|OPTIONAL) ],
+         from_raw => [ qw(raw first_layer|OPTIONAL) ],
          show => [ ],
          mac2eui64 => [ qw(mac_address) ],
-         frame => [ qw(layers_list) ],
-         arp => [ qw(destination_ipv4_address|OPTIONAL) ],
-         eth => [ ],
-         ipv4 => [ qw(protocol_id|OPTIONAL) ],
+         frame => [ qw(layers_array) ],
+         arp => [ qw(destination_ipv4_address|OPTIONAL destination_mac|OPTIONAL) ],
+         eth => [ qw(destination_mac|OPTIONAL type|OPTIONAL) ],
+         ipv4 => [ qw(destination_ipv4_address|OPTIONAL protocol|OPTIONAL) ],
+         tcp => [ qw(destination_port|OPTIONAL source_port|OPTIONAL flags|OPTIONAL) ],
+         udp => [ qw(destination_port|OPTIONAL source_port|OPTIONAL payload|OPTIONAL) ],
          icmpv4 => [ ],
          echo_icmpv4 => [ ],
       },
@@ -59,26 +62,24 @@ sub brik_use_properties {
 sub brik_init {
    my $self = shift;
 
-   my $interface = $self->update_interface
-      or return $self->log->error("brik_init: update_interface failed, you may not have a global device set");
+   $self->update_device_info
+      or return $self->log->error("brik_init: update_device_info failed, you may not have a global device set");
 
-   $self->interface($interface);
-
-   return $self->SUPER::brik_init;
+   return $self->SUPER::brik_init(@_);
 }
 
-sub update_interface {
+sub update_device_info {
    my $self = shift;
    my ($device) = @_;
 
    $device ||= $self->device;
 
-   my $network_device = Metabrik::Network::Device->new_from_brik($self);
+   my $nd = Metabrik::Network::Device->new_from_brik_init($self) or return;
 
-   my $interface = $network_device->get($device)
-      or return $self->log->error("update_interface: get failed");
+   my $device_info = $nd->get($device)
+      or return $self->log->error("update_device_info: get failed");
 
-   return $self->interface($interface);
+   return $self->device_info($device_info);
 }
 
 sub from_read {
@@ -112,16 +113,36 @@ sub from_hexa {
 
    $first_layer ||= 'IPv4';
 
-   my $string_hexa = Metabrik::String::Hexa->new_from_brik_init($self);
+   my $sh = Metabrik::String::Hexa->new_from_brik_init($self) or return;
 
-   if (! $string_hexa->is_hexa($data)) {
+   if (! $sh->is_hexa($data)) {
       return $self->log->error('from_hexa: data is not hexa');
    }
 
-   my $raw = $string_hexa->decode($data)
+   my $raw = $sh->decode($data)
       or return $self->log->error("from_hexa: decode failed");
 
-   return Net::Frame::Simple->new(raw => $raw, firstLayer => $first_layer);
+   my $frame;
+   eval {
+      $frame = Net::Frame::Simple->new(raw => $raw, firstLayer => $first_layer);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("from_hexa: cannot parse frame, not a $first_layer first layer? [$@]");
+   }
+
+   return $frame;
+}
+
+sub from_raw {
+   my $self = shift;
+   my ($raw, $first_layer) = @_;
+
+   if (! defined($raw)) {
+      return $self->log->error($self->brik_help_run('from_raw'));
+   }
+
+   return $self->from_hexa(unpack('H*', $raw), $first_layer);
 }
 
 sub show {
@@ -162,17 +183,19 @@ sub mac2eui64 {
 # Returns an ARP header with a set of default values
 sub arp {
    my $self = shift;
-   my ($dst_ip) = @_;
+   my ($dst_ip, $dst_mac) = @_;
 
-   my $interface = $self->interface;
+   my $device_info = $self->device_info;
 
    $dst_ip ||= '127.0.0.1';
+   $dst_mac ||= '00:00:00:00:00:00';
 
    my $hdr = Net::Frame::Layer::ARP->new(
       #opCode => NF_ARP_OPCODE_REQUEST,  # Default
-      srcIp => $interface->{ipv4},
+      srcIp => $device_info->{ipv4},
       dstIp => $dst_ip,
-      src => $interface->{mac},
+      src => $device_info->{mac},
+      dst => $dst_mac,
    );
 
    return $hdr;
@@ -181,12 +204,17 @@ sub arp {
 # Returns an Ethernet header with a set of default values
 sub eth {
    my $self = shift;
+   my ($dst, $type) = @_;
 
-   my $interface = $self->interface;
+   my $device_info = $self->device_info;
+
+   $dst ||= 'ff:ff:ff:ff:ff:ff'; # Broadcast
+   $type ||= 0x0800; # IPv4
 
    my $hdr = Net::Frame::Layer::ETH->new(
-      type => 0x0800,  # IPv4
-      src => $interface->{mac},
+      src => $device_info->{mac},
+      dst => $dst,
+      type => $type,
    );
 
    return $hdr;
@@ -194,16 +222,50 @@ sub eth {
 
 sub ipv4 {
    my $self = shift;
-   my ($protocol) = @_;
+   my ($dst, $protocol) = @_;
 
-   my $interface = $self->interface;
+   my $device_info = $self->device_info;
+
+   $dst ||= '127.0.0.1';
+   $protocol ||= 6;  # TCP
 
    my $hdr = Net::Frame::Layer::IPv4->new(
-      #protocol => NF_IPv4_PROTOCOL_TCP,  # Default
-      src => $interface->{ipv4},
+      src => $device_info->{ipv4},
+      dst => $dst,
+      protocol => $protocol,
    );
 
    return $hdr;
+}
+
+sub tcp {
+   my $self = shift;
+   my ($dst, $src, $flags) = @_;
+
+   $dst ||= 80;
+   $src ||= 1025;
+   $flags ||= 0x02;   # SYN
+
+   return Net::Frame::Layer::TCP->new(
+      dst => $dst,
+      src => $src,
+      flags => $flags,
+   );
+}
+
+sub udp {
+   my $self = shift;
+   my ($dst, $src, $payload) = @_;
+
+   $dst ||= 123;
+   $src ||= 1025;
+   $payload ||= '';
+
+   return Net::Frame::Layer::UDP->new(
+      dst => $dst,
+      src => $src,
+      length => length($payload),
+   )->pack.$payload;
 }
 
 sub icmpv4 {
