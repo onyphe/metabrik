@@ -22,9 +22,13 @@ sub brik_properties {
          network_address => [ qw(subnet|OPTIONAL) ],
          broadcast_address => [ qw(subnet|OPTIONAL) ],
          range_to_cidr => [ qw(first_address last_address) ],
+         is_ipv4 => [ qw(ip_address) ],
+         is_ipv6 => [ qw(ip_address) ],
       },
       require_modules => {
          'Net::Netmask' => [ ],
+         'Net::IPv4Addr' => [ ],
+         'Net::IPv6Addr' => [ ],
       },
    };
 }
@@ -115,6 +119,45 @@ sub range_to_cidr {
    }
 
    return \@res;
+}
+
+sub is_ipv4 {
+   my $self = shift;
+   my ($ip) = @_;
+
+   if (! defined($ip)) {
+      return $self->log->error($self->brik_help_run('is_ipv4'));
+   }
+
+   (my $local = $ip) =~ s/\/\d+$//;
+
+   if ($local =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) {
+      return 1;
+   }
+
+   return 0;
+}
+
+sub is_ipv6 {
+   my $self = shift;
+   my ($ip) = @_;
+
+   if (! defined($ip)) {
+      return $self->log->error($self->brik_help_run('is_ipv6'));
+   }
+
+   (my $local = $ip) =~ s/\/\d+$//;
+
+   if ($local =~ /^[0-9a-f:\/]+$/i) {
+      eval {
+         my $x = Net::IPv6Addr::ipv6_parse($local);
+      };
+      if (! $@) {
+         return 1;
+      }
+   }
+
+   return 0;
 }
 
 1;

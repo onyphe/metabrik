@@ -14,7 +14,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable network whois) ],
       commands => {
-         domain => [ qw(domain) ],
+         target => [ qw(domain|ip_address) ],
       },
       require_modules => {
          'Net::Whois::Raw' => [ ],
@@ -23,24 +23,20 @@ sub brik_properties {
    };
 }
 
-sub domain {
+sub target {
    my $self = shift;
-   my ($domain) = @_;
+   my ($target) = @_;
 
-   if (! defined($domain)) {
-      return $self->log->error($self->brik_help_run('domain'));
+   if (! defined($target)) {
+      return $self->log->error($self->brik_help_run('target'));
    }
 
-   if ($domain !~ /^\S+\.\S+$/) {
-      return $self->log->error("domain: invalid format for domain [$domain]");
-   }
-
-   my $info = Net::Whois::Raw::whois($domain)
-      or return $self->log->error("domain: whois failed");
+   my $info = Net::Whois::Raw::whois($target)
+      or return $self->log->error("target: whois failed");
 
    my $parse_string = Metabrik::String::Parse->new_from_brik($self) or return;
    my $lines = $parse_string->to_array($info)
-      or return $self->log->error("domain: to_array failed");
+      or return $self->log->error("target: to_array failed");
 
    return $lines;
 }

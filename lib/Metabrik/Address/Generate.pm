@@ -31,9 +31,9 @@ sub brik_properties {
       require_modules => {
          'List::Util' => [ 'shuffle' ],
       },
-      require_binaries => {
-         'ulimit' => [ ],
-      },
+      #require_binaries => {
+         #'ulimit' => [ ],   # It is built-in
+      #},
    };
 }
 
