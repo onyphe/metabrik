@@ -22,6 +22,7 @@ sub brik_properties {
       commands => {
          active_window => [ qw(output_file|OPTIONAL) ],
          full_screen => [ qw(output_file|OPTIONAL) ],
+         select_window => [ qw(output_file|OPTIONAL) ],
       },
       require_binaries => {
          'scrot' => [ ],
@@ -52,6 +53,20 @@ sub full_screen {
    $self->log->verbose("full_screen: saving to file [$output]");
 
    my $cmd = "scrot $output";
+   $self->system($cmd);
+
+   return $output;
+}
+
+sub select_window {
+   my $self = shift;
+   my ($output) = @_;
+
+   $output ||= $self->output;
+
+   $self->log->verbose("select_window: saving to file [$output]");
+
+   my $cmd = "scrot --select --border $output";
    $self->system($cmd);
 
    return $output;
