@@ -47,17 +47,19 @@ sub system {
       return $self->log->error($self->brik_help_run('system'));
    }
 
+   my ($command) = $cmd =~ m{(.*)\s+};
+
    my @path = split(':', $ENV{PATH});
    my $bin;
    for my $path (@path) {
-      if (-f "$path/$cmd") {
-         $bin = "$path/$cmd";
+      if (-f "$path/$command") {
+         $bin = "$path/$command";
          last;
       }
    }
 
    if (! defined($bin)) {
-      return $self->log->error("system: $cmd not found in PATH");
+      return $self->log->error("system: cmd [$command] not found in PATH");
    }
 
    $cmd = join(' ', $cmd, @args);
@@ -74,17 +76,19 @@ sub capture {
       return $self->log->error($self->brik_help_run('capture'));
    }
 
+   my ($command) = $cmd =~ m{(.*)\s+};
+
    my @path = split(':', $ENV{PATH});
    my $bin;
    for my $path (@path) {
-      if (-f "$path/$cmd") {
-         $bin = "$path/$cmd";
+      if (-f "$path/$command") {
+         $bin = "$path/$command";
          last;
       }
    }
 
    if (! defined($bin)) {
-      return $self->log->error("system: $cmd not found in PATH");
+      return $self->log->error("system: cmd [$command] not found in PATH");
    }
 
    my $run = join(' ', $cmd, @args);
