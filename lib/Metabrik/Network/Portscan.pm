@@ -210,6 +210,8 @@ sub synscan {
    my $string = Net::Write::Fast::runtime_as_string($runtime);
    $self->log->verbose("synscan: $string");
 
+   my $start = time();
+
    # Fork sender process
    defined(my $pid = fork()) or return $self->log->error("synscan: fork: $!");
    if (! $pid) { # Son
@@ -305,6 +307,8 @@ sub synscan {
    }
 
    $nr->close;
+
+   $self->log->verbose("synscan: completed in ".(time() - $start)." second(s)");
 
    return { open => \%open, closed => \%closed };
 }
