@@ -103,7 +103,7 @@ sub from_dec {
    }
 
    # No match
-   return;
+   return 'unknown';
 }
 
 sub from_hex {

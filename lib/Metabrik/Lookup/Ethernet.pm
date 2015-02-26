@@ -14,9 +14,9 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable lookup ethernet) ],
       commands => {
-         int => [ qw(int_number) ],
-         hex => [ qw(hex_number) ],
-         string => [ qw(ethernet_type) ],
+         from_dec => [ qw(dec_number) ],
+         from_hex => [ qw(hex_number) ],
+         from_string => [ qw(ethernet_type) ],
       },
    };
 }
@@ -58,45 +58,45 @@ sub _lookup {
    return $lookup;
 }
 
-sub hex {
+sub from_hex {
    my $self = shift;
    my ($hex) = @_;
 
    if (! defined($hex)) {
-      return $self->log->error($self->brik_help_run('hex'));
+      return $self->log->error($self->brik_help_run('from_hex'));
    }
 
    $hex =~ s/^0x//;
    if ($hex !~ /^[0-9a-f]+$/i) {
-      return $self->log->error("hex: invalid format for hex [$hex]");
+      return $self->log->error("from_hex: invalid format for hex [$hex]");
    }
    $hex = sprintf("0x%04s", $hex);
 
    return $self->_lookup->{$hex} || 'unknown';
 }
 
-sub int {
+sub from_dec {
    my $self = shift;
-   my ($int) = @_;
+   my ($dec) = @_;
 
-   if (! defined($int)) {
-      return $self->log->error($self->brik_help_run('int'));
+   if (! defined($dec)) {
+      return $self->log->error($self->brik_help_run('from_dec'));
    }
 
-   if ($int !~ /^[0-9]+$/) {
-      return $self->log->error("int: invalid format for int [$int]");
+   if ($dec !~ /^[0-9]+$/) {
+      return $self->log->error("from_dec: invalid format for dec [$dec]");
    }
-   my $hex = sprintf("0x%04x", $int);
+   my $hex = sprintf("0x%04x", $dec);
 
    return $self->hex($hex);
 }
 
-sub string {
+sub from_string {
    my $self = shift;
    my ($string) = @_;
 
    if (! defined($string)) {
-      return $self->log->error($self->brik_help_run('string'));
+      return $self->log->error($self->brik_help_run('from_string'));
    }
 
    my $lookup = $self->_lookup;

@@ -14,9 +14,9 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable lookup ipv4 ipv6 ip) ],
       commands => {
-         int => [ qw(int_number) ],
-         hex => [ qw(hex_number) ],
-         string => [ qw(ip_type) ],
+         from_dec => [ qw(dec_number) ],
+         from_hex => [ qw(hex_number) ],
+         from_string => [ qw(ip_type) ],
       },
    };
 }

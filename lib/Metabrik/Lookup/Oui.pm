@@ -24,8 +24,7 @@ sub brik_properties {
       commands => {
          update => [ qw(output|OPTIONAL) ],
          load => [ qw(input|OPTIONAL) ],
-         from_dec => [ qw(dec_number) ],
-         from_hex => [ qw(hex_number) ],
+         from_hex => [ qw(mac_address) ],
          from_string => [ qw(company_string) ],
       },
       require_modules => {
@@ -40,6 +39,9 @@ sub update {
 
    my $url = 'http://standards-oui.ieee.org/oui.txt';
    my ($file) = $self->input;
+
+   # XXX: should also check for generic attribution:
+   # http://www.iana.org/assignments/ethernet-numbers/ethernet-numbers-2.csv
 
    $output ||= $self->datadir.'/'.$file;
 
@@ -65,12 +67,6 @@ sub load {
       or return $self->log->error("load: read failed");
 
    return $self->_load($data);
-}
-
-sub from_dec {
-   my $self = shift;
-
-   return $self->log->error("from_dec: not applicable");
 }
 
 sub from_hex {
@@ -101,7 +97,7 @@ sub from_hex {
    }
 
    # No match
-   return;
+   return 'unknown';
 }
 
 sub from_string {

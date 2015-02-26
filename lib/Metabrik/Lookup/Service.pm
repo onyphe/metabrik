@@ -87,7 +87,7 @@ sub from_dec {
    }
 
    # No match
-   return;
+   return 'unknown';
 }
 
 sub from_hex {
@@ -121,10 +121,6 @@ sub from_string {
       next unless length($this->{'Port Number'});
       my $service = $this->{'Service Name'};
       if ($service =~ /$string/i) {
-         $self->log->verbose("from_string: match with [$service]");
-         push @match, $this->{'Port Number'}.'/'.$this->{'Transport Protocol'};
-      }
-      elsif ($service =~ /$string/i) {
          $self->log->verbose("from_string: match with [$service]");
          push @match, $this->{'Port Number'}.'/'.$this->{'Transport Protocol'};
       }
