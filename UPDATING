@@ -1,3 +1,11 @@
+20150226
+   AFFECT: lookup::ethernet, lookup::ip, lookup::*
+
+   - string Command renamed to from_string
+   - int Command renamed to from_dec
+   - hex Command renamed to from_hex
+   - from_* Commands return 'unknown' in case no match is found instead of undef
+
 20150220
    AFFECT: network::whois
 
