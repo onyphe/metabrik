@@ -186,6 +186,9 @@
       "Metabrik::Lookup::Ip" : {
          "file" : "lib/Metabrik/Lookup/Ip.pm"
       },
+      "Metabrik::Lookup::Ipoption" : {
+         "file" : "lib/Metabrik/Lookup/Ipoption.pm"
+      },
       "Metabrik::Lookup::Oui" : {
          "file" : "lib/Metabrik/Lookup/Oui.pm"
       },
@@ -194,6 +197,9 @@
       },
       "Metabrik::Lookup::Service" : {
          "file" : "lib/Metabrik/Lookup/Service.pm"
+      },
+      "Metabrik::Lookup::Tcpoption" : {
+         "file" : "lib/Metabrik/Lookup/Tcpoption.pm"
       },
       "Metabrik::Network::Address" : {
          "file" : "lib/Metabrik/Network/Address.pm"
@@ -371,7 +377,7 @@
    "release_status" : "stable",
    "resources" : {
       "license" : [
-         "http://opensource.org/licenses/bsd-license.php"
+         "http://opensource.org/licenses/BSD-3-Clause"
       ]
    },
    "version" : "1.06"
