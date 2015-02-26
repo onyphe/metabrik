@@ -47,23 +47,27 @@ sub system {
       return $self->log->error($self->brik_help_run('system'));
    }
 
-   my ($command) = $cmd =~ m{(.*)\s+};
+   my $command = join(' ', $cmd, @args);
+   my @toks = split(/\s+/, $command);
+   my $bin = $toks[0];
 
    my @path = split(':', $ENV{PATH});
-   my $bin;
-   for my $path (@path) {
-      if (-f "$path/$command") {
-         $bin = "$path/$command";
-         last;
+   if (! -f $bin) {  # If file is not directly found
+      for my $path (@path) {
+         if (-f "$path/$bin") {
+            $bin = "$path/$bin";
+            last;
+         }
       }
    }
+   $toks[0] = $bin;
 
-   if (! defined($bin)) {
-      return $self->log->error("system: cmd [$command] not found in PATH");
+   if (! -f $bin) {
+      return $self->log->error("system: program [$bin] not found in PATH");
    }
 
-   $cmd = join(' ', $cmd, @args);
-   my $r = CORE::system($cmd);
+   $command = join(' ', @toks);
+   my $r = CORE::system($command);
 
    return defined($r) ? 1 : 0;
 }
@@ -76,24 +80,28 @@ sub capture {
       return $self->log->error($self->brik_help_run('capture'));
    }
 
-   my ($command) = $cmd =~ m{(.*)\s+};
+   my $command = join(' ', $cmd, @args);
+   my @toks = split(/\s+/, $command);
+   my $bin = $toks[0];
 
    my @path = split(':', $ENV{PATH});
-   my $bin;
-   for my $path (@path) {
-      if (-f "$path/$command") {
-         $bin = "$path/$command";
-         last;
+   if (! -f $bin) {  # If file is not directly found
+      for my $path (@path) {
+         if (-f "$path/$bin") {
+            $bin = "$path/$bin";
+            last;
+         }
       }
    }
+   $toks[0] = $bin;
 
-   if (! defined($bin)) {
-      return $self->log->error("system: cmd [$command] not found in PATH");
+   if (! -f $bin) {
+      return $self->log->error("system: program [$bin] not found in PATH");
    }
 
-   my $run = join(' ', $cmd, @args);
+   $command = join(' ', @toks);
 
-   my $out = $self->capture_stderr ? `$run 2>&1` : `$run`;
+   my $out = $self->capture_stderr ? `$command 2>&1` : `$command`;
    $out ||= 'undef';
    chomp($out);
    if ($?) {
