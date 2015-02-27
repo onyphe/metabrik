@@ -377,7 +377,7 @@
    "release_status" : "stable",
    "resources" : {
       "license" : [
-         "http://opensource.org/licenses/BSD-3-Clause"
+         "http://opensource.org/licenses/bsd-license.php"
       ]
    },
    "version" : "1.06"
