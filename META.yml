@@ -27,8 +27,6 @@ provides:
     file: lib/Metabrik/Audit/Smtp.pm
   Metabrik::Audit::Twiki:
     file: lib/Metabrik/Audit/Twiki.pm
-  Metabrik::Brik::Search:
-    file: lib/Metabrik/Brik/Search.pm
   Metabrik::Client::Tcp:
     file: lib/Metabrik/Client/Tcp.pm
   Metabrik::Client::Whois:
@@ -183,15 +181,13 @@ provides:
     file: lib/Metabrik/Network/Wps.pm
   Metabrik::Network::Write:
     file: lib/Metabrik/Network/Write.pm
-  Metabrik::Perl::Module:
-    file: lib/Metabrik/Perl/Module.pm
   Metabrik::Remote::Ssh2:
     file: lib/Metabrik/Remote/Ssh2.pm
   Metabrik::Remote::Tcpdump:
     file: lib/Metabrik/Remote/Tcpdump.pm
   Metabrik::Repository:
     file: lib/Metabrik/Repository.pm
-    version: '1.06'
+    version: '1.07'
   Metabrik::Server::Agent:
     file: lib/Metabrik/Server/Agent.pm
   Metabrik::Server::Agent::Server:
@@ -249,4 +245,4 @@ requires:
   perl: v5.6.1
 resources:
   license: http://opensource.org/licenses/bsd-license.php
-version: '1.06'
+version: '1.07'
