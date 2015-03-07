@@ -49,6 +49,22 @@ sub update {
    $ff->get($url, $output)
       or return $self->log->error("update: get failed");
 
+   # We have to rewrite the CSV file, cause some entries are multiline.
+   my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+   $ft->overwrite(1);
+   $ft->append(0);
+   my $text = $ft->read($output)
+      or return $self->log->error("update: read failed");
+
+   # Some lines are split on multi-lines, we put into a single line
+   # for each record.
+   my @new = split(/\r\n/, $text);
+   for (@new) {
+      s/\n/ /g;
+   }
+
+   $ft->write(\@new, $output);
+
    return $output;
 }
 
