@@ -47,7 +47,15 @@ sub system {
       return $self->log->error($self->brik_help_run('system'));
    }
 
-   my $command = join(' ', $cmd, @args);
+   # Remove undefined values from arguments
+   my @new;
+   for (@args) {
+      if (defined($_)) {
+         push @new, $_;
+      }
+   }
+
+   my $command = join(' ', $cmd, @new);
    my @toks = split(/\s+/, $command);
    my $bin = $toks[0];
 
@@ -80,7 +88,15 @@ sub capture {
       return $self->log->error($self->brik_help_run('capture'));
    }
 
-   my $command = join(' ', $cmd, @args);
+   # Remove undefined values from arguments
+   my @new;
+   for (@args) {
+      if (defined($_)) {
+         push @new, $_;
+      }
+   }
+
+   my $command = join(' ', $cmd, @new);
    my @toks = split(/\s+/, $command);
    my $bin = $toks[0];
 

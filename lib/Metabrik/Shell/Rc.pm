@@ -107,6 +107,7 @@ my \$user = \$ENV{USER}
 
 my \$datadir = "\$home/metabrik"
 my \$repository = "\$datadir/repository/lib"
+my \$sudo = "sudo -E \$0 --no-splash"
 
 push \@INC, \$repository
 run core::context update_available
@@ -135,6 +136,7 @@ alias history "run shell::history show"
 alias ! "run shell::history exec"
 alias cat "run shell::command capture cat"
 alias pwd "run core::shell pwd"
+alias su "system \$sudo"
 
 use shell::history
 run shell::history load
