@@ -116,6 +116,8 @@ set core::global ctimeout 20
 set core::global rtimeout 20
 
 use shell::command
+use brik::search
+use perl::module
 
 alias update_available "run core::context update_available"
 alias reuse "run core::context reuse"

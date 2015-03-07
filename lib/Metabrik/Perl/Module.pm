@@ -17,7 +17,7 @@ sub brik_properties {
          install => [ qw(Module) ],
       },
       require_binaries => {
-         'metabrik-cpanm' => [ ],
+         'cpanm' => [ ],
       },
    };
 }
@@ -34,7 +34,7 @@ sub install {
       return $self->log->error("install: invalid format for module [$module]");
    }
 
-   return $self->system("metabrik-cpanm $module");
+   return $self->system("sudo cpanm $module");
 }
 
 1;
