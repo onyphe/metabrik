@@ -70,7 +70,7 @@ sub read {
       allow_loose_escapes => 1,
    }) or return $self->log->error('read: Text::CSV new failed');
 
-   my $read = Metabrik::File::Read->new_from_brik($self);
+   my $read = Metabrik::File::Read->new_from_brik($self) or return;
    $read->encoding($self->encoding);
    my $fd = $read->open($input)
       or return $self->log->error('read: read failed');
@@ -136,7 +136,7 @@ sub write {
 
    my $context = $self->context;
 
-   my $write = Metabrik::File::Write->new_from_brik($self);
+   my $write = Metabrik::File::Write->new_from_brik($self) or return;
    $write->output($output);
    $write->encoding($self->encoding);
    my $fd = $write->open

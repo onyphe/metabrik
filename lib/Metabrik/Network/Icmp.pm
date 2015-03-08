@@ -59,7 +59,7 @@ sub ping {
    my $frame2 = $self->frame([ $ipv4, $icmpv4, $echo2 ]);
    my $frame3 = $self->frame([ $ipv4, $icmpv4, $echo3 ]);
 
-   my $write = Metabrik::Network::Write->new_from_brik($self);
+   my $write = Metabrik::Network::Write->new_from_brik($self) or return;
 
    # We must use different Net::Frame::Simple objects so recv() method will work
    for my $f ($frame1, $frame2, $frame3) {

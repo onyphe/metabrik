@@ -51,7 +51,7 @@ sub check_ssl3_support {
       return $self->log->error("check_ssl3_support: uri [$uri] invalid format");
    }
 
-   my $string_uri = Metabrik::String::Uri->new_from_brik($self);
+   my $string_uri = Metabrik::String::Uri->new_from_brik($self) or return;
 
    my $hash = $string_uri->parse($uri)
       or return $self->log->error("check_ssl3_support: parse failed");

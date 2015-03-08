@@ -109,7 +109,7 @@ sub save {
 
    my $datadir = $self->datadir;
 
-   my $file_csv = Metabrik::File::Csv->new_from_brik($self);
+   my $file_csv = Metabrik::File::Csv->new_from_brik($self) or return;
    $file_csv->overwrite(1);
    $file_csv->encoding('utf8');
 
@@ -131,7 +131,7 @@ sub load {
 
    my $datadir = $self->datadir;
 
-   my $file_csv = Metabrik::File::Csv->new_from_brik($self);
+   my $file_csv = Metabrik::File::Csv->new_from_brik($self) or return;
    $file_csv->first_line_is_header(1);
 
    my $csv = $file_csv->read($datadir.'/'.$input);

@@ -49,7 +49,7 @@ sub probe {
    $self->disconnect;
 
    if (length($response)) {
-      my $parse = Metabrik::String::Parse->new;
+      my $parse = Metabrik::String::Parse->new_from_brik_init($self) or return;
       return $parse->to_array($response);
    }
 

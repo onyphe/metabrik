@@ -44,7 +44,7 @@ sub update {
    $self->get($uri, $file)
       or return $self->log->error("update: get failed");
 
-   my $file_compress = Metabrik::File::Compress->new_from_brik($self);
+   my $file_compress = Metabrik::File::Compress->new_from_brik($self) or return;
 
    $file_compress->unzip($file, $datadir)
       or return $self->log->error("update: unzip failed");
@@ -63,7 +63,7 @@ sub load {
 
    my $datadir = $self->datadir;
 
-   my $file_xml = Metabrik::File::Xml->new_from_brik($self);
+   my $file_xml = Metabrik::File::Xml->new_from_brik($self) or return;
 
    my $xml = $file_xml->read($datadir.'/'.$file);
 

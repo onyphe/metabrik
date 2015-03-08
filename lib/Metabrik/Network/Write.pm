@@ -206,7 +206,7 @@ sub fnsend_reply {
       $target = $ip->dst;
    }
 
-   my $read = Metabrik::Network::Read->new_from_brik($self);
+   my $read = Metabrik::Network::Read->new_from_brik($self) or return;
    $read->layer(2);
    $read->device($self->device);
    $read->rtimeout($self->global->rtimeout);

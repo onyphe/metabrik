@@ -95,11 +95,11 @@ sub generate_key {
    my $length_subkey = $self->length_subkey;
    my $expire_key = $self->expire_key;
 
-   my $filename = Metabrik::String::Random->new_from_brik($self)->filename
-      or return $self->log->error("generate_key: string::random failed");
+   my $sr = Metabrik::String::Random->new_from_brik_init($self) or return;
+   my $filename = $sr->filename
+      or return $self->log->error("generate_key: filename failed");
 
-   my $text = Metabrik::File::Text->new_from_brik($self)
-      or return $self->log->error("generate_key: file::text failed");
+   my $text = Metabrik::File::Text->new_from_brik($self) or return;
    $text->output($filename);
 
    # If key is RSA, subkey will be RSA.
@@ -219,8 +219,9 @@ sub import_keys {
       return $self->log->error("import_keys: import_keys failed");
    }
 
-   my $data = Metabrik::File::Text->new_from_brik($self)->read($file)
-      or return $self->log->error("import_keys: file::text failed");
+   my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+   my $data = $ft->read($file)
+      or return $self->log->error("import_keys: read failed");
 
    print $stdin $data;
    close($stdin);
@@ -409,7 +410,7 @@ sub decrypt {
       return $self->log->error($self->brik_help_run('decrypt'));
    }
 
-   my $string_password = Metabrik::String::Password->new_from_brik($self);
+   my $string_password = Metabrik::String::Password->new_from_brik($self) or return;
 
    my $passphrase = $string_password->prompt;
    if (! defined($passphrase)) {

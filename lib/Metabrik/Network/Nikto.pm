@@ -57,7 +57,7 @@ sub start {
       return $self->log->error($self->brik_help_set('uri'));
    }
 
-   my $target = Metabrik::String::Uri->new_from_brik($self);
+   my $target = Metabrik::String::Uri->new_from_brik($self) or return;
    my $p = $target->parse($uri);
 
    my $host = $p->{host};

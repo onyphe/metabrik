@@ -63,7 +63,7 @@ sub brute_force_wps {
 
    my $cmd = "sudo reaver -i $monitor -b $bssid -vv";
 
-   my $shell_command = Metabrik::Shell::Command->new_from_brik($self);
+   my $shell_command = Metabrik::Shell::Command->new_from_brik($self) or return;
    my $r = $shell_command->system($cmd);
 
    $self->stop_monitor_mode;

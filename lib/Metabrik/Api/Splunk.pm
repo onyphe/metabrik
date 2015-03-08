@@ -53,7 +53,7 @@ sub apps_local {
    my $response = $self->get($uri)
       or return $self->log->error("apps_local: get failed");
 
-   my $string_json = Metabrik::String::Json->new_from_brik($self);
+   my $string_json = Metabrik::String::Json->new_from_brik($self) or return;
 
    return $string_json->decode($response->{body});
 }

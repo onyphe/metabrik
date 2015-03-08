@@ -759,7 +759,7 @@ sub screenshot {
    my $data = $mech->content_as_png
       or return $self->log->error("screenshot: content_as_png failed");
 
-   my $write = Metabrik::File::Write->new_from_brik($self);
+   my $write = Metabrik::File::Write->new_from_brik($self) or return;
    $write->encoding('ascii');
    $write->overwrite(1);
    $write->append(0);

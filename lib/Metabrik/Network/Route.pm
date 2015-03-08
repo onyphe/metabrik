@@ -96,7 +96,7 @@ sub is_router_ipv4 {
 
    $device ||= $self->global->device;
 
-   my $command = Metabrik::Shell::Command->new;
+   my $command = Metabrik::Shell::Command->new_from_brik($self) or return;
    $command->as_matrix(0);
    $command->as_array(0);
    $command->capture_stderr(1);

@@ -57,7 +57,7 @@ sub read {
    my $data = $self->read($input)
       or return $self->log->error("read: read failed");
 
-   my $string_json = Metabrik::String::Json->new_from_brik($self);
+   my $string_json = Metabrik::String::Json->new_from_brik($self) or return;
 
    my $json = $string_json->decode($data)
       or return $self->log->error("read: decode failed");
@@ -78,7 +78,7 @@ sub write {
       return $self->log->error($self->brik_help_set('output'));
    }
 
-   my $string_json = Metabrik::String::Json->new_from_brik($self);
+   my $string_json = Metabrik::String::Json->new_from_brik($self) or return;
 
    my $data = $string_json->encode($json_hash)
       or return $self->log->error("write: encode failed");
