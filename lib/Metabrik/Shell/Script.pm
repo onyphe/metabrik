@@ -64,7 +64,6 @@ sub exec {
       return $self->log->error("exec: must give an ARRAYREF as argument");
    }
 
-   my $context = $self->context;
    my $shell = $self->shell;
 
    $shell->cmdloop($lines);

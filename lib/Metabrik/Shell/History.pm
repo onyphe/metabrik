@@ -165,8 +165,6 @@ sub exec {
    my $self = shift;
    my ($numbers) = @_;
 
-   my $context = $self->context;
-
    if (! defined($numbers)) {
       return $self->log->error($self->brik_help_run('exec'));
    }
@@ -180,12 +178,9 @@ sub exec {
       $lines = $self->get_range($numbers);
    }
 
-   for (@$lines) {
-      if (/^exit$/) {
-         exit(0);
-      }
-      $context->run('core::shell', 'cmd', $_);
-   }
+   my $shell = $self->shell;
+
+   $shell->cmdloop($lines);
 
    return 1;
 }
