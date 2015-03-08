@@ -214,6 +214,16 @@ sub synscan {
 
    # Fork sender process
    defined(my $pid = fork()) or return $self->log->error("synscan: fork: $!");
+   if ($pid) { # Father
+      my $restore = $SIG{INT};
+
+      $SIG{INT} = sub {
+         $self->debug && $self->log->debug("synscan: QUIT caught");
+         kill('QUIT', $pid);
+         $SIG{INT} = $restore;
+         return 1;
+      };
+   }
    if (! $pid) { # Son
       #print STDERR "DEBUG: run send()\n";
       my $r = Net::Write::Fast::l4_send_tcp_syn_multi(
