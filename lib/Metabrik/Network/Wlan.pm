@@ -167,7 +167,7 @@ sub connect {
       return $self->log->error($self->brik_help_set('essid'));
    }
 
-   my $cmd = "iwconfig $device essid $essid";
+   my $cmd = "sudo iwconfig $device essid $essid";
 
    $self->capture_stderr(1);
 
@@ -198,7 +198,7 @@ sub set_bitrate {
 
    $self->capture_stderr(1);
 
-   my $cmd = "iwconfig $device rate $bitrate";
+   my $cmd = "sudo iwconfig $device rate $bitrate";
 
    return $self->capture($cmd);
 }
@@ -214,7 +214,7 @@ sub set_wepkey {
 
    $device ||= $self->device;
 
-   my $cmd = "iwconfig $device key $key";
+   my $cmd = "sudo iwconfig $device key $key";
 
    $self->capture_stderr(1);
 

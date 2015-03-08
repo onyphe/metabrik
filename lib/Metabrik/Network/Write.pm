@@ -57,6 +57,10 @@ sub open {
    my $self = shift;
    my ($layer, $arg2, $arg3) = @_;
 
+   if ($< != 0) {
+      return $self->log->error("open: must be root to run");
+   }
+
    $layer ||= $self->layer;
 
    my $family = $self->family eq 'ipv6'

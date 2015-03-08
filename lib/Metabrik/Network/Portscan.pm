@@ -139,10 +139,6 @@ sub synscan {
    my $self = shift;
    my ($ip_list, $port_list, $pps) = @_;
 
-   if ($< != 0) {
-      return $self->log->error("synscan: must be root to run");
-   }
-
    if (! defined($ip_list)) {
       return $self->log->error($self->brik_help_run('synscan'));
    }

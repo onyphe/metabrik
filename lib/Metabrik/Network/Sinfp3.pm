@@ -45,6 +45,10 @@ sub active {
    my $self = shift;
    my ($target, $port) = @_;
 
+   if ($< != 0) {
+      return $self->log->error("active: must be root to run");
+   }
+
    $target ||= $self->target;
    $port ||= $self->port;
 

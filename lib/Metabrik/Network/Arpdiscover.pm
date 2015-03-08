@@ -60,6 +60,10 @@ sub scan {
    my $self = shift;
    my ($subnet) = @_;
 
+   if ($< != 0) {
+      return $self->log->error("scan: must be root to run");
+   }
+
    my $network_arp = Metabrik::Network::Arp->new_from_brik_init($self) or return;
    my $network_address = Metabrik::Network::Address->new_from_brik_init($self) or return;
 
