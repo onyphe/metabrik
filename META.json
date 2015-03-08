@@ -361,6 +361,9 @@
       "Metabrik::Time::Universal" : {
          "file" : "lib/Metabrik/Time/Universal.pm"
       },
+      "Metabrik::Worker::Fork" : {
+         "file" : "lib/Metabrik/Worker/Fork.pm"
+      },
       "Metabrik::Www::Splunk" : {
          "file" : "lib/Metabrik/Www/Splunk.pm"
       },

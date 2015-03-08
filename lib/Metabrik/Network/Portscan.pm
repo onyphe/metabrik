@@ -130,6 +130,7 @@ sub brik_properties {
          'Metabrik::Network::Device' => [ ],
          'Metabrik::Network::Read' => [ ],
          'Metabrik::Network::Address' => [ ],
+         'Metabrik::Worker::Fork' => [ ],
       },
    };
 }
@@ -213,17 +214,9 @@ sub synscan {
    my $start = time();
 
    # Fork sender process
-   defined(my $pid = fork()) or return $self->log->error("synscan: fork: $!");
-   if ($pid) { # Father
-      my $restore = $SIG{INT};
+   my $wf = Metabrik::Worker::Fork->new_from_brik_init($self) or return;
+   defined(my $pid = $wf->start) or return $self->log->error("synscan: start failed");
 
-      $SIG{INT} = sub {
-         $self->debug && $self->log->debug("synscan: QUIT caught");
-         kill('QUIT', $pid);
-         $SIG{INT} = $restore;
-         return 1;
-      };
-   }
    if (! $pid) { # Son
       #print STDERR "DEBUG: run send()\n";
       my $r = Net::Write::Fast::l4_send_tcp_syn_multi(
@@ -242,7 +235,7 @@ sub synscan {
       exit(0);
    }
 
-   # Analyse received frames
+   # Father: analyse received frames
    my %open;
    my %closed;
    while (! $nr->has_timeout) {
