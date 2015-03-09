@@ -240,6 +240,9 @@
       "Metabrik::Network::Nmap" : {
          "file" : "lib/Metabrik/Network/Nmap.pm"
       },
+      "Metabrik::Network::Portscan" : {
+         "file" : "lib/Metabrik/Network/Portscan.pm"
+      },
       "Metabrik::Network::Read" : {
          "file" : "lib/Metabrik/Network/Read.pm"
       },
@@ -287,7 +290,7 @@
       },
       "Metabrik::Repository" : {
          "file" : "lib/Metabrik/Repository.pm",
-         "version" : "1.07"
+         "version" : "1.08"
       },
       "Metabrik::Server::Agent" : {
          "file" : "lib/Metabrik/Server/Agent.pm"
@@ -377,5 +380,5 @@
          "http://opensource.org/licenses/bsd-license.php"
       ]
    },
-   "version" : "1.07"
+   "version" : "1.08"
 }
