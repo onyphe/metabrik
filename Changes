@@ -1,5 +1,9 @@
 Revision history for Perl extension Metabrik::Repository.
 
+1.08
+   - update: version bump
+   - UPDATE: see UPDATING file
+
 1.07 Sun Mar  8 17:52:48 CET 2015
    - update: version bump
    - UPDATE: see UPDATING file

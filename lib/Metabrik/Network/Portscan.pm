@@ -119,7 +119,7 @@ sub brik_properties {
          try => 2,
       },
       commands => {
-         synscan => [ qw(ip_list port_list|OPTIONAL) ],
+         tcp_syn => [ qw(ip_list port_list|OPTIONAL) ],
       },
       require_modules => {
          'Net::Write::Fast' => [ ],
@@ -135,26 +135,26 @@ sub brik_properties {
    };
 }
 
-sub synscan {
+sub tcp_syn {
    my $self = shift;
    my ($ip_list, $port_list, $pps) = @_;
 
    if (! defined($ip_list)) {
-      return $self->log->error($self->brik_help_run('synscan'));
+      return $self->log->error($self->brik_help_run('tcp_syn'));
    }
    if (ref($ip_list) ne 'ARRAY') {
-      return $self->log->error("synscan: argument 1 must be ARRAYREF");
+      return $self->log->error("tcp_syn: argument 1 must be ARRAYREF");
    }
    if (@$ip_list == 0) {
-      return $self->log->error("synscan: ip_list is empty");
+      return $self->log->error("tcp_syn: ip_list is empty");
    }
 
    $port_list ||= $self->top100;
    if (ref($port_list) ne 'ARRAY') {
-      return $self->log->error("synscan: argument 2 must be ARRAYREF");
+      return $self->log->error("tcp_syn: argument 2 must be ARRAYREF");
    }
    if (@$port_list == 0) {
-      return $self->log->error("synscan: port_list is empty");
+      return $self->log->error("tcp_syn: port_list is empty");
    }
 
    $pps ||= $self->pps;
@@ -163,7 +163,7 @@ sub synscan {
 
    my $nd = Metabrik::Network::Device->new_from_brik_init($self) or return;
    my $get = $nd->get($self->global->device)
-      or return $self->log->error("synscan: device failed");
+      or return $self->log->error("tcp_syn: device failed");
 
    my $ip = $get->{ipv4};
    my $ip6 = $get->{ipv6};
@@ -176,23 +176,23 @@ sub synscan {
    my $filter;
    my $use_ipv6 = 0;
    if ($na->is_ipv6($ip_list->[0])) {
-      $self->log->verbose("synscan: using source IPv6 [$ip6]");
+      $self->log->verbose("tcp_syn: using source IPv6 [$ip6]");
       $filter = 'ip6 and dst host '.$ip6;
       $use_ipv6 = 1;
    }
    elsif ($na->is_ipv4($ip_list->[0])) {
-      $self->log->verbose("synscan: using source IPv4 [$ip]");
+      $self->log->verbose("tcp_syn: using source IPv4 [$ip]");
       $filter =
          '((tcp[13] & 2 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.')'.
          ' or '.
          '((tcp[13] & 4 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.')';
    }
    else {
-      return $self->log->error("synscan: invalid IP address in ip_list");
+      return $self->log->error("tcp_syn: invalid IP address in ip_list");
    }
    $nr->filter($filter);
 
-   $nr->open or return $self->log->error("synscan: open failed");
+   $nr->open or return $self->log->error("tcp_syn: open failed");
 
    my $n_ports = scalar(@$port_list);
    my $n_targets = scalar(@$ip_list);
@@ -202,16 +202,16 @@ sub synscan {
       ports => $port_list,
       pps => $pps,
       try => $try,
-   }) or return $self->log->error("synscan: estimate_runtime failed");
+   }) or return $self->log->error("tcp_syn: estimate_runtime failed");
 
    my $string = Net::Write::Fast::runtime_as_string($runtime);
-   $self->log->verbose("synscan: $string");
+   $self->log->verbose("tcp_syn: $string");
 
    my $start = time();
 
    # Fork sender process
    my $wf = Metabrik::Worker::Fork->new_from_brik_init($self) or return;
-   defined(my $pid = $wf->start) or return $self->log->error("synscan: start failed");
+   defined(my $pid = $wf->start) or return $self->log->error("tcp_syn: start failed");
 
    if (! $pid) { # Son
       #print STDERR "DEBUG: run send()\n";
@@ -225,7 +225,7 @@ sub synscan {
          1,  # display warnings or not
       );
       if ($r == 0) {
-         $self->log->error("synscan: l4_send_tcp_syn_multi: ".Net::Write::Fast::nwf_geterror());
+         $self->log->error("tcp_syn: l4_send_tcp_syn_multi: ".Net::Write::Fast::nwf_geterror());
       }
       #print STDERR "DEBUG: stop send()\n";
       exit(0);
@@ -243,7 +243,7 @@ sub synscan {
             my $tcp = $s->ref->{TCP};
             if ($tcp->flags == 0x12) { # SYN+ACK
                #print STDERR "open: [".$ip->src."]:".$tcp->src."/tcp\n";
-               $self->log->verbose("synscan: open port [".$ip->src."]:".$tcp->src."/tcp");
+               $self->log->verbose("tcp_syn: open port [".$ip->src."]:".$tcp->src."/tcp");
                $open{$ip->src}{$tcp->src} = {
                   id => $use_ipv6 ? $ip->flowLabel : $ip->id,
                   ttl => $use_ipv6 ? $ip->hopLimit  : $ip->ttl,
@@ -307,7 +307,7 @@ sub synscan {
 
    $nr->close;
 
-   $self->log->verbose("synscan: completed in ".(time() - $start)." second(s)");
+   $self->log->verbose("tcp_syn: completed in ".(time() - $start)." second(s)");
 
    return { open => \%open, closed => \%closed };
 }
