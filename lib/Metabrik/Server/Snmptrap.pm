@@ -1,0 +1,127 @@
+#
+# $Id$
+#
+# server::snmptrap Brik
+#
+package Metabrik::Server::Snmptrap;
+use strict;
+use warnings;
+
+use base qw(Metabrik);
+
+# Default attribute values put here will BE inherited by subclasses
+sub brik_properties {
+   return {
+      revision => '$Revision$',
+      tags => [ qw(unstable server snmp trap trapd snmptrap snmptrapd) ],
+      attributes => {
+         datadir => [ qw(datadir) ],
+         hostname => [ qw(listen_hostname) ],
+         port => [ qw(listen_port) ],
+         _wf => [ qw(INTERNAL) ],
+      },
+      attributes_default => {
+         hostname => 'localhost',
+         port => 162,
+      },
+      commands => {
+         start => [ qw(listen_hostname|OPTIONAL listen_port|OPTIONAL datadir|OPTIONAL) ],
+         stop => [ ],
+      },
+      require_modules => {
+         'Metabrik::Worker::Fork' => [ ],
+         'Net::SNMPTrapd' => [ ],
+      },
+   };
+}
+
+sub start {
+   my $self = shift;
+   my ($hostname, $port, $root) = @_;
+
+   $hostname ||= $self->hostname;
+   $port ||= $self->port;
+   $root ||= $self->datadir;
+
+   if ($port < 1024 && $< != 0) {
+      return $self->log->error("start: need root privileges to bind port [$port]");
+   }
+
+   my $proc = Net::SNMPTrapd->new
+      or return $self->log->error("start: ".Net::SNMPTrapd->error);
+
+   my $wf = Metabrik::Worker::Fork->new_from_brik_init($self) or return;
+
+   defined(my $pid = $wf->start) or return $self->log->error("start: start failed");
+
+   # Son
+   if (! $pid) {
+      $self->debug && $self->log->debug("start: son process started: $$");
+
+      while (1) {
+         my $trap = $proc->get_trap;
+         if (! defined($trap)) {
+            printf "$0: %s\n", Net::SNMPTrapd->error;
+            exit(1);
+         }
+         elsif ($trap == 0) {
+            next;
+         }
+
+         if (! defined($trap->process_trap)) {
+            printf("$0: %s\n", Net::SNMPTrapd->error);
+         } else {
+            printf("%s\t%i\t%i\t%s\n",
+               $trap->remoteaddr,
+               $trap->remoteport,
+               $trap->version,
+               $trap->community,
+            );
+         }
+      }
+
+      $self->debug && $self->log->debug("start: son process exited: $$");
+
+      exit(0);
+   }
+
+   # Father
+   $self->_wf($wf);
+
+   return $wf->pid;
+}
+
+sub stop {
+   my $self = shift;
+
+   my $wf = $self->_wf;
+
+   if (defined($wf)) {
+      $self->log->verbose("stop: process with pid [".$wf->pid."]");
+      $wf->stop;
+      $self->_wf(undef);
+   }
+
+   return 1;
+}
+
+1;
+
+__END__
+
+=head1 NAME
+
+Metabrik::Server::Snmptrap - server::snmptrap Brik
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (c) 2014-2015, Patrice E<lt>GomoRE<gt> Auffret
+
+You may distribute this module under the terms of The BSD 3-Clause License.
+See LICENSE file in the source distribution archive.
+
+=head1 AUTHOR
+
+Patrice E<lt>GomoRE<gt> Auffret
+
+=cut
