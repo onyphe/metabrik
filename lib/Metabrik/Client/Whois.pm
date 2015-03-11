@@ -34,7 +34,7 @@ sub domain {
    }
 
    my $nw = Metabrik::Network::Whois->new_from_brik($self) or return;
-   my $lines = $nw->domain($domain)
+   my $lines = $nw->target($domain)
       or return $self->log->error("domain: domain failed");
 
    my %general = ();
