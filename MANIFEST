@@ -6,6 +6,7 @@ lib/Metabrik/Audit/Drupal.pm
 lib/Metabrik/Audit/Https.pm
 lib/Metabrik/Audit/Smtp.pm
 lib/Metabrik/Audit/Twiki.pm
+lib/Metabrik/Audit/Elasticsearch.pm
 lib/Metabrik/Client/Tcp.pm
 lib/Metabrik/Client/Www.pm
 lib/Metabrik/Client/Whois.pm
@@ -90,6 +91,8 @@ lib/Metabrik/Repository.pm
 lib/Metabrik/Server/Agent.pm
 lib/Metabrik/Server/Dns.pm
 lib/Metabrik/Server/Http.pm
+lib/Metabrik/Server/Snmp.pm
+lib/Metabrik/Server/Snmptrap.pm
 lib/Metabrik/Ssl/Heartbleed.pm
 lib/Metabrik/String/Base64.pm
 lib/Metabrik/String/Compress.pm

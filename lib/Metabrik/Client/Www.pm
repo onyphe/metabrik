@@ -15,7 +15,7 @@ sub brik_properties {
       tags => [ qw(unstable browser http client www javascript screenshot) ],
       attributes => {
          uri => [ qw(uri) ],
-         mechanize => [ qw(OBJECT) ],
+         mechanize => [ qw(INTERNAL) ],
          ssl_verify => [ qw(0|1) ],
          username => [ qw(username) ],
          password => [ qw(password) ],
@@ -31,7 +31,7 @@ sub brik_properties {
          getcertificate => [ qw(uri|OPTIONAL) ],
          trace_redirect => [ qw(uri|OPTIONAL) ],
          content => [ ],
-         post => [ qw(SCALAR) ],
+         post => [ qw(content_string uri|OPTIONAL) ],
          info => [ ],
          forms => [ ],
          links => [ ],
@@ -118,31 +118,54 @@ sub content {
 
 sub post {
    my $self = shift;
-   my ($data) = @_;
+   my ($data, $uri) = @_;
 
    if (! defined($data)) {
       return $self->log->error($self->brik_help_run('post'));
    }
 
-   my $uri = $self->uri;
+   $uri ||= $self->uri;
    if (! defined($uri)) {
       return $self->log->error($self->brik_help_set('uri'));
    }
 
-   if ($self->debug) {
-      $self->log->debug("post: uri[$uri]");
-      $self->log->debug("post: data[$data]");
+   my %args = ();
+   if (! $self->ssl_verify) {
+      $args{ssl_opts} = { SSL_verify_mode => 'SSL_VERIFY_NONE'};
    }
 
-   #$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
-
-   my $mech = WWW::Mechanize->new;
+   my $mech = WWW::Mechanize->new(%args);
    $mech->agent_alias('Linux Mozilla');
-   #$mech->ssl_opts(verify_hostname => 0);
+
+   my $username = $self->username;
+   my $password = $self->password;
+   if (defined($username) && defined($password)) {
+      $mech->credentials($username, $password);
+   }
 
    $self->mechanize($mech);
-   
-   return $mech->post($uri, [ $data ]);
+
+   $self->log->verbose("post: $uri");
+
+   my $response;
+   eval {
+      $response = $mech->post($uri, Content => $data);
+   };
+   if ($@) {
+      return $self->log->error("post: unable to post uri [$uri]");
+   }
+
+   my %response = ();
+   $response{code} = $response->code;
+   if (! $self->ignore_body) {
+      $response{body} = $response->decoded_content;
+   }
+
+   my $headers = $response->headers;
+   $response{headers} = { map { $_ => $headers->{$_} } keys %$headers };
+   delete $response{headers}->{'::std_case'};
+
+   return \%response;
 }
 
 sub info {

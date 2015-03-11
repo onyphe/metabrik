@@ -1,3 +1,8 @@
+20150311
+   AFFECT: client::www
+
+   - post Command returns an HASHREF i/o of WWW::Mechanize object
+
 20150309
    AFFECT: network::portscan
 

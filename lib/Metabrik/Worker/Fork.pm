@@ -21,6 +21,9 @@ sub brik_properties {
          start => [ ],
          stop => [ ],
       },
+      require_modules => {
+         'POSIX' => [ ],
+      },
    };
 }
 
@@ -31,6 +34,8 @@ sub start {
    defined(my $pid = fork()) or return $self->log->error("start: fork: $!");
    if ($pid) { # Father
       my $restore = $SIG{INT};
+
+      $SIG{CHLD} = "IGNORE";
 
       $SIG{INT} = sub {
          $self->debug && $self->log->debug("SIGINT: caught, son QUITs now");
@@ -49,6 +54,8 @@ sub stop {
 
    if ($self->pid) {
       kill('QUIT', $self->pid);
+      # Not needed now, we just ignore SIGCHLD
+      #waitpid($self->_pid, POSIX::WNOHANG());  # Cleanup zombie state
       $self->pid(undef);
    }
 
