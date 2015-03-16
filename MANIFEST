@@ -59,7 +59,6 @@ lib/Metabrik/Lookup/Tcpoption.pm
 lib/Metabrik/Lookup/Ipoption.pm
 lib/Metabrik/Network/Address.pm
 lib/Metabrik/Network/Arp.pm
-lib/Metabrik/Network/Arpdiscover.pm
 lib/Metabrik/Network/Device.pm
 lib/Metabrik/Network/Dns.pm
 lib/Metabrik/Network/Frame.pm
