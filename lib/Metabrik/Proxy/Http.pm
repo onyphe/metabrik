@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# http::proxy Brik
+# proxy::http Brik
 #
-package Metabrik::Http::Proxy;
+package Metabrik::Proxy::Http;
 use strict;
 use warnings;
 
@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable http proxy) ],
+      tags => [ qw(unstable proxy http) ],
       attributes => {
          port => [ qw(integer) ],
          truncate_request => [ qw(integer) ],
@@ -114,7 +114,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Http::Proxy - http::proxy Brik
+Metabrik::Proxy::Http - proxy::http Brik
 
 =head1 COPYRIGHT AND LICENSE
 

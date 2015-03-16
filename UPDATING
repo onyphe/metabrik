@@ -1,3 +1,9 @@
+20150316
+   AFFECT: http::proxy, iana::countrycode
+
+   - http::proxy Brik renamed to proxy::http
+   - iana::countrycode Brik renamed lookup::countrycode
+
 20150311
    AFFECT: client::www
 

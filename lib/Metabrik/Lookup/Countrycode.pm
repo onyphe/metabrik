@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# iana::countrycode Brik
+# lookup::countrycode Brik
 #
-package Metabrik::Iana::Countrycode;
+package Metabrik::Lookup::Countrycode;
 use strict;
 use warnings;
 
@@ -12,7 +12,7 @@ use base qw(Metabrik::Client::Www);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable iana countrycode cc) ],
+      tags => [ qw(unstable lookup iana countrycode cc) ],
       attributes => {
          datadir => [ qw(datadir) ],
          input => [ qw(file) ],
@@ -145,7 +145,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Iana::Countrycode - iana::countrycode Brik
+Metabrik::Lookup::Countrycode - lookup::countrycode Brik
 
 =head1 COPYRIGHT AND LICENSE
 

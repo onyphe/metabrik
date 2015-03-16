@@ -45,8 +45,8 @@ lib/Metabrik/File/Xml.pm
 lib/Metabrik/Hardware/Battery.pm
 lib/Metabrik/Hardware/Fan.pm
 lib/Metabrik/Hardware/Temperature.pm
-lib/Metabrik/Http/Proxy.pm
-lib/Metabrik/Iana/Countrycode.pm
+lib/Metabrik/Proxy/Http.pm
+lib/Metabrik/Lookup/Countrycode.pm
 lib/Metabrik/Identify/Ssh.pm
 lib/Metabrik/Image/Jpg.pm
 lib/Metabrik/Log/Dual.pm
@@ -142,7 +142,7 @@ t/18-use-briks-string.t
 t/19-use-briks-system.t
 t/20-use-briks-www.t
 t/21-use-briks-log.t
-t/22-use-briks-iana.t
+t/22-use-briks-proxy.t
 t/23-use-briks-perl.t
 t/24-use-briks-brik.t
 t/25-use-briks-hardware.t
