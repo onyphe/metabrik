@@ -24,6 +24,9 @@ sub brik_properties {
          system => [ qw(command) ],
          capture => [ qw(command) ],
       },
+      require_modules => {
+         'IPC::Run3' => [ ],
+      },
    };
 }
 
@@ -77,7 +80,9 @@ sub system {
    $command = join(' ', @toks);
    my $r = CORE::system($command);
 
-   return defined($r) ? 1 : 0;
+   # system() returns program exit code in case of success
+   # So we return $? in case of success, and 0 otherwise
+   return defined($r) ? $? : 0;
 }
 
 sub capture {
@@ -117,11 +122,30 @@ sub capture {
 
    $command = join(' ', @toks);
 
-   my $out = $self->capture_stderr ? `$command 2>&1` : `$command`;
+   my $out;
+   my $err;
+   eval {
+      run3(\@toks, undef, \$out, \$err);
+   };
+   # Error in executing run3()
+   if ($@) {
+      chomp($@);
+      return $self->log->error("capture: unable to execute command [$command]: $@");
+   }
+   # Error in command execution
+   elsif ($?) {
+      chomp($err);
+      return $self->log->error("capture: command execution failed [$command]: $err");
+   }
+
    $out ||= 'undef';
+   $err ||= 'undef';
    chomp($out);
-   if ($?) {
-      return $self->log->error("capture: exec failed [$out]");
+   chomp($err);
+
+   # If we also wanted stderr, we put it at the end of output
+   if ($self->capture_stderr) {
+      $out .= "\n\nSTDERR:\n$err";
    }
 
    # as_matrix has precedence over as_array (because as_array is the default)
