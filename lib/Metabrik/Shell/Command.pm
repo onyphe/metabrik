@@ -125,7 +125,7 @@ sub capture {
    my $out;
    my $err;
    eval {
-      run3(\@toks, undef, \$out, \$err);
+      IPC::Run3::run3(\@toks, undef, \$out, \$err);
    };
    # Error in executing run3()
    if ($@) {
