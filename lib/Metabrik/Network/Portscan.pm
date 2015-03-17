@@ -126,7 +126,6 @@ sub brik_properties {
          'Net::Frame::Simple' => [ ],
          'Net::Frame::Dump' => [ ],
          'List::Util' => [ ],
-         'POSIX' => [ ],
          'Metabrik::Network::Device' => [ ],
          'Metabrik::Network::Read' => [ ],
          'Metabrik::Network::Address' => [ ],
@@ -142,11 +141,20 @@ sub tcp_syn {
    if (! defined($ip_list)) {
       return $self->log->error($self->brik_help_run('tcp_syn'));
    }
-   if (ref($ip_list) ne 'ARRAY') {
-      return $self->log->error("tcp_syn: argument 1 must be ARRAYREF");
+
+   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
+
+   if (ref($ip_list) eq 'ARRAY') {
+      if (@$ip_list == 0) {
+         return $self->log->error("tcp_syn: ip_list is empty");
+      }
    }
-   if (@$ip_list == 0) {
-      return $self->log->error("tcp_syn: ip_list is empty");
+   else {
+      if (! $na->is_ip($ip_list)) {
+         return $self->log->error("tcp_syn: argument 0 must be IP or ARRAYREF");
+      }
+      # A single IP has been provided, we put it back into an ARRAYREF
+      $ip_list = [ $ip_list ];
    }
 
    $port_list ||= $self->top100;
@@ -170,8 +178,6 @@ sub tcp_syn {
 
    my $nr = Metabrik::Network::Read->new_from_brik_init($self) or return;
    $nr->rtimeout(1);
-
-   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
 
    my $filter;
    my $use_ipv6 = 0;
@@ -214,7 +220,7 @@ sub tcp_syn {
    defined(my $pid = $wf->start) or return $self->log->error("tcp_syn: start failed");
 
    if (! $pid) { # Son
-      #print STDERR "DEBUG: run send()\n";
+      $self->debug && $self->log->debug("tcp_syn: son starts its task...");
       my $r = Net::Write::Fast::l4_send_tcp_syn_multi(
          $use_ipv6 ? $ip6 : $ip,
          $ip_list,
@@ -227,7 +233,7 @@ sub tcp_syn {
       if ($r == 0) {
          $self->log->error("tcp_syn: l4_send_tcp_syn_multi: ".Net::Write::Fast::nwf_geterror());
       }
-      #print STDERR "DEBUG: stop send()\n";
+      $self->debug && $self->log->debug("tcp_syn: son finished its task, exiting");
       exit(0);
    }
 
@@ -264,12 +270,12 @@ sub tcp_syn {
          }
       }
       if ($nr->has_timeout) {
-         #print STDERR "DEBUG: timeout\n";
-         # If $pid has exited and a timeout has occured
-         # waitpid returns 0 if process is running, -1 if stopped, and $pid at
-         # first waitpid invocation since process exited.
-         my $r = waitpid($pid, POSIX::WNOHANG());
-         last if $r != -1 && $r != 0;
+         $self->debug && $self->log->debug("tcp_syn: has_timeout");
+         if (! $wf->is_son_alive) {
+            $self->log->verbose("tcp_syn: no more son, stopping loop");
+            last;
+         }
+         $self->debug && $self->log->debug("tcp_syn: reset_timeout");
          $nr->reset_timeout;
       }
    }

@@ -20,9 +20,10 @@ sub brik_properties {
       commands => {
          start => [ ],
          stop => [ ],
+         is_son_alive => [ ],
       },
       require_modules => {
-         'POSIX' => [ ],
+         #'POSIX' => [ ],
       },
    };
 }
@@ -37,16 +38,18 @@ sub start {
 
       $SIG{CHLD} = "IGNORE";
 
+      $self->pid($pid);
+
       $SIG{INT} = sub {
-         $self->debug && $self->log->debug("SIGINT: caught, son QUITs now");
-         kill('QUIT', $pid);
+         $self->debug && $self->log->debug("SIGINT: caught, son [$pid] QUITs now");
+         $self->stop;
          $SIG{INT} = $restore;
          return 1;
       };
    }
 
    # Return to father and son processes
-   return $self->pid($pid);
+   return $pid;
 }
 
 sub stop {
@@ -55,11 +58,25 @@ sub stop {
    if ($self->pid) {
       kill('QUIT', $self->pid);
       # Not needed now, we just ignore SIGCHLD
-      #waitpid($self->_pid, POSIX::WNOHANG());  # Cleanup zombie state
+      #waitpid($self->pid, POSIX::WNOHANG());  # Cleanup zombie state
       $self->pid(undef);
    }
 
    return 1;
+}
+
+sub is_son_alive {
+   my $self = shift;
+
+   my $pid = $self->pid;
+   if (defined($pid)) {
+      my $r = kill('ZERO', $pid);
+      if ($r) { # Son still alive
+         return 1;
+      }
+   }
+
+   return 0;
 }
 
 sub brik_fini {
