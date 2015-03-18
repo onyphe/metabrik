@@ -44,7 +44,7 @@ sub all {
    my ($dirpattern, $filepattern) = @_;
 
    if (! defined($dirpattern) || ! defined($filepattern)) {
-      return $self->log->error($self->brik_help_run('files'));
+      return $self->log->error($self->brik_help_run('all'));
    }
 
    my @dirs = ();
@@ -105,7 +105,9 @@ sub all {
                chomp($@);
                $self->log->debug("all: $path: dirs: $@");
             }
-            return { directories => [], files => [] };
+            # Don't return in case one directory is not readable
+            #return { directories => [], files => [] };
+            next;
          }
          for my $this (@tmp_dirs) {
             if ($this =~ /$dirpattern/) {
@@ -123,7 +125,9 @@ sub all {
                chomp($@);
                $self->log->debug("all: $path: files: $@");
             }
-            return { directories => [], files => [] };
+            # Don't return in case one file is not readable
+            #return { directories => [], files => [] };
+            next;
          }
          for my $this (@tmp_files) {
             if ($this =~ /$filepattern/) {
