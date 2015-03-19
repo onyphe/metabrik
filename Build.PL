@@ -13,7 +13,7 @@ my $builder = Module::Build->new(
    dist_version_from => 'lib/Metabrik/Repository.pm',
    requires => {
       'perl' => '5.6.1',
-      'Metabrik' => '1.05',
+      'Metabrik' => '1.08',
    },
 );
 
