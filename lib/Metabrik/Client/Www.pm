@@ -49,6 +49,7 @@ sub brik_properties {
          'URI' => [ ],
          'WWW::Mechanize' => [ ],
          'WWW::Mechanize::PhantomJS' => [ ],
+         'Net::SSLeay' => [ ],
          'Metabrik::File::Write' => [ ],
       },
       require_binaries => {
