@@ -19,6 +19,7 @@ DEPENDENCIES
    Perl v5.6.1
    Metabrik
    Config::Tiny
+   Data::Dump
    Data::Dumper
    DateTime
    DateTime::Format::Mail

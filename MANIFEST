@@ -42,6 +42,7 @@ lib/Metabrik/File/Text.pm
 lib/Metabrik/File/Tsv.pm
 lib/Metabrik/File/Write.pm
 lib/Metabrik/File/Xml.pm
+lib/Metabrik/File/Dump.pm
 lib/Metabrik/Hardware/Battery.pm
 lib/Metabrik/Hardware/Fan.pm
 lib/Metabrik/Hardware/Temperature.pm

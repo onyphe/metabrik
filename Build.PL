@@ -15,6 +15,7 @@ my $builder = Module::Build->new(
       'perl' => '5.6.1',
       'Metabrik' => '1.09',
       'Config::Tiny' => 0,
+      'Data::Dump' => 0,
       'Data::Dumper' => 0,
       'DateTime' => 0,
       'DateTime::Format::Mail' => 0,
