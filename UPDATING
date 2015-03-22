@@ -1,3 +1,8 @@
+20150322
+   AFFECT: file::csv
+
+   - removed get_col_by_name and get_col_by_number obsolete Commands
+
 20150319
    Metabrik 1.08
 

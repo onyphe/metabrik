@@ -32,8 +32,7 @@ sub brik_properties {
       commands => {
          read => [ qw(input_file|OPTIONAL) ],
          write => [ qw(csv_struct output_file|OPTIONAL) ],
-         get_col_by_name => [ qw($data|$READ column_name column_value) ],
-         get_col_by_number => [ qw($data|$READ integer) ],
+         get_column_values => [ qw($data column_name|column_int) ],
       },
       require_modules => {
          'Text::CSV' => [ ],
@@ -60,7 +59,7 @@ sub read {
 
    $input ||= $self->input;
    if (! defined($input)) {
-      return $self->log->error($self->brik_help_set('input'));
+      return $self->log->error($self->brik_help_run('read'));
    }
 
    my $csv = Text::CSV->new({
@@ -86,6 +85,7 @@ sub read {
             $headers = $row;
             $count = scalar @$row - 1;
             $first_line = 0;
+            $self->header($headers);
             next;
          }
 
@@ -185,41 +185,49 @@ sub write {
    return $written;
 }
 
-sub get_col_by_name {
+sub get_column_values {
    my $self = shift;
-   my ($data, $type, $value) = @_;
+   my ($data, $column) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('get_col_by_name'));
-   }
-   if (! defined($type)) {
-      return $self->log->error($self->brik_help_run('get_col_by_name'));
-   }
-   if (! defined($value)) {
-      return $self->log->error($self->brik_help_run('get_col_by_name'));
+   if (! defined($data) && ! defined($column)) {
+      return $self->log->error($self->brik_help_run('get_column_values'));
    }
 
-   if (! $self->first_line_is_header || @{$self->header} == 0) {
-      return $self->log->error("get_col_by_name: no CSV header found");
+   if (ref($data) ne 'ARRAY') {
+      return $self->log->error("get_column_values: arg1 must be ARRAYREF");
    }
 
    my @results = ();
-   for my $row (@$data) {
-      if (exists($row->{$type})) {
-         if ($row->{$type} eq $value) {
-            push @results, $row;
+   # CSV structure is an ARRAYREF of HASHREFs
+   if ($self->first_line_is_header) {
+      if (@{$self->header} == 0) {
+         return $self->log->error("get_column_values: no CSV header found");
+      }
+
+      for my $row (@$data) {
+         if (ref($row) ne 'HASH') {
+            $self->log->warning("get_column_values: row is not a HASHREF");
+            next;
+         }
+         if (exists($row->{$column})) {
+            push @results, $row->{$column};
+         }
+      }
+   }
+   # CSV structure is an ARRAYREF of ARRAYREFs
+   elsif ($column =~ m{^\d+$}) {
+      for my $row (@$data) {
+         if (ref($row) ne 'ARRAY') {
+            $self->log->warning("get_column_values: row is not an ARRAYREF");
+            next;
+         }
+         if (exists($row->[$column])) {
+            push @results, $row->[$column];
          }
       }
    }
 
    return \@results;
-}
-
-sub get_col_by_number {
-   my $self = shift;
-   my ($data, $number) = @_;
-
-   return $self->log->info("XXX: TODO");
 }
 
 1;
