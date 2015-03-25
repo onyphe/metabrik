@@ -26,7 +26,7 @@ sub brik_properties {
          exec => [ qw(sql_query) ],
          create => [ qw(table_name fields_array key|OPTIONAL) ],
          insert => [ qw(table_name data_hash) ],
-         select => [ qw(table_name data_array key|OPTIONAL) ],
+         select => [ qw(table_name fields_array key|OPTIONAL) ],
          commit => [ ],
          show_tables => [ ],
          list_types => [ ],
@@ -48,13 +48,19 @@ sub open {
       return $self->log->error($self->brik_help_run('open'));
    }
 
-   my $dbh = DBI->connect('dbi:SQLite:dbname='.$db,'','');
+   my $dbh = DBI->connect('dbi:SQLite:dbname='.$db,'','', {
+      AutoCommit => $self->autocommit,
+      RaiseError => 1,
+      PrintError => 0,
+      PrintWarn => 0,
+      #HandleError => sub {
+         #my ($errstr, $dbh, $arg) = @_;
+         #die("DBI: $errstr\n");
+      #},
+   });
    if (! $dbh) {
-      return $self->log->error("open: DBI: $!");
+      return $self->log->error("open: DBI: $DBI::errstr");
    }
-
-   $dbh->{AutoCommit} = $self->autocommit;
-   $dbh->{RaiseError} = 1;
 
    $self->dbh($dbh);
 
@@ -86,7 +92,15 @@ sub commit {
 
    my $dbh = $self->dbh;
 
-   return $dbh->commit;
+   eval {
+      $dbh->commit;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->warning("commit: $@");
+   }
+
+   return 1;
 }
 
 sub create {
@@ -106,6 +120,8 @@ sub create {
 
    my $sql = 'CREATE TABLE '.$table.' (';
    for my $field (@$fields) {
+      # Fields are table fields, we normalize them (space char not allowed)
+      $field =~ s/ /_/g;
       $sql .= $field;
       if (defined($key) && $field eq $key) {
          $sql .= ' PRIMARY KEY NOT NULL';
@@ -138,8 +154,9 @@ sub insert {
    }
 
    my $sql = 'INSERT INTO '.$table.' (';
-   my @fields = map { $_ } keys %$data;
-   my @values = map { "$_" } values %$data;
+   # Fields are table fields, we normalize them (space char not allowed)
+   my @fields = map { s/ /_/g; $_ } keys %$data;
+   my @values = map { $_ } values %$data;
    $sql .= join(',', @fields);
    $sql .= ') VALUES (';
    for (@values) {
@@ -155,18 +172,18 @@ sub insert {
 
 sub select {
    my $self = shift;
-   my ($table, $data, $key) = @_;
+   my ($table, $fields, $key) = @_;
 
-   if (! defined($table) && ! defined($data)) {
+   if (! defined($table) && ! defined($fields)) {
       return $self->log->error($self->brik_help_run('select'));
    }
 
-   if (ref($data) ne 'ARRAY') {
-      return $self->log->error("select: Argument 'data' must be ARRAYREF");
+   if (ref($fields) ne 'ARRAY') {
+      return $self->log->error("select: Argument 'fields' must be ARRAYREF");
    }
 
-   if (@$data == 0) {
-      return $self->log->error("select: Argument 'data' is empty");
+   if (@$fields == 0) {
+      return $self->log->error("select: Argument 'fields' is empty");
    }
 
    my $dbh = $self->dbh;
@@ -175,7 +192,9 @@ sub select {
    }
 
    my $sql = 'SELECT ';
-   for (@$data) {
+   for (@$fields) {
+      # Fields are table fields, we normalize them (space char not allowed)
+      s/ /_/g;
       $sql .= "$_,";
    }
    $sql =~ s/,$//;
@@ -184,7 +203,7 @@ sub select {
    my $sth = $dbh->prepare($sql);
    my $rv = $sth->execute;
 
-   if ($data->[0] eq '*' || ! defined($key)) {
+   if (! defined($key)) {
       return $sth->fetchall_arrayref;
    }
 
