@@ -26,7 +26,7 @@ sub brik_properties {
          exec => [ qw(sql_query) ],
          create => [ qw(table_name fields_array key|OPTIONAL) ],
          insert => [ qw(table_name data_hash) ],
-         select => [ qw(table_name fields_array key|OPTIONAL) ],
+         select => [ qw(table_name fields_array|OPTIONAL key|OPTIONAL) ],
          commit => [ ],
          show_tables => [ ],
          list_types => [ ],
@@ -174,7 +174,9 @@ sub select {
    my $self = shift;
    my ($table, $fields, $key) = @_;
 
-   if (! defined($table) && ! defined($fields)) {
+   $fields ||= [ '*' ];
+
+   if (! defined($table)) {
       return $self->log->error($self->brik_help_run('select'));
    }
 
