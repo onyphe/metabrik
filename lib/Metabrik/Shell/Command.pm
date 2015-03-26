@@ -80,9 +80,15 @@ sub system {
    $command = join(' ', @toks);
    my $r = CORE::system($command);
 
-   # system() returns program exit code in case of success
-   # So we return $? in case of success, and 0 otherwise
-   return defined($r) ? $? : 0;
+   $self->debug && $self->log->debug("system: return code [$r] with status [$?]");
+
+   # Success
+   if ($r == 0) {
+      return 1;
+   }
+
+   # Failure, we return the program exit code
+   return $?;
 }
 
 sub capture {
