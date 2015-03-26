@@ -22,9 +22,12 @@ sub brik_properties {
          unzip => [ qw(input|OPTIONAL datadir|OPTIONAL) ],
          gunzip => [ qw(input|OPTIONAL output|OPTIONAL) ],
       },
+      require_modules => {
+         'Metabrik::File::Write' => [ ],
+         'Compress::Zlib' => [ ],
+      },
       require_binaries => {
          'unzip' => [ ],
-         'gunzip' => [ ],
       },
    };
 }
@@ -56,19 +59,43 @@ sub gunzip {
       return $self->log->error($self->brik_help_set('input'));
    }
 
-   my $file_out;
-   if (defined($output)) {
-      $file_out = $output;
-   }
-   else {
-      ($file_out = $input) =~ s/.gz$//;
+   $output ||= $self->output;
+   # If no output given, we used the input file name by removing .gz like gunzip command
+   if (! defined($output)) {
+      ($output = $input) =~ s/.gz$//;
    }
 
-   my $cmd = "gunzip -c $input > $file_out";
+   my $gz = Compress::Zlib::gzopen($input, "rb");
+   if (! $gz) {
+      return $self->log->error("gunzip: gzopen file [$input]: [$Compress::Zlib::gzerrno]");
+   }
 
-   $self->system($cmd) or return;
+   my $fw = Metabrik::File::Write->new_from_brik_init($self) or return;
+   $fw->append(0);
+   $fw->encoding('ascii');
+   $fw->overwrite(1);
 
-   return $file_out;
+   my $fd = $fw->open($output);
+   if (! defined($fd)) {
+      return $self->log->error("gunzip: open failed");
+   }
+
+   my $no_error = 1;
+   my $buffer = '';
+   while ($gz->gzread($buffer) > 0) {
+      $self->debug && $self->log->debug("gunzip: gzread ".length($buffer));
+      my $r = $fw->write($buffer);
+      $buffer = '';
+      if (! defined($r)) {
+         $self->log->warning("gunzip: write failed");
+         $no_error = 0;
+         next;
+      }
+   }
+
+   $fw->close;
+
+   return $no_error;
 }
 
 1;

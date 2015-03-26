@@ -14,6 +14,7 @@ my $builder = Module::Build->new(
    requires => {
       'perl' => '5.6.1',
       'Metabrik' => '1.09',
+      'Compress::Zlib' => 0,
       'Config::Tiny' => 0,
       'Data::Dump' => 0,
       'Data::Dumper' => 0,

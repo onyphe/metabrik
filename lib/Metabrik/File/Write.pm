@@ -27,8 +27,8 @@ sub brik_properties {
          unbuffered => 0,
       },
       commands => {
-         open => [ qw(file|OPTIONAL) ],
-         write => [ qw($data|$data_ref|$data_list) ],
+         open => [ qw(file|OPTIONAL RETURN:$fd) ],
+         write => [ qw($data|$data_ref|$data_list RETURN:$data|$data_ref|$data_list) ],
          close => [ ],
       },
    };
@@ -84,6 +84,8 @@ sub open {
       $|++;
       select($previous_default);          
    }
+
+   $self->debug && $self->log->debug("open: fd [$out]");
 
    return $self->fd($out);
 }

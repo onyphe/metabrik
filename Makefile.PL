@@ -13,6 +13,7 @@ WriteMakefile(
    AUTHOR => 'GomoR <gomor_at_metabrik.org>',
    PREREQ_PM => {
       'Metabrik' => '1.09',
+      'Compress::Zlib' => 0,
       'Config::Tiny' => 0,
       'Data::Dump' => 0,
       'Data::Dumper' => 0,
