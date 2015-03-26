@@ -16,6 +16,10 @@ sub brik_properties {
       attributes => {
          input => [ qw(file) ],
          output => [ qw(file) ],
+         append => [ qw(0|1) ],
+      },
+      attributes_default => {
+         append => 1,
       },
       commands => {
          read => [ qw(file) ],
@@ -48,17 +52,28 @@ sub read {
    $read->close;
 
    my @vars = ();
-   for my $line (@$data) {
-      my $this = eval($line);
+   my $buf = '';
+   for (@$data) {
+      $buf .= $_;
+
+      if (/^$/) {
+         push @vars, $buf;
+         $buf = '';
+      }
+   }
+
+   my @res = ();
+   for (@vars) {
+      my $h = eval($_);
       if ($@) {
          chomp($@);
          $self->log->warning("read: eval failed: $@");
          next;
       }
-      push @vars, $this;
+      push @res, $h;
    }
 
-   return \@vars;
+   return \@res;
 }
 
 sub write {
@@ -77,10 +92,22 @@ sub write {
    $self->debug && $self->log->debug("write: data[$data]");
 
    $self->open($output) or return $self->log->error("write: open failed");
-   my $r = $self->SUPER::write(Data::Dump::dump($data)."\n");
-   if (! defined($r)) {
-      return $self->log->error("write: write failed");
+
+   if (ref($data) eq 'ARRAY') {
+      for (@$data) {
+         my $r = $self->SUPER::write(Data::Dump::dump($_)."\n\n");
+         if (! defined($r)) {
+            return $self->log->error("write: write failed");
+         }
+      }
    }
+   else {
+      my $r = $self->SUPER::write(Data::Dump::dump($data)."\n\n");
+      if (! defined($r)) {
+         return $self->log->error("write: write failed");
+      }
+   }
+
    $self->close;
 
    return 1;
