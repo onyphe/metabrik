@@ -12,7 +12,7 @@ use base qw(Metabrik::Shell::Command);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable crypto x509) ],
+      tags => [ qw(unstable crypto x509 openssl ssl pki certificate) ],
       attributes => {
          datadir => [ qw(directory) ],
          ca_name => [ qw(name) ],
@@ -22,19 +22,21 @@ sub brik_properties {
          ca_directory => [ qw(directory) ],
          ca_conf => [ qw(conf_file) ],
          use_passphrase => [ qw(0|1) ],
+         key_size => [ qw(bits) ],
       },
       attributes_default => {
          capture_stderr => 1,
          use_passphrase => 0,
+         key_size => 2048,
       },
       commands => {
-         ca_init => [ qw(name directory|OPTIONAL) ],
-         set_ca_attributes => [ qw(name) ],
-         ca_show => [ qw(name) ],
-         ca_sign_csr => [ qw(name csr_file) ],
+         ca_init => [ qw(name|OPTIONAL directory|OPTIONAL) ],
+         set_ca_attributes => [ qw(name|OPTIONAL) ],
+         ca_show => [ qw(name|OPTIONAL) ],
+         ca_sign_csr => [ qw(csr_file|OPTIONAL name|OPTIONAL) ],
          csr_new => [ qw(base_file use_passphrase|OPTIONAL) ],
          cert_hash => [ qw(cert_file) ],
-         cert_verify => [ qw(name cert_file) ],
+         cert_verify => [ qw(cert_file name|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::File::Text' => [ ],
@@ -49,6 +51,7 @@ sub set_ca_attributes {
    my $self = shift;
    my ($name) = @_;
 
+   $name ||= $self->ca_name;
    if (! defined($name)) {
       return $self->log->error($self->brik_help_run('set_ca_attributes'));
    }
@@ -76,6 +79,7 @@ sub ca_init {
    my $self = shift;
    my ($name, $directory) = @_;
 
+   $name ||= $self->ca_name;
    if (! defined($name)) {
       return $self->log->error($self->brik_help_run('ca_init'));
    }
@@ -107,6 +111,7 @@ sub ca_init {
    my $ca_cert = $self->ca_cert;
    my $ca_key = $self->ca_key;
    my $ca_lc_name = $self->ca_lc_name;
+   my $key_size = $self->key_size;
 
    my $email = 'dummy@example.com';
    my $organization = 'Dummy Org';
@@ -142,7 +147,7 @@ sub ca_init {
       "basicConstraints = CA:false",
       "",
       "[ req ]",
-      "default_bits       = 2048",
+      "default_bits       = $key_size",
       "default_keyfile    = $ca_key",
       "#default_md         = md5",
       "default_days       = 1800",
@@ -169,7 +174,7 @@ sub ca_init {
 
    $self->log->verbose("ca_init: using conf file [$ca_conf] and cert [$ca_cert]");
 
-   my $cmd = "openssl req -x509 -newkey rsa:1024 ".
+   my $cmd = "openssl req -x509 -newkey rsa:$key_size ".
              "-days 1800 -out $ca_cert -outform PEM -config $ca_conf";
 
    return $self->capture($cmd);
@@ -179,6 +184,7 @@ sub ca_show {
    my $self = shift;
    my ($name) = @_;
 
+   $name ||= $self->ca_name;
    if (! defined($name)) {
       return $self->log->error($self->brik_help_run('ca_show'));
    }
@@ -203,12 +209,13 @@ sub csr_new {
    my $datadir = $self->datadir;
    my $csr_cert = $datadir.'/'.$base_file.'.pem';
    my $csr_key = $datadir.'/'.$base_file.'.key';
+   my $key_size = $self->key_size;
 
    if (-f $csr_cert) {
       return $self->log->error("csr_new: file [$csr_cert] already exists");
    }
 
-   my $cmd = "openssl req -newkey rsa:1024 -keyout $csr_key -keyform PEM ".
+   my $cmd = "openssl req -newkey rsa:$key_size -keyout $csr_key -keyform PEM ".
              "-out $csr_cert -outform PEM";
 
    if (! $use_passphrase) {
@@ -225,17 +232,18 @@ sub csr_new {
 
 sub ca_sign_csr {
    my $self = shift;
-   my ($name, $csr_cert) = @_;
+   my ($csr_cert, $name) = @_;
 
-   if (! defined($name)) {
-      return $self->log->error($self->brik_help_run('ca_sign_csr'));
-   }
    if (! defined($csr_cert)) {
       return $self->log->error($self->brik_help_run('ca_sign_csr'));
    }
-
    if (! -f $csr_cert) {
       return $self->log->error("ca_sign_csr: file [$csr_cert] does not exists");
+   }
+
+   $name ||= $self->ca_name;
+   if (! defined($name)) {
+      return $self->log->error($self->brik_help_run('ca_sign_csr'));
    }
 
    $self->set_ca_attributes($name) or return;
@@ -277,17 +285,18 @@ sub cert_hash {
 
 sub cert_verify {
    my $self = shift;
-   my ($name, $cert_file) = @_;
+   my ($cert_file, $name) = @_;
 
-   if (! defined($name)) {
-      return $self->log->error($self->brik_help_run('cert_verify'));
-   }
    if (! defined($cert_file)) {
       return $self->log->error($self->brik_help_run('cert_verify'));
    }
-
    if (! -f $cert_file) {
       return $self->log->error("cert_verify: file [$cert_file] not found");
+   }
+
+   $name ||= $self->ca_name;
+   if (! defined($name)) {
+      return $self->log->error($self->brik_help_run('cert_verify'));
    }
 
    $self->set_ca_attributes($name) or return;

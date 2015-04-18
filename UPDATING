@@ -1,3 +1,8 @@
+20150418
+   AFFECT: crypto::x509
+
+   - Argument order changed for ca_sign_csr and cert_verify Commands
+
 20150322
    AFFECT: file::csv
 
