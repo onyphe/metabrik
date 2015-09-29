@@ -16,7 +16,7 @@ sub brik_properties {
       attributes => {
          db => [ qw(sqlite_file) ],
          autocommit => [ qw(0|1) ],
-         dbh => [ qw(INTERAL) ],
+         dbh => [ qw(INTERNAL) ],
       },
       attributes_default => {
          autocommit => 1,
@@ -29,6 +29,7 @@ sub brik_properties {
          select => [ qw(table_name fields_array|OPTIONAL key|OPTIONAL) ],
          commit => [ ],
          show_tables => [ ],
+         describe_table => [ ],
          list_types => [ ],
          close => [ ],
       },
@@ -241,6 +242,12 @@ sub list_types {
       'DATE',
       'VARCHAR(int)',
    ];
+}
+
+# https://metacpan.org/pod/DBI#table_info
+sub describe_table {
+#my $sth = $dbh->column_info(undef,'table_name',undef,undef);
+#$sth->fetchall_arrayref;
 }
 
 sub close {
