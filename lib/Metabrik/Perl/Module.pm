@@ -30,7 +30,7 @@ sub install {
       return $self->log->error($self->brik_help_run('install'));
    }
 
-   if ($module !~ /^[A-Za-z0-9:]+$/) {
+   if ($module !~ /^[A-Za-z0-9:_]+$/) {
       return $self->log->error("install: invalid format for module [$module]");
    }
 
