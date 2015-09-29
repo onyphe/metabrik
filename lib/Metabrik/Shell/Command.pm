@@ -19,10 +19,13 @@ sub brik_properties {
          as_array => [ qw(0|1) ],
          as_matrix => [ qw(0|1) ],
          capture_stderr => [ qw(0|1) ],
+         capture_mode => [ qw(0|1) ],
+         ignore_error => [ qw(0|1) ],
       },
       commands => {
          system => [ qw(command) ],
          capture => [ qw(command) ],
+         execute => [ qw(command) ],
       },
       require_modules => {
          'IPC::Run3' => [ ],
@@ -38,6 +41,8 @@ sub brik_use_properties {
          as_array => 1,
          as_matrix => 0,
          capture_stderr => 1,
+         capture_mode => 0,
+         ignore_error => 0,
       },
    };
 }
@@ -87,8 +92,12 @@ sub system {
       return 1;
    }
 
-   # Failure, we return the program exit code
-   return $?;
+   if (! $self->ignore_error) {
+      # Failure, we return the program exit code
+      return $?;
+   }
+
+   return 1;
 }
 
 sub capture {
@@ -123,7 +132,7 @@ sub capture {
    $toks[0] = $bin;
 
    if (! -f $bin) {
-      return $self->log->error("system: program [$bin] not found in PATH");
+      return $self->log->error("capture: program [$bin] not found in PATH");
    }
 
    $command = join(' ', @toks);
@@ -139,8 +148,10 @@ sub capture {
       return $self->log->error("capture: unable to execute command [$command]: $@");
    }
    # Error in command execution
-   elsif ($?) {
+   elsif ($? && ! $self->ignore_error) {
       chomp($err);
+      chomp($out);
+      $err ||= $out; # Sometimes, the error is printed on stdout instead of stderr
       return $self->log->error("capture: command execution failed [$command]: $err");
    }
 
@@ -167,6 +178,25 @@ sub capture {
    }
 
    return $out;
+}
+
+sub execute {
+   my $self = shift;
+   my ($cmd, @args) = @_;
+   
+   if (! defined($cmd)) {
+      return $self->log->error($self->brik_help_run('execute'));
+   }
+
+   if ($self->capture_mode) {
+      return $self->capture($cmd, @args);
+   }
+   else {  # non-capture mode
+      return $self->system($cmd, @args);
+   }
+
+   # Unknown error
+   return;
 }
 
 1;
