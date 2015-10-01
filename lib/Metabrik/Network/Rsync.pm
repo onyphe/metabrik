@@ -17,15 +17,15 @@ sub brik_properties {
          sync => [ qw(source destination) ],
       },
       attributes => {
+         source_root => [ qw(path) ],
+         destination_root => [ qw(path) ],
          use_ssh => [ qw(0|1) ],
          ssh_port => [ qw(port) ],
          ssh_args => [ qw(args) ],
          args => [ qw(args) ],
-         sudo_mode => [ qw(0|1) ],
       },
       require_binaries => {
          'rsync', => [ ],
-         'sudo', => [ ],
       },
    };
 }
@@ -38,7 +38,8 @@ sub brik_use_properties {
          use_ssh => 1,
          ssh_port => 22,
          args => '-azv',
-         sudo_mode => 0,
+         source_root => '',
+         destination_root => '',
       },
    };
 }
@@ -54,6 +55,16 @@ sub sync {
       return $self->log->error($self->brik_help_run('destination'));
    }
 
+   my $source_root = $self->source_root;
+   my $destination_root = $self->destination_root;
+
+   if (length($self->source_root)) {
+      $source = $self->source_root.'/'.$source;
+   }
+   if (length($self->destination_root)) {
+      $destination = $self->destination_root.'/'.$destination;
+   }
+
    my $cmd = "rsync";
    if ($self->use_ssh) {
       my $port = $self->ssh_port;
@@ -67,11 +78,6 @@ sub sync {
    else {
       my $args = $self->args;
       $cmd .= " $args $source $destination";
-   }
-
-   if ($self->sudo_mode) {
-      # Preserve environment like SSH_AGENT_PID
-      $cmd = "sudo -E $cmd";
    }
 
    return $self->execute($cmd);
