@@ -7,7 +7,7 @@ package Metabrik::Shell::Rc;
 use strict;
 use warnings;
 
-our $VERSION = '1.09';
+our $VERSION = '1.10';
 
 use base qw(Metabrik);
 
@@ -18,6 +18,9 @@ sub brik_properties {
       attributes => {
          file => [ qw(file) ],
          create_default => [ qw(0|1) ],
+      },
+      attributes_default => {
+         create_default => 1,
       },
       commands => {
          load => [ qw(input_file|OPTIONAL) ],
@@ -33,7 +36,6 @@ sub brik_use_properties {
    return {
       attributes_default => {
          file => $self->global->homedir.'/.metabrik_rc',
-         create_default => 1,
       },
    };
 }

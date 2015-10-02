@@ -7,7 +7,7 @@ package Metabrik::Shell::History;
 use strict;
 use warnings;
 
-our $VERSION = '1.09';
+our $VERSION = '1.10';
 
 use base qw(Metabrik);
 

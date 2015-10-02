@@ -7,7 +7,7 @@ package Metabrik::Shell::Script;
 use strict;
 use warnings;
 
-our $VERSION = '1.09';
+our $VERSION = '1.10';
 
 use base qw(Metabrik);
 
@@ -19,7 +19,7 @@ sub brik_properties {
          file => [ qw(file) ],
       },
       attributes_default => {
-         file => 'script.brik',
+         file => 'script.meta',
       },
       commands => {
          load => [ qw(input_file|OPTIONAL) ],

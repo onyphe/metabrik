@@ -7,7 +7,7 @@ package Metabrik::Shell::Command;
 use strict;
 use warnings;
 
-our $VERSION = '1.09';
+our $VERSION = '1.10';
 
 use base qw(Metabrik);
 
@@ -23,7 +23,15 @@ sub brik_properties {
          ignore_error => [ qw(0|1) ],
          use_sudo => [ qw(0|1) ],
          sudo_args => [ qw(args) ],
-         sudo_keep_env => [ qw(0|1) ],
+      },
+      attributes_default => {
+         as_array => 1,
+         as_matrix => 0,
+         capture_stderr => 1,
+         capture_mode => 0,
+         ignore_error => 0,
+         use_sudo => 0,
+         sudo_args => '-E',  # Keep environment
       },
       commands => {
          system => [ qw(command) ],
@@ -32,23 +40,6 @@ sub brik_properties {
       },
       require_modules => {
          'IPC::Run3' => [ ],
-      },
-   };
-}
-
-sub brik_use_properties {
-   my $self = shift;
-
-   return {
-      attributes_default => {
-         as_array => 1,
-         as_matrix => 0,
-         capture_stderr => 1,
-         capture_mode => 0,
-         ignore_error => 0,
-         use_sudo => 0,
-         sudo_args => '',
-         sudo_keep_env => 1,
       },
    };
 }
@@ -95,9 +86,6 @@ sub system {
       if (! ref($self->sudo_args) && length($self->sudo_args)) {
          my @args = split(/\s+/, $self->sudo_args);
          push @sudo, @args;
-      }
-      if ($self->sudo_keep_env) {
-         push @sudo, '-E';
       }
       $command = join(' ', @sudo)." $command";
       @toks = ( @sudo, @toks );
@@ -163,9 +151,6 @@ sub capture {
       if (! ref($self->sudo_args) && length($self->sudo_args)) {
          my @args = split(/\s+/, $self->sudo_args);
          push @sudo, @args;
-      }
-      if ($self->sudo_keep_env) {
-         push @sudo, '-E';
       }
       $command = join(' ', @sudo)." $command";
       @toks = ( @sudo, @toks );
