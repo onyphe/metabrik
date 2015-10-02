@@ -24,22 +24,15 @@ sub brik_properties {
          ssh_args => [ qw(args) ],
          args => [ qw(args) ],
       },
-      require_binaries => {
-         'rsync', => [ ],
-      },
-   };
-}
-
-sub brik_use_properties {
-   my $self = shift;
-
-   return {
       attributes_default => {
          use_ssh => 1,
          ssh_port => 22,
          args => '-azv',
          source_root => '',
          destination_root => '',
+      },
+      require_binaries => {
+         'rsync', => [ ],
       },
    };
 }
