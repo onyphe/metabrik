@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# network::rsync Brik
+# client::rsync Brik
 #
-package Metabrik::Network::Rsync;
+package Metabrik::Client::Rsync;
 use strict;
 use warnings;
 
@@ -12,7 +12,7 @@ use base qw(Metabrik::Shell::Command);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable network rsync) ],
+      tags => [ qw(unstable client network rsync) ],
       commands => {
          sync => [ qw(source destination) ],
       },
@@ -82,7 +82,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Network::Rsync - network::rsync Brik
+Metabrik::Client::Rsync - client::rsync Brik
 
 =head1 COPYRIGHT AND LICENSE
 

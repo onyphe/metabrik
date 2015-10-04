@@ -1,3 +1,8 @@
+20151003
+   AFFECT: network::rsync
+
+   - network::rsync renamed to client::rsync
+
 20150418
    AFFECT: crypto::x509
 
