@@ -35,7 +35,8 @@ sub brik_properties {
          get_column_values => [ qw($data column_name|column_int) ],
       },
       require_modules => {
-         'Text::CSV' => [ ],
+         'Text::CSV_XS' => [ ],
+         #'Text::CSV' => [ ],
          'Metabrik::File::Read' => [ ],
          'Metabrik::File::Write' => [ ],
       },
@@ -62,12 +63,14 @@ sub read {
       return $self->log->error($self->brik_help_run('read'));
    }
 
-   my $csv = Text::CSV->new({
+   my $csv = Text::CSV_XS->new({
+   #my $csv = Text::CSV->new({
       binary => 1,
       sep_char => $self->separator,
       allow_loose_quotes => 1,
       allow_loose_escapes => 1,
-   }) or return $self->log->error('read: Text::CSV new failed');
+   }) or return $self->log->error('read: Text::CSV_XS new failed');
+   #}) or return $self->log->error('read: Text::CSV new failed');
 
    my $read = Metabrik::File::Read->new_from_brik($self) or return;
    $read->encoding($self->encoding);
