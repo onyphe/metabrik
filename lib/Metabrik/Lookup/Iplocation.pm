@@ -7,9 +7,7 @@ package Metabrik::Lookup::Iplocation;
 use strict;
 use warnings;
 
-use base qw(Metabrik::File::Csv);
-
-# XXX: switch to Geo::IP for perf?
+use base qw(Metabrik);
 
 sub brik_properties {
    return {
@@ -17,74 +15,78 @@ sub brik_properties {
       tags => [ qw(unstable lookup location ipv4 ipv6 ip) ],
       attributes => {
          datadir => [ qw(datadir) ],
-         input => [ qw(input) ],
-         _load => [ qw(INTERNAL) ],
-      },
-      attributes_default => {
-         input => 'GeoIPCountryWhois.csv',
-         separator => ',',
       },
       commands => {
-         update => [ qw(output|OPTIONAL) ],
-         load => [ qw(input|OPTIONAL) ],
+         update => [ ],
          from_ip => [ qw(ip_address) ],
          from_ipv4 => [ qw(ipv4_address) ],
          from_ipv6 => [ qw(ipv6_address) ],
       },
       require_modules => {
-         'Metabrik::File::Fetch' => [ ],
-         'Metabrik::File::Compress' => [ ],
-         'Metabrik::Network::Address' => [ ],
+         'Geo::IP' => [ ],
+         'LWP::Simple' => [ ],
+         'File::Copy' => [ ],
+         'File::Spec' => [ ],
+         'PerlIO::gzip' => [ ],
       },
    };
 }
 
 sub update {
    my $self = shift;
-   my ($output) = @_;
 
-   # IPv6
-   # 'http://geolite.maxmind.com/download/geoip/database/GeoIPv6.csv.gz'
-   # City IPv4
-   # 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity_CSV/GeoLiteCity-latest.zip'
-   # City IPv6
-   # 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.csv.gz'
-   # ASN IPv4
-   # 'http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum2.zip'
-   # ASN IPv6
-   # 'http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum2v6.zip'
+   use LWP::Simple qw(mirror RC_NOT_MODIFIED RC_OK $ua);
+   use File::Copy qw(mv);
+   use File::Spec;
+   use PerlIO::gzip;
 
-   # IPv4
-   my $url = 'http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip';
-   my ($file) = $self->input;
+   my $download_dir = $self->datadir;
+   my $dest_dir = $self->datadir;
 
-   $output ||= $self->datadir.'/'.$file.'.zip';
+   my %mirror = (
+      'GeoIP.dat.gz'      => 'GeoLiteCountry/GeoIP.dat.gz',
+      'GeoIPCity.dat.gz'  => 'GeoLiteCity.dat.gz',
+      'GeoIPv6.dat.gz'    => 'GeoIPv6.dat.gz',
+      'GeoIPASNum.dat.gz' => 'asnum/GeoIPASNum.dat.gz'
+   );
 
-   my $ff = Metabrik::File::Fetch->new_from_brik_init($self) or return;
-   $ff->get($url, $output)
-      or return $self->log->error("update: get failed");
+   $ua->agent("MaxMind-geolite-mirror-simple/0.02");
+   my $dl_path = 'http://geolite.maxmind.com/download/geoip/database/';
 
-   my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
-   $fc->datadir($self->datadir);
-   my $r = $fc->unzip($output);
+   chdir($download_dir)
+      or return $self->log->error("update: unable to chdir to [$download_dir]: $!");
+   for my $f (keys %mirror) {
+      my $rc = mirror($dl_path.$mirror{$f}, $f);
+      if ($rc == RC_NOT_MODIFIED) {
+         next;
+      }
+      if ($rc == RC_OK) {
+         (my $outfile = $f) =~ s/\.gz$//;
+         my $r = open(my $in, '<:gzip', $f);
+         if (! defined($r)) {
+            $self->log->error("update: unable to unzip file [$f]: $!");
+            next;
+         }
+         $r = open(my $out, '>', $outfile);
+         if (! defined($r)) {
+            $self->log->error("update: unable to open file [$outfile]: $!");
+            next;
+         }
+         while (<$in>) {
+            print $out $_
+               or $self->log->error("update: unable to write to file [$outfile]: $!");
+         }
+         $r = mv($outfile, File::Spec->catfile($dest_dir, $outfile));
+         if (! defined($r)) {
+            $self->log->error("update: unable to move file [$outfile] to [$dest_dir]: $!");
+            next;
+         }
 
-   return $r.'/'.$file;
-}
-
-sub load {
-   my $self = shift;
-   my ($input) = @_;
-
-   $input ||= $self->datadir.'/'.$self->input;
-   if (! -f $input) {
-      return $self->log->error("load: file [$input] not found");
+         $self->log->info("update: file [$outfile] created or updated in [$dest_dir]");
+      }
    }
 
-   $self->first_line_is_header(0);
-   my $data = $self->read($input)
-      or return $self->log->error("load: read failed");
-
-   return $self->_load($data);
+   return 1;
 }
 
 sub from_ipv4 {
@@ -94,49 +96,33 @@ sub from_ipv4 {
    if (! defined($ipv4)) {
       return $self->log->error($self->brik_help_run('from_ipv4'));
    }
-   if (! defined($self->_load)) {
-      return $self->log->error($self->brik_help_run('load'));
-   }
 
-   # Example:
-   # [
-   #   ["1.0.0.0", "1.0.0.255", 16777216, 16777471, "AU", "Australia"],
-   #   ...
-   # ]
+   use Geo::IP;
+   my $gi = Geo::IP->open($self->datadir.'/GeoIPCity.dat', GEOIP_STANDARD)
+      or return $self->log->error("from_ipv4: unable to open GeoIPCity.dat");
 
-   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
-   my $prev = $self->log->level;
-   $self->log->level(0);
-   for my $line (@{$self->_load}) {
-      my $subnet_list = $na->range_to_cidr($line->[0], $line->[1]);
-      for my $subnet (@$subnet_list) {
-         if ($na->match($ipv4, $subnet)) {
-            $self->log->level($prev);
-            return {
-               subnet => $subnet,
-               ipv4 => $ipv4,
-               ipv4_first => $line->[0],
-               ipv4_last => $line->[1],
-               cc => $line->[4],
-               country => $line->[5],
-            };
-         }
-      }
-   }
+   my $record = $gi->record_by_addr($ipv4);
 
-   $self->log->level($prev);
-   $self->log->info("from_ipv4: no match found");
-
-   return 0;
+   # Convert from blessed hashref to hashref
+   return { map { $_ => $record->{$_} } keys %$record };
 }
 
 sub from_ipv6 {
    my $self = shift;
    my ($ipv6) = @_;
 
-   $self->log->info("from_ipv6: TODO");
+   if (! defined($ipv6)) {
+      return $self->log->error($self->brik_help_run('from_ipv6'));
+   }
 
-   return 0;
+   use Geo::IP;
+   my $gi = Geo::IP->open($self->datadir.'/GeoIPv6.dat')
+      or return $self->log->error("from_ipv6: unable to open GeoIPv6.dat");
+
+   my $record = $gi->country_code_by_addr_v6($ipv6);
+
+   # Convert from blessed hashref to hashref
+   return { map { $_ => $record->{$_} } keys %$record };
 }
 
 sub from_ip {
