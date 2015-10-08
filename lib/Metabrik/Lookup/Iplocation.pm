@@ -27,6 +27,7 @@ sub brik_properties {
          'LWP::Simple' => [ ],
          'File::Copy' => [ ],
          'File::Spec' => [ ],
+         'PerlIO' => [ ],
          'PerlIO::gzip' => [ ],
       },
    };
@@ -35,10 +36,9 @@ sub brik_properties {
 sub update {
    my $self = shift;
 
-   use LWP::Simple qw(mirror RC_NOT_MODIFIED RC_OK $ua);
-   use File::Copy qw(mv);
-   use File::Spec;
-   use PerlIO::gzip;
+   my $ua;
+   eval('use LWP::Simple qw(mirror RC_NOT_MODIFIED RC_OK $ua);');
+   eval('use File::Copy qw(mv);');
 
    my $download_dir = $self->datadir;
    my $dest_dir = $self->datadir;
@@ -50,17 +50,17 @@ sub update {
       'GeoIPASNum.dat.gz' => 'asnum/GeoIPASNum.dat.gz'
    );
 
-   $ua->agent("MaxMind-geolite-mirror-simple/0.02");
+   $ua->agent("Metabrik-MaxMind-geolite-mirror/1.00");
    my $dl_path = 'http://geolite.maxmind.com/download/geoip/database/';
 
    chdir($download_dir)
       or return $self->log->error("update: unable to chdir to [$download_dir]: $!");
    for my $f (keys %mirror) {
       my $rc = mirror($dl_path.$mirror{$f}, $f);
-      if ($rc == RC_NOT_MODIFIED) {
+      if ($rc == RC_NOT_MODIFIED()) {
          next;
       }
-      if ($rc == RC_OK) {
+      if ($rc == RC_OK()) {
          (my $outfile = $f) =~ s/\.gz$//;
          my $r = open(my $in, '<:gzip', $f);
          if (! defined($r)) {
@@ -97,8 +97,7 @@ sub from_ipv4 {
       return $self->log->error($self->brik_help_run('from_ipv4'));
    }
 
-   use Geo::IP;
-   my $gi = Geo::IP->open($self->datadir.'/GeoIPCity.dat', GEOIP_STANDARD)
+   my $gi = Geo::IP->open($self->datadir.'/GeoIPCity.dat', GEOIP_STANDARD())
       or return $self->log->error("from_ipv4: unable to open GeoIPCity.dat");
 
    my $record = $gi->record_by_addr($ipv4);
@@ -115,7 +114,6 @@ sub from_ipv6 {
       return $self->log->error($self->brik_help_run('from_ipv6'));
    }
 
-   use Geo::IP;
    my $gi = Geo::IP->open($self->datadir.'/GeoIPv6.dat')
       or return $self->log->error("from_ipv6: unable to open GeoIPv6.dat");
 
