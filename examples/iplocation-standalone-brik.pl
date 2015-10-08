@@ -10,4 +10,8 @@ my $context = Metabrik::Core::Context->new;
 $context->brik_init or die("[FATAL] context init failed\n");
 
 my $li = Metabrik::Lookup::Iplocation->new_from_brik_init($context);
-print Dumper($li->from_ip("104.47.125.219"));
+$li->update;
+
+my $info = $li->from_ip("104.47.125.219");
+
+print Dumper($info);
