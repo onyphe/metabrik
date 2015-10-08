@@ -1,4 +1,5 @@
 Build.PL
+examples/iplocation-standalone-brik.pl
 lib/Metabrik/Address/Generate.pm
 lib/Metabrik/Api/Splunk.pm
 lib/Metabrik/Audit/Dns.pm
