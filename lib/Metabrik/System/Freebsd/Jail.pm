@@ -25,6 +25,7 @@ sub brik_properties {
          update => [ ],
          name_to_id => [ qw(jail_name) ],
          exec => [ qw(jail_name command) ],
+         console => [ qw(jail_name) ],
       },
       require_binaries => {
          'sudo' => [ ],
@@ -250,6 +251,15 @@ sub update {
    my $self = shift;
 
    my $cmd = "sudo ezjail-admin update -i";
+
+   return $self->system($cmd);
+}
+
+sub console {
+   my $self = shift;
+   my ($jail_name) = @_;
+
+   my $cmd = "sudo ezjail-admin console $jail_name";
 
    return $self->system($cmd);
 }
