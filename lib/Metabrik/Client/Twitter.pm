@@ -94,7 +94,7 @@ sub tweet {
 
    my $r;
    eval {
-      $nt->update($message);
+      $r = $nt->update($message);
    };
    if ($@) {
       chomp($@);
