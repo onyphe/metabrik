@@ -40,7 +40,7 @@ sub load {
 
    my @lines = ();
    open(my $in, '<', $file)
-         or return $self->log->error("load: can't open file [$file]: $!");
+      or return $self->log->error("load: can't open file [$file]: $!");
    while (defined(my $line = <$in>)) {
       chomp($line);
       push @lines, $line;
