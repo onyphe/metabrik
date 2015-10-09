@@ -188,7 +188,7 @@ sub capture {
    chomp($err);
 
    # If we also wanted stderr, we put it at the end of output
-   if ($self->capture_stderr) {
+   if ($self->capture_stderr && $err ne 'undef') {
       $out .= "\n\nSTDERR:\n$err";
    }
 
