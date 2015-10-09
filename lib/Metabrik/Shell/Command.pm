@@ -144,6 +144,13 @@ sub capture {
       return $self->log->error("capture: program [$bin] not found in PATH");
    }
 
+   # Perform file globbing, if any
+   my @globbed = ();
+   for (@toks) {
+      push @globbed, glob($_);
+   }
+   @toks = @globbed;
+
    $command = join(' ', @toks);
 
    if ($self->use_sudo) {
