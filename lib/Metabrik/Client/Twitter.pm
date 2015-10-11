@@ -7,7 +7,7 @@ package Metabrik::Client::Twitter;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik);
 
 sub brik_properties {
    return {

@@ -223,9 +223,9 @@ sub scan {
       my $ip4 = $_;
       my $ip6 = $self->mac2eui64($mac);
       $self->log->verbose(sprintf("%-16s => %s  [%s]", $ip4, $mac, $ip6));
-      $results{$ip4} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
-      $results{$mac} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
-      $results{$ip6} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
+      $results{by_ipv4}{$ip4} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
+      $results{by_mac}{$mac} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
+      $results{by_ipv6}{$ip6} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
    }
 
    return \%results;

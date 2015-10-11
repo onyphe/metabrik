@@ -131,6 +131,9 @@ sub open_auth_login {
          }
       }
    }
+   else {
+      $self->log->info("AUTH LOGIN not supported by target");
+   }
 
    return {
       smtp_feature_auth_login => $smtp_feature_auth_login,

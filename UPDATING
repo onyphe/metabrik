@@ -1,3 +1,9 @@
+20151011
+   AFFECT: network::arp
+
+   - network::arp scan Command now returns a hashref with results sorted 
+     with keys named by_mac, by_ipv4 and by_ipv6
+
 20151003
    AFFECT: network::rsync
 
