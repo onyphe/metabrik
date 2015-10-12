@@ -29,7 +29,7 @@ sub brik_properties {
          as_matrix => 0,
          capture_stderr => 1,
          capture_mode => 0,
-         ignore_error => 0,
+         ignore_error => 1,
          use_sudo => 0,
          sudo_args => '-E',  # Keep environment
       },
@@ -175,11 +175,16 @@ sub capture {
       return $self->log->error("capture: unable to execute command [$command]: $@");
    }
    # Error in command execution
-   elsif ($? && ! $self->ignore_error) {
+   elsif ($?) {
       chomp($err);
       chomp($out);
       $err ||= $out; # Sometimes, the error is printed on stdout instead of stderr
-      return $self->log->error("capture: command execution failed [$command]: $err");
+      if ($self->ignore_error) {
+         $self->log->warning("capture: command execution had errors [$command]: $err");
+      }
+      else {
+         return $self->log->error("capture: command execution failed [$command]: $err");
+      }
    }
 
    $out ||= 'undef';
