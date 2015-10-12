@@ -21,6 +21,8 @@ sub brik_properties {
          from_ip => [ qw(ip_address) ],
          from_ipv4 => [ qw(ipv4_address) ],
          from_ipv6 => [ qw(ipv6_address) ],
+         subnet4 => [ qw(ipv4_address) ],
+         organization_name => [ qw(ip_address) ],
       },
       require_modules => {
          'Geo::IP' => [ ],
@@ -141,6 +143,38 @@ sub from_ip {
    $self->log->info("from_ip: IP [$ip] is not a valid IP address");
 
    return 0;
+}
+
+sub subnet4 {
+   my $self = shift;
+   my ($ipv4_address) = @_;
+
+   if (! defined($ipv4_address)) {
+      return $self->log->error($self->brik_help_run('subnet4'));
+   }
+
+   my $gi = Geo::IP->open($self->datadir.'/GeoIPCity.dat', Geo::IP::GEOIP_STANDARD())
+      or return $self->log->error("subnet4: unable to open GeoIPCity.dat");
+
+   my ($from, $to) = $gi->range_by_ip($ipv4_address);
+
+   return [ $from, $to ];
+}
+
+sub organization_name {
+   my $self = shift;
+   my ($ip_address) = @_;
+
+   if (! defined($ip_address)) {
+      return $self->log->error($self->brik_help_run('organization_name'));
+   }
+  
+   my $gi = Geo::IP->open($self->datadir.'/GeoIPCity.dat', Geo::IP::GEOIP_STANDARD())
+      or return $self->log->error("organization_name: unable to open GeoIPCity.dat");
+
+   my $record = $gi->name_by_addr($ip_address);
+
+   return $record;
 }
 
 1;

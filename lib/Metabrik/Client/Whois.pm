@@ -18,8 +18,10 @@ sub brik_properties {
          available => [ qw(domain) ],
          expire => [ qw(domain) ],
          abuse => [ qw(domain) ],
+         netname => [ qw(ip_address) ],
       },
       require_modules => {
+         'Metabrik::Network::Address' => [ ],
          'Metabrik::Network::Whois' => [ ],
       },
    };
@@ -171,6 +173,34 @@ sub expire {
 
 # Abuse if for IP addresses, we have to lookup the domain first.
 sub abuse {
+}
+
+sub netname {
+   my $self = shift;
+   my ($ip_address) = @_;
+
+   if (! defined($ip_address)) {
+      return $self->log->error($self->brik_help_run('netname'));
+   }
+
+   my $na = Metabrik::Network::Address->new_from_brik($self) or return;
+   if (! $na->is_ip($ip_address)) {
+      return $self->log->error("netname: IP [$ip_address] has invalid format");
+   }
+
+   my $nw = Metabrik::Network::Whois->new_from_brik($self) or return;
+   my $lines = $nw->target($ip_address) or return;
+
+   my $netname = '';
+   for my $line (@$lines) {
+      if ($line =~ /netname:/i) {
+         my @toks = split(/\s+/, $line);
+         $netname = $toks[-1];
+         last;
+      }
+   }
+
+   return $netname;
 }
 
 1;
