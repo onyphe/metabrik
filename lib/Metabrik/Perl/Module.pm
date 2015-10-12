@@ -14,7 +14,10 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable perl module install cpan) ],
       commands => {
-         install => [ qw(Module) ],
+         install => [ qw(module|$module_list) ],
+      },
+      attributes_default => {
+         use_sudo => 1,
       },
       require_binaries => {
          'cpanm' => [ ],
@@ -30,11 +33,27 @@ sub install {
       return $self->log->error($self->brik_help_run('install'));
    }
 
-   if ($module !~ /^[A-Za-z0-9:_]+$/) {
-      return $self->log->error("install: invalid format for module [$module]");
+   if (ref($module) eq 'ARRAY') {
+      for my $this (@$module) {
+         if ($this !~ /^[A-Za-z0-9:_]+$/) {
+            $self->log->error("install: invalid format for module [$module]");
+            next;
+         }
+
+         $self->system("cpanm $this");
+      }
+
+      return 1;
+   }
+   elsif (! ref($module)) {
+      if ($module !~ /^[A-Za-z0-9:_]+$/) {
+         return $self->log->error("install: invalid format for module [$module]");
+      }
+
+      return $self->system("cpanm $module");
    }
 
-   return $self->system("sudo cpanm $module");
+   return 1;
 }
 
 1;

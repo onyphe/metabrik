@@ -20,6 +20,7 @@ sub brik_properties {
          not_tag => [ qw(Tag) ],
          used => [ ],
          not_used => [ ],
+         show_require_modules => [ ],
       },
    };
 }
@@ -174,6 +175,41 @@ sub not_used {
    my $self = shift;
 
    return $self->not_tag('used');
+}
+
+sub show_require_modules {
+   my $self = shift;
+
+   my $context = $self->context;
+   my $available = $context->available;
+
+   # Don't show require for Metabrik::Core
+   my $core = {
+      'shell::script',
+      'shell::rc',
+      'shell::history',
+      'shell::command',
+      'brik::search',
+      'perl::module',
+      'core::context',
+      'core::log',
+      'core::shell',
+      'core::global',
+   };
+
+   my %require_modules = ();
+   for my $brik (keys %$available) {
+      next if (exists($core->{$brik}));
+      if ($available->{$brik}->can('brik_properties')) {
+         my $modules = $available->{$brik}->brik_properties->{require_modules};
+         for my $module (keys %$modules) {
+            next if $module =~ /^Metabrik/;
+            $require_modules{$module} = $brik;
+         }
+      }
+   }
+
+   return [ sort { $a cmp $b } keys %require_modules ];
 }
 
 1;
