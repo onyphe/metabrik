@@ -18,9 +18,10 @@ sub brik_properties {
          available => [ qw(domain) ],
          expire => [ qw(domain) ],
          abuse => [ qw(domain) ],
-         netname => [ qw(ip_address) ],
+         netname => [ qw(ip_address|$ip_address_list|hostname) ],
       },
       require_modules => {
+         'Metabrik::Client::Dns' => [ ],
          'Metabrik::Network::Address' => [ ],
          'Metabrik::Network::Whois' => [ ],
       },
@@ -177,30 +178,45 @@ sub abuse {
 
 sub netname {
    my $self = shift;
-   my ($ip_address) = @_;
+   my ($arg0) = @_;
 
-   if (! defined($ip_address)) {
+   if (! defined($arg0)) {
       return $self->log->error($self->brik_help_run('netname'));
    }
 
+   my $ip_list = [];
+   # If this is not an IP address list, it may be a hostname
+   # We try to resolve it.
    my $na = Metabrik::Network::Address->new_from_brik($self) or return;
-   if (! $na->is_ip($ip_address)) {
-      return $self->log->error("netname: IP [$ip_address] has invalid format");
+   if (! ref($arg0) && ! $na->is_ip($arg0)) {
+      my $cd = Metabrik::Client::Dns->new_from_brik($self) or return;
+      $ip_list = $cd->a_lookup($arg0) or return;
    }
-
-   my $nw = Metabrik::Network::Whois->new_from_brik($self) or return;
-   my $lines = $nw->target($ip_address) or return;
-
-   my $netname = '';
-   for my $line (@$lines) {
-      if ($line =~ /netname:/i) {
-         my @toks = split(/\s+/, $line);
-         $netname = $toks[-1];
-         last;
+   else {
+      if (ref($arg0) eq 'ARRAY') {
+         $ip_list = $arg0;
+      }
+      elsif (! ref($arg0)) {
+         $ip_list = [ $arg0 ];
       }
    }
 
-   return $netname;
+   my $results = {};
+   my $nw = Metabrik::Network::Whois->new_from_brik($self) or return;
+   for my $ip (@$ip_list) {
+      my $lines = $nw->target($ip) or next;
+
+      my $netname = '';
+      for my $line (@$lines) {
+         if ($line =~ /netname:/i) {
+            my @toks = split(/\s+/, $line);
+            $results->{$ip} = $toks[-1];
+            last;
+         }
+      }
+   }
+
+   return $results;
 }
 
 1;

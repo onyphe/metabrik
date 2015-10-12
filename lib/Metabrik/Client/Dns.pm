@@ -57,6 +57,9 @@ sub _nslookup {
       chomp($@);
       return $self->log->error("_nslookup: failed for host [$host] with type [$type]: $@");
    }
+   elsif (@r == 0) {
+      return $self->log->error("_nslookup: no response for host [$host] with type [$type]");
+   }
 
    return \@r;
 }
