@@ -27,6 +27,8 @@ sub brik_properties {
          ignore_body => 0,
       },
       commands => {
+         verify_server => [ qw(uri|OPTIONAL) ],
+         create_user_agent => [ ],
          get => [ qw(uri|OPTIONAL) ],
          getcertificate => [ qw(uri|OPTIONAL) ],
          trace_redirect => [ qw(uri|OPTIONAL) ],
@@ -40,7 +42,6 @@ sub brik_properties {
          getcertificate2 => [ qw(SCALAR SCALAR) ],
          screenshot => [ qw(uri output_file) ],
          eval_javascript => [ qw(js uri|OPTIONAL) ],
-         verify_server => [ qw(uri|OPTIONAL) ],
       },
       require_modules => {
          'Net::SSL' => [ ],
@@ -97,6 +98,31 @@ sub verify_server {
    return 1;
 }
 
+sub create_user_agent {
+   my $self = shift;
+
+   $ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = 'Net::SSL';
+
+   my $mech = WWW::Mechanize->new(
+      ssl_opts => {
+         verify_hostname => 0,
+         SSL_ca_file => Mozilla::CA::SSL_ca_file(),
+      },
+   );
+   if (! defined($mech)) {
+      return $self->log->error("create_user_agent: unable to create WWW::Mechanize object");
+   }
+
+   if ($self->user_agent) {
+      $mech->agent($self->user_agent);
+   }
+   else {
+      $mech->agent_alias('Linux Mozilla');
+   }
+
+   return $mech;
+}
+
 sub _mech_new {
    my $self = shift;
    my ($uri) = @_;
@@ -115,24 +141,7 @@ sub _mech_new {
       }
    }
 
-   my $mech = WWW::Mechanize->new(
-      ssl_opts => {
-         verify_hostname => 0,
-         SSL_ca_file => Mozilla::CA::SSL_ca_file(),
-      },
-   );
-   if (! defined($mech)) {
-      return;
-   }
-
-   if ($self->user_agent) {
-      $mech->agent($self->user_agent);
-   }
-   else {
-      $mech->agent_alias('Linux Mozilla');
-   }
-
-   return $mech;
+   return $self->create_user_agent;
 }
 
 sub get {
@@ -143,8 +152,6 @@ sub get {
    if (! defined($uri)) {
       return $self->log->error($self->brik_help_set('uri'));
    }
-
-   $ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = 'Net::SSL';
 
    my $mech = $self->_mech_new($uri)
       or return $self->log->error("get: unable to create WWW::Mechanize object");
