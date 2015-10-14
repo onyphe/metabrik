@@ -20,8 +20,8 @@ sub brik_properties {
          username => [ qw(username) ],
          password => [ qw(password) ],
          ignore_body => [ qw(0|1) ],
+         user_agent => [ qw(user_agent) ],
       },
-      # For SSL verify stuff, better to look at AnyEvent::TLS.
       attributes_default => {
          ssl_verify => 1,
          ignore_body => 0,
@@ -40,8 +40,11 @@ sub brik_properties {
          getcertificate2 => [ qw(SCALAR SCALAR) ],
          screenshot => [ qw(uri output_file) ],
          eval_javascript => [ qw(js uri|OPTIONAL) ],
+         verify_server => [ qw(uri|OPTIONAL) ],
       },
       require_modules => {
+         'Net::SSL' => [ ],
+         'Mozilla::CA' => [ ],
          'Data::Dumper' => [ ],
          'IO::Socket::SSL' => [ ],
          'LWP::UserAgent' => [ ],
@@ -58,6 +61,80 @@ sub brik_properties {
    };
 }
 
+sub verify_server {
+   my $self = shift;
+   my ($uri) = @_;
+
+   $uri ||= $self->uri;
+   if (! defined($uri)) {
+      return $self->log->error($self->brik_help_set('uri'));
+   }
+
+   my $su = Metabrik::String::Uri->new_from_brik($self) or return;
+   my $parsed = $su->parse($uri) or return;
+
+   my $host = $parsed->{host};
+   my $port = $parsed->{port};
+   $self->log->info("verify_server: trying host [".$parsed->{host}."] with port [".$parsed->{port}."]");
+
+   my $client = IO::Socket::SSL->new(
+      PeerHost => $parsed->{host},
+      PeerPort => $parsed->{port},
+      #SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_PEER(),
+      #SSL_verifycn_name => $parsed->{host},
+      #SSL_verifycn_scheme => 'http',
+   );
+   if (! defined($client) && ! length($!)) {
+      $self->log->info("verify_server: not verified: [".$IO::Socket::SSL::SSL_ERROR."]");
+      return 0;
+   }
+   elsif (! defined($client)) {
+      return $self->log->error("verify_server: connection failed with error: [$!]");
+   }
+
+   $self->log->info("verify_server: verified");
+
+   return 1;
+}
+
+sub _mech_new {
+   my $self = shift;
+   my ($uri) = @_;
+
+   # We have to use a different method to check certificate because all 
+   # IO::Socket::SSL, Net::SSL, Net::SSLeay, Net::HTTPS, AnyEvent::TLS just sucks.
+   # So we have to perform a first TCP connexion to verify cert, then a second 
+   # One to actually negatiate an unverified session.
+   if ($self->ssl_verify) {
+      my $verified = $self->verify_server($uri);
+      if (! defined($verified)) {
+         return;
+      }
+      if ($verified == 0) {
+         return $self->log->error("_mech_new: server [$uri] not verified");
+      }
+   }
+
+   my $mech = WWW::Mechanize->new(
+      ssl_opts => {
+         verify_hostname => 0,
+         SSL_ca_file => Mozilla::CA::SSL_ca_file(),
+      },
+   );
+   if (! defined($mech)) {
+      return;
+   }
+
+   if ($self->user_agent) {
+      $mech->agent($self->user_agent);
+   }
+   else {
+      $mech->agent_alias('Linux Mozilla');
+   }
+
+   return $mech;
+}
+
 sub get {
    my $self = shift;
    my ($uri, $username, $password) = @_;
@@ -67,13 +144,10 @@ sub get {
       return $self->log->error($self->brik_help_set('uri'));
    }
 
-   my %args = ();
-   if (! $self->ssl_verify) {
-      $args{ssl_opts} = { SSL_verify_mode => 'SSL_VERIFY_NONE'};
-   }
+   $ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = 'Net::SSL';
 
-   my $mech = WWW::Mechanize->new(%args);
-   $mech->agent_alias('Linux Mozilla');
+   my $mech = $self->_mech_new($uri)
+      or return $self->log->error("get: unable to create WWW::Mechanize object");
 
    $username ||= $self->username;
    $password ||= $self->password;
@@ -90,7 +164,8 @@ sub get {
       $response = $mech->get($uri);
    };
    if ($@) {
-      return $self->log->error("get: unable to get uri [$uri]");
+      chomp($@);
+      return $self->log->error("get: unable to get uri [$uri]: $@");
    }
 
    my %response = ();
@@ -130,13 +205,8 @@ sub post {
       return $self->log->error($self->brik_help_set('uri'));
    }
 
-   my %args = ();
-   if (! $self->ssl_verify) {
-      $args{ssl_opts} = { SSL_verify_mode => 'SSL_VERIFY_NONE'};
-   }
-
-   my $mech = WWW::Mechanize->new(%args);
-   $mech->agent_alias('Linux Mozilla');
+   my $mech = $self->_mech_new($uri)
+      or return $self->log->error("get: unable to create WWW::Mechanize object");
 
    my $username = $self->username;
    my $password = $self->password;
@@ -153,7 +223,8 @@ sub post {
       $response = $mech->post($uri, Content => $data);
    };
    if ($@) {
-      return $self->log->error("post: unable to post uri [$uri]");
+      chomp($@);
+      return $self->log->error("post: unable to post uri [$uri]: $@");
    }
 
    my %response = ();
@@ -355,7 +426,8 @@ sub trace_redirect {
          $response = $lwp->get($location);
       };
       if ($@) {
-         return $self->log->error("trace_redirect: unable to get uri [$uri]");
+         chomp($@);
+         return $self->log->error("trace_redirect: unable to get uri [$uri]: $@");
       }
 
       my $this = {
