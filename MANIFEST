@@ -11,7 +11,9 @@ lib/Metabrik/Audit/Https.pm
 lib/Metabrik/Audit/Smtp.pm
 lib/Metabrik/Audit/Twiki.pm
 lib/Metabrik/Client/Dns.pm
+lib/Metabrik/Client/Rest.pm
 lib/Metabrik/Client/Rsync.pm
+lib/Metabrik/Client/Ssl.pm
 lib/Metabrik/Client/Tcp.pm
 lib/Metabrik/Client/Twitter.pm
 lib/Metabrik/Client/Whois.pm
@@ -58,9 +60,9 @@ lib/Metabrik/Image/Jpg.pm
 lib/Metabrik/Log/Dual.pm
 lib/Metabrik/Lookup/Countrycode.pm
 lib/Metabrik/Lookup/Ethernet.pm
-lib/Metabrik/Lookup/Ip.pm
 lib/Metabrik/Lookup/Iplocation.pm
 lib/Metabrik/Lookup/Ipoption.pm
+lib/Metabrik/Lookup/Ip.pm
 lib/Metabrik/Lookup/Oui.pm
 lib/Metabrik/Lookup/Protocol.pm
 lib/Metabrik/Lookup/Service.pm
@@ -82,8 +84,8 @@ lib/Metabrik/Network/Portscan.pm
 lib/Metabrik/Network/Read.pm
 lib/Metabrik/Network/Route.pm
 lib/Metabrik/Network/S7comm.pm
-lib/Metabrik/Network/Sinfp3.pm
 lib/Metabrik/Network/Sinfp3/Arpdiscover.pm
+lib/Metabrik/Network/Sinfp3.pm
 lib/Metabrik/Network/Smtp.pm
 lib/Metabrik/Network/Sqlmap.pm
 lib/Metabrik/Network/Ssdp.pm
@@ -106,6 +108,7 @@ lib/Metabrik/Ssl/Heartbleed.pm
 lib/Metabrik/String/Base64.pm
 lib/Metabrik/String/Compress.pm
 lib/Metabrik/String/Hexa.pm
+lib/Metabrik/String/Hostname.pm
 lib/Metabrik/String/Html.pm
 lib/Metabrik/String/Ini.pm
 lib/Metabrik/String/Json.pm

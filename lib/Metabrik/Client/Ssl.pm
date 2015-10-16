@@ -28,6 +28,7 @@ sub brik_properties {
          'LWP::ConnCache' => [ ],
          'URI' => [ ],
          'Net::SSLeay' => [ ],
+         'Metabrik::String::Uri' => [ ],
       },
    };
 }
@@ -471,7 +472,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Client::Www - client::www Brik
+Metabrik::Client::Ssl - client::ssl Brik
 
 =head1 COPYRIGHT AND LICENSE
 
