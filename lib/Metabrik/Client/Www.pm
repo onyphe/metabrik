@@ -45,7 +45,6 @@ sub brik_properties {
       },
       require_modules => {
          'Net::SSL' => [ ],
-         'Mozilla::CA' => [ ],
          'Data::Dumper' => [ ],
          'IO::Socket::SSL' => [ ],
          'LWP::UserAgent' => [ ],
@@ -106,7 +105,6 @@ sub create_user_agent {
    my $mech = WWW::Mechanize->new(
       ssl_opts => {
          verify_hostname => 0,
-         SSL_ca_file => Mozilla::CA::SSL_ca_file(),
       },
    );
    if (! defined($mech)) {
@@ -118,6 +116,12 @@ sub create_user_agent {
    }
    else {
       $mech->agent_alias('Linux Mozilla');
+   }
+
+   if (defined($self->username) && defined($self->password)) {
+      $self->log->verbose("create_user_agent: using Basic authentication");
+      $mech->cookie_jar({});
+      $mech->credentials($self->username, $self->password);
    }
 
    return $mech;
@@ -155,12 +159,6 @@ sub get {
 
    my $mech = $self->_mech_new($uri)
       or return $self->log->error("get: unable to create WWW::Mechanize object");
-
-   $username ||= $self->username;
-   $password ||= $self->password;
-   if (defined($username) && defined($password)) {
-      $mech->credentials($username, $password);
-   }
 
    $self->mechanize($mech);
 
@@ -214,12 +212,6 @@ sub post {
 
    my $mech = $self->_mech_new($uri)
       or return $self->log->error("get: unable to create WWW::Mechanize object");
-
-   my $username = $self->username;
-   my $password = $self->password;
-   if (defined($username) && defined($password)) {
-      $mech->credentials($username, $password);
-   }
 
    $self->mechanize($mech);
 

@@ -51,7 +51,6 @@ WriteMakefile(
       'LWP::UserAgent' => 0,
       'List::Util' => 0,
       'MIME::Base64' => 0,
-      'Mozilla::CA' => 0,
       'Net::CIDR' => 0,
       'Net::Cmd' => 0,
       'Net::DNS::Nameserver::Trivial' => 0,

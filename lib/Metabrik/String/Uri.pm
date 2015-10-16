@@ -51,6 +51,11 @@ sub parse {
 
    my $uri = URI->new($string);
 
+   # Probably not a valid uri
+   if (! $uri->can('host')) {
+      return $self->log->error("parse: invalid URI [$string]");
+   }
+
    return {
       scheme => $uri->scheme || '',
       host => $uri->host || '',
@@ -104,62 +109,6 @@ sub path_query { return shift->_this('path_query'); }
 sub authority { return shift->_this('authority'); }
 sub query_form { return shift->_this('query_form'); }
 sub userinfo { return shift->_this('userinfo'); }
-
-sub tld {
-   my $self = shift;
-
-   my $uri = $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('parse'));
-   }
-
-   my $host = $uri->host;
-
-   my ($tld) = $host =~ /^.*\.(\S+)$/;
-
-   return $tld;
-}
-
-sub hostname {
-   my $self = shift;
-
-   my $uri = $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('parse'));
-   }
-
-   my $host = $uri->host;
-
-   # Only 1 dot, we don't have hostname
-   my @count = ($host =~ /\./g);
-   if (@count == 1) {
-      return '';
-   }
-
-   my ($hostname) = $host =~ /^(.*?)\..*$/;
-
-   return $hostname;
-}
-
-sub domain {
-   my $self = shift;
-
-   my $uri = $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('parse'));
-   }
-
-   my $host = $uri->host;
-
-   my ($domain) = $host =~ /^.*?\.(.+)$/;
-
-   # We only have domain.tld, we return it
-   if ($domain !~ /\./) {
-      return $host;
-   }
-
-   return $domain;
-}
 
 1;
 
