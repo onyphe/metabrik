@@ -15,41 +15,45 @@ sub brik_properties {
       tags => [ qw(unstable browser http client www javascript screenshot) ],
       attributes => {
          uri => [ qw(uri) ],
-         mechanize => [ qw(INTERNAL) ],
-         ssl_verify => [ qw(0|1) ],
          username => [ qw(username) ],
          password => [ qw(password) ],
-         ignore_body => [ qw(0|1) ],
+         ignore_content => [ qw(0|1) ],
          user_agent => [ qw(user_agent) ],
+         ssl_verify => [ qw(0|1) ],
+         _client => [ qw(object|INTERNAL) ],
+         _last => [ qw(object|INTERNAL) ],
       },
       attributes_default => {
-         ssl_verify => 1,
-         ignore_body => 0,
+         ssl_verify => 0,
+         ignore_content => 0,
       },
       commands => {
          create_user_agent => [ ],
-         get => [ qw(uri|OPTIONAL) ],
-         trace_redirect => [ qw(uri|OPTIONAL) ],
+         reset_user_agent => [ ],
+         get => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         post => [ qw(content_hash uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         patch => [ qw(content_hash uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         put => [ qw(content_hash uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         head => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         delete => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         options => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         code => [ ],
          content => [ ],
-         post => [ qw(content_string uri|OPTIONAL) ],
-         info => [ ],
+         headers => [ ],
          forms => [ ],
          links => [ ],
-         headers => [ ],
-         status => [ ],
+         trace_redirect => [ qw(uri|OPTIONAL) ],
          screenshot => [ qw(uri output_file) ],
          eval_javascript => [ qw(js uri|OPTIONAL) ],
+         info => [ ],
       },
       require_modules => {
          'Net::SSL' => [ ],
          'Data::Dumper' => [ ],
-         'IO::Socket::SSL' => [ ],
          'LWP::UserAgent' => [ ],
-         'LWP::ConnCache' => [ ],
-         'URI' => [ ],
+         'HTTP::Request' => [ ],
          'WWW::Mechanize' => [ ],
          'WWW::Mechanize::PhantomJS' => [ ],
-         'Net::SSLeay' => [ ],
          'Metabrik::File::Write' => [ ],
          'Metabrik::Client::Ssl' => [ ],
       },
@@ -61,10 +65,33 @@ sub brik_properties {
 
 sub create_user_agent {
    my $self = shift;
+   my ($uri, $username, $password) = @_;
+
+   $uri ||= $self->uri;
+   if ($self->ssl_verify) {
+      if (! defined($uri)) {
+         return $self->log->error("create_user_agent: you have to give URI argument to check SSL");
+      }
+
+      # We have to use a different method to check certificate because all 
+      # IO::Socket::SSL, Net::SSL, Net::SSLeay, Net::HTTPS, AnyEvent::TLS just sucks.
+      # So we have to perform a first TCP connexion to verify cert, then a second 
+      # One to actually negatiate an unverified session.
+      my $cs = Metabrik::Client::Ssl->new_from_brik($self) or return;
+      my $verified = $cs->verify_server($uri);
+      if (! defined($verified)) {
+         return;
+      }
+      if ($verified == 0) {
+         return $self->log->error("create_user_agent: server [$uri] not verified");
+      }
+   }
 
    $ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = 'Net::SSL';
 
    my $mech = WWW::Mechanize->new(
+      autocheck => 0,  # Do not throw on error by checking HTTP code. Let us do it.
+      timeout => $self->global->rtimeout,
       ssl_opts => {
          verify_hostname => 0,
       },
@@ -80,211 +107,181 @@ sub create_user_agent {
       $mech->agent_alias('Linux Mozilla');
    }
 
-   if (defined($self->username) && defined($self->password)) {
+   $username ||= $self->username;
+   $password ||= $self->password;
+   if (defined($username) && defined($password)) {
       $self->log->verbose("create_user_agent: using Basic authentication");
       $mech->cookie_jar({});
-      $mech->credentials($self->username, $self->password);
+      $mech->credentials($username, $password);
    }
 
    return $mech;
 }
 
-sub _mech_new {
+sub reset_user_agent {
    my $self = shift;
-   my ($uri) = @_;
 
-   # We have to use a different method to check certificate because all 
-   # IO::Socket::SSL, Net::SSL, Net::SSLeay, Net::HTTPS, AnyEvent::TLS just sucks.
-   # So we have to perform a first TCP connexion to verify cert, then a second 
-   # One to actually negatiate an unverified session.
-   if ($self->ssl_verify) {
-      my $cs = Metabrik::Client::Ssl->new_from_brik($self) or return;
-      my $verified = $cs->verify_server($uri);
-      if (! defined($verified)) {
-         return;
-      }
-      if ($verified == 0) {
-         return $self->log->error("_mech_new: server [$uri] not verified");
-      }
+   $self->_client(undef);
+
+   return 1;
+}
+
+sub _method {
+   my $self = shift;
+   my ($uri, $username, $password, $method, $data) = @_;
+
+   $uri ||= $self->uri;
+   if (! defined($uri)) {
+      return $self->log->error($self->brik_help_run($method));
    }
 
-   return $self->create_user_agent;
+   $username ||= $self->username;
+   $password ||= $self->password;
+   my $client = $self->_client;
+   if (! defined($self->_client)) {
+      $client = $self->create_user_agent($uri, $username, $password) or return;
+      $self->_client($client);
+   }
+
+   $self->log->verbose("$method: $uri");
+
+   my $response;
+   eval {
+      if ($method eq 'post' || $method eq 'put') {
+         $response = $client->$method($uri, Content => $data);
+      }
+      elsif ($method eq 'options' || $method eq 'patch') {
+         my $req = HTTP::Request->new($method => $uri);
+         $response = $client->request($req);
+      }
+      else {
+         $response = $client->$method($uri);
+      }
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("$method: unable to $method uri [$uri]: $@");
+   }
+
+   $self->_last($response);
+
+   my %response = ();
+   $response{code} = $response->code;
+   if (! $self->ignore_content) {
+      $response{content} = $response->decoded_content;
+   }
+
+   my $headers = $response->headers;
+   $response{headers} = { map { $_ => $headers->{$_} } keys %$headers };
+   delete $response{headers}->{'::std_case'};
+
+   return \%response;
 }
 
 sub get {
    my $self = shift;
    my ($uri, $username, $password) = @_;
 
-   $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_set('uri'));
+   return $self->_method($uri, $username, $password, 'get');
+}
+
+sub post {
+   my $self = shift;
+   my ($href, $uri, $username, $password) = @_;
+
+   if (! defined($href)) {
+      return $self->log->error($self->brik_help_run('post'));
    }
 
-   my $mech = $self->_mech_new($uri)
-      or return $self->log->error("get: unable to create WWW::Mechanize object");
+   return $self->_method($uri, $username, $password, 'post', $href);
+}
 
-   $self->mechanize($mech);
+sub put {
+   my $self = shift;
+   my ($href, $uri, $username, $password) = @_;
 
-   $self->log->verbose("get: $uri");
-
-   my $response;
-   eval {
-      $response = $mech->get($uri);
-   };
-   if ($@) {
-      chomp($@);
-      return $self->log->error("get: unable to get uri [$uri]: $@");
+   if (! defined($href)) {
+      return $self->log->error($self->brik_help_run('put'));
    }
 
-   my %response = ();
-   $response{code} = $response->code;
-   if (! $self->ignore_body) {
-      $response{body} = $response->decoded_content;
+   return $self->_method($uri, $username, $password, 'put', $href);
+}
+
+sub patch {
+   my $self = shift;
+   my ($href, $uri, $username, $password) = @_;
+
+   if (! defined($href)) {
+      return $self->log->error($self->brik_help_run('patch'));
    }
 
-   my $headers = $response->headers;
-   $response{headers} = { map { $_ => $headers->{$_} } keys %$headers };
-   delete $response{headers}->{'::std_case'};
+   return $self->_method($uri, $username, $password, 'patch', $href);
+}
 
-   return \%response;
+sub delete {
+   my $self = shift;
+   my ($uri, $username, $password) = @_;
+
+   return $self->_method($uri, $username, $password, 'delete');
+}
+
+sub options {
+   my $self = shift;
+   my ($uri, $username, $password) = @_;
+
+   return $self->_method($uri, $username, $password, 'options');
+}
+
+sub head {
+   my $self = shift;
+   my ($uri, $username, $password) = @_;
+
+   return $self->_method($uri, $username, $password, 'head');
+}
+
+sub code {
+   my $self = shift;
+
+   my $last = $self->_last;
+   if (! defined($last)) {
+      return $self->log->error("status: you have to execute a request first");
+   }
+
+   return $last->code;
 }
 
 sub content {
    my $self = shift;
 
-   my $mech = $self->mechanize;
-   if (! defined($mech)) {
-      return $self->log->error($self->brik_help_run('get'));
+   my $last = $self->_last;
+   if (! defined($last)) {
+      return $self->log->error("content: you have to execute a request first");
    }
 
-   return $mech->content;
+   return $last->decoded_content;
 }
 
-sub post {
-   my $self = shift;
-   my ($data, $uri) = @_;
-
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('post'));
-   }
-
-   $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_set('uri'));
-   }
-
-   my $mech = $self->_mech_new($uri)
-      or return $self->log->error("get: unable to create WWW::Mechanize object");
-
-   $self->mechanize($mech);
-
-   $self->log->verbose("post: $uri");
-
-   my $response;
-   eval {
-      $response = $mech->post($uri, Content => $data);
-   };
-   if ($@) {
-      chomp($@);
-      return $self->log->error("post: unable to post uri [$uri]: $@");
-   }
-
-   my %response = ();
-   $response{code} = $response->code;
-   if (! $self->ignore_body) {
-      $response{body} = $response->decoded_content;
-   }
-
-   my $headers = $response->headers;
-   $response{headers} = { map { $_ => $headers->{$_} } keys %$headers };
-   delete $response{headers}->{'::std_case'};
-
-   return \%response;
-}
-
-sub info {
+sub headers {
    my $self = shift;
 
-   if (! defined($self->mechanize)) {
-      return $self->log->error($self->brik_help_run('get'));
+   my $last = $self->_last;
+   if (! defined($last)) {
+      return $self->log->error("headers: you have to execute a request first");
    }
 
-   my $mech = $self->mechanize;
-   my $headers = $mech->response->headers;
-
-   # Taken from apps.json from Wappalyzer
-   my @headers = qw(
-      IBM-Web2-Location
-      X-Drupal-Cache
-      X-Powered-By
-      X-Drectory-Script
-      Set-Cookie
-      X-Powered-CMS
-      X-KoobooCMS-Version
-      X-ATG-Version
-      User-Agent
-      X-Varnish
-      X-Compressed-By
-      X-Firefox-Spdy
-      X-ServedBy
-      MicrosoftSharePointTeamServices
-      Set-Cookie
-      Generator
-      X-CDN
-      Server
-      X-Tumblr-User
-      X-XRDS-Location
-      X-Content-Encoded-By
-      X-Ghost-Cache-Status
-      X-Umbraco-Version
-      X-Rack-Cache
-      Liferay-Portal
-      X-Flow-Powered
-      X-Swiftlet-Cache
-      X-Lift-Version
-      X-Spip-Cache
-      X-Wix-Dispatcher-Cache-Hit
-      COMMERCE-SERVER-SOFTWARE
-      X-AMP-Version
-      X-Powered-By-Plesk
-      X-Akamai-Transformed
-      X-Confluence-Request-Time
-      X-Mod-Pagespeed
-      Composed-By
-      Via
-   );
-
-   if ($self->debug) {
-      print Data::Dumper::Dumper($headers)."\n";
-   }
-
-   my %info = ();
-   for my $hdr (@headers) {
-      my $this = $headers->header(lc($hdr));
-      $info{$hdr} = $this if defined($this);
-   }
-
-   my $title = $mech->title;
-   if (defined($title)) {
-      print "Title: $title\n";
-   }
-
-   for my $k (sort { $a cmp $b } keys %info) {
-      print "$k: ".$info{$k}."\n";
-   }
-
-   return $mech;
+   return $last->headers;
 }
 
 sub links {
    my $self = shift;
 
-   if (! defined($self->mechanize)) {
-      return $self->log->error($self->brik_help_run('get'));
+   my $last = $self->_last;
+   if (! defined($last)) {
+      return $self->log->error("links: you have to execute a request first");
    }
 
    my @links = ();
-   for my $l ($self->mechanize->links) {
+   for my $l ($self->_client->links) {
       push @links, $l->url;
       $self->log->verbose("links: found link [".$l->url."]");
    }
@@ -292,44 +289,21 @@ sub links {
    return \@links;
 }
 
-sub headers {
-   my $self = shift;
-
-   if (! defined($self->mechanize)) {
-      return $self->log->error($self->brik_help_run('get'));
-   }
-
-   my $headers = $self->mechanize->response->headers;
-
-   return $headers;
-}
-
-sub status {
-   my $self = shift;
-
-   if (! defined($self->mechanize)) {
-      return $self->log->error($self->brik_help_run('get'));
-   }
-
-   my $mech = $self->mechanize;
-
-   return $mech->status;
-}
-
 sub forms {
    my $self = shift;
 
-   if (! defined($self->mechanize)) {
-      return $self->log->error($self->brik_help_run('get'));
+   my $last = $self->_last;
+   if (! defined($last)) {
+      return $self->log->error("links: you have to execute a request first");
    }
 
-   my $mech = $self->mechanize;
+   my $client = $self->_client;
 
    if ($self->debug) {
-      print Data::Dumper::Dumper($mech->response->headers)."\n";
+      print Data::Dumper::Dumper($last->headers)."\n";
    }
 
-   my @forms = $mech->forms;
+   my @forms = $client->forms;
    my $count = 0; 
    for my $form (@forms) {
       my $name = $form->{attr}->{name} || '(undef)';
@@ -347,7 +321,7 @@ sub forms {
       $count++;
    }
 
-   return $mech;
+   return $client;
 }
 
 sub trace_redirect {
@@ -447,6 +421,80 @@ sub eval_javascript {
    }
 
    return $mech->eval_in_page($js);
+}
+
+sub info {
+   my $self = shift;
+
+   if (! defined($self->mechanize)) {
+      return $self->log->error($self->brik_help_run('get'));
+   }
+
+   my $mech = $self->mechanize;
+   my $headers = $mech->response->headers;
+
+   # Taken from apps.json from Wappalyzer
+   my @headers = qw(
+      IBM-Web2-Location
+      X-Drupal-Cache
+      X-Powered-By
+      X-Drectory-Script
+      Set-Cookie
+      X-Powered-CMS
+      X-KoobooCMS-Version
+      X-ATG-Version
+      User-Agent
+      X-Varnish
+      X-Compressed-By
+      X-Firefox-Spdy
+      X-ServedBy
+      MicrosoftSharePointTeamServices
+      Set-Cookie
+      Generator
+      X-CDN
+      Server
+      X-Tumblr-User
+      X-XRDS-Location
+      X-Content-Encoded-By
+      X-Ghost-Cache-Status
+      X-Umbraco-Version
+      X-Rack-Cache
+      Liferay-Portal
+      X-Flow-Powered
+      X-Swiftlet-Cache
+      X-Lift-Version
+      X-Spip-Cache
+      X-Wix-Dispatcher-Cache-Hit
+      COMMERCE-SERVER-SOFTWARE
+      X-AMP-Version
+      X-Powered-By-Plesk
+      X-Akamai-Transformed
+      X-Confluence-Request-Time
+      X-Mod-Pagespeed
+      Composed-By
+      Via
+   );
+
+   if ($self->debug) {
+      print Data::Dumper::Dumper($headers)."\n";
+   }
+
+   my %info = ();
+   for my $hdr (@headers) {
+      my $this = $headers->header(lc($hdr));
+      $info{$hdr} = $this if defined($this);
+   }
+
+   my $title = $mech->title;
+   if (defined($title)) {
+      print "Title: $title\n";
+   }
+
+   for my $k (sort { $a cmp $b } keys %info) {
+      print "$k: ".$info{$k}."\n";
+   }
+
+   return $mech;
 }
 
 1;
