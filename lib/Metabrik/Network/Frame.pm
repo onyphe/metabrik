@@ -79,6 +79,8 @@ sub update_device_info {
    my $device_info = $nd->get($device)
       or return $self->log->error("update_device_info: get failed");
 
+   $self->log->verbose("update_device_info: updating from device [$device]");
+
    return $self->device_info($device_info);
 }
 

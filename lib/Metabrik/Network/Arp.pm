@@ -28,6 +28,9 @@ sub brik_properties {
          full_poison => [ ],
          mac2eui64 => [ qw(mac_address) ],
          scan => [ qw(subnet|OPTIONAL) ],
+         get_ipv4_neighbors => [ qw(subnet|OPTIONAL) ],
+         get_ipv6_neighbors => [ qw(subnet|OPTIONAL) ],
+         get_mac_neighbors => [ qw(subnet|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::Network::Arp' => [ ],
@@ -128,16 +131,19 @@ sub scan {
       return $self->log->error("scan: must be root to run");
    }
 
-   my $network_address = Metabrik::Network::Address->new_from_brik_init($self) or return;
+   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
 
    my $interface = $self->device_info;
 
-   $subnet ||= $interface->{subnet};
+   $subnet ||= $interface->{subnet4};
+   if (! defined($subnet)) {
+      return $self->log->error($self->brik_help_run('scan'));
+   }
 
    my $arp_cache = $self->cache
       or return $self->log->error("scan: cache failed");
 
-   my $ip_list = $network_address->ipv4_list($subnet)
+   my $ip_list = $na->ipv4_list($subnet)
       or return $self->log->error("scan: ipv4_list failed");
 
    my $reply_cache = {};
@@ -165,16 +171,16 @@ sub scan {
       }
    }
 
-   my $network_write = Metabrik::Network::Write->new_from_brik_init($self) or return;
+   my $nw = Metabrik::Network::Write->new_from_brik_init($self) or return;
 
-   my $write = $network_write->open(2, $self->device)
+   my $write = $nw->open(2, $self->device)
       or return $self->log->error("scan: open failed");
 
-   my $network_read = Metabrik::Network::Read->new_from_brik_init($self) or return;
-   $network_read->rtimeout($self->timeout);
+   my $nr = Metabrik::Network::Read->new_from_brik_init($self) or return;
+   $nr->rtimeout($self->timeout);
 
    my $filter = 'arp and src net '.$subnet.' and dst host '.$interface->{ipv4};
-   my $read = $network_read->open(2, $self->device, $filter)
+   my $read = $nr->open(2, $self->device, $filter)
       or return $self->log->error("scan: open failed");
 
    # We will send frames 3 times max
@@ -185,13 +191,13 @@ sub scan {
          $self->debug && $self->log->debug($r->print);
          my $dst_ip = $r->ref->{ARP}->dstIp;
          if (! exists($reply_cache->{$dst_ip})) {
-            $network_write->send($r->raw)
+            $nw->send($r->raw)
                or $self->log->warning("scan: send failed");
          }
       }
 
       # Then we wait for all replies until a timeout occurs
-      my $h_list = $network_read->next_until_timeout;
+      my $h_list = $nr->next_until_timeout;
       for my $h (@$h_list) {
          my $r = $self->from_read($h);
          #$self->log->verbose("scan: read next returned some stuff".$r->print);
@@ -211,11 +217,11 @@ sub scan {
          }
       }
 
-      $network_read->reset_timeout;
+      $nr->reset_timeout;
    }
 
-   $network_write->close;
-   $network_read->close;
+   $nw->close;
+   $nr->close;
 
    my %results = ();
    for (keys %$reply_cache) {
@@ -229,6 +235,45 @@ sub scan {
    }
 
    return \%results;
+}
+
+sub get_ipv4_neighbors {
+   my $self = shift;
+   my ($subnet) = @_;
+
+   my $scan = $self->scan($subnet) or return;
+   my $ipv4 = $scan->{by_ipv4};
+   if (! defined($ipv4)) {
+      return $self->log->info("get_ipv4_neighbors: no IPv4 neighbor found");
+   }
+
+   return $ipv4;
+}
+
+sub get_ipv6_neighbors {
+   my $self = shift;
+   my ($subnet) = @_;
+
+   my $scan = $self->scan($subnet) or return;
+   my $ipv6 = $scan->{by_ipv6};
+   if (! defined($ipv6)) {
+      return $self->log->info("get_ipv6_neighbors: no IPv6 neighbor found");
+   }
+
+   return $ipv6;
+}
+
+sub get_mac_neighbors {
+   my $self = shift;
+   my ($subnet) = @_;
+
+   my $scan = $self->scan($subnet) or return;
+   my $mac = $scan->{by_mac};
+   if (! defined($mac)) {
+      return $self->log->info("get_mac_neighbors: no MAC neighbor found");
+   }
+
+   return $mac;
 }
 
 1;
