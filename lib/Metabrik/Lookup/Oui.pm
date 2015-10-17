@@ -26,6 +26,7 @@ sub brik_properties {
          load => [ qw(input|OPTIONAL) ],
          from_hex => [ qw(mac_address) ],
          from_string => [ qw(company_string) ],
+         all => [ ],
       },
       require_modules => {
          'Metabrik::File::Fetch' => [ ],
@@ -82,22 +83,32 @@ sub from_hex {
       return $self->log->error("from_hex: load failed");
    }
 
-   # Accept multiple format for MAC address
-   $hex =~ s/[:-]//g;
+   my $db = $self->all;
 
-   for my $this (@$data) {
-      if ($this =~ /^\s*([0-9A-F]{6})\s+\(base 16\)\s+(.*)$/i) {
-         $self->debug && $self->log->debug("from_hex: this[$this]");
-         my $oui = $1;
-         my $company = $2;
-         if ($hex =~ /^$oui/i) {
-            return $company;
-         }
+   my @lookup = ();
+   if (ref($hex) eq 'ARRAY') {
+      for my $h (@$hex) {
+         push @lookup, $h;
+      }
+   }
+   elsif (! ref($hex)) {
+      push @lookup, $hex;
+   }
+   else {
+      return $self->log->error("from_hex: MAC address format not recognized [$hex]");
+   }
+
+   my %result = ();
+   for my $hex (@lookup) {
+      my $this = $hex;
+      $this =~ s/://g;
+      $this =~ /^([0-9a-f]{6})/i;
+      if (exists($db->{$1})) {
+         $result{$hex} = $db->{$1};
       }
    }
 
-   # No match
-   return 'unknown';
+   return \%result;
 }
 
 sub from_string {
@@ -115,6 +126,7 @@ sub from_string {
 
    my @match = ();
    for my $this (@$data) {
+      $this =~ s/\r*$//;
       if ($this =~ /^\s*([0-9A-F]{2}\-[0-9A-F]{2}\-[0-9A-F]{2})\s+\(hex\)\s+(.*)$/i) {
          $self->debug && $self->log->debug("from_string: this[$this]");
          my $oui = $1;
@@ -128,6 +140,28 @@ sub from_string {
    }
 
    return \@match;
+}
+
+sub all {
+   my $self = shift;
+
+   my $data = $self->_load || $self->load;
+   if (! defined($data)) {
+      return $self->log->error("from_string: load failed");
+   }
+
+   my %result = ();
+   for my $this (@$data) {
+      $this =~ s/\r*$//;
+      if ($this =~ /^\s*([0-9A-F]{6})\s+\(base 16\)\s+(.*)$/i) {
+         $self->debug && $self->log->debug("from_hex: this[$this]");
+         my $oui = lc($1);
+         my $company = $2;
+         $result{$oui} = $company;
+      }
+   }
+
+   return \%result;
 }
 
 1;

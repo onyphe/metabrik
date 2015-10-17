@@ -118,10 +118,13 @@ sub write {
    my $self = shift;
    my ($csv_struct, $output) = @_;
 
-   $output ||= $self->output;
+   if (! defined($csv_struct)) {
+      return $self->log->error($self->brik_help_run('write'));
+   }
 
+   $output ||= $self->output;
    if (! defined($output)) {
-      return $self->log->error($self->brik_help_set('output'));
+      return $self->log->error($self->brik_help_run('write'));
    }
 
    # We handle handle array of hashes format (aoh) for writing

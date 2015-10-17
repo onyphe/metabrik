@@ -76,9 +76,7 @@ sub connect {
       return $self->log->error("connect: unable to connect [unknown error]");
    }
 
-   $self->net_twitter($nt);
-
-   return 1;
+   return $self->net_twitter($nt);
 }
 
 sub tweet {
@@ -89,8 +87,10 @@ sub tweet {
       return $self->log->error($self->brik_help_run('tweet'));
    }
 
-   my $nt = $self->net_twitter
-      or return $self->log->error($self->brik_help_run('connect'));
+   my $nt = $self->net_twitter;
+   if (! defined($nt)) {
+      $nt = $self->connect or return;
+   }
 
    my $r;
    eval {

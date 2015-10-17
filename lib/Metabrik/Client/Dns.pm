@@ -55,10 +55,10 @@ sub _nslookup {
    };
    if ($@) {
       chomp($@);
-      return $self->log->error("_nslookup: failed for host [$host] with type [$type]: $@");
+      return $self->log->error("nslookup: failed for host [$host] with type [$type]: $@");
    }
    elsif (@r == 0) {
-      return $self->log->error("_nslookup: no response for host [$host] with type [$type]");
+      $self->log->info("nslookup: no response for host [$host] with type [$type]");
    }
 
    return \@r;
@@ -94,7 +94,7 @@ sub _resolve {
       }
    }
    else {
-      return $self->log->error("_resolve: don't know how to resolve host [$ip]");
+      return $self->log->error("resolve: don't know how to resolve host [$ip]");
    }
 
    return;
