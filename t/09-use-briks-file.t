@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 14) }
+BEGIN { plan(tests => 16) }
 
 ok(sub { eval("use Metabrik::File::Compress"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::File::Create"); $@ ? 0 : 1 }, 1, $@);
@@ -15,3 +15,5 @@ ok(sub { eval("use Metabrik::File::Json"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::File::Text"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::File::Ini"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::File::Dump"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::File::Ole"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::File::Hash"); $@ ? 0 : 1 }, 1, $@);
