@@ -37,7 +37,7 @@ sub parse {
    my @subdomain_list = ();
    my @toks = split('\.', $hostname);
    if (@toks == 1) {
-      return $self->log->error("parse: invalid hostname [$hostname]");
+      $host = $toks[0];
    }
    elsif (@toks == 2) {
       $tld = $toks[1];

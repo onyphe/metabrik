@@ -62,7 +62,7 @@ sub update {
    my $uri = 'http://www.iana.org/domains/root/db';
 
    my $get = $self->get($uri) or return $self->log->error("update: get failed");
-   my $html = $get->{body};
+   my $html = $get->{content};
 
    # <tr class="iana-group-1 iana-type-2">
    #   <td><span class="domain tld"><a href="/domains/root/db/abogado.html">.abogado</a></span></td>

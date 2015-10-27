@@ -157,7 +157,7 @@ sub tcp_syn {
       $ip_list = [ $ip_list ];
    }
 
-   $port_list ||= $self->top100;
+   $port_list ||= $self->ports || $self->top100;
    if (ref($port_list) ne 'ARRAY') {
       return $self->log->error("tcp_syn: argument 2 must be ARRAYREF");
    }

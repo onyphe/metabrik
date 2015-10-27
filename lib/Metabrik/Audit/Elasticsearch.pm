@@ -60,7 +60,7 @@ sub check_cve_2015_1427_rce {
    my $reply = $self->post($check, $url)
       or return $self->log->error("check_cve_2015_1427_rce: post error");
 
-   my $content = $reply->{body}
+   my $content = $reply->{content}
       or return $self->log->error("check_cve_2015_1427_rce: no content found");
 
    my $sj = Metabrik::String::Json->new_from_brik_init($self) or return;
@@ -120,7 +120,7 @@ sub exploit_cve_2015_1427_rce {
    my $reply = $self->post($check, $url)
       or return $self->log->error("exploit_cve_2015_1427_rce: post error");
 
-   my $content = $reply->{body}
+   my $content = $reply->{content}
       or return $self->log->error("exploit_cve_2015_1427_rce: no content found");
 
    my $sj = Metabrik::String::Json->new_from_brik_init($self) or return;

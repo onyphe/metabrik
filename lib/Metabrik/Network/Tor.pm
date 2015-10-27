@@ -37,7 +37,7 @@ sub exit_nodes_list {
 
    my $get = $self->get or return $self->log->error('exit_nodes_list: get failed');
 
-   my $ip_list = $get->{body};
+   my $ip_list = $get->{content};
 
    my @ip_list = split(/\n/, $ip_list);
    my %ip_list = ();

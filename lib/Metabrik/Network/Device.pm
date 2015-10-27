@@ -188,7 +188,7 @@ sub internet_address {
    my $get = $cw->get($url)
       or return $self->log->error("internet_address: get failed");
 
-   my $html = $get->{body};
+   my $html = $get->{content};
 
    my ($ip) = $html =~ /(\d+\.\d+\.\d+\.\d+)/;
 

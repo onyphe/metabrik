@@ -25,13 +25,13 @@ sub brik_properties {
          _select => [ qw(INTERNAL) ],
       },
       attributes_default => {
-         port => 'tcp',
+         protocol => 'tcp',
          eof => 0,
          size => 1024,
          use_ipv6 => 0,
       },
       commands => {
-         connect => [ ],
+         connect => [ qw(host|OPTIONAL port|OPTIONAL) ],
          read => [ qw(size) ],
          readall => [ ],
          write => [ qw($data) ],
@@ -63,12 +63,11 @@ sub connect {
 
    $host ||= $self->host;
    $port ||= $self->port;
-
    if (! defined($host)) {
-      return $self->log->error($self->brik_help_set('host'));
+      return $self->log->error($self->brik_help_run('connect'));
    }
    if (! defined($port)) {
-      return $self->log->error($self->brik_help_set('port'));
+      return $self->log->error($self->brik_help_run('connect'));
    }
 
    my $context = $self->context;

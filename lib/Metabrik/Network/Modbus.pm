@@ -30,6 +30,8 @@ sub probe {
       return $self->log->error($self->brik_help_run('probe'));
    }
 
+   # XXX: gather nmap --script modbus-discovery -p 502 <IP>
+
    # To port 502/TCP (from plcscan)
    my $probe =
       "\x00\x00\x00\x00\x00\x05\x00\x2b".

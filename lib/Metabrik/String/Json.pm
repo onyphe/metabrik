@@ -35,7 +35,14 @@ sub encode {
       return $self->log->error("encode: you need to give data as an ARRAYREF or HASHREF");
    }
 
-   my $encoded = JSON::XS::encode_json($data);
+   my $encoded = '';
+   eval {
+      $encoded = JSON::XS::encode_json($data);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->erro("decode: unable to decode JSON: $@");
+   }
 
    return $encoded;
 }
@@ -48,7 +55,14 @@ sub decode {
       return $self->log->error($self->brik_help_run('decode'));
    }
 
-   my $decoded = JSON::XS::decode_json($data);
+   my $decoded = '';
+   eval {
+      $decoded = JSON::XS::decode_json($data);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->erro("decode: unable to decode JSON: $@");
+   }
 
    return $decoded;
 }

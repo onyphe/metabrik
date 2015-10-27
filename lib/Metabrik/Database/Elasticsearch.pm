@@ -269,7 +269,7 @@ sub www_search {
          next;
       }
 
-      my $body = $get->{body};
+      my $body = $get->{content};
       my $string_json = Metabrik::String::Json->new_from_brik($self) or return;
       my $decoded = $string_json->decode($body)
          or return $self->log->error("www_search: decode failed");

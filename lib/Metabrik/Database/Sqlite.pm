@@ -93,6 +93,11 @@ sub commit {
 
    my $dbh = $self->dbh;
 
+   if ($self->autocommit) {
+      $self->log->verbose("commit: skipping cause autocommit is on");
+      return 1;
+   }
+
    eval {
       $dbh->commit;
    };
@@ -150,25 +155,42 @@ sub insert {
       return $self->log->error($self->brik_help_run('open'));
    }
 
-   if (ref($data) ne 'HASH') {
-      return $self->log->error("insert: Argument 'data' must be HASHREF");
+   my @data = ();
+   if (ref($data) eq 'ARRAY') {
+      for my $this (@$data) {
+         if (ref($this) ne 'HASH') {
+            $self->log->verbose('insert: not a hash, skipping');
+            next;
+         }
+         push @data, $this;
+      }
+   }
+   else {
+      if (ref($data) ne 'HASH') {
+         return $self->log->error("insert: Argument 'data' must be HASHREF");
+      }
+      push @data, $data;
    }
 
-   my $sql = 'INSERT INTO '.$table.' (';
-   # Fields are table fields, we normalize them (space char not allowed)
-   my @fields = map { s/ /_/g; $_ } keys %$data;
-   my @values = map { $_ } values %$data;
-   $sql .= join(',', @fields);
-   $sql .= ') VALUES (';
-   for (@values) {
-      $sql .= "\"$_\",";
+   for my $this (@data) {
+      my $sql = 'INSERT INTO '.$table.' (';
+      # Fields are table fields, we normalize them (space char not allowed)
+      my @fields = map { s/ /_/g; $_ } keys %$this;
+      my @values = map { $_ } values %$this;
+      $sql .= join(',', @fields);
+      $sql .= ') VALUES (';
+      for (@values) {
+         $sql .= "\"$_\",";
+      }
+      $sql =~ s/,$//;
+      $sql .= ')';
+
+      $self->log->verbose("insert: $sql");
+
+      $self->exec($sql);
    }
-   $sql =~ s/,$//;
-   $sql .= ')';
 
-   $self->log->verbose("insert: $sql");
-
-   return $self->exec($sql);
+   return 1;
 }
 
 sub select {

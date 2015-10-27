@@ -39,6 +39,7 @@ sub brik_properties {
          options => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
          code => [ ],
          content => [ ],
+         save_content => [ qw(output) ],
          headers => [ ],
          forms => [ ],
          links => [ ],
@@ -259,6 +260,26 @@ sub content {
    }
 
    return $last->decoded_content;
+}
+
+sub save_content {
+   my $self = shift;
+   my ($output) = @_;
+
+   my $last = $self->_last;
+   if (! defined($last)) {
+      return $self->log->error("save_content: you have to execute a request first");
+   }
+
+   eval {
+      $self->_client->save_content($output);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("save_content: unable to save content: $@");
+   }
+
+   return 1;
 }
 
 sub headers {
