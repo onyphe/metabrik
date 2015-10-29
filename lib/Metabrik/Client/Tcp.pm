@@ -18,26 +18,31 @@ sub brik_properties {
          port => [ qw(port) ],
          protocol => [ qw(tcp) ],
          eof => [ qw(0|1) ],
+         timeout => [ qw(0|1) ],
          size => [ qw(size) ],
          rtimeout => [ qw(read_timeout) ],
          use_ipv6 => [ qw(0|1) ],
          _socket => [ qw(INTERNAL) ],
-         _select => [ qw(INTERNAL) ],
       },
       attributes_default => {
          protocol => 'tcp',
          eof => 0,
+         timeout => 0,
          size => 1024,
          use_ipv6 => 0,
       },
       commands => {
          connect => [ qw(host|OPTIONAL port|OPTIONAL) ],
-         read => [ qw(size) ],
-         readall => [ ],
-         write => [ qw($data) ],
+         read => [ qw(stdin|OPTIONAL) ],
+         read_size => [ qw(size stdin|OPTIONAL) ],
+         read_line => [ qw(stdin|OPTIONAL) ],
+         write => [ qw($data stdout|OPTIONAL) ],
+         loop => [ qw(stdin|OPTIONAL stdout|OPTIONAL stderr|OPTIONAL) ],
          disconnect => [ ],
          is_connected => [ ],
          chomp => [ qw($data) ],
+         reset_timeout => [ ],
+         reset_eof => [ ],
       },
       require_modules => {
          'IO::Socket::INET' => [ ],
@@ -85,14 +90,13 @@ sub connect {
       return $self->log->error("connect: failed connecting to target [$host:$port]: $!");
    }
          
-   $socket->blocking(0);
+   $socket->blocking(1);
    $socket->autoflush(1);
 
    my $select = IO::Select->new or return $self->log->error("connect: IO::Select failed: $!");
    $select->add($socket);
 
    $self->_socket($socket);
-   $self->_select($select);
 
    $self->log->verbose("connect: successfully connected to [$host:$port]");
 
@@ -112,7 +116,6 @@ sub disconnect {
    if ($self->_socket) {
       $self->_socket->close;
       $self->_socket(undef);
-      $self->_select(undef);
       $self->log->verbose("disconnect: successfully disconnected");
    }
    else {
@@ -125,7 +128,7 @@ sub disconnect {
 sub is_connected {
    my $self = shift;
 
-   if ($self->_socket && $self->_socket->connected) {
+   if ($self->_socket) {
       return 1;
    }
 
@@ -134,19 +137,19 @@ sub is_connected {
 
 sub write {
    my $self = shift;
-   my ($data) = @_;
+   my ($data, $stdout) = @_;
 
+   if (! $self->is_connected) {
+      return $self->log->error($self->brik_help_run('connect'));
+   }
    if (! defined($data)) {
       return $self->log->error($self->brik_help_run('write'));
    }
 
-   if (! $self->is_connected) {
-      return $self->log->error("write: not connected");
-   }
-
    my $socket = $self->_socket;
+   $stdout ||= $socket;
 
-   my $ret = $socket->syswrite($data, length($data));
+   my $ret = $stdout->syswrite($data, length($data));
    if (! $ret) {
       return $self->log->error("write: syswrite failed with error [$!]");
    }
@@ -154,26 +157,45 @@ sub write {
    return $ret;
 }
 
-sub read {
+sub reset_timeout {
    my $self = shift;
-   my ($size) = @_;
+
+   $self->timeout(0);
+
+   return 1;
+}
+
+sub reset_eof {
+   my $self = shift;
+
+   $self->eof(0);
+
+   return 1;
+}
+
+sub read_size {
+   my $self = shift;
+   my ($size, $stdin) = @_;
 
    $size ||= $self->size;
-
    if (! $self->is_connected) {
-      return $self->log->error("read: not connected");
+      return $self->log->error($self->brik_help_run('connect'));
    }
 
    my $socket = $self->_socket;
-   my $select = $self->_select;
+   $stdin ||= $socket;
+
+   my $select = IO::Select->new;
+   $select->add($stdin);
 
    my $read = 0;
    my $eof = 0;
    my $data = '';
-   while (my @read = $select->can_read($self->rtimeout)) {
-      my $ret = $socket->sysread($data, $size);
+   my @ready = ();
+   while (@ready = $select->can_read($self->rtimeout)) {
+      my $ret = $stdin->sysread($data, $size);
       if (! defined($ret)) {
-         return $self->log->error("read: sysread failed with error [$!]");
+         return $self->log->error("read_size: sysread failed with error [$!]");
       }
       elsif ($ret == 0) { # EOF
          $self->eof(1);
@@ -185,13 +207,148 @@ sub read {
          last;
       }
       else {
+         return $self->log->fatal("read_size: What?!?");
+      }
+   }
+
+   if (@ready == 0) {
+      $self->timeout(1);
+      $self->log->verbose("read_size: timeout occured");
+   }
+
+   return $data;
+}
+
+sub read_line {
+   my $self = shift;
+   my ($stdin) = @_;
+
+   if (! $self->is_connected) {
+      return $self->log->error($self->brik_help_run('connect'));
+   }
+
+   my $socket = $self->_socket;
+   $stdin ||= $socket;
+
+   my $select = IO::Select->new;
+   $select->add($stdin);
+
+   my $read = 0;
+   my $eof = 0;
+   my $data = '';
+   my @ready = ();
+   while (@ready = $select->can_read($self->rtimeout)) {
+      $data = $stdin->getline;
+      if (! defined($data)) {
+         return $self->log->error("read_line: getline failed with error [$!]");
+      }
+      last;
+   }
+
+   if (@ready == 0) {
+      $self->timeout(1);
+      $self->log->verbose("read_line: timeout occured");
+   }
+
+   return $data;
+}
+
+sub read {
+   my $self = shift;
+   my ($stdin) = @_;
+
+   if (! $self->is_connected) {
+      return $self->log->error($self->brik_help_run('connect'));
+   }
+
+   my $socket = $self->_socket;
+   $stdin ||= $socket;
+
+   my $select = IO::Select->new;
+   $select->add($stdin);
+
+   my $read = 0;
+   my $eof = 0;
+   my $data = '';
+   my $chunk = 500;
+   my @ready = ();
+   while (@ready = $select->can_read($self->rtimeout)) {
+   AGAIN:
+      my $buf = '';
+      my $ret = $stdin->sysread($buf, $chunk);
+      if (! defined($ret)) {
+         return $self->log->error("read: sysread failed with error [$!]");
+      }
+      elsif ($ret == 0) { # EOF
+         $self->debug && $self->log->debug("read: eof");
+         $self->eof(1);
+         $eof++;
+         last;
+      }
+      elsif ($ret > 0) { # Read stuff
+         $read++;
+         $data .= $buf;
+         $self->debug && $self->log->debug("read: stuff len[$ret]");
+         if ($ret == $chunk) {
+            $self->debug && $self->log->debug("read: AGAIN");
+            goto AGAIN;
+         }
+         last;
+      }
+      else {
          return $self->log->fatal("read: What?!?");
       }
    }
 
-   if (! $eof && ! $read) {
-      $self->log->debug("read: timeout occured");
-      return 0;
+   if (@ready == 0) {
+      $self->timeout(1);
+      $self->log->verbose("read: timeout occured");
+   }
+
+   return $data;
+}
+
+sub loop {
+   my $self = shift;
+   my ($stdin, $stdout, $stderr) = @_;
+
+   if (! $self->is_connected) {
+      return $self->log->error($self->brik_help_run('connect'));
+   }
+
+   my $socket = $self->_socket;
+   $stdin ||= \*STDIN;
+   $stdout ||= $socket;
+   $stderr ||= \*STDERR;
+
+   my $select = IO::Select->new;
+   $select->add($stdin);  # Client
+   $select->add($stdout); # Server
+
+   my @ready = ();
+   my $data = '';
+   while (@ready = $select->can_read($self->rtimeout)) {
+      my $eof = 0;
+      for my $std (@ready) {
+         if ($std == $stdin) {  # client $stdin has sent stuff we can read
+            $data = $self->read_line($stdin);
+            $self->write($data, $stdout);
+         }
+         else { # server $stdout has sent stuff we can read
+            $data = $self->read($stdout);
+            if ($self->eof) {
+               $self->log->verbose("loop: server sent eof");
+               $eof++;
+               last;
+            }
+            print $data;
+         }
+      }
+      last if $eof;
+   }
+
+   if (@ready == 0) {
+      $self->log->verbose("loop: timeout occured");
    }
 
    return $data;

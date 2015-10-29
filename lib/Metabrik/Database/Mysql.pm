@@ -40,7 +40,7 @@ sub brik_properties {
          show_tables => [ ],
          list_types => [ ],
          close => [ ],
-         save => [ qw(output_file) ],
+         save => [ qw(db output_file) ],
          load => [ qw(input_file db) ],
          createdb => [ qw(db) ],
          dropdb => [ qw(db) ],
@@ -126,6 +126,28 @@ sub dropdb {
 
    # mysqladmin drop database
    return $sc->system("mysqladmin -h $host --port=$port -u $username --password=$password drop $db");
+}
+
+sub save {
+   my $self = shift;
+   my ($db, $filename) = @_;
+
+   if (! defined($db)) {
+      return $self->log->error($self->brik_help_run('save'));
+   }
+   if (! defined($filename)) {
+      return $self->log->error($self->brik_help_run('save'));
+   }
+
+   my $host = $self->host;
+   my $port = $self->port;
+   my $username = $self->username;
+   my $password = $self->password;
+
+   my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
+
+   # mysqldump -h hostname -u user --password=password databasename > filename
+   return $sc->system("mysqldump -h $host --port=$port -u $username --password=$password $db > $filename");
 }
 
 sub load {

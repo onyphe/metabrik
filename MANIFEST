@@ -132,6 +132,7 @@ lib/Metabrik/System/Freebsd/Package.pm
 lib/Metabrik/System/Freebsd/Pf.pm
 lib/Metabrik/System/Os.pm
 lib/Metabrik/System/Package.pm
+lib/Metabrik/System/Process.pm
 lib/Metabrik/System/Service.pm
 lib/Metabrik/System/Ubuntu/Package.pm
 lib/Metabrik/Terminal/Control.pm

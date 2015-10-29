@@ -1,5 +1,5 @@
 20151027
-   Metabrik 1.10
+   Metabrik 1.10 released
 
 20151011
    AFFECT: network::arp
@@ -23,7 +23,7 @@
    - removed get_col_by_name and get_col_by_number obsolete Commands
 
 20150319
-   Metabrik 1.08
+   Metabrik 1.08 released
 
 20150316
    AFFECT: http::proxy, iana::countrycode, network::arpdiscover

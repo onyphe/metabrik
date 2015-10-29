@@ -1,5 +1,10 @@
 Revision history for Perl extension Metabrik::Repository.
 
+1.11
+   - new: api::shodan Brik
+   - new: system::process Brik
+   - new: network::sinfp3::arpdiscover Brik
+
 1.10 Tue Oct 27 20:11:54 CET 2015
    - update: version bump
    - UPDATE: see UPDATING file
