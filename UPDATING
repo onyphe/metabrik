@@ -1,3 +1,8 @@
+20151031
+   AFFECT: remote::ssh2
+
+   - remote::ssh2 renamed to client::ssh
+
 20151027
    Metabrik 1.10 released
 
