@@ -110,6 +110,7 @@ lib/Metabrik/Server/Dns.pm
 lib/Metabrik/Server/Http.pm
 lib/Metabrik/Server/Snmp.pm
 lib/Metabrik/Server/Snmptrap.pm
+lib/Metabrik/Server/Tcp.pm
 lib/Metabrik/Ssl/Heartbleed.pm
 lib/Metabrik/String/Ascii.pm
 lib/Metabrik/String/Base64.pm
