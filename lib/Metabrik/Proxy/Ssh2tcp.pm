@@ -30,15 +30,18 @@ sub brik_properties {
          start => [ qw(ssh_hostname|OPTIONAL ssh_port|OPTIONAL remote_hostname|OPTIONAL remote_port|OPTIONAL) ],
       },
       require_modules => {
+         'Net::OpenSSH' => [ ],
          'POE::Kernel' => [ ],
          'POE::Component::Server::TCP' => [ ],
          'Metabrik::Network::Address' => [ ],
+         'Metabrik::System::Process' => [ ],
       },
    };
 }
 
 sub sig_int {
-  my $self = shift;
+   my $self = shift;
+   my ($master_pid) = @_;
 
    my $restore = $SIG{INT};
 
@@ -46,6 +49,10 @@ sub sig_int {
       $self->debug && $self->log->debug("sig_int: INT caught");
 
       my $kernel = $self->_poe_kernel;
+
+      my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+      $sp->kill($master_pid) or return;
+
       $kernel->stop;
 
       $SIG{INT} = $restore;
@@ -53,6 +60,35 @@ sub sig_int {
    };
 
    return 1;
+}
+
+sub _read {
+   my $sock = shift;
+
+   my $buf = '';
+   my $chunk = 512;
+   my $len = 0;
+   my @ready = ();
+   while (1) {
+      my $n = $sock->sysread(my $tmp = '', $chunk);
+      if (! defined($n)) {
+         #print STDERR "undef: $!\n";
+         last;
+      }
+      #print STDERR "read[$n]\n";
+      if ($n == 0) {
+         print STDERR "*** read eof\n";
+         return;
+         last;
+      }
+      $buf .= $tmp;
+      $len += length($tmp);
+   }
+   if (@ready == 0) {
+      #print STDERR "timeout\n";
+   }
+
+   return $buf;
 }
 
 sub start {
@@ -96,83 +132,84 @@ sub start {
    }
 
    $self->log->verbose("start: connecting to SSH [$ssh_hostname]:$ssh_port");
-   $self->connect($ssh_hostname, $ssh_port) or return;
 
-   my $ssh2 = $self->ssh2;
+   my $ssh2 = Net::OpenSSH->new("$ssh_hostname:$ssh_port") or die("new");
+   my $master_pid = $ssh2->get_master_pid;
 
    use POE qw(Component::Server::TCP);
+   use POE qw(Wheel::ReadWrite);
 
    POE::Component::Server::TCP->new(
       Port => $port,
       Address => $hostname,
       ClientConnected => sub {
          my $heap = $_[HEAP];
-         $self->log->verbose("start: connection from [".$heap->{remote_ip}."]:".$heap->{remote_port});
-         $self->sig_int; # We have to reharm the signal
+         my $client = $heap->{client};
 
-         my $chan = $self->ssh2->tcpip($remote_hostname, $remote_port);
-         if (! defined($chan)) {
-            return $self->log->error("start: ClientConnected: unable to create channel to [$remote_hostname]:$remote_port");
+         $self->log->verbose("start: connection from [".$heap->{remote_ip}."]:".$heap->{remote_port});
+
+         $self->sig_int($master_pid); # We have to reharm the signal
+
+         my $socket = $client->[POE::Wheel::ReadWrite::HANDLE_INPUT()];
+         $socket->autoflush(1);
+
+         my ($tunnel, $pid) = $ssh2->open_tunnel({}, $remote_hostname, $remote_port)
+            or die("open_tunnel");
+         $tunnel->blocking(0);
+         $tunnel->autoflush(1);
+
+         $heap->{tunnel_pid} = $pid;
+
+         $self->log->verbose("channel opened [$pid] tunnel[$tunnel]");
+
+         my $select = IO::Select->new;
+         $select->add($socket);
+         $select->add($tunnel);
+
+         my $stop = 0;
+         while (1) {
+            my @ready = ();
+            while (@ready = $select->can_read(1)) {
+               for my $this (@ready) {
+                  if ($this == $socket) { # Client sent something
+                     my $buf = _read($socket);
+                     if (! defined($buf)) {
+                        print STDERR "*** socket eof\n";
+                        $stop++;
+                        last;
+                     }
+                     $tunnel->syswrite($buf);
+                  }
+                  elsif ($this == $tunnel) {
+                     my $buf = _read($tunnel);
+                     if (! defined($buf)) {
+                        print STDERR "*** tunnel eof\n";
+                        $stop++;
+                        last;
+                     }
+                     $socket->syswrite($buf);
+                  }
+               }
+               last if $stop;
+            }
+            last if $stop;
          }
-         #$chan->blocking(0);
-         $heap->{chan} = $chan;
       },
       ClientFilter => "POE::Filter::Stream",
-      ClientInput => sub {
-         my $input = $_[ARG0];
-         my $heap = $_[HEAP];
-         my $client = $heap->{client};
-         my $chan = $heap->{chan};
-
-         $self->sig_int; # We have to reharm the signal
-
-         print STDERR "> client to proxy len[".length($input)."]\n";
-         print STDERR "> proxy to server len[".length($input)."]\n";
-         $chan->write($input);
-
-         #my $chunk = 2048;
-
-         #my $r;
-         #my $len = 0;
-         #my $chunk = 1;
-         #my $buf = '';
-         #my @poll = ({handle => $chan, events => 'in'});
-         #if ($ssh2->poll(250, \@poll) && $poll[0]->{revents}->{in}) {
-            #while (defined(my $n = $chan->read(my $tmp = '',512))) {
-               #$buf .= $tmp;
-               #$len += $n;
-            #}
-         #}
-
-         my $buf = '';
-         my $chunk = 1;
-         my $len = 0;
-         while (1) {
-         AGAIN:
-            my $n;
-            my $tmp = '';
-            eval {
-               local $SIG{ALRM} = sub { die };
-               alarm(1); # 2 seconds with nothing, we stop read
-               $n = $chan->read($tmp, $chunk);
-               alarm(0);
-            };
-            last if $@ || not defined $n;
-            $buf .= $tmp;
-            $len += $n;
-         }
-
-         print STDERR "< server to proxy len[$len]\n";
-
-         print "> proxy to client len[$len]\n";
-         $client->put($buf);
-         $self->sig_int; # We have to reharm the signal
-      },
+      ClientInput => sub {},  # Completely disabled, we do our own eventloop
       ClientDisconnected => sub {
          my $heap = $_[HEAP];
+         my $kernel = $_[KERNEL];
+
          $self->log->verbose("start: disconnection from [".$heap->{remote_ip}."]:".$heap->{remote_port});
 
-         $self->sig_int; # We have to reharm the signal
+         my $pid = $heap->{tunnel_pid};
+
+         my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+         $self->log->verbose("start: ClientDisconnected: killing pid[$pid]");
+         $sp->kill($pid) or return;
+
+         $self->sig_int($master_pid); # We have to reharm the signal
       }
    );
 
@@ -181,7 +218,7 @@ sub start {
    my $kernel = POE::Kernel->new;
    $self->_poe_kernel($kernel);
 
-   $self->sig_int;
+   #$self->sig_int;
    $self->_poe_kernel->run;
 
    return 1;

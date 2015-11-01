@@ -14,6 +14,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable client whois) ],
       commands => {
+         ip => [ qw(ip_address) ],
          domain => [ qw(domain) ],
          available => [ qw(domain) ],
          expire => [ qw(domain) ],
@@ -28,6 +29,23 @@ sub brik_properties {
    };
 }
 
+sub ip {
+   my $self = shift;
+   my ($ip) = @_;
+
+   if (! defined($ip)) {
+      return $self->log->error($self->brik_help_run('ip'));
+   }
+
+   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
+   if (! $na->is_ip($ip)) {
+      return $self->log->error("ip: not a valid IP address [$ip]");
+   }
+
+   # XXX: For now, we use the same parser
+   return $self->domain($ip);
+}
+
 sub domain {
    my $self = shift;
    my ($domain) = @_;
@@ -35,6 +53,12 @@ sub domain {
    if (! defined($domain)) {
       return $self->log->error($self->brik_help_run('domain'));
    }
+
+   # XXX: Activate when ip Command is finished
+   #my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
+   #if ($na->is_ip($domain)) {
+      #return $self->log->error("domain: domain [$domain] is an address");
+   #}
 
    my $nw = Metabrik::Network::Whois->new_from_brik($self) or return;
    my $lines = $nw->target($domain)

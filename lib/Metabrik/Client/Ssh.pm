@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# remote::ssh2 Brik
+# client::ssh Brik
 #
-package Metabrik::Remote::Ssh2;
+package Metabrik::Client::Ssh;
 use strict;
 use warnings;
 
@@ -12,16 +12,23 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable remote ssh ssh2) ],
+      tags => [ qw(unstable client ssh) ],
       attributes => {
          hostname => [ qw(hostname) ],
          port => [ qw(integer) ],
          username => [ qw(username) ],
+         password => [ qw(password) ],
          publickey => [ qw(file) ],
          privatekey => [ qw(file) ],
          ssh2 => [ qw(Net::SSH2) ],
          use_publickey => [ qw(0|1) ],
          _channel => [ qw(INTERNAL) ],
+      },
+      attributes_default => {
+         hostname => 'localhost',
+         username => 'root',
+         port => 22,
+         use_publickey => 1,
       },
       commands => {
          connect => [ qw(hostname|OPTIONAL port|OPTIONAL username|OPTIONAL) ],
@@ -42,78 +49,62 @@ sub brik_properties {
    };
 }
 
-sub brik_use_properties {
-   my $self = shift;
-
-   return {
-      attributes_default => {
-         hostname => $self->global->hostname || 'localhost',
-         port => 22,
-         username => $self->global->username || 'root',
-         use_publickey => 1,
-      },
-   };
-}
-
 sub connect {
    my $self = shift;
-   my ($hostname, $port, $username) = @_;
+   my ($hostname, $port, $username, $password) = @_;
 
    if (defined($self->ssh2)) {
       return $self->log->verbose("connect: already connected");
    }
 
    $hostname ||= $self->hostname;
-   if (! defined($hostname)) {
-      return $self->log->error($self->brik_help_set('hostname'));
-   }
-
    $port ||= $self->port;
-   if (! defined($port)) {
-      return $self->log->error($self->brik_help_set('port'));
-   }
-
    $username ||= $self->username;
-   if (! defined($self->username)) {
-      return $self->log->error($self->brik_help_set('username'));
-   }
+   $password ||= $self->password;
+   my $publickey = $self->publickey;
+   my $privatekey = $self->privatekey;
 
-   if ($self->use_publickey && ! defined($self->publickey)) {
+   if ($self->use_publickey && ! $publickey) {
       return $self->log->error($self->brik_help_set('publickey'));
    }
-
-   if ($self->use_publickey && ! defined($self->privatekey)) {
+   if ($self->use_publickey && ! $privatekey) {
       return $self->log->error($self->brik_help_set('privatekey'));
    }
 
    my $ssh2 = Net::SSH2->new;
+   if (! defined($ssh2)) {
+      return $self->log->error("connect: cannot create Net::SSH2 object");
+   }
+
    my $ret = $ssh2->connect($hostname, $port);
    if (! $ret) {
       return $self->log->error("connect: can't connect via SSH2: $!");
    }
 
-   my $publickey = $self->publickey;
-   my $privatekey = $self->privatekey;
-
    if ($self->use_publickey) {
-      #$ret = $ssh2->auth_publickey($username, $publickey, $privatekey);
       $ret = $ssh2->auth(
          username => $username,
          publickey => $publickey,
          privatekey => $privatekey,
       );
+      if (! $ret) {
+         return $self->log->error("connect: authentication failed with publickey: $!");
+      }
    }
    else {
-      my $string_password = Metabrik::String::Password->new_from_brik($self) or return;
-      my $password = $string_password->prompt;
+      # Prompt for password if not given
+      if (! defined($password)) {
+         my $sp = Metabrik::String::Password->new_from_brik_init($self) or return;
+         $password = $sp->prompt;
+      }
 
       $ret = $ssh2->auth_password($username, $password);
-   }
-   if (! $ret) {
-      return $self->log->error("connect: authentication failed: $!");
+      if (! $ret) {
+         return $self->log->error("connect: authentication failed with password: $!");
+      }
    }
 
-   $self->log->verbose("connect: ssh2 connected to [".$self->hostname."]:$port");
+   $self->log->verbose("connect: ssh2 connected to [$hostname]:$port");
 
    return $self->ssh2($ssh2);
 }
@@ -122,9 +113,8 @@ sub disconnect {
    my $self = shift;
 
    my $ssh2 = $self->ssh2;
-
    if (! defined($ssh2)) {
-      return $self->log->error($self->brik_help_run('connect'));
+      return $self->log->verbose("disconnect: not connected");
    }
 
    my $r = $ssh2->disconnect;
@@ -140,11 +130,9 @@ sub exec {
    my ($cmd) = @_;
 
    my $ssh2 = $self->ssh2;
-
    if (! defined($ssh2)) {
       return $self->log->error($self->brik_help_run('connect'));
    }
-
    if (! defined($cmd)) {
       return $self->log->error($self->brik_help_run('exec'));
    }
@@ -344,7 +332,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Remote::Ssh2 - remote::ssh2 Brik
+Metabrik::Client::Ssh - client::ssh Brik
 
 =head1 COPYRIGHT AND LICENSE
 

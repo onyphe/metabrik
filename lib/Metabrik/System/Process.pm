@@ -25,6 +25,9 @@ sub brik_properties {
          get_process_info => [ qw(process) ],
          kill => [ qw(process|pid) ],
       },
+      require_modules => {
+         'POSIX' => [ qw(:sys_wait_h) ],
+      },
       require_binaries => {
          'ps', => [ ],
       },
@@ -111,11 +114,13 @@ sub kill {
 
    if ($process =~ /^\d+$/) {
       kill('TERM', $process);
+      my $kid = waitpid(-1, POSIX::WNOHANG());
    }
    else {
       my $list = $self->get_process_info($process) or return;
       for my $this (@$list) {
          kill('TERM', $this->{PID});
+         my $kid = waitpid(-1, POSIX::WNOHANG());
       }
    }
 

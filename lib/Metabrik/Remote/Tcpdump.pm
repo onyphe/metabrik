@@ -7,7 +7,7 @@ package Metabrik::Remote::Tcpdump;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Remote::Ssh2);
+use base qw(Metabrik::Client::Ssh);
 
 sub brik_properties {
    return {
