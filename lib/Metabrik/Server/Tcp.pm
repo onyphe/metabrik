@@ -16,39 +16,37 @@ sub brik_properties {
       attributes => {
          hostname => [ qw(listen_hostname) ],
          port => [ qw(listen_port) ],
-         _poe_kernel => [ qw(INTERNAL) ],
+         listen => [ qw(listen) ],
+         use_ipv4 => [ qw(0|1) ],
+         use_ipv6 => [ qw(0|1) ],
+         socket => [ qw(server_socket) ],
+         select => [ qw(select) ],
+         clients => [ qw(connected_clients) ],
       },
       attributes_default => {
-         hostname => '127.0.0.1',
+         hostname => 'localhost',
          port => 8888,
+         listen => 10,
+         use_ipv4 => 1,
+         use_ipv6 => 0,
+         clients => {},
       },
       commands => {
          start => [ qw(listen_hostname|OPTIONAL listen_port|OPTIONAL) ],
+         stop => [ ],
+         is_started => [ ],
+         wait_readable => [ ],
+         get_clients_count => [ ],
+         get_last_client => [ ],
+         get_last_client_id => [ ],
+         accept => [ ],
       },
       require_modules => {
-         'POE::Kernel' => [ ],
-         'POE::Component::Server::TCP' => [ ],
-         'Metabrik::Network::Address' => [ ],
+         'IO::Socket' => [ ],
+         'IO::Select' => [ ],
+         'IO::Socket::INET' => [ ],
       },
    };
-}
-
-sub sig_int {
-  my $self = shift;
-
-   my $restore = $SIG{INT};
-
-   $SIG{INT} = sub {
-      $self->debug && $self->log->debug("sig_int: INT caught");
-
-      my $kernel = $self->_poe_kernel;
-      $kernel->stop;
-
-      $SIG{INT} = $restore;
-      return 1;
-   };
-
-   return 1;
 }
 
 sub start {
@@ -60,40 +58,220 @@ sub start {
    if ($port !~ /^\d+$/) {
       return $self->log->error("start: port [$port] must be an integer");
    }
-   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
-   if (! $na->is_ip($hostname)) {
-      return $self->log->error("start: hostname [$hostname] must be an IP address");
+
+   my $use_ipv4 = $self->use_ipv4;
+   my $use_ipv6 = $self->use_ipv6;
+   my $domain = IO::Socket::AF_INET();  # XXX: TODO
+   my $listen = $self->listen;
+
+   my $socket = IO::Socket::INET->new(
+      LocalHost => $hostname,
+      LocalPort => $port,,
+      Proto => 'tcp',
+      ReuseAddr => 1,
+      Listen => $listen,
+      Domain => $domain,
+   );
+   if (! defined($socket)) {
+      return $self->log->error("start: unable to create server: $!");
    }
 
-   use POE qw(Component::Server::TCP);
+   $socket->blocking(0);
+   $socket->autoflush(1);
 
-   POE::Component::Server::TCP->new(
-      Port => $port,
-      Address => $hostname,
-      ClientConnected => sub {
-         my $heap = $_[HEAP];
-         $self->log->verbose("start: connection from [".$heap->{remote_ip}."]:".$heap->{remote_port});
-         $self->sig_int; # We have to reharm the signal
-      },
-      ClientInput => sub {
-         my $input = $_[ARG0];
-         my $client = $_[HEAP]{client};
-         print "$input\n";   # Just echo on server console what client said
-         $client->put("OK"); # And said OK to client
-      },
-      ClientDisconnected => sub {
-         my $heap = $_[HEAP];
-         $self->log->verbose("start: disconnection from [".$heap->{remote_ip}."]:".$heap->{remote_port});
+   my $select = IO::Select->new;
+   $select->add($socket);
+
+   $self->select($select);
+
+   $self->log->info("start: starting server on [$hostname]:$port");
+
+   return $self->socket($socket);
+}
+
+sub stop {
+   my $self = shift;
+
+   if (! $self->is_started) {
+      return $self->log->error($self->brik_help_run('start'));
+   }
+
+   my $socket = $self->socket;
+   my $select = $self->select;
+   my $clients = $self->clients;
+
+   for my $this (keys %$clients) {
+      $select->remove($clients->{$this}{socket});
+      close($clients->{$this}{socket});
+      delete $clients->{$this};
+   }
+
+   $select->remove($socket);
+   close($socket);
+
+   $self->socket(undef);
+   $self->select(undef);
+   $self->clients({});
+
+   return 1;
+}
+
+sub is_started {
+   my $self = shift;
+
+   my $socket = $self->socket;
+   if (! defined($socket)) {
+      return 0;
+   }
+
+   return 1;
+}
+
+sub wait_readable {
+   my $self = shift;
+   my ($timeout) = @_;
+
+   if (! $self->is_started) {
+      return $self->log->error($self->brik_help_run('start'));
+   }
+
+   $timeout ||= 0; # No timeout
+
+   my $socket = $self->socket;
+   my $select = $self->select;
+
+   my @readable = $select->can_read;
+   if (@readable > 0) {
+      return \@readable;
+   }
+
+   return 0;  # Timeout occured
+}
+
+sub get_clients_count {
+   my $self = shift;
+
+   if (! $self->is_started) {
+      return $self->log->error($self->brik_help_run('start'));
+   }
+
+   my $clients = $self->{clients};
+
+   return keys %$clients;
+}
+
+sub get_last_client {
+   my $self = shift;
+
+   if (! $self->is_started) {
+      return $self->log->error($self->brik_help_run('start'));
+   }
+
+   my $clients = $self->{clients};
+
+   my $last = 0;
+   for my $this (keys %$clients) {
+      if ($this > $last) {
+         $last = $this;
       }
-   );
+   }
 
-   $self->log->error("start: starting server on [$hostname]:$port");
+   return $clients->{$last};
+}
 
-   my $kernel = POE::Kernel->new;
-   $self->_poe_kernel($kernel);
+sub get_last_client_id {
+   my $self = shift;
 
-   $self->sig_int;
-   $self->_poe_kernel->run;
+   if (! $self->is_started) {
+      return $self->log->error($self->brik_help_run('start'));
+   }
+
+   my $clients = $self->{clients};
+
+   my $last = 0;
+   for my $this (keys %$clients) {
+      if ($this > $last) {
+         $last = $this;
+      }
+   }
+
+   return $last;
+}
+
+sub accept {
+   my $self = shift;
+
+   if (! $self->is_started) {
+      return $self->log->error($self->brik_help_run('start'));
+   }
+
+   my $socket = $self->socket;
+   my $select = $self->select;
+   my $clients = $self->clients;
+
+   my $client = $socket->accept;
+   $client->blocking(0);
+   $client->autoflush(1);
+
+   $select->add($client);
+
+   my $last = $self->get_last_client_id;
+
+   my $new = {
+      id => $last + 1,
+      socket => $client,
+      ipv4 => $client->peerhost,
+      port => $client->peerport,
+   };
+
+   return $clients->{$last+1} = $new;
+}
+
+sub read {
+   my $self = shift;
+   my ($socket) = @_;
+
+   if (! $self->is_started) {
+      return $self->log->error($self->brik_help_run('start'));
+   }
+
+   my $buf = '';
+   my $chunk = 512;
+   my @ready = ();
+   while (1) {
+      my $n = $socket->sysread(my $tmp = '', $chunk);
+      if (! defined($n)) {
+         last;  # Should test for EWOULDBLOCK. If so, we can return. Otherwise, handle error.
+      }
+      if ($n == 0) {  # EOF
+         return;
+      }
+      $buf .= $tmp;
+   }
+
+   return $buf;
+}
+
+sub client_disconnected {
+   my $self = shift;
+   my ($id) = @_;
+
+   if (! $self->is_started) {
+      return $self->log->error($self->brik_help_run('start'));
+   }
+
+   if (! defined($id)) {
+      return $self->log->error($self->log->brik_help_run('client_disconnected'));
+   }
+
+   my $clients = $self->clients;
+   my $select = $self->select;
+
+   if (exists($clients->{$id})) {
+      close($clients->{$id}{socket});
+      $select->remove($clients->{id}{socket});
+      delete $clients->{$id};
+   }
 
    return 1;
 }
