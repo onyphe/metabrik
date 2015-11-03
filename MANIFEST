@@ -14,6 +14,7 @@ lib/Metabrik/Audit/Https.pm
 lib/Metabrik/Audit/Smtp.pm
 lib/Metabrik/Audit/Twiki.pm
 lib/Metabrik/Client/Dns.pm
+lib/Metabrik/Client/Openssh.pm
 lib/Metabrik/Client/Rest.pm
 lib/Metabrik/Client/Rsync.pm
 lib/Metabrik/Client/Ssh.pm
