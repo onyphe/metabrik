@@ -30,10 +30,9 @@ sub brik_properties {
          start => [ qw(ssh_hostname|OPTIONAL ssh_port|OPTIONAL remote_hostname|OPTIONAL remote_port|OPTIONAL) ],
       },
       require_modules => {
-         'Net::OpenSSH' => [ ],
-         'POE::Kernel' => [ ],
-         'POE::Component::Server::TCP' => [ ],
+         'Metabrik::Client::Openssh' => [ ],
          'Metabrik::Network::Address' => [ ],
+         'Metabrik::Server::Tcp' => [ ],
          'Metabrik::System::Process' => [ ],
       },
    };
@@ -133,114 +132,69 @@ sub start {
 
    $self->log->verbose("start: connecting to SSH [$ssh_hostname]:$ssh_port");
 
-   my $ssh2 = Net::OpenSSH->new("$ssh_hostname:$ssh_port") or die("new");
-   my $master_pid = $ssh2->get_master_pid;
+   my $so = Metabrik::Client::Openssh->new_from_brik_init($self) or return;
+   $so->connect($ssh_hostname, $ssh_port) or return;
 
-   use POE qw(Component::Server::TCP);
-   use POE qw(Wheel::ReadWrite);
+   my $st = Metabrik::Server::Tcp->new_from_brik_init($self) or return;
+   my $server = $st->start or return;
+   my $select = $st->select;
+   my $clients = $st->clients;
 
-   POE::Component::Server::TCP->new(
-      Port => $port,
-      Address => $hostname,
-      ClientConnected => sub {
-         my $heap = $_[HEAP];
-         my $client = $heap->{client};
-         my $client_ip = $heap->{remote_ip};
-         my $client_port = $heap->{remote_port};
+   while (1) {
+      if (my $ready = $st->wait_readable) {
+         for my $sock (@$ready) {
+            if ($sock == $server) {
+               my $client = $st->accept;
 
-         $self->sig_int($master_pid); # We have to reharm the signal
+               my $tunnel = $so->open_tunnel($remote_hostname, $remote_port) or return;
+               $select->add($tunnel);
+               $client->{tunnel} = $tunnel;
 
-         $self->log->verbose("start: connection from [$client_ip]:$client_port");
-
-         my $socket = $client->[POE::Wheel::ReadWrite::HANDLE_INPUT()];
-         use Data::Dumper;
-         print Dumper($client)."\n";
-         #my $socket = $client->{Handle};
-         $socket->blocking(0);
-         $socket->autoflush(1);
-
-         my ($tunnel, $pid) = $ssh2->open_tunnel({}, $remote_hostname, $remote_port)
-            or die("open_tunnel");
-         $tunnel->blocking(0);
-         $tunnel->autoflush(1);
-
-         $heap->{tunnel_pid} = $pid;
-         $heap->{tunnel_socket} = $tunnel;
-
-         $self->log->verbose("channel opened [$pid] tunnel[$tunnel]");
-
-      },
-      ClientFilter => "POE::Filter::Stream",
-      ClientInput => sub {
-         my $input = $_[ARG0];
-         my $heap = $_[HEAP];
-         my $client = $heap->{client};
-
-         $self->sig_int($master_pid); # We have to reharm the signal
-
-         my $socket = $client->[POE::Wheel::ReadWrite::HANDLE_INPUT()];
-         my $tunnel = $heap->{tunnel_socket};
-
-         $tunnel->syswrite($input);
-
-         my $select = IO::Select->new;
-         $select->add($socket);
-         $select->add($tunnel);
-
-         my $stop = 0;
-         while (1) {
-            my @ready = ();
-            while (@ready = $select->can_read(1)) {
-               for my $this (@ready) {
-                  if ($this == $socket) { # Client sent something
-                     my $buf = _read($socket);
-                     if (! defined($buf)) {
-                        print STDERR "*** socket eof\n";
-                        $stop++;
-                        last;
-                     }
-                     $tunnel->syswrite($buf);
-                  }
-                  elsif ($this == $tunnel) {
-                     my $buf = _read($tunnel);
-                     if (! defined($buf)) {
-                        print STDERR "*** tunnel eof\n";
-                        close($socket); # XXX: todo
-                        $stop++;
-                        last;
-                     }
-                     $socket->syswrite($buf);
+               $self->log->verbose("start: new connection from [".
+                  $client->{ipv4}."]:".$client->{port});
+            }
+            else {
+               my $client;
+               my $this_client;
+               my $this_tunnel;
+               for my $k (keys %$clients) {
+                  if ($sock == $clients->{$k}{socket} || $sock == $clients->{$k}{tunnel}) {
+                     $client = $k;
+                     $this_client = $clients->{$k}{socket};
+                     $this_tunnel = $clients->{$k}{tunnel};
+                     last;
                   }
                }
-               last if $stop;
+               if ($sock == $this_client) { # Client sent something
+                  my $buf = $st->read($this_client);
+                  if (! defined($buf)) {
+                     #$self->log->verbose("start: client sent eof");
+                     $select->remove($this_tunnel);
+                     close($this_tunnel);
+                     #$st->client_disconnected($client);
+                  }
+                  else {
+                     $self->log->verbose("start: read from client [".length($buf)."]");
+                     $this_tunnel->syswrite($buf);
+                  }
+               }
+               elsif ($sock == $this_tunnel) {
+                  my $buf = $st->read($this_tunnel);
+                  if (! defined($buf)) {
+                     #$self->log->verbose("start: tunnel sent eof");
+                     $select->remove($this_tunnel);
+                     close($this_tunnel);
+                     #$st->client_disconnected($client);
+                  }
+                  else {
+                     $self->log->verbose("start: read from tunnel [".length($buf)."]");
+                     $this_client->syswrite($buf);
+                  }
+               }
             }
-            last if $stop;
          }
-      },  # Completely disabled, we do our own eventloop
-      ClientDisconnected => sub {
-         my $heap = $_[HEAP];
-         my $kernel = $_[KERNEL];
-
-         $self->sig_int($master_pid); # We have to reharm the signal
-
-         $self->log->verbose("start: disconnection from [".$heap->{remote_ip}."]:".$heap->{remote_port});
-
-         my $pid = $heap->{tunnel_pid};
-
-         my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
-         $self->log->verbose("start: ClientDisconnected: killing pid[$pid]");
-         $sp->kill($pid) or return;
       }
-   );
-
-   $self->log->info("start: starting server on [$hostname]:$port");
-
-   my $kernel = POE::Kernel->new;
-   $self->_poe_kernel($kernel);
-
-   $self->sig_int;
-
-   $self->_poe_kernel->run;
+   }
 
    return 1;
 }
