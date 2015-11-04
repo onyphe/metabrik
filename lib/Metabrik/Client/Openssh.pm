@@ -66,7 +66,9 @@ sub connect {
    $username ||= $self->username;
    $password ||= $self->password;
 
-   my %opts = ();
+   my %opts = (
+      timeout => 5,
+   );
    if (length($username)) {
       $opts{user} = $username;
    }

@@ -243,7 +243,10 @@ sub read {
       if (! defined($n)) {
          last;  # Should test for EWOULDBLOCK. If so, we can return. Otherwise, handle error.
       }
-      if ($n == 0) {  # EOF
+      if ($n == 0 && length($buf)) {  # EOF, but we send what we read
+         return $buf;
+      }
+      if ($n == 0) {  # EOF, nothing read
          return;
       }
       $buf .= $tmp;
@@ -269,7 +272,7 @@ sub client_disconnected {
 
    if (exists($clients->{$id})) {
       close($clients->{$id}{socket});
-      $select->remove($clients->{id}{socket});
+      $select->remove($clients->{$id}{socket});
       delete $clients->{$id};
    }
 
