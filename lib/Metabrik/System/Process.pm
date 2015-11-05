@@ -24,8 +24,10 @@ sub brik_properties {
          is_running => [ qw(process) ],
          get_process_info => [ qw(process) ],
          kill => [ qw(process|pid) ],
+         daemonize => [ qw($sub) ],
       },
       require_modules => {
+         'Daemon::Daemonize' => [ ],
          'POSIX' => [ qw(:sys_wait_h) ],
       },
       require_binaries => {
@@ -123,6 +125,34 @@ sub kill {
          my $kid = waitpid(-1, POSIX::WNOHANG());
       }
    }
+
+   return 1;
+}
+
+sub daemonize {
+   my $self = shift;
+   my ($sub) = @_;
+
+   my %opts = (
+      close => 0,
+   );
+
+   my $r;
+   # Daemonize the given subroutine
+   if (defined($sub)) {
+      $r = Daemon::Daemonize->daemonize(
+         %opts,
+         run => $sub,
+      );
+   }
+   # Or myself
+   else {
+      $r = Daemon::Daemonize->daemonize(
+         %opts,
+      );
+   }
+
+   #$self->log->info("daemonize: returned [$r]");
 
    return 1;
 }

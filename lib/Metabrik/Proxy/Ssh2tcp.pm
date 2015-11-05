@@ -7,7 +7,7 @@ package Metabrik::Proxy::Ssh2tcp;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Client::Ssh);
+use base qw(Metabrik::System::Process);
 
 sub brik_properties {
    return {
@@ -16,24 +16,24 @@ sub brik_properties {
       attributes => {
          hostname => [ qw(listen_hostname) ],
          port => [ qw(listen_port) ],
-         ssh_hostname => [ qw(ssh_hostname) ],
-         ssh_port => [ qw(ssh_port) ],
-         remote_hostname => [ qw(remote_hostname) ],
-         remote_port => [ qw(remote_port) ],
+         ssh_hostname_port => [ qw(ssh_hostname_port) ],
+         remote_hostname_port => [ qw(remote_hostname_port) ],
          st => [ qw(INTERNAL) ],
+         so => [ qw(INTERNAL) ],
       },
       attributes_default => {
          hostname => '127.0.0.1',
          port => 8888,
       },
       commands => {
-         start => [ qw(ssh_hostname|OPTIONAL ssh_port|OPTIONAL remote_hostname|OPTIONAL remote_port|OPTIONAL) ],
+         start => [ qw(ssh_hostname_port|OPTIONAL remote_hostname_port|OPTIONAL) ],
+         tunnel_loop => [ qw(remote_hostname_port) ],
+         background_tunnel_loop => [ qw(remote_hostname_port) ],
          is_started => [ ],
          stop => [ ],
       },
       require_modules => {
          'Metabrik::Client::Openssh' => [ ],
-         'Metabrik::Network::Address' => [ ],
          'Metabrik::Server::Tcp' => [ ],
          'Metabrik::System::Process' => [ ],
       },
@@ -73,57 +73,158 @@ sub is_started {
    return 0;
 }
 
+sub background_tunnel_loop {
+   my $self = shift;
+   my $args = \@_;
+
+   return $self->daemonize(sub { $self->start(@$args) && $self->tunnel_loop(@$args) });
+}
+
 sub start {
    my $self = shift;
-   my ($ssh_hostname, $ssh_port, $remote_hostname, $remote_port) = @_;
+   my ($ssh_hostname_port, $remote_hostname_port) = @_;
 
    my $hostname = $self->hostname;
    my $port = $self->port;
-   $remote_hostname ||= $self->remote_hostname;
-   $remote_port ||= $self->remote_port;
-   $ssh_hostname ||= $self->ssh_hostname;
-   $ssh_port ||= $self->ssh_port;
-   if (! defined($ssh_hostname)) {
+   $ssh_hostname_port ||= $self->ssh_hostname_port;
+   $remote_hostname_port ||= $self->remote_hostname_port;
+   if (! defined($ssh_hostname_port)) {
       return $self->log->error($self->brik_help_run('start'));
    }
-   if (! defined($ssh_port)) {
+   if (! defined($remote_hostname_port)) {
       return $self->log->error($self->brik_help_run('start'));
    }
-   if (! defined($remote_hostname)) {
-      return $self->log->error($self->brik_help_run('start'));
-   }
-   if (! defined($remote_port)) {
-      return $self->log->error($self->brik_help_run('start'));
-   }
-   if ($port !~ /^\d+$/) {
-      return $self->log->error("start: port [$port] must be an integer");
-   }
-   if ($ssh_port !~ /^\d+$/) {
-      return $self->log->error("start: ssh_port [$ssh_port] must be an integer");
-   }
-   if ($remote_port !~ /^\d+$/) {
-      return $self->log->error("start: remote_port [$remote_port] must be an integer");
-   }
-   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
-   if (! $na->is_ip($hostname)) {
-      return $self->log->error("start: hostname [$hostname] must be an IP address");
-   }
-   # ssh_hostname can actually be a hostname
-   if (! $na->is_ip($remote_hostname)) {
-      return $self->log->error("start: remote_hostname [$remote_hostname] must be an IP address");
+   if ($remote_hostname_port !~ /^[^:]+:\d+$/) {
+      return $self->log->error("start: invalid format for remote_hostname_port [$remote_hostname_port], must be hostname:port");
    }
 
-   $self->log->verbose("start: connecting to SSH [$ssh_hostname]:$ssh_port");
+   my $so;
+   # Only one hop
+   if (! ref($ssh_hostname_port)) {
+      if ($ssh_hostname_port !~ /^[^:]+:\d+$/) {
+         return $self->log->error("start: invalid format for ssh_hostname_port [$ssh_hostname_port], must be hostname:port");
+      }
 
-   my $so = Metabrik::Client::Openssh->new_from_brik_init($self) or return;
-   $so->connect($ssh_hostname, $ssh_port) or return;
+      my ($ssh_hostname, $ssh_port) = split(':', $ssh_hostname_port);
+
+      $so = Metabrik::Client::Openssh->new_from_brik_init($self) or return;
+      $so->connect($ssh_hostname, $ssh_port) or return;
+
+      $self->log->verbose("start: connected to SSH [$ssh_hostname]:$ssh_port");
+   }
+   # Multiple hops :)
+   elsif (ref($ssh_hostname_port) eq 'ARRAY') {
+      my @ok = ();
+      for my $this (@$ssh_hostname_port) {
+         if ($this !~ /^[^:]+:\d+$/) {
+            $self->log->verbose("start: invalid format for this [$this], must be hostname:port");
+            next;
+         }
+         push @ok, $this;
+      }
+
+      if (@ok < 2) {
+         return $self->log->error("start: cannot chain with only one proxy");
+      }
+
+      # Build hop chain
+      my $path = [];
+      my $hop = 1;
+      my $lport = $port+1;
+      my $target = $remote_hostname_port;
+      while (1) {
+         if ($hop == 1) {
+            my $this = shift @ok;
+            my $next = shift @ok;
+            last unless defined $next;
+            push @$path, {
+               from => $this,
+               to => $next,
+               host => 'localhost',
+               port => $lport++,
+            };
+         }
+         else {
+            my $next = shift @ok;
+            last unless defined $next;
+            push @$path, {
+               from => $path->[-1]->{host}.':'.$path->[-1]->{port},
+               to => $next,
+               host => 'localhost',
+               port => $lport++,
+            };
+         }
+         $hop++;
+      }
+
+      push @$path, {
+          from => $path->[-1]->{host}.':'.$path->[-1]->{port},
+          to => $remote_hostname_port,
+          host => 'localhost',
+          port => $port,
+      };
+
+      use Data::Dumper;
+      print Dumper($path)."\n";
+      #return 1;
+
+      $hop = 1;
+      for my $this (@$path) {
+         $self->hostname($this->{host});
+         $self->port($this->{port});
+         $self->log->verbose("background_start: ".
+            "from: ".$this->{from}." to: ".$this->{to}. " listen: ".$this->{port}
+         );
+
+         #$self->start($this->{from}, $this->{to}) or return;
+         $self->background_tunnel_loop($this->{from}, $this->{to}) or return;
+
+         $self->log->verbose("start: connected to SSH hop [$hop] [".$this->{to}."]");
+
+         # XXX: do better
+         sleep(5);  # Wait for tunnel to be established
+
+         $hop++;
+      }
+
+      return 1;
+   }
 
    my $st = Metabrik::Server::Tcp->new_from_brik_init($self) or return;
+   $st->hostname($self->hostname);
+   $st->port($self->port);
+
    my $server = $st->start or return;
+   $self->st($st);
+   $self->so($so);
+
+   $self->tunnel_loop($remote_hostname_port) or return;
+
+   return 1;
+}
+
+sub tunnel_loop {
+   my $self = shift;
+   my ($remote_hostname_port) = @_;
+
+   if (! $self->is_started) {
+      return $self->log->error($self->brik_help_run('start'));
+   }
+   if (! defined($remote_hostname_port)) {
+      return $self->log->error($self->brik_help_run('tunnel_loop'));
+   }
+   if ($remote_hostname_port !~ /^[^:]+:\d+$/) {
+      return $self->log->error("start: invalid format for remote_hostname_port [$remote_hostname_port], must be hostname:port");
+   }
+
+   my ($remote_hostname, $remote_port) = split(':', $remote_hostname_port);
+
+   my $st = $self->st;
+   my $server = $st->socket;
    my $select = $st->select;
    my $clients = $st->clients;
 
-   $self->st($st);
+   my $so = $self->so;
 
    while (1) {
       last if ! $self->is_started;  # Used to stop the process on SIGINT
@@ -193,8 +294,10 @@ sub stop {
    # server::tcp know nothing about tunnels, we have to clean by ourselves
    my $clients = $st->clients;
    for my $this (keys %$clients) {
-      close($clients->{$this}{tunnel});
-      $self->log->verbose("stop: tunnel for client [$this] closed");
+      if (exists($clients->{$this}{tunnel})) {
+         close($clients->{$this}{tunnel});
+         $self->log->verbose("stop: tunnel for client [$this] closed");
+      }
    }
 
    $st->stop;
