@@ -28,7 +28,6 @@ sub brik_properties {
          host => 'localhost',
          port => 3306,
          username => 'root',
-         password => '',
       },
       commands => {
          open => [ qw(db_name|OPTIONAL host|OPTIONAL port|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
@@ -40,20 +39,33 @@ sub brik_properties {
          show_tables => [ ],
          list_types => [ ],
          close => [ ],
-         save => [ qw(db output_file) ],
-         load => [ qw(input_file db) ],
-         createdb => [ qw(db) ],
-         dropdb => [ qw(db) ],
+         save => [ qw(db_name output_file) ],
+         load => [ qw(input_file db_name) ],
+         createdb => [ qw(db_name) ],
+         dropdb => [ qw(db_name) ],
+         create_user => [ qw(username password|OPTIONAL) ],
+         grant_all_privileges => [ qw(database username ip_address|OPTIONAL) ],
+         password_prompt => [ qw(string|OPTIONAL) ],
+         enter_shell => [ qw(db_name|OPTIONAL host|OPTIONAL port|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
       },
       require_modules => {
          'DBI' => [ ],
          'DBD::mysql' => [ ],
+         'Metabrik::String::Password' => [ ],
       },
       require_binaries => {
          'mysql' => [ ],
          'mysqladmin' => [ ],
       },
    };
+}
+
+sub password_prompt {
+   my $self = shift;
+   my ($string) = @_;
+
+   my $sp = Metabrik::String::Password->new_from_brik_init($self) or return;
+   return $sp->prompt($string);
 }
 
 sub open {
@@ -64,7 +76,7 @@ sub open {
    $host ||= $self->host;
    $port ||= $self->port;
    $username ||= $self->username;
-   $password ||= $self->password;
+   $password ||= $self->password || $self->password_prompt("Enter $username password: ") or return;
 
    my $dbh = DBI->connect("DBI:mysql:database=$db;host=$host;port=$port", $username, $password, {
       AutoCommit => $self->autocommit,
@@ -102,10 +114,14 @@ sub createdb {
    my $self = shift;
    my ($db) = @_;
 
+   if (! defined($db)) {
+      return $self->log->error($self->brik_help_run('createdb'));
+   }
+
    my $host = $self->host;
    my $port = $self->port;
    my $username = $self->username;
-   my $password = $self->password;
+   my $password = $self->password || $self->password_prompt("Enter $username password: ") or return;
 
    my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
 
@@ -117,10 +133,14 @@ sub dropdb {
    my $self = shift;
    my ($db) = @_;
 
+   if (! defined($db)) {
+      return $self->log->error($self->brik_help_run('dropdb'));
+   }
+
    my $host = $self->host;
    my $port = $self->port;
    my $username = $self->username;
-   my $password = $self->password;
+   my $password = $self->password || $self->password_prompt("Enter $username password: ") or return;
 
    my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
 
@@ -142,7 +162,7 @@ sub save {
    my $host = $self->host;
    my $port = $self->port;
    my $username = $self->username;
-   my $password = $self->password;
+   my $password = $self->password || $self->password_prompt("Enter $username password: ") or return;
 
    my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
 
@@ -167,12 +187,82 @@ sub load {
    my $host = $self->host;
    my $port = $self->port;
    my $username = $self->username;
-   my $password = $self->password;
+   my $password = $self->password || $self->password_prompt("Enter $username password: ") or return;
 
    my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
 
    # mysql -h hostname -u user --password=password databasename < filename
    return $sc->system("mysql -h $host --port=$port -u $username --password=$password $db < $filename");
+}
+
+sub create_user {
+   my $self = shift;
+   my ($username, $password, $ip) = @_;
+
+   $ip ||= '%';
+   if (! defined($username)) {
+      return $self->log->error($self->brik_help_run('create_user'));
+   }
+
+   my $mysql_host = $self->host;
+   my $mysql_port = $self->port;
+   my $mysql_username = $self->username;
+   my $mysql_password = $self->password || $self->password_prompt("Enter $mysql_username password: ") or return;
+
+   $password ||= $self->password_prompt("Enter $username password: ") or return;
+
+   my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
+
+   my $cmd = "mysql -h $mysql_host --port=$mysql_port -u $mysql_username --password=$mysql_password --execute=\"create user $username\@'$ip' identified by '$password'\" mysql";
+
+   $self->debug && $self->log->debug("create_user: cmd [$cmd]");
+
+   return $sc->system($cmd);
+}
+
+sub grant_all_privileges {
+   my $self = shift;
+   my ($db, $username, $ip) = @_;
+
+   $ip ||= '%';
+   if (! defined($db)) {
+      return $self->log->error($self->brik_help_run('grant_all_privileges'));
+   }
+   if (! defined($username)) {
+      return $self->log->error($self->brik_help_run('grant_all_privileges'));
+   }
+
+   my $mysql_host = $self->host;
+   my $mysql_port = $self->port;
+   my $mysql_username = $self->username;
+   my $mysql_password = $self->password || $self->password_prompt("Enter $mysql_username password: ") or return;
+
+   my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
+
+   my $cmd = "mysql -h $mysql_host --port=$mysql_port -u $mysql_username --password=$mysql_password --execute=\"grant all privileges on $db.* to $username\@'$ip'\" mysql";
+
+   $self->debug && $self->log->debug("grant_all_privileges: cmd [$cmd]");
+
+   return $sc->system($cmd);
+}
+
+sub enter_shell {
+   my $self = shift;
+   my ($mysql_db, $mysql_host, $mysql_port, $mysql_username, $mysql_password) = @_;
+
+   $mysql_db ||= $self->db;
+   $mysql_host ||= $self->host;
+   $mysql_port ||= $self->port;
+   $mysql_username ||= $self->username;
+   $mysql_password ||= $self->password || $self->password_prompt("Enter $mysql_username password: ") or return;
+
+   my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
+
+   my $cmd = "mysql -h $mysql_host --port=$mysql_port -u $mysql_username --password=$mysql_password mysql";
+
+   $self->debug && $self->log->debug("shell: cmd [$cmd]");
+
+   return $sc->system($cmd);
 }
 
 1;

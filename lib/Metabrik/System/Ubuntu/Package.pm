@@ -18,6 +18,7 @@ sub brik_properties {
          install => [ qw(package) ],
          update => [ ],
          upgrade => [ ],
+         list => [ ],
       },
       require_binaries => {
          'aptitude' => [ ],
@@ -67,6 +68,12 @@ sub upgrade {
    my $cmd = "sudo apt-get dist-upgrade";
 
    return $self->system($cmd);
+}
+
+sub list {
+   my $self = shift;
+
+   return $self->log->info("list: not available on this system");
 }
 
 1;

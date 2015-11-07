@@ -25,7 +25,7 @@ sub brik_properties {
       },
       commands => {
          generate => [ qw(length|OPTIONAL count|OPTIONAL) ],
-         prompt => [ ],
+         prompt => [ qw(string|OPTIONAL) ],
       },
       require_modules => {
          'String::Random' => [ ],
@@ -56,10 +56,13 @@ sub generate {
 
 sub prompt {
    my $self = shift;
+   my ($string) = @_;
+
+   $string ||= 'Password: ';
 
    my $password;
    while (1) {
-      my $this = Term::ReadPassword::read_password('password: ');
+      my $this = Term::ReadPassword::read_password($string);
       if (defined($this)) {
          $password = $this;
          last;

@@ -90,6 +90,12 @@ sub upgrade {
    return $self->_sp->upgrade;
 }
 
+sub list {
+   my $self = shift;
+
+   return $self->_sp->list;
+}
+
 1;
 
 __END__

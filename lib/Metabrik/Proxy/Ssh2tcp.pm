@@ -16,12 +16,14 @@ sub brik_properties {
       attributes => {
          hostname => [ qw(listen_hostname) ],
          port => [ qw(listen_port) ],
+         username => [ qw(username) ],
          ssh_hostname_port => [ qw(ssh_hostname_port) ],
          remote_hostname_port => [ qw(remote_hostname_port) ],
          st => [ qw(INTERNAL) ],
          so => [ qw(INTERNAL) ],
       },
       attributes_default => {
+         username => 'root',
          hostname => '127.0.0.1',
          port => 8888,
       },
@@ -82,12 +84,13 @@ sub background_tunnel_loop {
 
 sub start {
    my $self = shift;
-   my ($ssh_hostname_port, $remote_hostname_port) = @_;
+   my ($ssh_hostname_port, $remote_hostname_port, $username) = @_;
 
    my $hostname = $self->hostname;
    my $port = $self->port;
    $ssh_hostname_port ||= $self->ssh_hostname_port;
    $remote_hostname_port ||= $self->remote_hostname_port;
+   $username ||= $self->username;
    if (! defined($ssh_hostname_port)) {
       return $self->log->error($self->brik_help_run('start'));
    }
@@ -108,6 +111,7 @@ sub start {
       my ($ssh_hostname, $ssh_port) = split(':', $ssh_hostname_port);
 
       $so = Metabrik::Client::Openssh->new_from_brik_init($self) or return;
+      $so->username($username);
       $so->connect($ssh_hostname, $ssh_port) or return;
 
       $self->log->verbose("start: connected to SSH [$ssh_hostname]:$ssh_port");

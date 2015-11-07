@@ -18,6 +18,7 @@ sub brik_properties {
          install => [ qw(package) ],
          update => [ ],
          upgrade => [ ],
+         list => [ ],
       },
       require_binaries => {
          'sudo' => [ ],
@@ -64,6 +65,14 @@ sub upgrade {
    my $self = shift;
 
    my $cmd = "sudo pkg upgrade";
+
+   return $self->system($cmd);
+}
+
+sub list {
+   my $self = shift;
+
+   my $cmd = "pkg info";
 
    return $self->system($cmd);
 }
