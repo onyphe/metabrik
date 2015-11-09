@@ -110,6 +110,7 @@ lib/Metabrik/Repository.pm
 lib/Metabrik/Server/Agent.pm
 lib/Metabrik/Server/Dns.pm
 lib/Metabrik/Server/Http.pm
+lib/Metabrik/Server/Rest.pm
 lib/Metabrik/Server/Snmp.pm
 lib/Metabrik/Server/Snmptrap.pm
 lib/Metabrik/Server/Tcp.pm

@@ -7,6 +7,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: server::tcp Brik
    - new: proxy::ssh2tcp Brik
    - new: client::openssh Brik
+   - new: server::rest Brik
 
 1.10 Tue Oct 27 20:11:54 CET 2015
    - update: version bump
