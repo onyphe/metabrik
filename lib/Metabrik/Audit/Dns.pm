@@ -16,8 +16,10 @@ sub brik_properties {
       attributes => {
          nameserver => [ qw(nameserver|$nameserver_list) ],
          domainname => [ qw(domainname) ],
+         rtimeout => [ qw(timeout) ],
       },
       attributes_default => {
+         rtimeout => 2,
          nameserver => '127.0.0.1',
       },
       commands => {
@@ -54,6 +56,8 @@ sub version {
          recurse => 0,
          searchlist => [],
          debug => $self->debug,
+         udp_timeout => $self->rtimeout,
+         tcp_timeout => $self->rtimeout,
       ) or return $self->log->error("version: Net::DNS::Resolver::new failed");
    
       my $version = 'undef';
@@ -93,6 +97,8 @@ sub recursion {
          recurse => 1,
          searchlist => [],
          debug => $self->debug,
+         udp_timeout => $self->rtimeout,
+         tcp_timeout => $self->rtimeout,
       ) or return $self->log->error("recursion: Net::DNS::Resolver::new failed");
 
       my $recursion_allowed = 0;
@@ -133,6 +139,8 @@ sub axfr {
          recurse => 0,
          searchlist => ref($domainname) eq 'ARRAY' ? $domainname : [ $domainname ],
          debug => $self->debug,
+         udp_timeout => $self->rtimeout,
+         tcp_timeout => $self->rtimeout,
       ) or return $self->log->error("axfr: Net::DNS::Resolver::new failed");
 
       my $axfr_allowed = 0;

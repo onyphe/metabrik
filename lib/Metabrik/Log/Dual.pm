@@ -16,7 +16,13 @@ sub brik_properties {
       attributes => {
          level => [ qw(0|1|2|3) ],
          output_file => [ qw(file) ],
+         time_prefix => [ qw(0|1) ],
+         text_prefix => [ qw(0|1) ],
          _fd => [ qw(file_descriptor) ],
+      },
+      attributes_default => {
+         time_prefix => 0,
+         text_prefix => 0,
       },
       commands => {
          info => [ qw(string caller|OPTIONAL) ],
@@ -65,8 +71,6 @@ sub brik_preinit {
 sub brik_init {
    my $self = shift;
 
-   #print "DEBUG log::dual brik_init\n";
-
    my $output_file = $self->output_file;
    open(my $fd, '>', $output_file)
       or return $self->log->error("brik_init: can't open output file [$output_file]: $!");
@@ -97,7 +101,9 @@ sub warning {
    my $self = shift;
    my ($msg, $caller) = @_;
 
-   my $buffer = "[!] ".$self->_msg(($caller) ||= caller(), $msg);
+   my $prefix = $self->text_prefix ? "WARN " : "[!]";
+   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
    my $fd = $self->_fd;
 
@@ -111,7 +117,9 @@ sub error {
    my $self = shift;
    my ($msg, $caller) = @_;
 
-   my $buffer = "[-] ".$self->_msg(($caller) ||= caller(), $msg);
+   my $prefix = $self->text_prefix ? "ERROR" : "[-]";
+   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
    my $fd = $self->_fd;
 
@@ -127,7 +135,9 @@ sub fatal {
    my $self = shift;
    my ($msg, $caller) = @_;
 
-   my $buffer = "[F] ".$self->_msg(($caller) ||= caller(), $msg);
+   my $prefix = $self->text_prefix ? "FATAL" : "[F]";
+   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
    my $fd = $self->_fd;
 
@@ -143,7 +153,9 @@ sub info {
 
    $msg ||= 'undef';
 
-   my $buffer = "[+] $msg\n";
+   my $prefix = $self->text_prefix ? "INFO " : "[+]";
+   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $buffer = $time."$prefix $msg\n";
 
    my $fd = $self->_fd;
 
@@ -159,7 +171,9 @@ sub verbose {
 
    return 1 unless $self->level > 1;
 
-   my $buffer = "[*] ".$self->_msg(($caller) ||= caller(), $msg);
+   my $prefix = $self->text_prefix ? "VERB " : "[*]";
+   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
    my $fd = $self->_fd;
 
@@ -188,7 +202,9 @@ sub debug {
       else {
          return 1 unless $self->level > 2;
 
-         my $buffer = "[D] ".$self->_msg(($caller) ||= caller(), $msg);
+         my $prefix = $self->text_prefix ? "DEBUG" : "[D]";
+         my $time = $self->time_prefix ? localtime()." " : " ";
+         my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
          my $fd = $self->_fd;
 

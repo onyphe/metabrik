@@ -54,11 +54,13 @@ sub brik_properties {
          'LWP::UserAgent' => [ ],
          'HTTP::Request' => [ ],
          'WWW::Mechanize' => [ ],
-         'WWW::Mechanize::PhantomJS' => [ ],
          'Metabrik::File::Write' => [ ],
          'Metabrik::Client::Ssl' => [ ],
       },
-      require_binaries => {
+      optional_modules => {
+         'WWW::Mechanize::PhantomJS' => [ ],
+      },
+      optional_binaries => {
          'phantomjs' => [ ],
       },
    };
@@ -407,41 +409,64 @@ sub screenshot {
    my $self = shift;
    my ($uri, $output) = @_;
 
-   my $mech = WWW::Mechanize::PhantomJS->new
-      or return $self->log->error("screenshot: PhantomJS failed");
-   $mech->get($uri)
-      or return $self->log->error("screenshot: get uri [$uri] failed");
+   if (! defined($uri) || ! defined($output)) {
+      return $self->log->error($self->brik_help_run('screenshot'));
+   }
 
-   my $data = $mech->content_as_png
-      or return $self->log->error("screenshot: content_as_png failed");
+   if ($self->brik_has_module('WWW::Mechanize::PhantomJS')
+   &&  $self->brik_has_binary('phantomjs')) {
+      my $mech = WWW::Mechanize::PhantomJS->new
+         or return $self->log->error("screenshot: PhantomJS failed");
 
-   my $write = Metabrik::File::Write->new_from_brik($self) or return;
-   $write->encoding('ascii');
-   $write->overwrite(1);
-   $write->append(0);
+      my $get = $mech->get($uri)
+         or return $self->log->error("screenshot: get uri [$uri] failed");
+      if (! $get->is_success) {
+         return $self->log->error("screenshot: error from GET: [".$get->status_line."]");
+      }
 
-   $write->open($output) or return $self->log->error("screenshot: open failed");
-   $write->write($data) or return $self->log->error("screenshot: write failed");
-   $write->close;
+      my $data = $mech->content_as_png
+         or return $self->log->error("screenshot: content_as_png failed");
 
-   return $output;
+      my $write = Metabrik::File::Write->new_from_brik($self) or return;
+      $write->encoding('ascii');
+      $write->overwrite(1);
+      $write->append(0);
+
+      $write->open($output) or return $self->log->error("screenshot: open failed");
+      $write->write($data) or return $self->log->error("screenshot: write failed");
+      $write->close;
+
+      return $output;
+   }
+
+   return $self->log->error("screenshot: optional module [WWW::Mechanize::PhantomJS] and optional binary [phantomjs] are not available");
 }
 
 sub eval_javascript {
    my $self = shift;
    my ($js, $uri) = @_;
 
-   # Perl module Wight may also be an option.
-
-   my $mech = WWW::Mechanize::PhantomJS->new
-      or return $self->log->error("eval_javascript: PhantomJS failed");
-
-   if ($uri) {
-      $mech->get($uri)
-         or return $self->log->error("eval_javascript: get uri [$uri] failed");
+   if (! defined($js) || ! defined($uri)) {
+      return $self->log->error($self->brik_help_run('eval_javascript'));
    }
 
-   return $mech->eval_in_page($js);
+   # Perl module Wight may also be an option.
+
+   if ($self->brik_has_module('WWW::Mechanize::PhantomJS')
+   &&  $self->brik_has_binary('phantomjs')) {
+      my $mech = WWW::Mechanize::PhantomJS->new
+         or return $self->log->error("eval_javascript: PhantomJS failed");
+
+      my $get = $mech->get($uri)
+         or return $self->log->error("eval_javascript: get uri [$uri] failed");
+      if (! $get->is_success) {
+         return $self->log->error("eval_javascript: error from GET: [".$get->status_line."]");
+      }
+
+      return $mech->eval_in_page($js);
+   }
+
+   return $self->log->error("eval_javascript: optional module [WWW::Mechanize::PhantomJS] and optional binary [phantomjs] are not available");
 }
 
 sub info {
