@@ -43,6 +43,9 @@ sub load {
       or return $self->log->error("load: can't open file [$file]: $!");
    while (defined(my $line = <$in>)) {
       chomp($line);
+      next if $line =~ /^\s*$/;   # Skip blank lines
+      next if $line =~ /^\s*#/;   # Skip comments
+      $line =~ s/^(.*)#.*$/$1/;   # Strip comments at end of line
       push @lines, $line;
    }
    close($in);
