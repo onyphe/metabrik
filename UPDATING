@@ -1,9 +1,10 @@
 20151110
-   AFFECT: audit::dns
+   AFFECT: audit::dns, client::rest
 
    - audit::dns Commands (all Commands) now return different content for results. Example:
      version Command: return { $nameserver => 'undef' }; # If the server does not support
      version.
+   - client::rest: default output mode switched from XML to JSON
 
 20151031
    AFFECT: remote::ssh2
