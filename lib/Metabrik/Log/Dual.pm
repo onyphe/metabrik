@@ -19,12 +19,12 @@ sub brik_properties {
          _fd => [ qw(file_descriptor) ],
       },
       commands => {
-         info => [ qw(string) ],
-         verbose => [ qw(string) ],
-         warning => [ qw(string) ],
-         error => [ qw(string) ],
-         fatal => [ qw(string) ],
-         debug => [ qw(string) ],
+         info => [ qw(string caller|OPTIONAL) ],
+         verbose => [ qw(string caller|OPTIONAL) ],
+         warning => [ qw(string caller|OPTIONAL) ],
+         error => [ qw(string caller|OPTIONAL) ],
+         fatal => [ qw(string caller|OPTIONAL) ],
+         debug => [ qw(string caller|OPTIONAL) ],
       },
       require_modules => {
          'Term::ANSIColor' => [ ],
@@ -65,7 +65,7 @@ sub brik_preinit {
 sub brik_init {
    my $self = shift;
 
-   print "DEBUG log::dual brik_init\n";
+   #print "DEBUG log::dual brik_init\n";
 
    my $output_file = $self->output_file;
    open(my $fd, '>', $output_file)
@@ -88,16 +88,16 @@ sub _msg {
 
    $msg ||= 'undef';
 
-   $brik =~ s/^metabrik::brik:://i;
+   $brik =~ s/^metabrik:://i;
 
    return lc($brik).": $msg\n";
 }
 
 sub warning {
    my $self = shift;
-   my ($msg) = @_;
+   my ($msg, $caller) = @_;
 
-   my $buffer = "[!] ".$self->_msg(my ($caller) = caller(), $msg);
+   my $buffer = "[!] ".$self->_msg(($caller) ||= caller(), $msg);
 
    my $fd = $self->_fd;
 
@@ -109,9 +109,9 @@ sub warning {
 
 sub error {
    my $self = shift;
-   my ($msg) = @_;
+   my ($msg, $caller) = @_;
 
-   my $buffer = "[-] ".$self->_msg(my ($caller) = caller(), $msg);
+   my $buffer = "[-] ".$self->_msg(($caller) ||= caller(), $msg);
 
    my $fd = $self->_fd;
 
@@ -125,9 +125,9 @@ sub error {
 
 sub fatal {
    my $self = shift;
-   my ($msg) = @_;
+   my ($msg, $caller) = @_;
 
-   my $buffer = "[F] ".$self->_msg(my ($caller) = caller(), $msg);
+   my $buffer = "[F] ".$self->_msg(($caller) ||= caller(), $msg);
 
    my $fd = $self->_fd;
 
@@ -137,9 +137,9 @@ sub fatal {
 
 sub info {
    my $self = shift;
-   my ($msg) = @_;
+   my ($msg, $caller) = @_;
 
-   return 0 unless $self->level > 0;
+   return 1 unless $self->level > 0;
 
    $msg ||= 'undef';
 
@@ -155,11 +155,11 @@ sub info {
 
 sub verbose {
    my $self = shift;
-   my ($msg) = @_;
+   my ($msg, $caller) = @_;
 
    return 1 unless $self->level > 1;
 
-   my $buffer = "[*] ".$self->_msg(my ($caller) = caller(), $msg);
+   my $buffer = "[*] ".$self->_msg(($caller) ||= caller(), $msg);
 
    my $fd = $self->_fd;
 
@@ -171,7 +171,7 @@ sub verbose {
 
 sub debug {
    my $self = shift;
-   my ($msg) = @_;
+   my ($msg, $caller) = @_;
 
    # We have a conflict between the method and the accessor,
    # we have to identify which one is accessed.
@@ -188,7 +188,7 @@ sub debug {
       else {
          return 1 unless $self->level > 2;
 
-         my $buffer = "[D] ".$self->_msg(my ($caller) = caller(), $msg);
+         my $buffer = "[D] ".$self->_msg(($caller) ||= caller(), $msg);
 
          my $fd = $self->_fd;
 

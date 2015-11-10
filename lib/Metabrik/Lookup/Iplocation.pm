@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable lookup location ipv4 ipv6 ip) ],
+      tags => [ qw(unstable lookup location ipv4 ipv6 ip geo geolocation iplocation) ],
       attributes => {
          datadir => [ qw(datadir) ],
       },

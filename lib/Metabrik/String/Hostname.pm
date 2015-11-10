@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable hostname string) ],
+      tags => [ qw(unstable hostname string fqdn domain) ],
       attributes => {
          hostname => [ qw(hostname) ],
       },

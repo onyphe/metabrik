@@ -12,7 +12,7 @@ use base qw(Metabrik::Client::Rest);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable rest api virustotal) ],
+      tags => [ qw(unstable rest api virustotal domain virtualhost) ],
       attributes => {
          apikey => [ qw(apikey) ],
          output_mode => [ qw(json|xml) ],
@@ -26,6 +26,8 @@ sub brik_properties {
          file_report => [ qw(hash) ],
          ipv4_address_report => [ qw(ipv4_address) ],
          domain_report => [ qw(domain) ],
+         subdomain_list => [ qw(domain) ],
+         hosted_domains => [ qw(ipv4_address) ],
       },
       require_modules => {
          'Metabrik::String::Json' => [ ],
@@ -140,6 +142,43 @@ sub domain_report {
    my $decode = $sj->decode($content) or return;
 
    return $decode;
+}
+
+sub subdomain_list {
+   my $self = shift;
+   my ($domain) = @_;
+
+   if (! defined($domain)) {
+      return $self->log->error($self->brik_help_run('subdomain_list'));
+   }
+
+   my $r = $self->domain_report($domain) or return;
+
+   if (exists($r->{subdomains}) && ref($r->{subdomains}) eq 'ARRAY') {
+      return $r->{subdomains};
+   }
+
+   return [];
+}
+
+sub hosted_domains {
+   my $self = shift;
+   my ($ipv4_address) = @_;
+
+   if (! defined($ipv4_address)) {
+      return $self->log->error($self->brik_help_run('hosted_domains'));
+   }
+
+   my $r = $self->ipv4_address_report($ipv4_address) or return;
+
+   my @result = ();
+   if (exists($r->{resolutions}) && ref($r->{resolutions}) eq 'ARRAY') {
+      for (@{$r->{resolutions}}) {
+         push @result, $_->{hostname};
+      }
+   }
+
+   return \@result;
 }
 
 1;

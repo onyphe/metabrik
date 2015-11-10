@@ -14,13 +14,17 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable audit dns) ],
       attributes => {
-         nameserver => [ qw(nameserver) ],
+         nameserver => [ qw(nameserver|$nameserver_list) ],
          domainname => [ qw(domainname) ],
       },
+      attributes_default => {
+         nameserver => '127.0.0.1',
+      },
       commands => {
-         recursion => [ ],
-         axfr => [ ],
-         all => [ ],
+         version => [ qw(nameserver|$nameserver_list|OPTIONAL) ],
+         recursion => [ qw(nameserver|$nameserver_list|OPTIONAL) ],
+         axfr => [ qw(nameserver|$nameserver_list|OPTIONAL domainname|$domainname_list|OPTIONAL) ],
+         all => [ qw(nameserver|$nameserver_list|OPTIONAL domainname|$domainname_list|OPTIONAL) ],
       },
       require_modules => {
          'Net::DNS::Resolver' => [ ],
@@ -28,119 +32,137 @@ sub brik_properties {
    };
 }
 
-sub brik_use_properties {
-   my $self = shift;
-
-   return {
-      attributes_default => {
-         nameserver => '127.0.0.1',
-         domainname => $self->global->domainname,
-      },
-   };
-}
-
 sub version {
    my $self = shift;
+   my ($nameserver) = @_;
 
-   if (! defined($self->nameserver)) {
-      return $self->log->error($self->brik_help_set('nameserver'));
+   $nameserver ||= $self->nameserver;
+   if (! defined($nameserver)) {
+      return $self->log->error($self->brik_help_run('version'));
    }
 
-   my $nameserver = $self->nameserver;
-
-   my $dns = Net::DNS::Resolver->new(
-      nameservers => [ $nameserver, ],
-      recurse     => 0,
-      searchlist  => [],
-      debug       => $self->debug,
-   ) or return $self->log->error("Net::DNS::Resolver: new");
-
-   my $version = 'UNKNOWN';
-   my $res = $dns->send('version.bind', 'TXT', 'CH');
-   if (defined($res) && defined($res->{answer})) {
-      my $rr = $res->{answer}->[0];
-      if (defined($rr) && defined($rr->{rdata})) {
-         $version = unpack("H*", $rr->{rdata});
+   my $result = {};
+   if (ref($nameserver) eq 'ARRAY') {
+      for (@$nameserver) {
+         my $r = $self->version($_);
+         for (keys %$r) { $result->{$_} = $r->{$_} }
       }
    }
+   else {
+      my $dns = Net::DNS::Resolver->new(
+         nameservers => [ $nameserver ],
+         recurse => 0,
+         searchlist => [],
+         debug => $self->debug,
+      ) or return $self->log->error("version: Net::DNS::Resolver::new failed");
+   
+      my $version = 'undef';
+      my $res = $dns->send('version.bind', 'TXT', 'CH');
+      if (defined($res) && defined($res->{answer})) {
+         my $rr = $res->{answer}->[0];
+         if (defined($rr) && defined($rr->{rdata})) {
+            $version = unpack("H*", $rr->{rdata});
+         }
+      }
 
-   return {
-      dns_version_bind => $version,
-   };
+      $result->{$nameserver} = $version;
+   }
+
+   return $result;
 }
 
 sub recursion {
    my $self = shift;
+   my ($nameserver) = @_;
 
-   if (! defined($self->nameserver)) {
-      return $self->log->error($self->brik_help_set('nameserver'));
+   $nameserver ||= $self->nameserver;
+   if (! defined($nameserver)) {
+      return $self->log->error($self->brik_help_run('recursion'));
    }
 
-   my $nameserver = $self->nameserver;
+   my $result = {};
+   if (ref($nameserver)) {
+      for (@$nameserver) {
+         my $r = $self->recursion($_);
+         for (keys %$r) { $result->{$_} = $r->{$_} }
+      }
+   }
+   else {
+      my $dns = Net::DNS::Resolver->new(
+         nameservers => [ $nameserver ],
+         recurse => 1,
+         searchlist => [],
+         debug => $self->debug,
+      ) or return $self->log->error("recursion: Net::DNS::Resolver::new failed");
 
-   my $dns = Net::DNS::Resolver->new(
-      nameservers => [ $nameserver, ],
-      recurse     => 1,
-      searchlist  => [],
-      debug       => $self->debug,
-   ) or return $self->log->error("Net::DNS::Resolver: new");
+      my $recursion_allowed = 0;
+      my $res = $dns->search('example.com');
+      if (defined($res) && defined($res->answer)) {
+         $recursion_allowed = 1;
+      }
 
-   my $recursion_allowed = 0;
-   my $res = $dns->search('example.com');
-   if (defined($res) && defined($res->answer)) {
-      $recursion_allowed = 1;
+      $result->{$nameserver} = $recursion_allowed;
    }
 
-   return {
-      dns_recursion_allowed => $recursion_allowed,
-   };
+   return $result;
 }
 
 sub axfr {
    my $self = shift;
+   my ($nameserver, $domainname) = @_;
 
-   if (! defined($self->nameserver)) {
-      return $self->log->error($self->brik_help_set('nameserver'));
+   $nameserver ||= $self->nameserver;
+   $domainname ||= $self->domainname;
+   if (! defined($nameserver)) {
+      return $self->log->error($self->brik_help_run('nameserver'));
+   }
+   if (! defined($domainname)) {
+      return $self->log->error($self->brik_help_run('nameserver'));
    }
 
-   if (! defined($self->domainname)) {
-      return $self->log->error($self->brik_help_set('domainname'));
+   my $result = {};
+   if (ref($nameserver) eq 'ARRAY') {
+      for (@$nameserver) {
+         my $r = $self->axfr($_);
+         for (keys %$r) { $result->{$_} = $r->{$_} }
+      }
+   }
+   else {
+      my $dns = Net::DNS::Resolver->new(
+         nameservers => [ $nameserver ],
+         recurse => 0,
+         searchlist => ref($domainname) eq 'ARRAY' ? $domainname : [ $domainname ],
+         debug => $self->debug,
+      ) or return $self->log->error("axfr: Net::DNS::Resolver::new failed");
+
+      my $axfr_allowed = 0;
+      my @res = $dns->axfr;
+      if (@res) {
+         $axfr_allowed = 1;
+      }
+
+      $result->{$nameserver} = $axfr_allowed;
    }
 
-   my $nameserver = $self->nameserver;
-   my $domainname = $self->domainname;
-
-   my $dns = Net::DNS::Resolver->new(
-      nameservers => [ $nameserver, ],
-      recurse     => 0,
-      searchlist  => [ $domainname, ],
-      debug       => $self->debug,
-   ) or return $self->log->error("Net::DNS::Resolver: new");
-
-   my $axfr_allowed = 0;
-   my @res = $dns->axfr;
-   if (@res) {
-      $axfr_allowed = 1;
-   }
-
-   return {
-      dns_axfr_allowed => $axfr_allowed,
-   };
+   return $result;
 }
 
 sub all {
    my $self = shift;
+   my ($nameserver, $domainname) = @_;
 
-   my $hash = {};
+   my $result = {};
 
-   my $version = $self->version;
-   for (keys %$version) { $hash->{$_} = $version->{$_} }
-   my $recursion = $self->recursion;
-   for (keys %$recursion) { $hash->{$_} = $recursion->{$_} }
-   my $axfr = $self->axfr;
-   for (keys %$axfr) { $hash->{$_} = $axfr->{$_} }
+   my $version = $self->version($nameserver, $domainname);
+   for (keys %$version) { $result->{$_}{version} = $version->{$_} }
 
-   return $hash;
+   my $recursion = $self->recursion($nameserver, $domainname);
+   for (keys %$recursion) { $result->{$_}{recursion} = $recursion->{$_} }
+
+   my $axfr = $self->axfr($nameserver, $domainname);
+   for (keys %$axfr) { $result->{$_}{axfr} = $axfr->{$_} }
+
+   return $result;
 }
 
 1;

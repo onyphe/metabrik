@@ -44,7 +44,7 @@ sub brik_properties {
          createdb => [ qw(db_name) ],
          dropdb => [ qw(db_name) ],
          create_user => [ qw(username password|OPTIONAL) ],
-         grant_all_privileges => [ qw(database username ip_address|OPTIONAL) ],
+         grant_all_privileges => [ qw(database username password|OPTIONAL ip_address|OPTIONAL) ],
          password_prompt => [ qw(string|OPTIONAL) ],
          enter_shell => [ qw(db_name|OPTIONAL host|OPTIONAL port|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
       },
@@ -222,7 +222,7 @@ sub create_user {
 
 sub grant_all_privileges {
    my $self = shift;
-   my ($db, $username, $ip) = @_;
+   my ($db, $username, $password, $ip) = @_;
 
    $ip ||= '%';
    if (! defined($db)) {
@@ -237,9 +237,11 @@ sub grant_all_privileges {
    my $mysql_username = $self->username;
    my $mysql_password = $self->password || $self->password_prompt("Enter $mysql_username password: ") or return;
 
+   $password ||= $self->password_prompt("Enter $username password: ") or return;
+
    my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
 
-   my $cmd = "mysql -h $mysql_host --port=$mysql_port -u $mysql_username --password=$mysql_password --execute=\"grant all privileges on $db.* to $username\@'$ip'\" mysql";
+   my $cmd = "mysql -h $mysql_host --port=$mysql_port -u $mysql_username --password=$mysql_password --execute=\"grant all privileges on $db.* to $username\@'$ip' identified by '$password'\" mysql";
 
    $self->debug && $self->log->debug("grant_all_privileges: cmd [$cmd]");
 

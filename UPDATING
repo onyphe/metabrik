@@ -1,3 +1,10 @@
+20151110
+   AFFECT: audit::dns
+
+   - audit::dns Commands (all Commands) now return different content for results. Example:
+     version Command: return { $nameserver => 'undef' }; # If the server does not support
+     version.
+
 20151031
    AFFECT: remote::ssh2
 

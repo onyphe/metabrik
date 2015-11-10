@@ -13,9 +13,28 @@ sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(unstable http client rest api) ],
+      attributes => {
+         output_mode => [ qw(json|xml) ],
+      },
+      attributes_default => {
+         output_mode => 'json',
+      },
+      commands => {
+         reset_user_agent => [ ],
+         get => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         post => [ qw(content_hash uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         patch => [ qw(content_hash uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         put => [ qw(content_hash uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         head => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         delete => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         options => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         code => [ ],
+         content => [ ],
+      },
       require_modules => {
          'Metabrik::String::Uri' => [ ],
          'Metabrik::String::Xml' => [ ],
+         'Metabrik::String::Json' => [ ],
       },
    };
 }
@@ -28,8 +47,19 @@ sub content {
       return $self->log->error("content: no request has been made yet");
    }
 
-   my $sx = Metabrik::String::Xml->new_from_brik($self) or return;
-   return $sx->decode($last->content);
+   my $sm;
+   my $output_mode = $self->output_mode;
+   if ($output_mode eq 'json') {
+      $sm = Metabrik::String::Json->new_from_brik($self) or return;
+   }
+   elsif ($output_mode eq 'xml') {
+      $sm = Metabrik::String::Xml->new_from_brik($self) or return;
+   }
+   else {
+      return $self->log->error("content: output_mode not supported [$output_mode]");
+   }
+
+   return $sm->decode($last->content);
 }
 
 1;
