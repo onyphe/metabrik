@@ -76,6 +76,7 @@ lib/Metabrik/Lookup/Oui.pm
 lib/Metabrik/Lookup/Protocol.pm
 lib/Metabrik/Lookup/Service.pm
 lib/Metabrik/Lookup/Tcpoption.pm
+lib/Metabrik/Lookup/Threatlist.pm
 lib/Metabrik/Network/Address.pm
 lib/Metabrik/Network/Arp.pm
 lib/Metabrik/Network/Device.pm
