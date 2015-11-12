@@ -17,6 +17,7 @@ sub brik_properties {
          identify => [ qw(string) ],
          to_array => [ qw($data) ],
          to_matrix => [ qw($data) ],
+         split_by_blank_line => [ qw($data) ],
       },
    };
 }
@@ -27,6 +28,10 @@ sub to_array {
 
    if (! defined($data)) {
       return $self->log->error($self->brik_help_run('to_array'));
+   }
+
+   if (ref($data)) {
+      return $self->log->error("to_array: data must be a SCALAR");
    }
 
    my @array = split(/\n/, $data);
@@ -42,7 +47,7 @@ sub to_matrix {
       return $self->log->error($self->brik_help_run('to_matrix'));
    }
 
-   my $array = $self->to_array($data);
+   my $array = $self->to_array($data) or return;
 
    my @matrix = ();
    for my $this (@$array) {
@@ -89,6 +94,37 @@ sub identify {
    }
 
    return $identify;
+}
+
+sub split_by_blank_line {
+   my $self = shift;
+   my ($data) = @_;
+
+   if (! defined($data)) {
+      return $self->log->error($self->brik_help_run('split_by_blank_line'));
+   }
+
+   if (ref($data) ne 'ARRAY') {
+      return $self->log->error("split_by_blank_line: data must be an ARRAYREF");
+   }
+
+   my $new = [];
+   my @chunks = ();
+   for (@$data) {
+      if (/^\s*$/ && @$new > 0) {
+         push @chunks, $new;
+         $new = [];
+         next;
+      }
+      push @$new, $_;
+   }
+
+   # Read last lines before eof (no more blank lines can be found)
+   if (@$new > 0) {
+      push @chunks, $new;
+   }
+
+   return \@chunks;
 }
 
 1;

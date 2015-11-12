@@ -17,6 +17,8 @@ provides:
     file: lib/Metabrik/Address/Generate.pm
   Metabrik::Api::Bluecoat:
     file: lib/Metabrik/Api/Bluecoat.pm
+  Metabrik::Api::Shodan:
+    file: lib/Metabrik/Api/Shodan.pm
   Metabrik::Api::Splunk:
     file: lib/Metabrik/Api/Splunk.pm
   Metabrik::Api::Virustotal:
@@ -35,10 +37,14 @@ provides:
     file: lib/Metabrik/Audit/Twiki.pm
   Metabrik::Client::Dns:
     file: lib/Metabrik/Client/Dns.pm
+  Metabrik::Client::Openssh:
+    file: lib/Metabrik/Client/Openssh.pm
   Metabrik::Client::Rest:
     file: lib/Metabrik/Client/Rest.pm
   Metabrik::Client::Rsync:
     file: lib/Metabrik/Client/Rsync.pm
+  Metabrik::Client::Ssh:
+    file: lib/Metabrik/Client/Ssh.pm
   Metabrik::Client::Ssl:
     file: lib/Metabrik/Client/Ssl.pm
   Metabrik::Client::Tcp:
@@ -135,6 +141,8 @@ provides:
     file: lib/Metabrik/Image/Jpg.pm
   Metabrik::Log::Dual:
     file: lib/Metabrik/Log/Dual.pm
+  Metabrik::Log::Null:
+    file: lib/Metabrik/Log/Null.pm
   Metabrik::Lookup::Countrycode:
     file: lib/Metabrik/Lookup/Countrycode.pm
   Metabrik::Lookup::Ethernet:
@@ -153,6 +161,8 @@ provides:
     file: lib/Metabrik/Lookup/Service.pm
   Metabrik::Lookup::Tcpoption:
     file: lib/Metabrik/Lookup/Tcpoption.pm
+  Metabrik::Lookup::Threatlist:
+    file: lib/Metabrik/Lookup/Threatlist.pm
   Metabrik::Network::Address:
     file: lib/Metabrik/Network/Address.pm
   Metabrik::Network::Arp:
@@ -211,13 +221,13 @@ provides:
     file: lib/Metabrik/Network/Write.pm
   Metabrik::Proxy::Http:
     file: lib/Metabrik/Proxy/Http.pm
-  Metabrik::Remote::Ssh2:
-    file: lib/Metabrik/Remote/Ssh2.pm
+  Metabrik::Proxy::Ssh2tcp:
+    file: lib/Metabrik/Proxy/Ssh2tcp.pm
   Metabrik::Remote::Tcpdump:
     file: lib/Metabrik/Remote/Tcpdump.pm
   Metabrik::Repository:
     file: lib/Metabrik/Repository.pm
-    version: '1.10'
+    version: '1.11'
   Metabrik::Server::Agent:
     file: lib/Metabrik/Server/Agent.pm
   Metabrik::Server::Agent::Server:
@@ -226,10 +236,14 @@ provides:
     file: lib/Metabrik/Server/Dns.pm
   Metabrik::Server::Http:
     file: lib/Metabrik/Server/Http.pm
+  Metabrik::Server::Rest:
+    file: lib/Metabrik/Server/Rest.pm
   Metabrik::Server::Snmp:
     file: lib/Metabrik/Server/Snmp.pm
   Metabrik::Server::Snmptrap:
     file: lib/Metabrik/Server/Snmptrap.pm
+  Metabrik::Server::Tcp:
+    file: lib/Metabrik/Server/Tcp.pm
   Metabrik::Ssl::Heartbleed:
     file: lib/Metabrik/Ssl/Heartbleed.pm
   Metabrik::String::Ascii:
@@ -274,6 +288,8 @@ provides:
     file: lib/Metabrik/System/Os.pm
   Metabrik::System::Package:
     file: lib/Metabrik/System/Package.pm
+  Metabrik::System::Process:
+    file: lib/Metabrik/System/Process.pm
   Metabrik::System::Service:
     file: lib/Metabrik/System/Service.pm
   Metabrik::System::Ubuntu::Package:
@@ -343,4 +359,4 @@ requires:
   perl: v5.6.1
 resources:
   license: http://opensource.org/licenses/BSD-3-Clause
-version: '1.10'
+version: '1.11'

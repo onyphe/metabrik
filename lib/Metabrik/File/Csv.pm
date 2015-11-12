@@ -72,7 +72,7 @@ sub read {
    }) or return $self->log->error('read: Text::CSV_XS new failed');
    #}) or return $self->log->error('read: Text::CSV new failed');
 
-   my $read = Metabrik::File::Read->new_from_brik($self) or return;
+   my $read = Metabrik::File::Read->new_from_brik_init($self) or return;
    $read->encoding($self->encoding);
    my $fd = $read->open($input)
       or return $self->log->error('read: read failed');

@@ -19,27 +19,19 @@ sub brik_properties {
          as_array => [ qw(0|1) ],
          strip_crlf => [ qw(0|1) ],
       },
+      # encoding: see `perldoc Encode::Supported' for other types
+      attributes_default => {
+         encoding => 'utf8',
+         as_array => 0,
+         strip_crlf => 0,
+      },
       commands => {
-         read => [ qw(file) ],
-         write => [ qw($data|$data_ref|$data_list output|OPTIONAL) ],
+         read => [ qw(input) ],
+         read_split_by_blank_line => [ qw(input) ],
+         write => [ qw($data|$data_ref|$data_list output) ],
       },
       require_modules => {
          'Metabrik::File::Read' => [ ],
-      },
-   };
-}
-
-sub brik_use_properties {
-   my $self = shift;
-
-   # encoding: see `perldoc Encode::Supported' for other types
-   return {
-      attributes_default => {
-         input => $self->global->input || '/tmp/input.txt',
-         output => $self->global->output || '/tmp/output.txt',
-         encoding => $self->global->encoding || 'utf8',
-         as_array => 0,
-         strip_crlf => 0,
       },
    };
 }
@@ -50,41 +42,66 @@ sub read {
 
    $input ||= $self->input;
    if (! defined($input)) {
-      return $self->log->error($self->brik_help_set('input'));
+      return $self->log->error($self->brik_help_run('read'));
    }
 
-   my $read = Metabrik::File::Read->new_from_brik($self) or return;
-   $read->input($input);
-   $read->encoding($self->encoding);
-   $read->as_array($self->as_array);
-   $read->strip_crlf($self->strip_crlf);
-   $read->open or return $self->log->error("read: open failed");
-   my $data = $read->readall or return $self->log->error("read: read failed");
-   $read->close;
+   my $fr = Metabrik::File::Read->new_from_brik($self) or return;
+   $fr->input($input);
+   $fr->encoding($self->encoding);
+   $fr->as_array($self->as_array);
+   $fr->strip_crlf($self->strip_crlf);
+
+   $fr->open or return;
+   my $data = $fr->read or return;
+   $fr->close;
 
    return $data;
+}
+
+sub read_split_by_blank_line {
+   my $self = shift;
+   my ($input) = @_;
+
+   $input ||= $self->input;
+   if (! defined($input)) {
+      return $self->log->error($self->brik_help_run('read_split_by_blank_line'));
+   }
+
+   my $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
+   $fr->input($input);
+   $fr->encoding($self->encoding);
+   $fr->as_array($self->as_array);
+   $fr->strip_crlf($self->strip_crlf);
+
+   $fr->open or return;
+
+   my @chunks = ();
+   while (my $this = $fr->read_until_blank_line) {
+      push @chunks, $this;
+      last if $fr->eof;
+   }
+
+   $fr->close;
+
+   return \@chunks;
 }
 
 sub write {
    my $self = shift;
    my ($data, $output) = @_;
 
+   $output ||= $self->output;
+   if (! defined($output)) {
+      return $self->log->error($self->brik_help_run('write'));
+   }
    if (! defined($data)) {
       return $self->log->error($self->brik_help_run('write'));
    }
 
-   $output ||= $self->output;
-   if (! defined($output)) {
-      return $self->log->error($self->brik_help_set('output'));
-   }
-
    $self->debug && $self->log->debug("write: data[$data]");
 
-   $self->open($output) or return $self->log->error("write: open failed");
-   my $r = $self->SUPER::write($data);
-   if (! defined($r)) {
-      return $self->log->error("write: write failed");
-   }
+   $self->open($output) or return;
+   $self->SUPER::write($data) or return;
    $self->close;
 
    return 1;

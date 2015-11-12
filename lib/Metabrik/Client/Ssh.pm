@@ -34,9 +34,9 @@ sub brik_properties {
          connect => [ qw(hostname|OPTIONAL port|OPTIONAL username|OPTIONAL) ],
          cat => [ qw(file) ],
          exec => [ qw(command) ],
-         readall => [ ],
-         readline => [ ],
-         readlineall => [ ],
+         read => [ ],
+         read_line => [ ],
+         read_line_all => [ ],
          load => [ qw(file) ],
          listfiles => [ qw(glob) ],
          disconnect => [ ],
@@ -150,7 +150,7 @@ sub exec {
    return $self->_channel($channel);
 }
 
-sub readline {
+sub read_line {
    my $self = shift;
 
    my $ssh2 = $self->ssh2;
@@ -160,7 +160,7 @@ sub readline {
 
    my $channel = $self->_channel;
    if (! defined($channel)) {
-      return $self->log->info("readline: create a channel first");
+      return $self->log->info("read_line: create a channel first");
    }
 
    my $read = '';
@@ -176,7 +176,7 @@ sub readline {
          last if $char eq "\n";
       }
       elsif ($rc < 0) {
-         return $self->log->error("read: error [$rc]");
+         return $self->log->error("read_line: error [$rc]");
       }
       else {
          last;
@@ -186,7 +186,7 @@ sub readline {
    return $read;
 }
 
-sub readlineall {
+sub read_line_all {
    my $self = shift;
 
    my $ssh2 = $self->ssh2;
@@ -196,12 +196,12 @@ sub readlineall {
 
    my $channel = $self->_channel;
    if (! defined($channel)) {
-      return $self->log->info("readlineall: create a channel first");
+      return $self->log->info("read_line_all: create a channel first");
    }
 
-   my $read = $self->readall;
+   my $read = $self->read;
    if (! defined($read)) {
-      return $self->log->error("readlineall: readall error");
+      return $self->log->error("read_line_all: read error");
    }
 
    my @lines = split(/\n/, $read);
@@ -209,7 +209,7 @@ sub readlineall {
    return \@lines;
 }
 
-sub readall {
+sub read {
    my $self = shift;
 
    my $ssh2 = $self->ssh2;
@@ -219,7 +219,7 @@ sub readall {
 
    my $channel = $self->_channel;
    if (! defined($channel)) {
-      return $self->log->info("readall: create a channel first");
+      return $self->log->info("read: create a channel first");
    }
 
    my $read = '';
@@ -254,9 +254,9 @@ sub listfiles {
       return $self->log->error("listfiles: exec error");
    }
 
-   my $read = $self->readall;
+   my $read = $self->read;
    if (! defined($read)) {
-      return $self->log->error("listfiles: readall error");
+      return $self->log->error("listfiles: read error");
    }
 
    my @files = split(/\n/, $read);

@@ -31,9 +31,10 @@ sub brik_properties {
       commands => {
          open => [ qw(file|OPTIONAL) ],
          close => [ ],
-         readall => [ ],
+         read => [ ],
          read_until_blank_line => [ ],
          read_line => [ qw(count|OPTIONAL) ],
+         is_eof => [ ],
       },
    };
 }
@@ -79,12 +80,13 @@ sub close {
 
    if (defined($self->fd)) {
       close($self->fd);
+      $self->eof(0);
    }
 
    return 1;
 }
 
-sub readall {
+sub read {
    my $self = shift;
 
    my $fd = $self->fd;
@@ -204,6 +206,12 @@ sub read_line {
    }
 
    return;
+}
+
+sub is_eof {
+   my $self = shift;
+
+   return $self->eof;
 }
 
 1;

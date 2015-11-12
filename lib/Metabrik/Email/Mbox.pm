@@ -20,7 +20,7 @@ sub brik_properties {
       commands => {
          open => [ qw(mbox_file|OPTIONAL) ],
          read => [ ],
-         read_all => [ ],
+         read_next => [ ],
          close => [ ],
       },
       require_modules => {
@@ -31,23 +31,22 @@ sub brik_properties {
 
 sub open {
    my $self = shift;
-   my ($mbox) = @_;
+   my ($input) = @_;
 
-   $mbox ||= $self->input;
-
-   if (! defined($mbox)) {
+   $input ||= $self->input;
+   if (! defined($input)) {
       return $self->log->error($self->brik_help_run('open'));
    }
 
-   my $folder = Email::Folder->new($mbox);
+   my $folder = Email::Folder->new($input);
    if (! defined($folder)) {
-      return $self->log->error("open: Email::Folder new failed for mbox [$mbox]");
+      return $self->log->error("open: Email::Folder new failed for mbox [$input]");
    }
 
    return $self->_folder($folder);
 }
 
-sub read_all {
+sub read {
    my $self = shift;
 
    my $folder = $self->_folder;
@@ -66,7 +65,7 @@ sub read_all {
    return \@messages;
 }
 
-sub read {
+sub read_next {
    my $self = shift;
 
    my $folder = $self->_folder;

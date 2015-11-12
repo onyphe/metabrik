@@ -25,11 +25,13 @@ sub brik_properties {
       },
       attributes => {
          nameserver => [ qw(ip_address|$ip_address_list) ],
-         timeout => [ qw(timeout) ],
+         timeout => [ qw(0|1) ],
+         rtimeout => [ qw(timeout) ],
          return_list => [ qw(0|1) ],
       },
       attributes_default => {
-         timeout => 2,
+         timeout => 0,
+         rtimeout => 2,
          return_list => 1,
       },
       require_modules => {
@@ -44,18 +46,26 @@ sub _nslookup {
 
    my %args = (
       type => $type,
+      timeout => $self->rtimeout,
    );
    if (defined($nameserver)) {
       $args{server} = $nameserver;  # Accepts a string or an arrayref
    }
 
+   # Reset timeout indicator
+   $self->timeout(0);
+
    my @r;
    eval {
       @r = Net::Nslookup::nslookup(host => $host, %args);
    };
-   if ($@) {
+   if ($@ && $@ ne "alarm\n") {
       chomp($@);
       return $self->log->error("nslookup: failed for host [$host] with type [$type]: $@");
+   }
+   elsif ($@ && $@ eq "alarm\n") {
+      $self->timeout(1);
+      $self->log->info("nslookup: timeout waiting response for host [$host] with type [$type]");
    }
    elsif (@r == 0) {
       $self->log->info("nslookup: no response for host [$host] with type [$type]");

@@ -13,6 +13,12 @@ sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(unstable network whois) ],
+      attributes => {
+         rtimeout => [ qw(timeout) ],
+      },
+      attributes_default => {
+         rtimeout => 2,
+      },
       commands => {
          target => [ qw(domain|ip_address) ],
       },
@@ -31,12 +37,13 @@ sub target {
       return $self->log->error($self->brik_help_run('target'));
    }
 
-   my $info = Net::Whois::Raw::whois($target)
-      or return $self->log->error("target: whois failed");
+   $Net::Whois::Raw::TIMEOUT = $self->rtimeout;
 
-   my $parse_string = Metabrik::String::Parse->new_from_brik($self) or return;
-   my $lines = $parse_string->to_array($info)
-      or return $self->log->error("target: to_array failed");
+   my $info = Net::Whois::Raw::whois($target)
+      or return $self->log->error("target: whois for target [$target] failed");
+
+   my $sp = Metabrik::String::Parse->new_from_brik_init($self) or return;
+   my $lines = $sp->to_array($info) or return;
 
    return $lines;
 }

@@ -41,15 +41,15 @@ sub read {
       return $self->log->error($self->brik_help_run('read'));
    }
 
-   my $read = Metabrik::File::Read->new_from_brik($self) or return;
-   $read->input($input);
-   $read->encoding($self->encoding);
-   $read->as_array(1);
-   $read->strip_crlf(1);
+   my $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
+   $fr->input($input);
+   $fr->encoding($self->encoding);
+   $fr->as_array(1);
+   $fr->strip_crlf(1);
 
-   $read->open or return $self->log->error("read: open failed");
-   my $data = $read->readall or return $self->log->error("read: read failed");
-   $read->close;
+   $fr->open or return $self->log->error("read: open failed");
+   my $data = $fr->read or return $self->log->error("read: read failed");
+   $fr->close;
 
    my @vars = ();
    my $buf = '';

@@ -28,8 +28,8 @@ sub brik_properties {
       },
       commands => {
          connect => [ qw(host|OPTIONAL port|OPTIONAL) ],
-         read => [ qw(size) ],
-         readall => [ ],
+         read => [ ],
+         read_size => [ qw(size) ],
          write => [ qw($data) ],
          disconnect => [ ],
          is_connected => [ ],

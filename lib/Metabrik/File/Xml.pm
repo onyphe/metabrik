@@ -55,7 +55,7 @@ sub read {
    }
 
    $self->open($input) or return $self->log->error("read: open failed");
-   my $data = $self->readall or return $self->log->error("read: readall failed");
+   my $data = $self->read or return $self->log->error("read: read failed");
    $self->close;
 
    my $xml = Metabrik::String::Xml->new_from_brik($self) or return;

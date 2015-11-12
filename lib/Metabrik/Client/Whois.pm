@@ -16,17 +16,63 @@ sub brik_properties {
       commands => {
          ip => [ qw(ip_address) ],
          domain => [ qw(domain) ],
-         available => [ qw(domain) ],
-         expire => [ qw(domain) ],
-         abuse => [ qw(domain) ],
-         netname => [ qw(ip_address|$ip_address_list|hostname) ],
+         is_available_domain => [ qw(domain) ],
       },
       require_modules => {
-         'Metabrik::Client::Dns' => [ ],
          'Metabrik::Network::Address' => [ ],
          'Metabrik::Network::Whois' => [ ],
+         'Metabrik::String::Parse' => [ ],
       },
    };
+}
+
+sub _parse_whois {
+   my $self = shift;
+   my ($lines) = @_;
+
+   my $sp = Metabrik::String::Parse->new_from_brik_init($self) or return;
+   my $chunks = $sp->split_by_blank_line($lines) or return;
+
+   my @chunks = ();
+   for my $this (@$chunks) {
+      my $new = {};
+      my $abuse = '';
+      for (@$this) {
+         # If an abuse email adress can be found, we gather it.
+         if (/abuse/i && /\@/) {
+            ($abuse) = $_ =~ /^.*\s(\S+\@\S+)\s?.*$/;
+            $abuse =~ s/['"]//g;
+         }
+
+         next if (/^\s*%/);  # Skip comments
+
+         # We default to split by the first encountered : char
+         if (/^\s*([^:]+?)\s*:\s*(.*)\s*$/) {
+            if (defined($1) && defined($2)) {
+               my $k = lc($1);
+               my $v = $2;
+               $k =~ s{[ /]}{_}g;
+               if (exists($new->{$k})) {
+                  $new->{$k} .= "\n$v";
+               }
+               else {
+                  $new->{$k} = $v;
+               }
+            }
+         }
+      }
+
+      # If we found some email address along with 'abuse' string, we add this email address
+      if (length($abuse)) {
+         $new->{abuse} = $abuse;
+      }
+
+      if (keys %$new > 0) {
+         push @chunks, $new;
+      }
+   }
+
+   return \@chunks;
 }
 
 sub ip {
@@ -42,8 +88,66 @@ sub ip {
       return $self->log->error("ip: not a valid IP address [$ip]");
    }
 
-   # XXX: For now, we use the same parser
-   return $self->domain($ip);
+   my $nw = Metabrik::Network::Whois->new_from_brik($self) or return;
+   my $lines = $nw->target($ip) or return;
+
+   my $chunks = $self->_parse_whois($lines);
+
+   my $r = { raw => $lines };
+
+   for (@$chunks) {
+      if (exists($_->{abuse})) {
+         exists($r->{abuse}) ? ($r->{abuse} .= "\n".$_->{abuse})
+                             : ($r->{abuse} = $_->{abuse});
+      }
+      if (exists($_->{inetnum})) {
+         exists($r->{inetnum}) ? ($r->{inetnum} .= "\n".$_->{inetnum})
+                               : ($r->{inetnum} = $_->{inetnum});
+      }
+      if (exists($_->{descr})) {
+         exists($r->{descr}) ? ($r->{descr} .= "\n".$_->{descr})
+                             : ($r->{descr} = $_->{descr});
+      }
+      if (exists($_->{source})) {
+         exists($r->{source}) ? ($r->{source} .= "\n".$r->{source})
+                              : ($r->{source} = $_->{source});
+      }
+      if (exists($_->{netname})) {
+         exists($r->{netname}) ? ($r->{netname} .= "\n".$r->{netname})
+                               : ($r->{netname} = $_->{netname});
+      }
+      if (exists($_->{org})) {
+         exists($r->{org}) ? ($r->{org} .= "\n".$r->{org})
+                           : ($r->{org} = $_->{org});
+      }
+      if (exists($_->{country})) {
+         exists($r->{country}) ? ($r->{country} .= "\n".$r->{country})
+                               : ($r->{country} = $_->{country});
+      }
+      if (exists($_->{"org-name"})) {
+         exists($r->{"org-name"}) ? ($r->{"org-name"} .= "\n".$r->{"org-name"})
+                                  : ($r->{"org-name"} = $_->{"org-name"});
+      }
+      if (exists($_->{origin})) {
+         exists($r->{origin}) ? ($r->{origin} .= "\n".$r->{origin})
+                              : ($r->{origin} = $_->{origin});
+      }
+      if (exists($_->{route})) {
+         exists($r->{route}) ? ($r->{route} .= "\n".$r->{route})
+                             : ($r->{route} = $_->{route});
+      }
+   }
+
+   # Dedups lines
+   for (keys %$r) {
+      next if $_ eq 'raw';
+      if (my @toks = split(/\n/, $r->{$_})) {
+         my %uniq = map { $_ => 1 } @toks;
+         $r->{$_} = join("\n", sort { $a cmp $b } keys %uniq);  # With a sort
+      }
+   }
+
+   return $r;
 }
 
 sub domain {
@@ -54,193 +158,154 @@ sub domain {
       return $self->log->error($self->brik_help_run('domain'));
    }
 
-   # XXX: Activate when ip Command is finished
-   #my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
-   #if ($na->is_ip($domain)) {
-      #return $self->log->error("domain: domain [$domain] is an address");
-   #}
+   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
+   if ($na->is_ip($domain)) {
+      return $self->log->error("domain: domain [$domain] must not be an IP address");
+   }
 
    my $nw = Metabrik::Network::Whois->new_from_brik($self) or return;
-   my $lines = $nw->target($domain)
-      or return $self->log->error("domain: domain failed");
+   my $lines = $nw->target($domain) or return;
 
-   my %general = ();
-   my %registrant = ();
-   my %admin = ();
-   my %tech = ();
-   for my $line (@$lines) {
-      next if (! length($line));
-      #next if ($line =~ /^\s*#/);
-      #next if ($line =~ /^\s*Access to Public Interest Registry WHOIS information/i);
+   my $chunks = $self->_parse_whois($lines);
 
-      my ($k, $v) = $line =~ /^\s*(.*?)\s*:\s*(.*$)\s*$/;
+   my $r = { raw => $lines };
 
-      next if (! defined($k));
-
-      # 4 categories: general, registrant, admin, tech
-      if ($k =~ /domain name/i || $k =~ /domain$/i) {
-         $general{domain} = lc($v);
+   # 4 categories: general, registrant, admin, tech
+   for (@$chunks) {
+      # Registrar,Sponsoring Registrar,
+      if (exists($_->{registrar})) {
+         exists($r->{registrar}) ? ($r->{registrar} .= "\n".$_->{registrar})
+                                 : ($r->{registrar} = $_->{registrar});
       }
-      elsif ($k =~ /domain id/i) {
-         $general{domain_id} = $v;
+      if (exists($_->{registrar})) {
+         exists($r->{registrar}) ? ($r->{registrar} .= "\n".$_->{sponsoring_registrar})
+                                 : ($r->{registrar} = $_->{sponsoring_registrar});
       }
-      elsif ($k =~ /creation date/i || $k =~ /created/) {
-         $general{date_creation} = $v;
+      # Whois Server,
+      if (exists($_->{whois_server})) {
+         exists($r->{whois_server}) ? ($r->{whois_server} .= "\n".$_->{whois_server})
+                                    : ($r->{whois_server} = $_->{whois_server});
       }
-      elsif ($k =~ /updated date/i || $k =~ /last.update/) {
-         $general{date_updated} = $v;
+      # Domain Name,
+      if (exists($_->{domain_name})) {
+         exists($r->{domain_name}) ? ($r->{domain_name} .= "\n".$_->{domain_name})
+                                   : ($r->{domain_name} = $_->{domain_name});
       }
-      elsif ($k =~ /registry expiry date/i || $k =~ /expiration date/i) {
-         $general{date_expire} = $v;
+      # Creation Date,
+      if (exists($_->{creation_date})) {
+         exists($r->{creation_date}) ? ($r->{creation_date} .= "\n".$_->{creation_date})
+                                     : ($r->{creation_date} = $_->{creation_date});
       }
-      elsif ($k =~ /sponsoring registrar iana id/i) {
-         $general{sponsoring_registrar_iana_id} = $v;
+      # Updated Date,
+      if (exists($_->{updated_date})) {
+         exists($r->{updated_date}) ? ($r->{updated_date} .= "\n".$_->{updated_date})
+                                    : ($r->{updated_date} = $_->{updated_date});
       }
-      elsif ($k =~ /sponsoring registrar$/i || $k =~ /^registrar$/) {
-         $general{sponsoring_registrar} = $v;
+      # Registrar Registration Expiration Date,Expiration Date,Registry Expiry Date,
+      if (exists($_->{registrar_registration_expiration_date})) {
+         exists($r->{expiration_date}) ? ($r->{expiration_date} .= "\n".$_->{registrar_registration_expiration_date})
+                                       : ($r->{expiration_date} = $_->{registrar_registration_expiration_date});
       }
-      elsif ($k =~ /dnssec/i) {
-         $general{dnssec} = lc($v);
+      if (exists($_->{expiration_date})) {
+         exists($r->{expiration_date}) ? ($r->{expiration_date} .= "\n".$_->{expiration_date})
+                                       : ($r->{expiration_date} = $_->{expiration_date});
       }
-      elsif ($k =~ /domain status/i) {
-         exists($general{status}) ? ( $general{status} .= '|'.$v ) : ( $general{status} = $v);
+      if (exists($_->{expiration_date})) {
+         exists($r->{expiration_date}) ? ($r->{expiration_date} .= "\n".$_->{registry_expiry_date})
+                                       : ($r->{expiration_date} = $_->{registry_expiry_date});
       }
-      elsif ($k =~ /^status/i) {
-         if ($v eq 'ACTIVE') {
-            $general{active} = 1;
-         }
+      # Registrar URL,Referral URL,
+      if (exists($_->{registrar_url})) {
+         exists($r->{registrar_url}) ? ($r->{registrar_url} .= "\n".$_->{registrar_url})
+                                     : ($r->{registrar_url} = $_->{registrar_url});
       }
-      elsif ($k =~ /name server/i || $k =~ /nserver/) {
-         next unless length($v);
-         exists($general{nameserver}) ? ( $general{nameserver} .= '|'.lc($v) )
-                                      : ( $general{nameserver} = lc($v));
+      if (exists($_->{registrar_url})) {
+         exists($r->{registrar_url}) ? ($r->{registrar_url} .= "\n".$_->{referral_url})
+                                     : ($r->{registrar_url} = $_->{referral_url});
       }
-      elsif ($k =~ /registrant id/i || $k =~ /holder.c/) {
-         $registrant{id} = $v;
+      # DNSSEC,
+      if (exists($_->{dnssec})) {
+         exists($r->{dnssec}) ? ($r->{dnssec} .= "\n".$_->{dnssec})
+                              : ($r->{dnssec} = $_->{dnssec});
       }
-      elsif ($k =~ /registrant name/i) {
-         $registrant{name} = $v;
+      # Domain Status,Status,
+      if (exists($_->{domain_status})) {
+         exists($r->{domain_status}) ? ($r->{domain_status} .= "\n".$_->{domain_status})
+                                     : ($r->{domain_status} = $_->{domain_status});
       }
-      elsif ($k =~ /registrant organization/i) {
-         $registrant{organization} = $v;
+      if (exists($_->{domain_status})) {
+         exists($r->{domain_status}) ? ($r->{domain_status} .= "\n".$_->{status})
+                                     : ($r->{domain_status} = $_->{status});
       }
-      elsif ($k =~ /registrant street/i) {
-         $registrant{street} = $v;
+      # Name Server,
+      if (exists($_->{name_server})) {
+         exists($r->{name_server}) ? ($r->{name_server} .= "\n".$_->{name_server})
+                                   : ($r->{name_server} = $_->{name_server});
       }
-      elsif ($k =~ /registrant city/i) {
-         $registrant{city} = $v;
+      # Registrant Name,
+      if (exists($_->{registrant_name})) {
+         exists($r->{registrant_name}) ? ($r->{registrant_name} .= "\n".$_->{registrant_name})
+                                       : ($r->{registrant_name} = $_->{registrant_name});
       }
-      elsif ($k =~ /registrant state\/province/i) {
-         $registrant{state_province} = $v;
+      # Registrant Organization,
+      if (exists($_->{registrant_organization})) {
+         exists($r->{registrant_organization}) ? ($r->{registrant_organization} .= "\n".$_->{registrant_organization})
+                                               : ($r->{registrant_organization} = $_->{registrant_organization});
       }
-      elsif ($k =~ /registrant postal code/i) {
-         $registrant{postal_code} = $v;
+      # Registrant Street,
+      if (exists($_->{registrant_street})) {
+         exists($r->{registrant_street}) ? ($r->{registrant_street} .= "\n".$_->{registrant_street})
+                                         : ($r->{registrant_street} = $_->{registrant_street});
       }
-      elsif ($k =~ /registrant country/i) {
-         $registrant{country_code} = $v;
+      # Registrant City,
+      if (exists($_->{registrant_city})) {
+         exists($r->{registrant_city}) ? ($r->{registrant_city} .= "\n".$_->{registrant_city})
+                                       : ($r->{registrant_city} = $_->{registrant_city});
       }
-      elsif ($k =~ /registrant phone ext/i) {
-         $registrant{phone_ext} = $v;
+      # Registrant Postal Code,
+      if (exists($_->{registrant_postal_code})) {
+         exists($r->{registrant_postal_code}) ? ($r->{registrant_postal_code} .= "\n".$_->{registrant_postal_code})
+                                              : ($r->{registrant_postal_code} = $_->{registrant_postal_code});
       }
-      elsif ($k =~ /registrant phone$/i) {
-         $registrant{phone} = $v;
+      # Registrant State/Province,
+      if (exists($_->{registrant_state_province})) {
+         exists($r->{registrant_state_province}) ? ($r->{registrant_state_province} .= "\n".$_->{registrant_state_province})
+                                                 : ($r->{registrant_state_province} = $_->{registrant_state_province});
       }
-      elsif ($k =~ /registrant fax ext/i) {
-         $registrant{fax_ext} = $v;
+      # Registrant Country,
+      if (exists($_->{registrant_country})) {
+         exists($r->{registrant_country}) ? ($r->{registrant_country} .= "\n".$_->{registrant_country})
+                                          : ($r->{registrant_country} = $_->{registrant_country});
       }
-      elsif ($k =~ /registrant fax$/i) {
-         $registrant{fax} = $v;
-      }
-      elsif ($k =~ /registrant email/i) {
-         $registrant{email} = $v;
+      # Registrant Email,
+      if (exists($_->{registrant_email})) {
+         exists($r->{registrant_email}) ? ($r->{registrant_email} .= "\n".$_->{registrant_email})
+                                        : ($r->{registrant_email} = $_->{registrant_email});
       }
    }
 
-   # Uniformisation time
-   if (exists($general{status})) {
-      $general{active} = 1;
-   }
-
-   return {
-      raw => $lines,
-      general => \%general,
-      registrant => \%registrant,
-   };
-}
-
-sub available {
-   my $self = shift;
-   my ($domain) = shift;
-
-   if (! defined($domain)) {
-      return $self->log->brik_help_run('available');
-   }
-
-   my $info = $self->domain($domain)
-      or return $self->log->error("available: domain failed");
-
-   return $info->{general}->{active} ? 0 : 1;
-}
-
-sub expire {
-   my $self = shift;
-   my ($domain) = shift;
-
-   if (! defined($domain)) {
-      return $self->log->brik_help_run('expire');
-   }
-
-   my $info = $self->domain($domain)
-      or return $self->log->error("available: domain failed");
-
-   return $info->{general}->{date_expire} || 'undef';
-}
-
-# Abuse if for IP addresses, we have to lookup the domain first.
-sub abuse {
-}
-
-sub netname {
-   my $self = shift;
-   my ($arg0) = @_;
-
-   if (! defined($arg0)) {
-      return $self->log->error($self->brik_help_run('netname'));
-   }
-
-   my $ip_list = [];
-   # If this is not an IP address list, it may be a hostname
-   # We try to resolve it.
-   my $na = Metabrik::Network::Address->new_from_brik($self) or return;
-   if (! ref($arg0) && ! $na->is_ip($arg0)) {
-      my $cd = Metabrik::Client::Dns->new_from_brik($self) or return;
-      $ip_list = $cd->a_lookup($arg0) or return;
+   # If there is more than the raw key, domain exists
+   if (keys %$r > 1) {
+      $r->{domain_exists} = 1;
    }
    else {
-      if (ref($arg0) eq 'ARRAY') {
-         $ip_list = $arg0;
-      }
-      elsif (! ref($arg0)) {
-         $ip_list = [ $arg0 ];
-      }
+      $r->{domain_exists} = 0;
    }
 
-   my $results = {};
-   my $nw = Metabrik::Network::Whois->new_from_brik($self) or return;
-   for my $ip (@$ip_list) {
-      my $lines = $nw->target($ip) or next;
+   return $r;
+}
 
-      my $netname = '';
-      for my $line (@$lines) {
-         if ($line =~ /netname:/i) {
-            my @toks = split(/\s+/, $line);
-            $results->{$ip} = $toks[-1];
-            last;
-         }
-      }
+sub is_available_domain {
+   my $self = shift;
+   my ($domain) = shift;
+
+   if (! defined($domain)) {
+      return $self->log->brik_help_run('is_available');
    }
 
-   return $results;
+   my $info = $self->domain($domain) or return;
+
+   return $info->{domain_exists};
 }
 
 1;
