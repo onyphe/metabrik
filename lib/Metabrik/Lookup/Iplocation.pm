@@ -26,11 +26,8 @@ sub brik_properties {
       },
       require_modules => {
          'Geo::IP' => [ ],
-         'LWP::Simple' => [ ],
-         'File::Copy' => [ ],
-         'File::Spec' => [ ],
-         'PerlIO' => [ ],
-         'PerlIO::gzip' => [ ],
+         'Metabrik::Client::Www' => [ ],
+         'Metabrik::File::Compress' => [ ],
       },
    };
 }
@@ -38,52 +35,30 @@ sub brik_properties {
 sub update {
    my $self = shift;
 
-   eval('use LWP::Simple qw(mirror RC_NOT_MODIFIED RC_OK $ua);');
-   eval('use File::Copy qw(mv);');
+   my $datadir = $self->datadir;
 
-   my $download_dir = $self->datadir;
-   my $dest_dir = $self->datadir;
+   my $dl_path = 'http://geolite.maxmind.com/download/geoip/database/';
 
    my %mirror = (
-      'GeoIP.dat.gz'      => 'GeoLiteCountry/GeoIP.dat.gz',
-      'GeoIPCity.dat.gz'  => 'GeoLiteCity.dat.gz',
-      'GeoIPv6.dat.gz'    => 'GeoIPv6.dat.gz',
+      'GeoIP.dat.gz' => 'GeoLiteCountry/GeoIP.dat.gz',
+      'GeoIPCity.dat.gz' => 'GeoLiteCity.dat.gz',
+      'GeoIPv6.dat.gz' => 'GeoIPv6.dat.gz',
       'GeoIPASNum.dat.gz' => 'asnum/GeoIPASNum.dat.gz'
    );
 
-   $LWP::Simple::ua->agent("Metabrik-MaxMind-geolite-mirror/1.00");
-   my $dl_path = 'http://geolite.maxmind.com/download/geoip/database/';
+   my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
+   $cw->user_agent("Metabrik-MaxMind-geolite-mirror/1.01");
+   $cw->datadir($datadir);
 
-   chdir($download_dir)
-      or return $self->log->error("update: unable to chdir to [$download_dir]: $!");
+   my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
+   $fc->datadir($datadir);
+
    for my $f (keys %mirror) {
-      my $rc = mirror($dl_path.$mirror{$f}, $f);
-      if ($rc == LWP::Simple::RC_NOT_MODIFIED()) {
-         next;
-      }
-      if ($rc == LWP::Simple::RC_OK()) {
-         (my $outfile = $f) =~ s/\.gz$//;
-         my $r = open(my $in, '<:gzip', $f);
-         if (! defined($r)) {
-            $self->log->error("update: unable to unzip file [$f]: $!");
-            next;
-         }
-         $r = open(my $out, '>', $outfile);
-         if (! defined($r)) {
-            $self->log->error("update: unable to open file [$outfile]: $!");
-            next;
-         }
-         while (<$in>) {
-            print $out $_
-               or $self->log->error("update: unable to write to file [$outfile]: $!");
-         }
-         $r = mv($outfile, File::Spec->catfile($dest_dir, $outfile));
-         if (! defined($r)) {
-            $self->log->error("update: unable to move file [$outfile] to [$dest_dir]: $!");
-            next;
-         }
-
-         $self->log->info("update: file [$outfile] created or updated in [$dest_dir]");
+      my $files = $cw->mirror($dl_path.$mirror{$f}, $f) or next;
+      for my $file (@$files) {
+         (my $outfile = $file) =~ s/\.gz$//;
+         $self->log->verbose("update: uncompressing to [$outfile]");
+         $fc->uncompress($datadir.'/'.$file, $outfile) or next;
       }
    }
 

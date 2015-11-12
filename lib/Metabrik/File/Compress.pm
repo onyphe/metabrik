@@ -20,7 +20,8 @@ sub brik_properties {
       },
       commands => {
          unzip => [ qw(input|OPTIONAL datadir|OPTIONAL) ],
-         gunzip => [ qw(input|OPTIONAL output|OPTIONAL) ],
+         gunzip => [ qw(input|OPTIONAL output|OPTIONAL datadir|OPTIONAL) ],
+         uncompress => [ qw(input|OPTIONAL output|OPTIONAL datadir|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::File::Write' => [ ],
@@ -38,7 +39,7 @@ sub unzip {
 
    $input ||= $self->input;
    if (! defined($input)) {
-      return $self->log->error($self->brik_help_set('input'));
+      return $self->log->error($self->brik_help_run('unzip'));
    }
 
    $datadir ||= $self->datadir;
@@ -52,11 +53,11 @@ sub unzip {
 
 sub gunzip {
    my $self = shift;
-   my ($input, $output) = @_;
+   my ($input, $output, $datadir) = @_;
 
    $input ||= $self->input;
    if (! defined($input)) {
-      return $self->log->error($self->brik_help_set('input'));
+      return $self->log->error($self->brik_help_run('gunzip'));
    }
 
    $output ||= $self->output;
@@ -64,6 +65,8 @@ sub gunzip {
    if (! defined($output)) {
       ($output = $input) =~ s/.gz$//;
    }
+
+   $datadir ||= $self->datadir;
 
    my $gz = Compress::Zlib::gzopen($input, "rb");
    if (! $gz) {
@@ -75,7 +78,7 @@ sub gunzip {
    $fw->encoding('ascii');
    $fw->overwrite(1);
 
-   my $fd = $fw->open($output);
+   my $fd = $fw->open($datadir.'/'.$output);
    if (! defined($fd)) {
       return $self->log->error("gunzip: open failed");
    }
@@ -96,6 +99,27 @@ sub gunzip {
    $fw->close;
 
    return $no_error;
+}
+
+sub uncompress {
+   my $self = shift;
+   my ($input, $output, $datadir) = @_;
+
+   $input ||= $self->input;
+   if (! defined($input)) {
+      return $self->log->error($self->brik_help_run('uncompress'));
+   }
+
+   $datadir ||= $self->datadir;
+
+   if ($input =~ /\.gz$/) {
+      return $self->gunzip($input, $output);
+   }
+   elsif ($input =~ /\.zip$/) {
+      return $self->unzip($input, $datadir);
+   }
+
+   return $self->log->error("uncompress: don't know how to uncompress file [$input]");
 }
 
 1;

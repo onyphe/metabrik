@@ -20,6 +20,7 @@ sub brik_properties {
          ignore_content => [ qw(0|1) ],
          user_agent => [ qw(user_agent) ],
          ssl_verify => [ qw(0|1) ],
+         datadir => [ qw(datadir) ],
          _client => [ qw(object|INTERNAL) ],
          _last => [ qw(object|INTERNAL) ],
       },
@@ -47,6 +48,7 @@ sub brik_properties {
          screenshot => [ qw(uri output_file) ],
          eval_javascript => [ qw(js uri|OPTIONAL) ],
          info => [ ],
+         mirror => [ qw(url|$url_list datadir|OPTIONAL) ],
       },
       require_modules => {
          'Net::SSL' => [ ],
@@ -541,6 +543,53 @@ sub info {
    }
 
    return $mech;
+}
+
+sub mirror {
+   my $self = shift;
+   my ($url, $output_file) = @_;
+
+   if (! defined($url) || ! defined($output_file)) {
+      return $self->log->error($self->brik_help_run('mirror'));
+   }
+
+   my $datadir = $self->datadir;
+
+   my @files = ();
+   if (ref($url) eq 'ARRAY') {
+      for my $this (@$url) {
+         my $file = $self->mirror($this, $output_file) or next;
+         push @files, @$file;
+      }
+   }
+   else {
+      if ($url !~ /^https?:\/\// && $url !~ /^ftp:\/\//) {
+         return $self->log->error("mirror: invalid URL [$url]");
+      }
+
+      $self->debug && $self->log->debug("mirror: url[$url] output_file[$output_file]");
+
+      my $mech = $self->create_user_agent or return;
+
+      my $rc;
+      eval {
+         $rc = $mech->mirror($url, $datadir.'/'.$output_file);
+      };
+      if ($@) {
+         chomp($@);
+         return $self->log->error("mirror: mirroring URL [$url] to local file [$output_file] failed: $@");
+      }
+      my $code = $rc->code;
+      if ($rc->code == 200) {
+         push @files, $output_file;
+         $self->log->info("mirror: downloading URL [$url] to local file [$output_file] done");
+      }
+      elsif ($rc->code == 304) { # Not modified
+         $self->log->info("mirror: file [$output_file] not modified since last check");
+      }
+   }
+
+   return \@files;
 }
 
 1;
