@@ -23,12 +23,15 @@ sub brik_properties {
          netmask_address => [ qw(subnet|OPTIONAL) ],
          netmask_to_cidr => [ qw(netmask) ],
          range_to_cidr => [ qw(first_ip_address last_ip_address) ],
-         is_ipv4 => [ qw(ip_address) ],
-         is_ipv6 => [ qw(ip_address) ],
+         is_ipv4 => [ qw(ipv4_address) ],
+         is_ipv6 => [ qw(ipv6_address) ],
          is_ip => [ qw(ip_address) ],
          is_rfc1918 => [ qw(ip_address) ],
          ipv4_list => [ qw(subnet|OPTIONAL) ],
          ipv6_list => [ qw(subnet|OPTIONAL) ],
+         count_ipv4 => [ qw(subnet|OPTIONAL) ],
+         get_ipv4_cidr => [ qw(subnet|OPTIONAL) ],
+         is_ipv4_subnet => [ qw(subnet|OPTIONAL) ],
       },
       require_modules => {
          'Net::Netmask' => [ ],
@@ -163,11 +166,16 @@ sub is_rfc1918 {
    (my $local = $ip) =~ s/\/\d+$//;
 
    my $new = NetAddr::IP->new($local);
-   if ($new->is_rfc1918) {
-      return 1;
+   my $is;
+   eval {
+      $is = $new->is_rfc1918;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("is_rfc1918: is_rfc1918 failed for [$local] with error [$@]");
    }
 
-   return 0;
+   return $is ? 1 : 0;
 }
 
 sub is_ipv4 {
@@ -245,7 +253,14 @@ sub ipv4_list {
    my $m = $self->netmask_address($subnet) or return;
 
    my $ip = NetAddr::IP->new($a, $m);
-   my $r = $ip->hostenumref;
+   my $r;
+   eval {
+      $r = $ip->hostenumref;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("ipv4_list: hostenumref failed for [$a] [$m] with error [$@]");
+   }
 
    my @list = ();
    for my $ip (@$r) {
@@ -275,7 +290,14 @@ sub ipv6_list {
    NetAddr::IP::netlimit(20);
 
    my $ip = NetAddr::IP->new($subnet);
-   my $r = $ip->hostenumref;
+   my $r;
+   eval {
+      $r = $ip->hostenumref;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("ipv6_list: hostenumref failed for [$subnet] with error [$@]");
+   }
 
    my @list = ();
    for my $ip (@$r) {
@@ -283,6 +305,68 @@ sub ipv6_list {
    }
 
    return \@list;
+}
+
+sub get_ipv4_cidr {
+   my $self = shift;
+   my ($subnet) = @_;
+
+   $subnet ||= $self->subnet;
+   if (! defined($subnet)) {
+      return $self->log->error($self->brik_help_run('get_ipv4_cidr'));
+   }
+
+   my ($cidr) = $subnet =~ m{/(\d+)$};
+   if (! defined($cidr)) {
+      return $self->log->error("get_ipv4_cidr: no CIDR mask found");
+   }
+
+   if ($cidr < 0 || $cidr > 32) {
+      return $self->log->error("get_ipv4_cidr: invalid CIDR mask [$cidr]");
+   }
+
+   return $cidr;
+}
+
+sub count_ipv4 {
+   my $self = shift;
+   my ($subnet) = @_;
+
+   $subnet ||= $self->subnet;
+   if (! defined($subnet)) {
+      return $self->log->error($self->brik_help_run('count_ipv4'));
+   }
+
+   if (! $self->is_ipv4($subnet)) {
+      return $self->log->error("count_ipv4: invalid format [$subnet], not IPv4");
+   }
+
+   my $cidr = $self->get_ipv4_cidr($subnet) or return;
+
+   return 2 ** (32 - $cidr);
+}
+
+sub is_ipv4_subnet {
+   my $self = shift;
+   my ($subnet) = @_;
+
+   $subnet ||= $self->subnet;
+   if (! defined($subnet)) {
+      return $self->log->error($self->brik_help_run('is_ipv4_subnet'));
+   }
+
+   my ($address, $cidr) = $subnet =~ m{^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/(\d+)$};
+   if (! defined($address) || ! defined($cidr)) {
+      $self->log->verbose("is_ipv4_subnet: not a subnet [$subnet]");
+      return 0;
+   }
+
+   if ($cidr < 0 || $cidr > 32) {
+      $self->log->verbose("is_ipv4_subnet: not a valid CIDR mask [$cidr]");
+      return 0;
+   }
+
+   return 1;
 }
 
 1;

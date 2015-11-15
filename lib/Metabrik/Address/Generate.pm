@@ -16,20 +16,21 @@ sub brik_properties {
       attributes => {
          datadir => [ qw(directory) ],
          file_count => [ qw(integer) ],
-         ip_count => [ qw(integer) ],
+         count => [ qw(integer) ],
       },
       attributes_default => {
          file_count => 1000,
-         ip_count => 0,
+         count => 0,
       },
       commands => {
          ipv4_reserved_ranges => [ ],
          ipv4_private_ranges => [ ],
          ipv4_routable_ranges => [ ],
-         ipv4_generate_space => [ ],
+         ipv4_generate_space => [ qw(count|OPTIONAL file_count|OPTIONAL) ],
+         random_ipv4_addresses => [ qw(count|OPTIONAL) ],
       },
       require_modules => {
-         'List::Util' => [ 'shuffle' ],
+         'List::Util' => [ qw(shuffle) ],
       },
       #require_binaries => {
          #'ulimit' => [ ],   # It is built-in
@@ -93,35 +94,31 @@ sub ipv4_routable_ranges {
 
 sub ipv4_generate_space {
    my $self = shift;
+   my ($count, $file_count) = @_;
 
+   $count ||= $self->count;
+   $file_count ||= $self->file_count;
    my $datadir = $self->datadir;
-   my $file_count = $self->file_count;
-   my $ip_count = $self->ip_count;
-
    my $n = $file_count - 1;
-   my $count = $ip_count ? $ip_count : undef;
 
    my @chunks = ();
-   my $new;
    if ($n > 0) {
       for (0..$n) {
          my $file = sprintf("ip4-space-%03d.txt", $_);
-         open($new, '>', "$datadir/$file")
+         open(my $fd, '>', "$datadir/$file")
             or return $self->log->error("ipv4_generate_space: open: file [$datadir/$file]: $!");
-         push @chunks, $new;
+         push @chunks, $fd;
       }
    }
    else {
-      my $file = sprintf("ip4-space.txt", $_);
-      open($new, '>', "$datadir/$file")
+      my $file = "ip4-space.txt";
+      open(my $fd, '>', "$datadir/$file")
          or return $self->log->error("ipv4_generate_space: open: file [$datadir/$file]: $!");
-      push @chunks, $new;
+      push @chunks, $fd;
    }
 
    my $current = 0;
-
-   # XXX: may not be the based algorithm when not generating full IPv4 range
-   # To skip: $self->ipv4_reserved_ranges
+   # Note: this algorithm is best suited to generate the full IPv4 address space
    for my $b1 (List::Util::shuffle(1..9,11..126,128..223)) {  # Skip 0.0.0.0/8, 224.0.0.0/4,
                                                               # 240.0.0.0/4, 10.0.0.0/8,
                                                               # 127.0.0.0/8
@@ -132,25 +129,63 @@ sub ipv4_generate_space {
          for my $b3 (List::Util::shuffle(0..255)) {
             next if ($b1 == 192 && $b2 == 0 && $b3 == 2);  # Skip 192.0.2.0/24
             for my $b4 (List::Util::shuffle(0..255)) {
+               # Write randomly to one of the previously open files
                my $i;
-               if ($n > 0) {
-                  $i = int(rand($n + 1));
-               }
-               else {
-                  $i = 0;
-               }
+               ($n > 0) ? ($i = int(rand($n + 1))) : ($i = 0);
+
                my $out = $chunks[$i];
                print $out "$b1.$b2.$b3.$b4\n";
                $current++;
 
                # Stop if we have the number we wanted
-               return 1 if defined($count) && ($current == $count);
+               if ($count && $current == $count) {
+                  $self->log->info("ipv4_generate_space: generated $current IP addresses");
+                  return 1;
+               }
             }
          }
       }
    }
 
+   $self->log->info("ipv4_generate_space: generated $current IP addresses");
+
    return 1;
+}
+
+sub random_ipv4_addresses {
+   my $self = shift;
+   my ($count) = @_;
+
+   $count ||= $self->count;
+   if ($count <= 0) {
+      return $self->log->error("random_ipv4_addresses: cannot generate [$count] address");
+   }
+
+   my $current = 0;
+   my %random = ();
+   while (1) {
+      my $b1 = List::Util::shuffle(1..9,11..126,128..223); # Skip 0.0.0.0/8, 224.0.0.0/4,
+                                                           # 240.0.0.0/4, 10.0.0.0/8,
+                                                           # 127.0.0.0/8
+      my $b2 = List::Util::shuffle(0..255);
+      next if ($b1 == 169 && $b2 == 254);               # Skip 169.254.0.0/16
+      next if ($b1 == 172 && ($b2 >= 16 && $b2 <= 31)); # Skip 172.16.0.0/12
+      next if ($b1 == 192 && $b2 == 168);               # Skip 192.168.0.0/16
+
+      my $b3 = List::Util::shuffle(0..255);
+      next if ($b1 == 192 && $b2 == 0 && $b3 == 2);  # Skip 192.0.2.0/24
+
+      my $b4 = List::Util::shuffle(0..255);
+      my $ip = "$b1.$b2.$b3.$b4";
+      if (! exists($random{$ip})) {
+         $random{$ip}++;
+         $current++;
+      }
+
+      last if $current == $count;
+   }
+
+   return [ keys %random ];
 }
 
 1;

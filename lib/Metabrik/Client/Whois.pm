@@ -17,6 +17,8 @@ sub brik_properties {
          ip => [ qw(ip_address) ],
          domain => [ qw(domain) ],
          is_available_domain => [ qw(domain) ],
+         parse_raw_whois => [ qw($lines_list) ],
+         normalize_raw_ip_whois => [ qw($chunks $lines_list) ],
       },
       require_modules => {
          'Metabrik::Network::Address' => [ ],
@@ -26,32 +28,53 @@ sub brik_properties {
    };
 }
 
-sub _parse_whois {
+sub parse_raw_whois {
    my $self = shift;
    my ($lines) = @_;
+
+   if (! defined($lines)) {
+      return $self->log->error($self->brik_help_run('parse_raw_whois'));
+   }
 
    my $sp = Metabrik::String::Parse->new_from_brik_init($self) or return;
    my $chunks = $sp->split_by_blank_line($lines) or return;
 
+   my @abuse = ();
    my @chunks = ();
    for my $this (@$chunks) {
       my $new = {};
-      my $abuse = '';
       for (@$this) {
          # If an abuse email adress can be found, we gather it.
          if (/abuse/i && /\@/) {
-            ($abuse) = $_ =~ /^.*\s(\S+\@\S+)\s?.*$/;
-            $abuse =~ s/['"]//g;
+            my ($new) = $_ =~ /(\S+\@[A-Za-z0-9\._-]+)/;
+            if (defined($new)) {
+               defined($new) ? ($new =~ s/['"]//g) : ();
+               push @abuse, $new;
+            }
+         }
+
+         if (/^\s*%error 230 No objects found/i) {
+            $new->{match} = 0;
+         }
+         elsif (/^\s*%error 350 Invalid Query Syntax/i) {
+            $new->{has_error} = 1;
+         }
+         elsif (/^\s*%error 501 Service Not Available: exceeded max client sessions/i) {
+            $new->{has_error} = 1;
+         }
+         elsif (/^\s*%ok\s*$/) {
+            $new->{has_error} = 1;
          }
 
          next if (/^\s*%/);  # Skip comments
+         next if (/^\s*#/);  # Skip comments
 
          # We default to split by the first encountered : char
          if (/^\s*([^:]+?)\s*:\s*(.*)\s*$/) {
             if (defined($1) && defined($2)) {
                my $k = lc($1);
                my $v = $2;
-               $k =~ s{[ /]}{_}g;
+               $k =~ s{[ /-]}{_}g;
                if (exists($new->{$k})) {
                   $new->{$k} .= "\n$v";
                }
@@ -60,11 +83,30 @@ sub _parse_whois {
                }
             }
          }
+         # We try to guess an inetnum. Example:
+         # Akamai Technologies, Inc. AKAMAI (NET-104-64-0-0-1) 104.64.0.0 - 104.127.255.255
+         elsif (/^\s*([^\(]+)\(([^\)]+)\)\s*(\S+\s*-\s*\S+)$/) {
+            my $description = $1;
+            my $netname = $2;
+            my $inetnum = $3;
+            $new->{description} = $description;
+            $new->{netname} = $netname;
+            $new->{inetnum} = $inetnum;
+         }
+         # Nothing known. Exemple:
+         # No match found for aaa
+         elsif (/^\s*No match found for /i) {
+            $new->{match} = 0;
+         }
       }
 
       # If we found some email address along with 'abuse' string, we add this email address
-      if (length($abuse)) {
-         $new->{abuse} = $abuse;
+      if (@abuse > 0) {
+         $new->{abuse} = join("\n", @abuse);
+      }
+
+      if (keys %$new > 0 && ! exists($new->{match})) {
+         $new->{match} = 1;
       }
 
       if (keys %$new > 0) {
@@ -73,6 +115,156 @@ sub _parse_whois {
    }
 
    return \@chunks;
+}
+
+sub _ip_lookup {
+   my $self = shift;
+   my ($this, $key, $normalize, $result) = @_;
+
+   return $self->_domain_lookup($this, $key, $normalize, $result);
+}
+
+sub normalize_raw_ip_whois {
+   my $self = shift;
+   my ($chunks, $lines) = @_;
+
+   if (! defined($chunks) || ! defined($lines)) {
+      return $self->log->error($self->brik_help_run('normalize_raw_ip_whois'));
+   }
+
+   my $r = { raw => $lines };
+   #my $r = {};
+
+   my $n_chunks = @$chunks;
+   if (@$chunks <= 0) {
+      return $self->log->error("normalize_raw_ip_whois: nothing to normalize");
+   }
+
+   # We search for the first chunk with an inetnum.
+   my $general;
+   for (@$chunks) {
+      if (exists($_->{inetnum})) {
+         $general = $_;
+         last;
+      }
+   }
+   if (! defined($general)) {
+      return $self->log->error("normalize_raw_ip_whois: no inetnum found in this record");
+   }
+
+   # inetnum,netrange,network,
+   $self->_ip_lookup($general, 'inetnum', 'inetnum', $r);
+   $self->_ip_lookup($general, 'netrange', 'inetnum', $r);
+   $self->_ip_lookup($general, 'network', 'inetnum', $r);
+   # cidr,
+   $self->_ip_lookup($general, 'cidr', 'cidr', $r);
+   # nethandle,
+   $self->_ip_lookup($general, 'nethandle', 'nethandle', $r);
+   # created,
+   $self->_ip_lookup($general, 'created', 'date_created', $r);
+   # updated,last_modified,
+   $self->_ip_lookup($general, 'updated', 'date_updated', $r);
+   $self->_ip_lookup($general, 'last_modified', 'date_updated', $r);
+   # originas,origin,
+   $self->_ip_lookup($general, 'originas', 'originas', $r);
+   $self->_ip_lookup($general, 'origin', 'originas', $r);
+   # netname,ownerid,
+   $self->_ip_lookup($general, 'netname', 'netname', $r);
+   $self->_ip_lookup($general, 'ownerid', 'netname', $r);
+   # descr,
+   $self->_ip_lookup($general, 'descr', 'description', $r);
+   # parent,
+   $self->_ip_lookup($general, 'parent', 'netparent', $r);
+   # nettype,
+   $self->_ip_lookup($general, 'nettype', 'nettype', $r);
+   # organization,org,owner,org_name,
+   $self->_ip_lookup($general, 'organization', 'organization', $r);
+   $self->_ip_lookup($general, 'org', 'organization', $r);
+   $self->_ip_lookup($general, 'owner', 'organization', $r);
+   $self->_ip_lookup($general, 'org_name', 'organization', $r);
+   # regdate,
+   $self->_ip_lookup($general, 'regdate', 'date_registered', $r);
+   # ref,
+   $self->_ip_lookup($general, 'ref', 'ref', $r);
+   # country,
+   $self->_ip_lookup($general, 'country', 'country', $r);
+   # source,
+   $self->_ip_lookup($general, 'source', 'source', $r);
+   # status,
+   $self->_ip_lookup($general, 'status', 'status', $r);
+   # abuse,abuse_c,
+   $self->_ip_lookup($general, 'abuse', 'abuse', $r);
+   $self->_ip_lookup($general, 'abuse_c', 'abuse', $r);
+   # nserver,
+   $self->_ip_lookup($general, 'nserver', 'nserver', $r);
+   # phone,
+   $self->_ip_lookup($general, 'phone', 'phone', $r);
+   # responsible,
+   $self->_ip_lookup($general, 'responsible', 'responsible', $r);
+   # address,
+   $self->_ip_lookup($general, 'address', 'address', $r);
+   # city,
+   $self->_ip_lookup($general, 'city', 'city', $r);
+   # sponsoring_org,
+   $self->_ip_lookup($general, 'sponsoring_org', 'sponsoring_org', $r);
+   # route,inetnum-up,
+   $self->_ip_lookup($general, 'route', 'route', $r);
+   $self->_ip_lookup($general, 'inetnum_up', 'route', $r);
+
+   # We search for a chunk with AS information (usually the last chunk)
+   my $asinfo;
+   for (reverse @$chunks) {
+      if (exists($_->{origin}) && exists($_->{route})) {
+         $asinfo = $_;
+         last;
+      }
+   }
+
+   $self->_ip_lookup($asinfo, 'route', 'route', $r);
+   $self->_ip_lookup($asinfo, 'origin', 'originas', $r);
+
+   my @fields = qw(
+      inetnum
+      cidr
+      nethandle
+      date_created
+      date_updated
+      originas
+      netname
+      description
+      netparent
+      nettype
+      organization
+      date_registered
+      ref
+      country
+      source
+      status
+      abuse
+      nserver
+      phone
+      responsible
+      address
+      city
+      sponsoring_org
+      route
+   );
+
+   # Put default values for missing fields
+   for (@fields) {
+      $r->{$_} ||= 'undef';
+   }
+
+   # Dedups lines
+   for (keys %$r) {
+      next if $_ eq 'raw';
+      if (my @toks = split(/\n/, $r->{$_})) {
+         my %uniq = map { $_ => 1 } @toks;
+         $r->{$_} = join("\n", sort { $a cmp $b } keys %uniq);  # With a sort
+      }
+   }
+
+   return $r;
 }
 
 sub ip {
@@ -88,66 +280,30 @@ sub ip {
       return $self->log->error("ip: not a valid IP address [$ip]");
    }
 
-   my $nw = Metabrik::Network::Whois->new_from_brik($self) or return;
+   my $nw = Metabrik::Network::Whois->new_from_brik_init($self) or return;
    my $lines = $nw->target($ip) or return;
 
-   my $chunks = $self->_parse_whois($lines);
+   my $chunks = $self->parse_raw_whois($lines) or return;
 
-   my $r = { raw => $lines };
+   my $r = $self->normalize_raw_ip_whois($chunks, $lines) or return;
 
-   for (@$chunks) {
-      if (exists($_->{abuse})) {
-         exists($r->{abuse}) ? ($r->{abuse} .= "\n".$_->{abuse})
-                             : ($r->{abuse} = $_->{abuse});
-      }
-      if (exists($_->{inetnum})) {
-         exists($r->{inetnum}) ? ($r->{inetnum} .= "\n".$_->{inetnum})
-                               : ($r->{inetnum} = $_->{inetnum});
-      }
-      if (exists($_->{descr})) {
-         exists($r->{descr}) ? ($r->{descr} .= "\n".$_->{descr})
-                             : ($r->{descr} = $_->{descr});
-      }
-      if (exists($_->{source})) {
-         exists($r->{source}) ? ($r->{source} .= "\n".$r->{source})
-                              : ($r->{source} = $_->{source});
-      }
-      if (exists($_->{netname})) {
-         exists($r->{netname}) ? ($r->{netname} .= "\n".$r->{netname})
-                               : ($r->{netname} = $_->{netname});
-      }
-      if (exists($_->{org})) {
-         exists($r->{org}) ? ($r->{org} .= "\n".$r->{org})
-                           : ($r->{org} = $_->{org});
-      }
-      if (exists($_->{country})) {
-         exists($r->{country}) ? ($r->{country} .= "\n".$r->{country})
-                               : ($r->{country} = $_->{country});
-      }
-      if (exists($_->{"org-name"})) {
-         exists($r->{"org-name"}) ? ($r->{"org-name"} .= "\n".$r->{"org-name"})
-                                  : ($r->{"org-name"} = $_->{"org-name"});
-      }
-      if (exists($_->{origin})) {
-         exists($r->{origin}) ? ($r->{origin} .= "\n".$r->{origin})
-                              : ($r->{origin} = $_->{origin});
-      }
-      if (exists($_->{route})) {
-         exists($r->{route}) ? ($r->{route} .= "\n".$r->{route})
-                             : ($r->{route} = $_->{route});
-      }
-   }
-
-   # Dedups lines
-   for (keys %$r) {
-      next if $_ eq 'raw';
-      if (my @toks = split(/\n/, $r->{$_})) {
-         my %uniq = map { $_ => 1 } @toks;
-         $r->{$_} = join("\n", sort { $a cmp $b } keys %uniq);  # With a sort
-      }
-   }
+   $r->{date_queried} = localtime();
+   $r->{whois_server} = $nw->last_server;
 
    return $r;
+}
+
+sub _domain_lookup {
+   my $self = shift;
+   my ($this, $key, $normalize, $result) = @_;
+
+   if (exists($this->{$key})) {
+      exists($result->{$normalize})
+         ? ($result->{$normalize} .= "\n".$this->{$key})
+         : ($result->{$normalize} = $this->{$key});
+   }
+
+   return $this;
 }
 
 sub domain {
@@ -163,124 +319,92 @@ sub domain {
       return $self->log->error("domain: domain [$domain] must not be an IP address");
    }
 
-   my $nw = Metabrik::Network::Whois->new_from_brik($self) or return;
+   my $nw = Metabrik::Network::Whois->new_from_brik_init($self) or return;
    my $lines = $nw->target($domain) or return;
 
-   my $chunks = $self->_parse_whois($lines);
+   my $chunks = $self->parse_raw_whois($lines);
 
    my $r = { raw => $lines };
 
    # 4 categories: general, registrant, admin, tech
    for (@$chunks) {
       # Registrar,Sponsoring Registrar,
-      if (exists($_->{registrar})) {
-         exists($r->{registrar}) ? ($r->{registrar} .= "\n".$_->{registrar})
-                                 : ($r->{registrar} = $_->{registrar});
-      }
-      if (exists($_->{registrar})) {
-         exists($r->{registrar}) ? ($r->{registrar} .= "\n".$_->{sponsoring_registrar})
-                                 : ($r->{registrar} = $_->{sponsoring_registrar});
-      }
+      $self->_domain_lookup($_, 'registrar', 'registrar', $r);
+      $self->_domain_lookup($_, 'sponsoring_registrar', 'registrar', $r);
+
       # Whois Server,
-      if (exists($_->{whois_server})) {
-         exists($r->{whois_server}) ? ($r->{whois_server} .= "\n".$_->{whois_server})
-                                    : ($r->{whois_server} = $_->{whois_server});
-      }
-      # Domain Name,
-      if (exists($_->{domain_name})) {
-         exists($r->{domain_name}) ? ($r->{domain_name} .= "\n".$_->{domain_name})
-                                   : ($r->{domain_name} = $_->{domain_name});
-      }
-      # Creation Date,
-      if (exists($_->{creation_date})) {
-         exists($r->{creation_date}) ? ($r->{creation_date} .= "\n".$_->{creation_date})
-                                     : ($r->{creation_date} = $_->{creation_date});
-      }
-      # Updated Date,
-      if (exists($_->{updated_date})) {
-         exists($r->{updated_date}) ? ($r->{updated_date} .= "\n".$_->{updated_date})
-                                    : ($r->{updated_date} = $_->{updated_date});
-      }
-      # Registrar Registration Expiration Date,Expiration Date,Registry Expiry Date,
-      if (exists($_->{registrar_registration_expiration_date})) {
-         exists($r->{expiration_date}) ? ($r->{expiration_date} .= "\n".$_->{registrar_registration_expiration_date})
-                                       : ($r->{expiration_date} = $_->{registrar_registration_expiration_date});
-      }
-      if (exists($_->{expiration_date})) {
-         exists($r->{expiration_date}) ? ($r->{expiration_date} .= "\n".$_->{expiration_date})
-                                       : ($r->{expiration_date} = $_->{expiration_date});
-      }
-      if (exists($_->{expiration_date})) {
-         exists($r->{expiration_date}) ? ($r->{expiration_date} .= "\n".$_->{registry_expiry_date})
-                                       : ($r->{expiration_date} = $_->{registry_expiry_date});
-      }
+      $self->_domain_lookup($_, 'whois_server', 'whois_server', $r);
+
+      # Domain Name,Dominio,domain,
+      $self->_domain_lookup($_, 'domain_name', 'domain_name', $r);
+      $self->_domain_lookup($_, 'dominio', 'domain_name', $r);
+      $self->_domain_lookup($_, 'domain', 'domain_name', $r);
+
+      # Creation Date,Fecha de registro,created,
+      $self->_domain_lookup($_, 'creation_date', 'creation_date', $r);
+      $self->_domain_lookup($_, 'fecha_de_registro', 'creation_date', $r);
+      $self->_domain_lookup($_, 'created', 'creation_date', $r);
+
+      # Updated Date,last-update,
+      $self->_domain_lookup($_, 'updated_date', 'updated_date', $r);
+      $self->_domain_lookup($_, 'last_update', 'updated_date', $r);
+
+      # Registrar Registration Expiration Date,Expiration Date,Registry Expiry Date,Fecha de vencimiento,Expiry Date,
+      $self->_domain_lookup($_, 'registrar_registration_expiration_date', 'expiration_date', $r);
+      $self->_domain_lookup($_, 'expiration_date', 'expiration_date', $r);
+      $self->_domain_lookup($_, 'registry_expiry_date', 'expiration_date', $r);
+      $self->_domain_lookup($_, 'fecha_de_vencimiento', 'expiration_date', $r);
+      $self->_domain_lookup($_, 'expiry_date', 'expiration_date', $r);
+
       # Registrar URL,Referral URL,
-      if (exists($_->{registrar_url})) {
-         exists($r->{registrar_url}) ? ($r->{registrar_url} .= "\n".$_->{registrar_url})
-                                     : ($r->{registrar_url} = $_->{registrar_url});
-      }
-      if (exists($_->{registrar_url})) {
-         exists($r->{registrar_url}) ? ($r->{registrar_url} .= "\n".$_->{referral_url})
-                                     : ($r->{registrar_url} = $_->{referral_url});
-      }
+      $self->_domain_lookup($_, 'registrar_url', 'registrar_url', $r);
+      $self->_domain_lookup($_, 'referral_url', 'registrar_url', $r);
+
       # DNSSEC,
-      if (exists($_->{dnssec})) {
-         exists($r->{dnssec}) ? ($r->{dnssec} .= "\n".$_->{dnssec})
-                              : ($r->{dnssec} = $_->{dnssec});
-      }
+      $self->_domain_lookup($_, 'dnssec', 'dnssec', $r);
+
       # Domain Status,Status,
-      if (exists($_->{domain_status})) {
-         exists($r->{domain_status}) ? ($r->{domain_status} .= "\n".$_->{domain_status})
-                                     : ($r->{domain_status} = $_->{domain_status});
-      }
-      if (exists($_->{domain_status})) {
-         exists($r->{domain_status}) ? ($r->{domain_status} .= "\n".$_->{status})
-                                     : ($r->{domain_status} = $_->{status});
-      }
-      # Name Server,
-      if (exists($_->{name_server})) {
-         exists($r->{name_server}) ? ($r->{name_server} .= "\n".$_->{name_server})
-                                   : ($r->{name_server} = $_->{name_server});
-      }
+      $self->_domain_lookup($_, 'domain_status', 'domain_status', $r);
+      $self->_domain_lookup($_, 'status', 'domain_status', $r);
+
+      # Name Server,nserver,
+      $self->_domain_lookup($_, 'name_server', 'name_server', $r);
+      $self->_domain_lookup($_, 'nserver', 'name_server', $r);
+
       # Registrant Name,
-      if (exists($_->{registrant_name})) {
-         exists($r->{registrant_name}) ? ($r->{registrant_name} .= "\n".$_->{registrant_name})
-                                       : ($r->{registrant_name} = $_->{registrant_name});
-      }
-      # Registrant Organization,
-      if (exists($_->{registrant_organization})) {
-         exists($r->{registrant_organization}) ? ($r->{registrant_organization} .= "\n".$_->{registrant_organization})
-                                               : ($r->{registrant_organization} = $_->{registrant_organization});
-      }
+      $self->_domain_lookup($_, 'registrant_name', 'registrant_name', $r);
+
+      # Registrant Organization,Organizacion,
+      $self->_domain_lookup($_, 'registrant_organization', 'registrant_organization', $r);
+      $self->_domain_lookup($_, 'organizacion', 'registrar', $r);
+
       # Registrant Street,
-      if (exists($_->{registrant_street})) {
-         exists($r->{registrant_street}) ? ($r->{registrant_street} .= "\n".$_->{registrant_street})
-                                         : ($r->{registrant_street} = $_->{registrant_street});
-      }
-      # Registrant City,
-      if (exists($_->{registrant_city})) {
-         exists($r->{registrant_city}) ? ($r->{registrant_city} .= "\n".$_->{registrant_city})
-                                       : ($r->{registrant_city} = $_->{registrant_city});
-      }
+      $self->_domain_lookup($_, 'registrant_street', 'registrant_street', $r);
+
+      # Registrant City,Ciudad,
+      $self->_domain_lookup($_, 'registrant_city', 'registrant_city', $r);
+      $self->_domain_lookup($_, 'ciudad', 'registrant_city', $r);
+
       # Registrant Postal Code,
-      if (exists($_->{registrant_postal_code})) {
-         exists($r->{registrant_postal_code}) ? ($r->{registrant_postal_code} .= "\n".$_->{registrant_postal_code})
-                                              : ($r->{registrant_postal_code} = $_->{registrant_postal_code});
-      }
+      $self->_domain_lookup($_, 'registrant_postal_code', 'registrant_postal_code', $r);
+
       # Registrant State/Province,
-      if (exists($_->{registrant_state_province})) {
-         exists($r->{registrant_state_province}) ? ($r->{registrant_state_province} .= "\n".$_->{registrant_state_province})
-                                                 : ($r->{registrant_state_province} = $_->{registrant_state_province});
-      }
-      # Registrant Country,
-      if (exists($_->{registrant_country})) {
-         exists($r->{registrant_country}) ? ($r->{registrant_country} .= "\n".$_->{registrant_country})
-                                          : ($r->{registrant_country} = $_->{registrant_country});
-      }
+      $self->_domain_lookup($_, 'registrant_state_province', 'registrant_state_province', $r);
+
+      # Registrant Country,Pais,
+      $self->_domain_lookup($_, 'registrant_country', 'registrant_country', $r);
+      $self->_domain_lookup($_, 'pais', 'registrant_country', $r);
+
       # Registrant Email,
-      if (exists($_->{registrant_email})) {
-         exists($r->{registrant_email}) ? ($r->{registrant_email} .= "\n".$_->{registrant_email})
-                                        : ($r->{registrant_email} = $_->{registrant_email});
+      $self->_domain_lookup($_, 'registrant_email', 'registrant_email', $r);
+   }
+
+   # Dedups lines
+   for (keys %$r) {
+      next if $_ eq 'raw';
+      if (my @toks = split(/\n/, $r->{$_})) {
+         my %uniq = map { $_ => 1 } @toks;
+         $r->{$_} = join("\n", sort { $a cmp $b } keys %uniq);  # With a sort
       }
    }
 

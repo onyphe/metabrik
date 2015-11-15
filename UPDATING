@@ -1,3 +1,8 @@
+20151115
+   AFFECT: address::generate
+
+   - address::generate ip_count Attribute renamed to count
+
 20151112
    AFFECT: client::dns, client::ssh, client::udp, client::tcp, client::whois, email::mbox, file::read
 

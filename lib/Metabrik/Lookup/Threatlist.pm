@@ -41,17 +41,41 @@ sub update {
       'iblocklist-ghlzqtqxnzctvvajwwag.gz' => 'http://list.iblocklist.com/?list=ghlzqtqxnzctvvajwwag',
       'sans-block.txt' => 'http://isc.sans.edu/block.txt',
       'malwaredomains-domains.txt' => 'http://mirror1.malwaredomains.com/files/domains.txt',
-      'emergingthreats-compromised-ips.txt' => 'http://rules.emergingthreats.net/blockrules/compromised-ips.txt',
-      'emergingthreats-emerging-Block-IPs.txt' => 'http://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt',
+      'emergingthreats-compromised-ips.txt.gz' => 'http://rules.emergingthreats.net/blockrules/compromised-ips.txt',
+      'emergingthreats-emerging-Block-IPs.txt.gz' => 'http://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt',
       'phishtank-verified_online.csv.gz' => 'http://data.phishtank.com/data/online-valid.csv.gz',
-      'abusech-palevotracker.txt' => 'https://palevotracker.abuse.ch/blocklists.php?download=ipblocklist',
-      'abusech-spyeyetracker.txt' => 'https://spyeyetracker.abuse.ch/blocklist.php?download=ipblocklist',
-      'abusech-zeustracker-badips.txt' => 'https://zeustracker.abuse.ch/blocklist.php?download=badips',
-      'abusech-zeustracker.txt' => 'https://zeustracker.abuse.ch/blocklist.php?download=ipblocklist',
+      'abusech-palevotracker.txt.gz' => 'https://palevotracker.abuse.ch/blocklists.php?download=ipblocklist',
+      'abusech-spyeyetracker.txt.gz' => 'https://spyeyetracker.abuse.ch/blocklist.php?download=ipblocklist',
+      'abusech-zeustracker-badips.txt.gz' => 'https://zeustracker.abuse.ch/blocklist.php?download=badips',
+      'abusech-zeustracker.txt.gz' => 'https://zeustracker.abuse.ch/blocklist.php?download=ipblocklist',
       'amazonaws-top-1m.csv.zip' => 'http://s3.amazonaws.com/alexa-static/top-1m.csv.zip',
       'iana-tlds-alpha-by-domain.txt' => 'http://data.iana.org/TLD/tlds-alpha-by-domain.txt',
-      'publicsuffix-effective_tld_names.dat' => 'https://publicsuffix.org/list/effective_tld_names.dat',
+      'publicsuffix-effective_tld_names.dat.gz' => 'https://publicsuffix.org/list/effective_tld_names.dat',
    );
+
+   # IP Threatlist:
+   # "abusech-palevotracker.txt",  # Palevo C&C
+   # "abusech-zeustracker-badips.txt", # Zeus IPs
+   # "abusech-zeustracker.txt", # Zeus IPs
+   # "emergingthreats-compromised-ips.txt", # Compromised IPs
+   # "emergingthreats-emerging-Block-IPs.txt", # Raw IPs from Spamhaus, DShield and Abuse.ch
+   # "iblocklist-ghlzqtqxnzctvvajwwag", # Various exploiters, scanner, spammers IPs
+   # "iblocklist-llvtlsjyoyiczbkjsxpf", # Various evil IPs (?)
+   # "iblocklist-xoebmbyexwuiogmbyprb", # Proxy and TOR IPs
+   # "sans-block.txt", # IP ranges to block for abuse reasons
+
+   # Owner lists
+   # "iblocklist-nzldzlpkgrcncdomnttb", # ThePirateBay
+   # "iblocklist-togdoptykrlolpddwbvz", # TOR IPs
+   # "iblocklist-tgbankumtwtrzllndbmb", # LogMeIn IPs
+   # "iblocklist-zfucwtjkfwkalytktyiw", # RapidShare IPs
+   # "phishtank-verified_online.csv", # URLs hosting phishings
+   # "malwaredomains-domains.txt", # Malware domains
+
+   # Other lists
+   # "top-1m.csv",
+   # "iana-tlds-alpha-by-domain.txt",
+   # "publicsuffix-effective_tld_names.dat",
 
    my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
    $cw->user_agent("Metabrik-Lookup-Threatlist-mirror/1.00");

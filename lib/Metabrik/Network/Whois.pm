@@ -15,12 +15,14 @@ sub brik_properties {
       tags => [ qw(unstable network whois) ],
       attributes => {
          rtimeout => [ qw(timeout) ],
+         last_server => [ qw(server) ],
       },
       attributes_default => {
          rtimeout => 2,
       },
       commands => {
          target => [ qw(domain|ip_address) ],
+         queried_server => [ ],
       },
       require_modules => {
          'Net::Whois::Raw' => [ ],
@@ -39,13 +41,32 @@ sub target {
 
    $Net::Whois::Raw::TIMEOUT = $self->rtimeout;
 
-   my $info = Net::Whois::Raw::whois($target)
-      or return $self->log->error("target: whois for target [$target] failed");
+   my $info;
+   my $server;
+   eval {
+      ($info, $server) = Net::Whois::Raw::whois($target)
+        or return $self->log->error("target: whois for target [$target] failed");
+   };
+   if ($@) {
+      chomp($@);
+      if ($@ =~ /(Connection timeout to \S+)/) {
+         $@ = $1;
+      }
+      return $self->log->error("target: whois failed with error [$@]");
+   }
 
    my $sp = Metabrik::String::Parse->new_from_brik_init($self) or return;
    my $lines = $sp->to_array($info) or return;
 
+   $self->last_server($server);
+
    return $lines;
+}
+
+sub queried_server {
+   my $self = shift;
+
+   return $self->last_server || 'undef';
 }
 
 1;
