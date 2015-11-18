@@ -15,9 +15,11 @@ sub brik_properties {
       tags => [ qw(unstable system process) ],
       attributes => {
          force_kill => [ qw(0|1) ],
+         close_output_on_daemonize => [ qw(0|1) ],
       },
       attributes_default => {
          force_kill => 0,
+         close_output_on_daemonize => 1,
       },
       commands => {
          list => [ ],
@@ -134,7 +136,7 @@ sub daemonize {
    my ($sub) = @_;
 
    my %opts = (
-      close => 0,
+      close => $self->close_output_on_daemonize,
    );
 
    my $r;

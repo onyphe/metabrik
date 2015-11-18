@@ -21,12 +21,16 @@ sub brik_properties {
          user_agent => [ qw(user_agent) ],
          ssl_verify => [ qw(0|1) ],
          datadir => [ qw(datadir) ],
+         timeout => [ qw(0|1) ],
+         rtimeout => [ qw(timeout) ],
          _client => [ qw(object|INTERNAL) ],
          _last => [ qw(object|INTERNAL) ],
       },
       attributes_default => {
          ssl_verify => 0,
          ignore_content => 0,
+         timeout => 0,
+         rtimeout => 10,
       },
       commands => {
          create_user_agent => [ ],
@@ -96,7 +100,7 @@ sub create_user_agent {
 
    my $mech = WWW::Mechanize->new(
       autocheck => 0,  # Do not throw on error by checking HTTP code. Let us do it.
-      timeout => $self->global->rtimeout,
+      timeout => $self->rtimeout,
       ssl_opts => {
          verify_hostname => 0,
       },
@@ -140,6 +144,8 @@ sub _method {
       return $self->log->error($self->brik_help_run($method));
    }
 
+   $self->timeout(0);
+
    $username ||= $self->username;
    $password ||= $self->password;
    my $client = $self->_client;
@@ -165,6 +171,9 @@ sub _method {
    };
    if ($@) {
       chomp($@);
+      if ($@ =~ /read timeout/i) {
+         $self->timeout(1);
+      }
       return $self->log->error("$method: unable to $method uri [$uri]: $@");
    }
 
@@ -364,7 +373,7 @@ sub trace_redirect {
    }
 
    my $lwp = LWP::UserAgent->new(%args);
-   $lwp->timeout($self->global->rtimeout);
+   $lwp->timeout($self->rtimeout);
    $lwp->agent('Mozilla/5.0');
    $lwp->max_redirect(0);
    $lwp->env_proxy;

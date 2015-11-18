@@ -44,9 +44,12 @@ sub parse_raw_whois {
    for my $this (@$chunks) {
       my $new = {};
       for (@$this) {
+         # Some whois prefix every line by 'network:'
+         s/^\s*network\s*:\s*//;
+
          # If an abuse email adress can be found, we gather it.
          if (/abuse/i && /\@/) {
-            my ($new) = $_ =~ /(\S+\@[A-Za-z0-9\._-]+)/;
+            my ($new) = $_ =~ /([A-Za-z0-9\._-]+\@[A-Za-z0-9\._-]+)/;
             if (defined($new)) {
                defined($new) ? ($new =~ s/['"]//g) : ();
                push @abuse, $new;
@@ -143,7 +146,7 @@ sub normalize_raw_ip_whois {
    # We search for the first chunk with an inetnum.
    my $general;
    for (@$chunks) {
-      if (exists($_->{inetnum})) {
+      if (exists($_->{inetnum}) || exists($_->{netrange}) || exists($_->{network})) {
          $general = $_;
          last;
       }

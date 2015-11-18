@@ -57,11 +57,11 @@ sub match {
    }
 
    if (Net::CIDR::cidrlookup($ip, $subnet)) {
-      $self->log->info("match: $ip is in the same subnet as $subnet");
+      $self->log->verbose("match: $ip is in the same subnet as $subnet");
       return 1;
    }
    else {
-      $self->log->info("match: $ip is NOT in the same subnet as $subnet");
+      $self->log->verbose("match: $ip is NOT in the same subnet as $subnet");
       return 0;
    }
 
