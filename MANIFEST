@@ -133,6 +133,7 @@ lib/Metabrik/String/Regex.pm
 lib/Metabrik/String/Rot13.pm
 lib/Metabrik/String/Uri.pm
 lib/Metabrik/String/Xml.pm
+lib/Metabrik/System/Docker.pm
 lib/Metabrik/System/Freebsd/Jail.pm
 lib/Metabrik/System/Freebsd/Package.pm
 lib/Metabrik/System/Freebsd/Pf.pm
