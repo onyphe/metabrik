@@ -7,20 +7,22 @@ package Metabrik::File::Create;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command);
 
 sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(unstable dd) ],
       attributes => {
+         output => [ qw(output) ],
          max_size => [ qw(integer) ],
       },
       attributes_default => {
+         output => 'file.create',
          max_size => 10_000_000, # 10MB
       },
       commands => {
-         fixed_size => [ qw(SCALAR) ],
+         fixed_size => [ qw(output|OPTIONAL max_size|OPTIONAL) ],
       },
       require_binaries => {
          'dd' => [ ],
@@ -30,15 +32,19 @@ sub brik_properties {
 
 sub fixed_size {
    my $self = shift;
-   my ($filename) = @_;
+   my ($output, $max_size) = @_;
 
-   if (! defined($filename)) {
+   $output ||= $self->output;
+   $max_size ||= $self->max_size;
+   if (! defined($output)) {
       return $self->log->error($self->brik_help_run('fixed_size'));
    }
 
-   my $cmd = "dd if=/dev/zero of=$filename bs=1 count=".$self->max_size;
+   $max_size =~ s/_//g;
 
-   return $self->context->run('shell::command', 'system', $cmd);
+   my $cmd = "dd if=/dev/zero of=$output bs=1 count=$max_size";
+
+   return $self->system($cmd);
 }
 
 1;
