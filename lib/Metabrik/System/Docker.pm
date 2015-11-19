@@ -153,7 +153,7 @@ sub create {
       return $self->log->error($self->brik_help_run('create'));
    }
 
-   my $cmd = "";
+   my $cmd = "docker pull $jail_name";
 
    return $self->system($cmd);
 }
@@ -195,7 +195,7 @@ sub delete {
       return $self->log->error($self->brik_help_run('delete'));
    }
 
-   my $cmd = "";
+   my $cmd = "docker rmi -f $jail_name";
 
    return $self->system($cmd);
 }

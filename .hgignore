@@ -1,7 +1,6 @@
 blib
 _build
 Build
-META.*
 MYMETA.*
 TODO
 work

@@ -18,7 +18,8 @@ sub brik_properties {
          device_info => [ qw(device_info_hash) ],
       },
       commands => {
-         update_device_info => [ ],
+         get_device_info => [ qw(device|OPTIONAL) ],
+         update_device_info => [ qw(device|OPTIONAL) ],
          from_read => [ qw(frame) ],
          from_hexa => [ qw(hexa first_layer|OPTIONAL) ],
          from_raw => [ qw(raw first_layer|OPTIONAL) ],
@@ -68,7 +69,7 @@ sub brik_init {
    return $self->SUPER::brik_init(@_);
 }
 
-sub update_device_info {
+sub get_device_info {
    my $self = shift;
    my ($device) = @_;
 
@@ -76,12 +77,18 @@ sub update_device_info {
 
    my $nd = Metabrik::Network::Device->new_from_brik_init($self) or return;
 
-   my $device_info = $nd->get($device)
-      or return $self->log->error("update_device_info: get failed");
+   my $device_info = $nd->get($device) or return;
 
-   $self->log->verbose("update_device_info: updating from device [$device]");
+   $self->log->verbose("get_device_info: got info from device [$device]");
 
-   return $self->device_info($device_info);
+   return $device_info;
+}
+
+sub update_device_info {
+   my $self = shift;
+   my ($device) = @_;
+
+   return $self->device_info($self->get_device_info($device));
 }
 
 sub from_read {

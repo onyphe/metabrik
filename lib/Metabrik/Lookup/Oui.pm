@@ -29,7 +29,7 @@ sub brik_properties {
          all => [ ],
       },
       require_modules => {
-         'Metabrik::File::Fetch' => [ ],
+         'Metabrik::Client::Www' => [ ],
       },
    };
 }
@@ -38,17 +38,17 @@ sub update {
    my $self = shift;
    my ($output) = @_;
 
-   my $url = 'http://standards-oui.ieee.org/oui.txt';
-   my ($file) = $self->input;
+   my $input = $self->input;
+   my $datadir = $self->datadir;
+   $output ||= $input;
 
    # XXX: should also check for generic attribution:
    # http://www.iana.org/assignments/ethernet-numbers/ethernet-numbers-2.csv
 
-   $output ||= $self->datadir.'/'.$file;
+   my $url = 'http://standards-oui.ieee.org/oui.txt';
 
-   my $ff = Metabrik::File::Fetch->new_from_brik_init($self) or return;
-   $ff->get($url, $output)
-      or return $self->log->error("update: get failed");
+   my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
+   $cw->mirror($url, $output, $datadir) or return;
 
    return $output;
 }

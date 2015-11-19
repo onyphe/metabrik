@@ -49,10 +49,10 @@ sub brik_properties {
          forms => [ ],
          links => [ ],
          trace_redirect => [ qw(uri|OPTIONAL) ],
-         screenshot => [ qw(uri output_file) ],
+         screenshot => [ qw(uri output) ],
          eval_javascript => [ qw(js uri|OPTIONAL) ],
          info => [ ],
-         mirror => [ qw(url|$url_list datadir|OPTIONAL) ],
+         mirror => [ qw(url|$url_list output|OPTIONAL datadir|OPTIONAL) ],
       },
       require_modules => {
          'Net::SSL' => [ ],
@@ -556,18 +556,18 @@ sub info {
 
 sub mirror {
    my $self = shift;
-   my ($url, $output_file) = @_;
+   my ($url, $output, $datadir) = @_;
 
-   if (! defined($url) || ! defined($output_file)) {
+   if (! defined($url) || ! defined($output)) {
       return $self->log->error($self->brik_help_run('mirror'));
    }
 
-   my $datadir = $self->datadir;
+   $datadir ||= $self->datadir;
 
    my @files = ();
    if (ref($url) eq 'ARRAY') {
       for my $this (@$url) {
-         my $file = $self->mirror($this, $output_file) or next;
+         my $file = $self->mirror($this, $output) or next;
          push @files, @$file;
       }
    }
@@ -576,25 +576,25 @@ sub mirror {
          return $self->log->error("mirror: invalid URL [$url]");
       }
 
-      $self->debug && $self->log->debug("mirror: url[$url] output_file[$output_file]");
+      $self->debug && $self->log->debug("mirror: url[$url] output[$output]");
 
       my $mech = $self->create_user_agent or return;
 
       my $rc;
       eval {
-         $rc = $mech->mirror($url, $datadir.'/'.$output_file);
+         $rc = $mech->mirror($url, $datadir.'/'.$output);
       };
       if ($@) {
          chomp($@);
-         return $self->log->error("mirror: mirroring URL [$url] to local file [$output_file] failed: $@");
+         return $self->log->error("mirror: mirroring URL [$url] to local file [$output] failed: $@");
       }
       my $code = $rc->code;
       if ($rc->code == 200) {
-         push @files, $output_file;
-         $self->log->info("mirror: downloading URL [$url] to local file [$output_file] done");
+         push @files, $output;
+         $self->log->info("mirror: downloading URL [$url] to local file [$output] done");
       }
       elsif ($rc->code == 304) { # Not modified
-         $self->log->info("mirror: file [$output_file] not modified since last check");
+         $self->log->info("mirror: file [$output] not modified since last check");
       }
    }
 

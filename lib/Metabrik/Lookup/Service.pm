@@ -30,7 +30,8 @@ sub brik_properties {
          from_string => [ qw(service_string) ],
       },
       require_modules => {
-         'Metabrik::File::Fetch' => [ ],
+         'Metabrik::Client::Www' => [ ],
+         'Metabrik::File::Compress' => [ ],
          'Metabrik::File::Text' => [ ],
       },
    };
@@ -41,29 +42,34 @@ sub update {
    my ($output) = @_;
 
    my $url = 'http://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.csv';
-   my ($file) = $self->input;
 
-   $output ||= $self->datadir.'/'.$file;
+   my $input = $self->input;
+   my $datadir = $self->datadir;
+   $output ||= $input;
 
-   my $ff = Metabrik::File::Fetch->new_from_brik_init($self) or return;
-   $ff->get($url, $output)
-      or return $self->log->error("update: get failed");
+   my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
+   my $files = $cw->mirror($url, "$output.gz", $datadir) or return;
 
-   # We have to rewrite the CSV file, cause some entries are multiline.
-   my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
-   $ft->overwrite(1);
-   $ft->append(0);
-   my $text = $ft->read($output)
-      or return $self->log->error("update: read failed");
+   # If files were modified, we uncompress and save
+   if (@$files > 0) {
+      my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
+      $fc->uncompress($datadir."/$output.gz", $output, $datadir) or return;
 
-   # Some lines are split on multi-lines, we put into a single line
-   # for each record.
-   my @new = split(/\r\n/, $text);
-   for (@new) {
-      s/\n/ /g;
+      # We have to rewrite the CSV file, cause some entries are multiline.
+      my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+      $ft->overwrite(1);
+      $ft->append(0);
+      my $text = $ft->read($datadir.'/'.$output) or return;
+
+      # Some lines are split on multi-lines, we put into a single line
+      # for each record.
+      my @new = split(/\r\n/, $text);
+      for (@new) {
+         s/\n/ /g;
+      }
+
+      $ft->write(\@new, $output);
    }
-
-   $ft->write(\@new, $output);
 
    return $output;
 }

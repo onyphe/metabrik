@@ -15,47 +15,33 @@ sub brik_properties {
       tags => [ qw(unstable arp cache poison eui64 discover scan) ],
       attributes => {
          try => [ qw(try_count) ],
-         timeout => [ qw(timeout_seconds) ],
+         rtimeout => [ qw(timeout_seconds) ],
          max_read => [ qw(max_read_packet) ],
          max_runtime => [ qw(max_runtime) ],
-         _dnet => [ qw(Net::Libdnet::Arp) ],
       },
       attributes_default => {
          try => 2,
-         timeout => 2,
+         rtimeout => 2,
       },
       commands => {
          cache => [ ],
          half_poison => [ ],
          full_poison => [ ],
          mac2eui64 => [ qw(mac_address) ],
-         scan => [ qw(subnet|OPTIONAL) ],
-         get_ipv4_neighbors => [ qw(subnet|OPTIONAL) ],
-         get_ipv6_neighbors => [ qw(subnet|OPTIONAL) ],
-         get_mac_neighbors => [ qw(subnet|OPTIONAL) ],
+         scan => [ qw(subnet|OPTIONAL device[OPTIONAL) ],
+         get_ipv4_neighbors => [ qw(subnet|OPTIONAL device|OPTIONAL) ],
+         get_ipv6_neighbors => [ qw(subnet|OPTIONAL device|OPTIONAL) ],
+         get_mac_neighbors => [ qw(subnet|OPTIONAL device|OPTIONAL) ],
       },
       require_modules => {
-         'Metabrik::Network::Arp' => [ ],
-         'Metabrik::Network::Write' => [ ],
-         'Metabrik::Network::Read' => [ ],
-         'Metabrik::Network::Address' => [ ],
          'Net::Frame::Layer::ARP' => [ ],
          'Net::Libdnet::Arp' => [ ],
+         'Metabrik::Network::Address' => [ ],
+         'Metabrik::Network::Arp' => [ ],
+         'Metabrik::Network::Read' => [ ],
+         'Metabrik::Network::Write' => [ ],
       },
    };
-}
-
-sub brik_init {
-   my $self = shift;
-
-   my $dnet = Net::Libdnet::Arp->new;
-   if (! defined($dnet)) {
-      return $self->log->error("brik_init: unable to create Net::Libdnet::Arp object");
-   }
-
-   $self->_dnet($dnet);
-
-   return $self->SUPER::brik_init(@_);
 }
 
 sub _loop {
@@ -70,8 +56,10 @@ sub _loop {
 sub cache {
    my $self = shift;
 
+   my $dnet = Net::Libdnet::Arp->new;
+
    my %data = ();
-   $self->_dnet->loop(\&_loop, \%data);
+   $dnet->loop(\&_loop, \%data);
 
    return \%data;
 }
@@ -127,15 +115,13 @@ sub _get_arp_frame {
 
 sub scan {
    my $self = shift;
-   my ($subnet) = @_;
+   my ($subnet, $device) = @_;
 
    if ($< != 0) {
       return $self->log->error("scan: must be root to run");
    }
 
-   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
-
-   my $interface = $self->device_info;
+   my $interface = $self->get_device_info($device) or return;
 
    $subnet ||= $interface->{subnet4};
    if (! defined($subnet)) {
@@ -145,8 +131,9 @@ sub scan {
    my $arp_cache = $self->cache
       or return $self->log->error("scan: cache failed");
 
-   my $ip_list = $na->ipv4_list($subnet)
-      or return $self->log->error("scan: ipv4_list failed");
+   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
+
+   my $ip_list = $na->ipv4_list($subnet) or return;
 
    my $reply_cache = {};
    my $local_arp_cache = {};
@@ -154,7 +141,9 @@ sub scan {
 
    for my $ip (@$ip_list) {
       # We scan ARP for everyone but our own IP
-      next if $ip eq $interface->{ipv4};
+      if (exists($interface->{ipv4}) && $ip eq $interface->{ipv4}) {
+         next;
+      }
 
       # XXX: move to network::arp so there is one place for ARP cache handling
       my $mac;
@@ -175,16 +164,14 @@ sub scan {
 
    my $nw = Metabrik::Network::Write->new_from_brik_init($self) or return;
 
-   my $write = $nw->open(2, $self->device)
-      or return $self->log->error("scan: open failed");
+   my $write = $nw->open(2, $interface->{device}) or return;
 
    my $nr = Metabrik::Network::Read->new_from_brik_init($self) or return;
-   $nr->rtimeout($self->timeout);
+   $nr->rtimeout($self->rtimeout);
    $nr->max_read($self->max_read || 0);
 
    my $filter = 'arp and src net '.$subnet.' and dst host '.$interface->{ipv4};
-   my $read = $nr->open(2, $self->device, $filter)
-      or return $self->log->error("scan: open failed");
+   my $read = $nr->open(2, $interface->{device}, $filter) or return;
 
    # We will send frames 3 times max
    my $try = $self->try;

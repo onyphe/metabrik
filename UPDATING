@@ -1,3 +1,8 @@
+20151118
+   AFFECT: network::arp
+
+   - network::arp: timeout Attribute renamed to rtimeout for normalization purposes
+
 20151115
    AFFECT: address::generate
 

@@ -113,7 +113,7 @@ sub uncompress {
    $datadir ||= $self->datadir;
 
    if ($input =~ /\.gz$/) {
-      return $self->gunzip($input, $output);
+      return $self->gunzip($input, $output, $datadir);
    }
    elsif ($input =~ /\.zip$/) {
       return $self->unzip($input, $datadir);

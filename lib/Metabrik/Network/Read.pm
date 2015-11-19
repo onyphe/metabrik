@@ -90,7 +90,7 @@ sub open {
       return $self->log->error("open: not implemented");
    }
 
-   $dump->start or return $self->log->error("open: error");
+   $dump->start or return $self->log->error("open: Net::Frame::Dump::Online2->start failed");
 
    return $self->_dump($dump);
 }
