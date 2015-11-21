@@ -14,17 +14,21 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable route) ],
       attributes => {
-         _dnet => [ qw(Net::Libdnet::Route) ],
+         device => [ qw(device) ],
       },
       commands => {
          list => [ ],
          show => [ ],
-         is_router_ipv4 => [ ],
-         enable_router_ipv4 => [ ],
-         disable_router_ipv4 => [ ],
+         is_router_ipv4 => [ qw(device|OPTIONAL) ],
+         enable_router_ipv4 => [ qw(device|OPTIONAL) ],
+         disable_router_ipv4 => [ qw(device|OPTIONAL) ],
+         default_device => [ qw(ip_address|OPTIONAL) ],
+         default_ipv4_gateway => [ qw(device|OPTIONAL) ],
+         default_ipv6_gateway => [ qw(device|OPTIONAL) ],
       },
       require_modules => {
-         'Net::Libdnet::Route' => [ ],
+         'Net::Routing' => [ ],
+         'Metabrik::Network::Device' => [ ],
          'Metabrik::Shell::Command' => [ ],
       },
       require_binaries => {
@@ -33,77 +37,135 @@ sub brik_properties {
    };
 }
 
-sub brik_init {
+sub brik_use_properties {
    my $self = shift;
 
-   my $dnet = Net::Libdnet::Route->new
-      or return $self->log->error("can't create Net::Libdnet::Route object");
-
-   $self->_dnet($dnet);
-
-   return $self->SUPER::brik_init;
-}
-
-sub _display {
-   my ($entry, $data) = @_;
-
-   my $buf = sprintf("%-30s %-30s", $entry->{route_dst}, $entry->{route_gw});
-   print "$buf\n";
-
-   return $buf;
+   return {
+      attributes_default => {
+         device => $self->global->device,
+      },
+   };
 }
 
 sub show {
    my $self = shift;
 
-   printf("%-30s %-30s\n", 'Destination', 'Gateway');
-   my $data = '';
-   $self->_dnet->loop(\&_display, \$data);
+   $self->log->info("show: IPv4 network routes:");
+
+   my $nr4 = Net::Routing->new(
+      target => Net::Routing::NR_TARGET_ALL(),
+      family => Net::Routing::NR_FAMILY_INET4(),
+   );
+   $nr4->list;
+
+   $self->log->info("\nshow: IPv6 network routes:");
+
+   my $nr6 = Net::Routing->new(
+      target => Net::Routing::NR_TARGET_ALL(),
+      family => Net::Routing::NR_FAMILY_INET6(),
+   );
+   $nr6->list;
 
    return 1;
-}
-
-sub _get_list {
-   my ($entry, $data) = @_;
-
-   # We may have multiple routes to the same destination.
-   # By destination lookup
-   push @{$data->{destination}->{$entry->{route_dst}}}, {
-      destination => $entry->{route_dst},
-      gateway => $entry->{route_gw},
-   };
-   # By gateway lookup
-   push @{$data->{gateway}->{$entry->{route_gw}}}, {
-      destination => $entry->{route_dst},
-      gateway => $entry->{route_gw},
-   };
-
-   return $data;
 }
 
 sub list {
    my $self = shift;
 
-   my $data = {};
-   $self->_dnet->loop(\&_get_list, $data);
+   my $nr4 = Net::Routing->new(
+      target => Net::Routing::NR_TARGET_ALL(),
+      family => Net::Routing::NR_FAMILY_INET4(),
+   );
+   my $route4 = $nr4->get || [];
 
-   return $data;
+   for (@$route4) {
+      $_->{family} = 'inet4';
+   }
+
+   my $nr6 = Net::Routing->new(
+      target => Net::Routing::NR_TARGET_ALL(),
+      family => Net::Routing::NR_FAMILY_INET6(),
+   );
+   my $route6 = $nr6->get || [];
+
+   for (@$route6) {
+      $_->{family} = 'inet6';
+   }
+
+   return [ @$route4, @$route6 ];
+}
+
+sub default_device {
+   my $self = shift;
+   my ($ip_address) = @_;
+
+   my $nd = Metabrik::Network::Device->new_from_brik_init($self) or return;
+   return $nd->default($ip_address);
+}
+
+sub default_ipv4_gateway {
+   my $self = shift;
+   my ($device) = @_;
+
+   $device ||= '';
+
+   my $routes = $self->list or return;
+   for (@$routes) {
+      next unless (length($device) && $_->{interface} eq $device || ! length($device));
+      if ($_->{family} eq 'inet4' && $_->{default}) {
+         return $_->{gateway};
+      }
+   }
+
+   if (length($device)) {
+      $self->log->info("default_ipv4_gateway: no default gateway found for device [$device]");
+   }
+   else {
+      $self->log->info("default_ipv4_gateway: no default gateway found");
+   }
+
+   return 0;
+}
+
+sub default_ipv6_gateway {
+   my $self = shift;
+   my ($device) = @_;
+
+   $device ||= '';
+
+   my $routes = $self->list or return;
+   for (@$routes) {
+      next unless (length($device) && $_->{interface} eq $device || ! length($device));
+      if ($_->{family} eq 'inet6' && $_->{default}) {
+         return $_->{gateway};
+      }
+   }
+
+   if (length($device)) {
+      $self->log->info("default_ipv6_gateway: no default gateway found for device [$device]");
+   }
+   else {
+      $self->log->info("default_ipv6_gateway: no default gateway found");
+   }
+
+   return 0;
 }
 
 sub is_router_ipv4 {
    my $self = shift;
    my ($device) = @_;
 
-   $device ||= $self->global->device;
+   $device ||= $self->device;
+   if (! defined($device)) {
+      return $self->log->error($self->brik_help_run('is_router_ipv4'));
+   }
 
-   my $command = Metabrik::Shell::Command->new_from_brik($self) or return;
+   my $command = Metabrik::Shell::Command->new_from_brik_init($self) or return;
    $command->as_matrix(0);
    $command->as_array(0);
    $command->capture_stderr(1);
 
-   $command->brik_init or return $self->log->error("is_router: shell::command brik_init failed");
-
-   my $cmd = "sysctl net.ipv4.conf.".$device.".forwarding";
+   my $cmd = "sysctl net.ipv4.conf.$device.forwarding";
    chomp(my $line = $command->capture($cmd));
 
    $self->log->verbose("is_router_ipv4: cmd [$cmd]");
@@ -122,16 +184,17 @@ sub enable_router_ipv4 {
    my $self = shift;
    my ($device) = @_;
 
-   $device ||= $self->global->device;
+   $device ||= $self->device;
+   if (! defined($device)) {
+      return $self->log->error($self->brik_help_run('enable_router_ipv4'));
+   }
 
-   my $command = Metabrik::Shell::Command->new_from_brik($self) or return;
+   my $command = Metabrik::Shell::Command->new_from_brik_init($self) or return;
    $command->as_matrix(0);
    $command->as_array(0);
    $command->capture_stderr(1);
 
-   $command->brik_init or return $self->log->error("enable_router_ipv4: shell::command brik_init failed");
-
-   my $cmd = "sudo sysctl -w net.ipv4.conf.".$device.".forwarding=1";
+   my $cmd = "sudo sysctl -w net.ipv4.conf.$device.forwarding=1";
    chomp(my $line = $command->capture($cmd));
 
    $self->log->verbose("enable_router_ipv4: cmd [$cmd]"); 
@@ -150,16 +213,17 @@ sub disable_router_ipv4 {
    my $self = shift;
    my ($device) = @_;
 
-   $device ||= $self->global->device;
+   $device ||= $self->device;
+   if (! defined($device)) {
+      return $self->log->error($self->brik_help_run('disable_router_ipv4'));
+   }
 
-   my $command = Metabrik::Shell::Command->new_from_brik($self) or return;
+   my $command = Metabrik::Shell::Command->new_from_brik_init($self) or return;
    $command->as_matrix(0);
    $command->as_array(0);
    $command->capture_stderr(1);
 
-   $command->brik_init or return $self->log->error("disable_router_ipv4: shell::command brik_init failed");
-
-   my $cmd = "sudo sysctl -w net.ipv4.conf.".$device.".forwarding=0";
+   my $cmd = "sudo sysctl -w net.ipv4.conf.$device.forwarding=0";
    chomp(my $line = $command->capture($cmd));
 
    $self->log->verbose("disable_router_ipv4: cmd [$cmd]");

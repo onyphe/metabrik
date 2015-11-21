@@ -22,7 +22,6 @@ sub brik_properties {
       },
       attributes_default => {
          eof => 0,
-         count => 1,
          filter => '',
       },
       commands => {
@@ -112,7 +111,7 @@ sub read_next {
    my $self = shift;
    my ($count) = @_;
 
-   $count ||= $self->count;
+   $count ||= 1;
    my $dump = $self->_dump;
    if (! defined($dump)) {
       return $self->log->error($self->brik_help_run('open'));

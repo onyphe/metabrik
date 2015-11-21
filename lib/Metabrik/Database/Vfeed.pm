@@ -14,11 +14,14 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable cve vfeed) ],
       attributes => {
-         db => [ qw(vfeed_db) ],
-         vfeed => [ qw(vFeed::DB) ],
+         datadir => [ qw(datadir) ],
+         db => [ qw(vfeed.db) ],
+      },
+      attributes_default => {
+         db => 'vfeed.db',
       },
       commands => {
-         vfeed_version => [ ],
+         db_version => [ ],
          update => [ ],
          cve => [ qw(cve_id) ],
       },
@@ -26,53 +29,51 @@ sub brik_properties {
          'Data::Dumper' => [ ],
          'vFeed::DB' => [ ],
          'vFeed::Log' => [ ],
+         'Metabrik::Client::Www' => [ ],
+         'Metabrik::File::Compress' => [ ],
       },
    };
 }
 
-sub brik_init {
+sub db_version {
    my $self = shift;
 
-   if (! defined($self->db)) {
-      return $self->log->error($self->brik_help_set('db'));
-   }
+   my $db = $self->db;
+   my $datadir = $self->datadir;
 
    my $log = vFeed::Log->new;
    my $vfeed = vFeed::DB->new(
       log => $log,
-      file => $self->db,
+      file => $datadir.'/'.$db,
    );
 
    $vfeed->init;
 
-   $self->vfeed($vfeed);
-
-   return $self->SUPER::brik_init;
-}
-
-sub vfeed_version {
-   my $self = shift;
-
-   my $version = $self->vfeed->db_version;
-   print "vFeed version: $version\n";
-
-   return $version;
+   return $vfeed->db_version;
 }
 
 sub cve {
    my $self = shift;
    my ($id) = @_;
 
-   my $vfeed = $self->vfeed;
+   if (! defined($id)) {
+      return $self->log->error($self->brik_help_run('cve'));
+   }
+
+   my $db = $self->db;
+   my $datadir = $self->datadir;
+
+   my $log = vFeed::Log->new;
+   my $vfeed = vFeed::DB->new(
+      log => $log,
+      file => $datadir.'/'.$db,
+   );
+
+   $vfeed->init;
 
    my $cve = $vfeed->get_cve($id);
-   print Dumper($cve),"\n";
-
    my $cpe = $vfeed->get_cpe($id);
-   print Dumper($cpe),"\n";
-
    my $cwe = $vfeed->get_cwe($id);
-   print Dumper($cwe),"\n";
 
    return {
       cve => $cve,
@@ -84,11 +85,19 @@ sub cve {
 sub update {
    my $self = shift;
 
-   my $vfeed = $self->vfeed;
+   my $db = $self->db;
+   my $datadir = $self->datadir;
+   my $url = 'http://www.toolswatch.org/vfeed/vfeed.db.tgz';
 
-   $vfeed->update;
+   my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
+   my $files = $cw->mirror($url, 'vfeed.db.tgz', $datadir);
+   if (@$files) { # An update was found
+      $self->log->info("update: a new version was found");
+      my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
+      $fc->uncompress($files->[0], $db, $datadir) or return;
+   }
 
-   return $self;
+   return $self->db_version;
 }
 
 1;

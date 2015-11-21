@@ -55,9 +55,12 @@ sub brik_properties {
          mirror => [ qw(url|$url_list output|OPTIONAL datadir|OPTIONAL) ],
       },
       require_modules => {
+         'Progress::Any::Output' => [ ],
+         'Progress::Any::Output::TermProgressBarColor' => [ ],
          'Net::SSL' => [ ],
          'Data::Dumper' => [ ],
          'LWP::UserAgent' => [ ],
+         'LWP::UserAgent::ProgressAny' => [ ],
          'HTTP::Request' => [ ],
          'WWW::Mechanize' => [ ],
          'Metabrik::File::Write' => [ ],
@@ -86,7 +89,7 @@ sub create_user_agent {
       # IO::Socket::SSL, Net::SSL, Net::SSLeay, Net::HTTPS, AnyEvent::TLS just sucks.
       # So we have to perform a first TCP connexion to verify cert, then a second 
       # One to actually negatiate an unverified session.
-      my $cs = Metabrik::Client::Ssl->new_from_brik($self) or return;
+      my $cs = Metabrik::Client::Ssl->new_from_brik_init($self) or return;
       my $verified = $cs->verify_server($uri);
       if (! defined($verified)) {
          return;
@@ -431,14 +434,11 @@ sub screenshot {
 
       my $get = $mech->get($uri)
          or return $self->log->error("screenshot: get uri [$uri] failed");
-      if (! $get->is_success) {
-         return $self->log->error("screenshot: error from GET: [".$get->status_line."]");
-      }
 
       my $data = $mech->content_as_png
          or return $self->log->error("screenshot: content_as_png failed");
 
-      my $write = Metabrik::File::Write->new_from_brik($self) or return;
+      my $write = Metabrik::File::Write->new_from_brik_init($self) or return;
       $write->encoding('ascii');
       $write->overwrite(1);
       $write->append(0);
@@ -579,6 +579,8 @@ sub mirror {
       $self->debug && $self->log->debug("mirror: url[$url] output[$output]");
 
       my $mech = $self->create_user_agent or return;
+      LWP::UserAgent::ProgressAny::__add_handlers($mech);
+      Progress::Any::Output->set("TermProgressBarColor");
 
       my $rc;
       eval {
@@ -590,8 +592,9 @@ sub mirror {
       }
       my $code = $rc->code;
       if ($rc->code == 200) {
-         push @files, $output;
-         $self->log->info("mirror: downloading URL [$url] to local file [$output] done");
+         my $file = $datadir.'/'.$output;
+         push @files, $file;
+         $self->log->info("mirror: downloading URL [$url] to local file [$file] done");
       }
       elsif ($rc->code == 304) { # Not modified
          $self->log->info("mirror: file [$output] not modified since last check");

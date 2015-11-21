@@ -159,14 +159,15 @@ sub show {
    } 
 
    for my $this (@$devices) {
+      $self->debug && $self->log->debug("show: found device [$this]");
       my $device = $self->get($this);
-      if (! defined($device)) {
+      if (! defined($device) || ! exists($device->{device})) {
          $self->enable_warnings
             && $self->log->warning("show: get failed for device [$this]");
          next;
       }
 
-      printf("device: %s\nipv4: %s  subnet4: %s\nipv6: %s  subnet6: %s\n",
+      printf("device: %s\nipv4: %s  subnet4: %s\nipv6: %s  subnet6: %s\n\n",
          $device->{device},
          $device->{ipv4},
          $device->{subnet4},

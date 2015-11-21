@@ -26,9 +26,13 @@ sub brik_properties {
       attributes_default => {
          layer => 2,
          max_read => 0,
+         family => 'ipv4',
+         protocol => 'tcp',
+         rtimeout => 5,
+         filter => '',
       },
       commands => {
-         open => [ qw(layer|OPTIONAL arg2|OPTIONAL arg3|OPTIONAL) ],
+         open => [ qw(layer|OPTIONAL device|OPTIONAL filter|OPTIONAL) ],
          next => [ ],
          next_until_timeout => [ ],
          close => [ ],
@@ -48,42 +52,36 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         rtimeout => $self->global->rtimeout,
          device => $self->global->device,
-         family => $self->global->family,
-         protocol => $self->global->protocol,
       },
    };
 }
 
 sub open {
    my $self = shift;
-   my ($layer, $arg2, $arg3) = @_;
+   my ($layer, $device, $filter) = @_;
 
    if ($< != 0) {
       return $self->log->error("open: must be root to run");
    }
 
    $layer ||= 2;
+   $device ||= $self->device;
+   $filter ||= $self->filter;
 
    my $family = $self->family eq 'ipv6' ? 'ip6' : 'ip';
 
    my $protocol = defined($self->protocol) ? $self->protocol : 'tcp';
 
-   my $filter = $self->filter || '';
-
    my $dump;
    if ($layer == 2) {
-      $arg2 ||= $self->device;
-      $arg3 ||= $filter;
-
       $self->debug && $self->log->debug("open: timeoutOnNext: ".$self->rtimeout);
       $self->debug && $self->log->debug("open: filter: ".$filter);
 
       $dump = Net::Frame::Dump::Online2->new(
-         dev => $arg2,
+         dev => $device,
          timeoutOnNext => $self->rtimeout,
-         filter => $arg3,
+         filter => $filter,
       );
    }
    elsif ($self->layer != 3) {

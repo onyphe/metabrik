@@ -22,7 +22,7 @@ RUN cpanm -n File::Find Term::ANSIColor Module::Reload
 #
 # Packaged programs
 #
-RUN apt-get install -y libssl-dev phantomjs rng-tools tcptraceroute nmap python wget unzip aptitude mysql-client scrot
+RUN apt-get install -y libssl-dev phantomjs rng-tools tcptraceroute nmap python wget unzip aptitude mysql-client scrot dsniff
 #
 # Packaged Perl modules
 #
@@ -30,7 +30,7 @@ RUN apt-get install -y libdbi-perl libnet-ssleay-perl libxml-simple-perl libdbd-
 #
 # Unpackaged Perl modules
 #
-RUN cpanm -n IO::Scalar IO::Socket::INET6 IO::Socket::Multicast IO::Socket::SSL LWP::UserAgent Net::CIDR Net::DNS Net::Frame Net::Frame::Dump Net::Frame::Layer::ICMPv4 Net::Frame::Layer::ICMPv6 Net::Frame::Layer::IPv6 Net::Frame::Simple Net::Netmask Net::Nslookup Net::Routing Net::SSL Net::Write Net::Write::Fast NetAddr::IP String::Random Term::ReadPassword Text::CSV_XS URI URI::Escape WWW::Mechanize Net::NBName Net::IPv4Addr Net::SMTP Net::SinFP3 Net::Whois::Raw Net::FTP List::Util Net::IPv6Addr Crypt::Digest Config::Tiny Geo::IP WWW::Mechanize::PhantomJS URI Net::Twitter HTTP::Proxy LWP::Protocol::connect Daemon::Daemonize Search::Elasticsearch Redis Net::Cmd IO::Handle WWW::Splunk MIME::Base64 URI::Escape Net::Server
+RUN cpanm -n IO::Scalar IO::Socket::INET6 IO::Socket::Multicast IO::Socket::SSL LWP::UserAgent Net::CIDR Net::DNS Net::Frame Net::Frame::Dump Net::Frame::Layer::ICMPv4 Net::Frame::Layer::ICMPv6 Net::Frame::Layer::IPv6 Net::Frame::Simple Net::Netmask Net::Nslookup Net::Routing Net::SSL Net::Write Net::Write::Fast NetAddr::IP String::Random Term::ReadPassword Text::CSV_XS URI URI::Escape WWW::Mechanize Net::NBName Net::IPv4Addr Net::SMTP Net::SinFP3 Net::Whois::Raw Net::FTP List::Util Net::IPv6Addr Crypt::Digest Config::Tiny Geo::IP WWW::Mechanize::PhantomJS URI Net::Twitter HTTP::Proxy LWP::Protocol::connect Daemon::Daemonize Search::Elasticsearch Redis Net::Cmd IO::Handle WWW::Splunk MIME::Base64 URI::Escape Net::Server Progress::Any::Output Progress::Any::Output::TermProgressBarColor LWP::UserAgent::ProgressAny
 
 #
 # Metabrik itselves
