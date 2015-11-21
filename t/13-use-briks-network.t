@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 28) }
+BEGIN { plan(tests => 30) }
 
 ok(sub { eval("use Metabrik::Network::Address"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Arp"); $@ ? 0 : 1 }, 1, $@);
@@ -7,6 +7,7 @@ ok(sub { eval("use Metabrik::Network::Device"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Dns"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Frame"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Ftp"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::Network::Grep"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Http"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Icmp"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Modbus"); $@ ? 0 : 1 }, 1, $@);
@@ -23,6 +24,7 @@ ok(sub { eval("use Metabrik::Network::Sinfp3::Arpdiscover"); $@ ? 0 : 1 }, 1, $@
 ok(sub { eval("use Metabrik::Network::Smtp"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Sqlmap"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Ssdp"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::Network::Stream"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Tor"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Traceroute"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Whois"); $@ ? 0 : 1 }, 1, $@);

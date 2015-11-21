@@ -14,6 +14,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: string::yara Brik
    - new: network::grep Brik
    - new: file::pcap Brik
+   - new: network::stream Brik
 
 1.10 Tue Oct 27 20:11:54 CET 2015
    - update: version bump
