@@ -54,6 +54,7 @@ lib/Metabrik/File/Hash.pm
 lib/Metabrik/File/Ini.pm
 lib/Metabrik/File/Json.pm
 lib/Metabrik/File/Ole.pm
+lib/Metabrik/File/Pcap.pm
 lib/Metabrik/File/Psv.pm
 lib/Metabrik/File/Read.pm
 lib/Metabrik/File/Text.pm
@@ -83,6 +84,7 @@ lib/Metabrik/Network/Device.pm
 lib/Metabrik/Network/Dns.pm
 lib/Metabrik/Network/Frame.pm
 lib/Metabrik/Network/Ftp.pm
+lib/Metabrik/Network/Grep.pm
 lib/Metabrik/Network/Http.pm
 lib/Metabrik/Network/Icmp.pm
 lib/Metabrik/Network/Modbus.pm
