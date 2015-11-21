@@ -1,3 +1,8 @@
+20151121
+   AFFECT: database::vfeed
+
+   - database::vfeed vfeed_version renamed to db_version
+
 20151118
    AFFECT: network::arp
 
