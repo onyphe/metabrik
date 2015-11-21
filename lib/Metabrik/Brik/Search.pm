@@ -21,6 +21,7 @@ sub brik_properties {
          used => [ ],
          not_used => [ ],
          show_require_modules => [ ],
+         command => [ qw(Command) ],
       },
    };
 }
@@ -210,6 +211,49 @@ sub show_require_modules {
    }
 
    return [ sort { $a cmp $b } keys %require_modules ];
+}
+
+sub command {
+   my $self = shift;
+   my ($command) = @_;
+
+   if (! defined($command)) {
+      return $self->log->error($self->brik_help_run('command'));
+   }
+
+   my $context = $self->context;
+   my $status = $context->status;
+
+   my $total = 0;
+   $self->log->info("Used:");
+   for my $brik (@{$status->{used}}) {
+      if (exists($context->used->{$brik}->brik_properties->{commands})) {
+         my $tags = $context->used->{$brik}->brik_tags;
+         push @$tags, 'used';
+         for my $key (keys %{$context->used->{$brik}->brik_properties->{commands}}) {
+            if ($key =~ /$command/i) {
+               $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
+               $total++;
+            }
+         }
+      }
+   }
+
+   $self->log->info("Not used:");
+   for my $brik (@{$status->{not_used}}) {
+      if (exists($context->not_used->{$brik}->brik_properties->{commands})) {
+         my $tags = $context->not_used->{$brik}->brik_tags;
+         push @$tags, 'not_used';
+         for my $key (keys %{$context->not_used->{$brik}->brik_properties->{commands}}) {
+            if ($key =~ /$command/i) {
+               $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
+               $total++;
+            }
+         }
+      }
+   }
+
+   return $total;
 }
 
 1;
