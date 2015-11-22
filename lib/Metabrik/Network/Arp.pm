@@ -19,6 +19,7 @@ sub brik_properties {
          max_read => [ qw(max_read_packet) ],
          max_runtime => [ qw(max_runtime) ],
          device => [ qw(device) ],
+         _pidfile => [ qw(INTERNAL) ],
       },
       attributes_default => {
          try => 2,
@@ -33,6 +34,7 @@ sub brik_properties {
          get_ipv4_neighbors => [ qw(subnet|OPTIONAL device|OPTIONAL) ],
          get_ipv6_neighbors => [ qw(subnet|OPTIONAL device|OPTIONAL) ],
          get_mac_neighbors => [ qw(subnet|OPTIONAL device|OPTIONAL) ],
+         stop_poison => [ ],
       },
       require_modules => {
          'Net::Frame::Layer::ARP' => [ ],
@@ -99,9 +101,10 @@ sub half_poison {
 
    my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
    my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
-   $sp->daemonize(sub { $sc->system($cmd) });
+   my $pidfile = $sp->daemonize(sub { $sc->system($cmd) });
+   $self->_pidfile($pidfile);
 
-   $self->log->info("half_poison: arpspoof has been daemonized");
+   $self->log->info("half_poison: daemonized to pidfile[$pidfile]");
 
    return 1;
 }
@@ -125,9 +128,10 @@ sub full_poison {
 
    my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
    my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
-   $sp->daemonize(sub { $sc->system($cmd) });
+   my $pidfile = $sp->daemonize(sub { $sc->system($cmd) });
+   $self->_pidfile($pidfile);
 
-   $self->log->info("full_poison: arpspoof has been daemonized");
+   $self->log->info("full_poison: daemonized to pidfile[$pidfile]");
 
    return 1;
 }
@@ -316,6 +320,27 @@ sub get_mac_neighbors {
    }
 
    return $mac;
+}
+
+sub stop_poison {
+   my $self = shift;
+
+   my $pidfile = $self->_pidfile;
+   if (defined($pidfile)) {
+      my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+      $sp->force_kill(1);
+      $sp->kill_from_pidfile($pidfile);
+      $self->log->verbose("stop_poison: killing arpspoof process");
+      $self->_pidfile(undef);
+   }
+
+   return 1;
+}
+
+sub brik_fini {
+   my $self = shift;
+
+   return $self->stop_poison;
 }
 
 1;

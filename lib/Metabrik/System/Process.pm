@@ -14,6 +14,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable system process) ],
       attributes => {
+         datadir => [ qw(datadir) ],
          force_kill => [ qw(0|1) ],
          close_output_on_daemonize => [ qw(0|1) ],
       },
@@ -27,10 +28,14 @@ sub brik_properties {
          get_process_info => [ qw(process) ],
          kill => [ qw(process|pid) ],
          daemonize => [ qw($sub) ],
+         list_daemons => [ ],
+         get_latest_daemon_id => [ ],
+         kill_from_pidfile => [ qw(pidfile) ],
       },
       require_modules => {
          'Daemon::Daemonize' => [ ],
          'POSIX' => [ qw(:sys_wait_h) ],
+         'Metabrik::File::Find' => [ ],
       },
       require_binaries => {
          'ps', => [ ],
@@ -116,14 +121,16 @@ sub kill {
       return $self->log->error($self->brik_help_run('kill'));
    }
 
+   my $signal = $self->force_kill ? 'KILL' : 'TERM';
+
    if ($process =~ /^\d+$/) {
-      kill('TERM', $process);
+      kill($signal, $process);
       my $kid = waitpid(-1, POSIX::WNOHANG());
    }
    else {
       my $list = $self->get_process_info($process) or return;
       for my $this (@$list) {
-         kill('TERM', $this->{PID});
+         kill($signal, $this->{PID});
          my $kid = waitpid(-1, POSIX::WNOHANG());
       }
    }
@@ -139,22 +146,100 @@ sub daemonize {
       close => $self->close_output_on_daemonize,
    );
 
-   my $r;
+   my $new_pid;
+   my $pidfile;
    # Daemonize the given subroutine
    if (defined($sub)) {
-      $r = Daemon::Daemonize->daemonize(
+      my $id = $self->get_latest_daemon_id;
+      defined($id) ? $id++ : ($id = 1);
+      $pidfile = $self->datadir."/daemonpid.$id";
+
+      my $r = Daemon::Daemonize->daemonize(
          %opts,
          run => $sub,
       );
+
+      # Waiting for new pidfile to be created, but no more than 100_000 loops.
+      #my $count = 100_000;
+      #while (! ($new_pid = Daemon::Daemonize->read_pidfile($pidfile))) {
+         #last if ++$count == 100_00;
+      #}
+      my $written = 0;
+      my $count = 100_000;
+      my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+      while (1) {
+         my $list = $sp->get_process_info("arpspoof") or return;
+         for (@$list) {
+            # First process if the good one
+            if (exists($_->{PID})) {
+               $new_pid = $_->{PID};
+               Daemon::Daemonize->write_pidfile($pidfile, $new_pid);
+               $written++;
+               last;
+            }
+         }
+         last if $written;
+         last if ++$count == 100_000;
+      }
    }
-   # Or myself
+   # Or myself. But no handling of pidfile there.
    else {
-      $r = Daemon::Daemonize->daemonize(
+      Daemon::Daemonize->daemonize(
          %opts,
       );
    }
 
-   #$self->log->info("daemonize: returned [$r]");
+   $self->log->verbose("daemonize: new daemon with pid [$new_pid] started");
+
+   return defined($new_pid) ? $pidfile : 1;
+}
+
+sub list_daemons {
+   my $self = shift;
+
+   my $datadir = $self->datadir;
+
+   my $ff = Metabrik::File::Find->new_from_brik_init($self) or return;
+   my $list = $ff->files($datadir, 'daemonpid\.\d+');
+
+   my %daemons = ();
+   for (@$list) {
+      my ($id) = $_ =~ m{\.(\d+)$};
+      my $pid = Daemon::Daemonize->read_pidfile($_) or next;
+      $daemons{$id} = { file => $_, pid => $pid };
+   }
+
+   return \%daemons;
+}
+
+sub get_latest_daemon_id {
+   my $self = shift;
+
+   my $list = $self->list_daemons or return;
+
+   my $id = 0;
+   for (keys %$list) {
+      if ($_ > $id) {
+         $id = $_;
+      }
+   }
+
+   return $id;
+}
+
+sub kill_from_pidfile {
+   my $self = shift;
+   my ($pidfile) = @_;
+
+   if (! defined($pidfile)) {
+      return $self->log->error($self->brik_help_run('kill_from_pidfile'));
+   }
+
+   if (my $pid = Daemon::Daemonize->check_pidfile($pidfile)) {
+      $self->log->verbose("kill_from_pidfile: file[$pidfile] and pid[$pid]");
+      $self->kill($pid);
+      Daemon::Daemonize->delete_pidfile($pidfile);
+   }
 
    return 1;
 }

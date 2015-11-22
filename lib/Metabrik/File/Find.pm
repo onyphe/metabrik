@@ -9,32 +9,65 @@ use warnings;
 
 use base qw(Metabrik);
 
-use IO::All;
-
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable file find) ],
+      tags => [ qw(unstable) ],
       attributes => {
          path => [ qw($path_list) ],
-         recursive => [ qw(0|1) ],
       },
       attributes_default => {
          path => [ '.' ],
-         recursive => 1,
       },
       commands => {
          all => [ qw(directory_pattern file_pattern) ],
+         files => [ qw(directory|OPTIONAL file_pattern|OPTIONAL) ],
       },
       require_modules => {
-         'IO::All' => [ ],
          'File::Find' => [ ],
       },
    };
 }
 
-#sub files {
-#}
+sub files {
+   my $self = shift;
+   my ($directory, $filepattern) = @_;
+
+   $directory ||= '.';
+   $filepattern ||= '.*';
+
+   if (! -d $directory) {
+      return $self->log->error("files: directory [$directory] not found");
+   }
+
+   my $file_regex = qr/$filepattern/;
+   my $dot_regex = qr/^\.$/;
+   my $dot2_regex = qr/^\.\.$/;
+
+   my @tmp_files = ();
+   my $sub = sub {
+      my $dir = $File::Find::dir;
+      my $name = $File::Find::name;
+      my $file = $_;
+      # Skip dot and double dot directories
+      if ($file =~ $dot_regex || $file =~ $dot2_regex) {
+      }
+      elsif ($file =~ $file_regex) {
+         push @tmp_files, $name;
+      }
+   };
+
+   {
+      no warnings;
+      File::Find::find($sub, ( $directory ));
+   };
+
+   @tmp_files = map { s/^\.\///; $_ } @tmp_files;  # Remove leading dot slash
+   my %uniq_files = map { $_ => 1 } @tmp_files;
+   my @files = sort { $a cmp $b } keys %uniq_files;
+
+   return \@files;
+}
 
 #sub directories {
 #}
@@ -58,84 +91,32 @@ sub all {
    # Escape dirpattern if we are searching for a directory hierarchy
    $dirpattern =~ s/\//\\\//g;
 
-   # In recursive mode, we use the File::Find module
-   if ($self->recursive) {
-      my $dir_regex = qr/$dirpattern/;
-      my $file_regex = qr/$filepattern/;
-      my $dot_regex = qr/^\.$/;
-      my $dot2_regex = qr/^\.\.$/;
+   my $dir_regex = qr/$dirpattern/;
+   my $file_regex = qr/$filepattern/;
+   my $dot_regex = qr/^\.$/;
+   my $dot2_regex = qr/^\.\.$/;
 
-      my $sub = sub {
-         my $dir = $File::Find::dir;
-         my $file = $_;
-         # Skip dot and double dot directories
-         if ($file =~ $dot_regex || $file =~ $dot2_regex) {
-         }
-         elsif ($dir =~ $dir_regex && $file =~ $file_regex) {
-            push @dirs, "$dir/";
-            push @files, "$dir/$file";
-         }
-      };
-
-      {
-         no warnings;
-         File::Find::find($sub, @$path);
-      };
-
-      my %uniq_dirs = map { $_ => 1 } @dirs;
-      my %uniq_files = map { $_ => 1 } @files;
-      @dirs = sort { $a cmp $b } keys %uniq_dirs;
-      @files = sort { $a cmp $b } keys %uniq_files;
-   }
-   # In non-recursive mode, we can use plain IO::All
-   else {
-      for my $path (@$path) {
-         $self->debug && $self->log->debug("all: path: $path");
-
-         # Includes given directory
-         push @dirs, $path;
-
-         # Handle finding of directories
-         my @tmp_dirs = ();
-         eval {
-            @tmp_dirs = io($path)->all_dirs;
-         };
-         if ($@) {
-            if ($self->debug) {
-               chomp($@);
-               $self->log->debug("all: $path: dirs: $@");
-            }
-            # Don't return in case one directory is not readable
-            #return { directories => [], files => [] };
-            next;
-         }
-         for my $this (@tmp_dirs) {
-            if ($this =~ /$dirpattern/) {
-               push @dirs, "$this/";
-            }
-         }
-
-         # Handle finding of files
-         my @tmp_files = ();
-         eval {
-            @tmp_files = io($path)->all_files;
-         };
-         if ($@) {
-            if ($self->debug) {
-               chomp($@);
-               $self->log->debug("all: $path: files: $@");
-            }
-            # Don't return in case one file is not readable
-            #return { directories => [], files => [] };
-            next;
-         }
-         for my $this (@tmp_files) {
-            if ($this =~ /$filepattern/) {
-               push @files, "$this";
-            }
-         }
+   my $sub = sub {
+      my $dir = $File::Find::dir;
+      my $file = $_;
+      # Skip dot and double dot directories
+      if ($file =~ $dot_regex || $file =~ $dot2_regex) {
       }
-   }
+      elsif ($dir =~ $dir_regex && $file =~ $file_regex) {
+         push @dirs, "$dir/";
+         push @files, "$dir/$file";
+      }
+   };
+
+   {
+      no warnings;
+      File::Find::find($sub, @$path);
+   };
+
+   my %uniq_dirs = map { $_ => 1 } @dirs;
+   my %uniq_files = map { $_ => 1 } @files;
+   @dirs = sort { $a cmp $b } keys %uniq_dirs;
+   @files = sort { $a cmp $b } keys %uniq_files;
 
    @dirs = map { s/^\.\///; $_ } @dirs;  # Remove leading dot slash
    @files = map { s/^\.\///; $_ } @files;  # Remove leading dot slash

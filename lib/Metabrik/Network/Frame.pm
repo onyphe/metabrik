@@ -20,7 +20,8 @@ sub brik_properties {
       commands => {
          get_device_info => [ qw(device|OPTIONAL) ],
          update_device_info => [ qw(device|OPTIONAL) ],
-         from_read => [ qw(frame) ],
+         from_read => [ qw(frame|$frame_list) ],
+         to_read => [ qw(simple|$simple_list) ],
          from_hexa => [ qw(hexa first_layer|OPTIONAL) ],
          from_raw => [ qw(raw first_layer|OPTIONAL) ],
          show => [ ],
@@ -93,23 +94,90 @@ sub update_device_info {
 
 sub from_read {
    my $self = shift;
-   my ($data) = @_;
+   my ($frames) = @_;
 
-   if (! defined($data)) {
+   if (! defined($frames)) {
       return $self->log->error($self->brik_help_run('from_read'));
    }
 
-   if (ref($data) ne 'HASH') {
-      return $self->log->error("from_read: data must be a HASHREF");
+   # We accept a one frame Argument...
+   if (ref($frames) eq 'HASH') {
+      if (! exists($frames->{raw})
+      ||  ! exists($frames->{firstLayer})
+      ||  ! exists($frames->{timestamp})) {
+         return $self->log->error("from_read: frames Argument is not an array of valid next HASHREFs");
+      }
+      else {
+         return Net::Frame::Simple->newFromDump($frames);
+      }
    }
 
-   if (! exists($data->{raw})
-   ||  ! exists($data->{firstLayer})
-   ||  ! exists($data->{timestamp})) {
-      return $self->log->error("from_read: data must be come from network::read Brik");
+   # Or an ARRAY or frames
+   if (ref($frames) ne 'ARRAY') {
+      return $self->log->error("from_read: frames Argument must be an ARRAYREF");
+   }
+   if (@$frames <= 0) {
+      return $self->log->error("from_read: frames Argument is empty");
+   }
+   my $first = $frames->[0];
+   if (ref($first) ne 'HASH') {
+      return $self->log->error("from_read: frames Argument is not an array of next HASHREFs");
+   }
+   if (! exists($first->{raw})
+   ||  ! exists($first->{firstLayer})
+   ||  ! exists($first->{timestamp})) {
+      return $self->log->error("from_read: frames Argument is not an array of valid next HASHREFs");
    }
 
-   return Net::Frame::Simple->newFromDump($data);
+   my @simple = ();
+   for my $h (@$frames) {
+      my $simple = Net::Frame::Simple->newFromDump($h) or next;
+      push @simple, $simple;
+   }
+
+   return \@simple;
+}
+
+sub to_read {
+   my $self = shift;
+   my ($frame) = @_;
+
+   if (! defined($frame)) {
+      return $self->log->error($self->brik_help_run('to_read'));
+   }
+
+   my $ref = ref($frame);
+   my $first = $ref eq 'ARRAY' ? $frame->[0] : $frame;
+   if ($ref eq 'ARRAY') {
+      # We just check the first item in the list.
+      if (ref($first) eq 'Net::Frame::Simple') {
+         my @read = ();
+         for my $simple (@$frame) {
+            push @read, {
+               timestamp => $simple->timestamp,
+               firstLayer => $simple->firstLayer,
+               raw => $simple->raw,
+            };
+         }
+         return \@read;
+      }
+      else {
+         return $self->log->error("to_read: frame ARRAYREF must contain Net::Frame::Simple objects");
+      }
+   }
+   elsif ($ref eq 'Net::Frame::Simple') {
+      my $h = {
+         timestamp => $frame->timestamp,
+         firstLayer => $frame->firstLayer,
+         raw => $frame->raw,
+      };
+      return $h;
+   }
+   else {
+      return $self->log->error("to_read: frame Argument must be a Net::Frame::Simple object or an ARRAYREF");
+   }
+
+   return $self->log->error("to_read: unknown error occured");
 }
 
 sub from_hexa {
@@ -156,17 +224,17 @@ sub from_raw {
 
 sub show {
    my $self = shift;
-   my ($data) = @_;
+   my ($frame) = @_;
 
-   if (! defined($data)) {
+   if (! defined($frame)) {
       return $self->log->error($self->brik_help_run('show'));
    }
 
-   if (ref($data) ne 'Net::Frame::Simple') {
-      return $self->log->error("show: data must come from from_read Command");
+   if (ref($frame) ne 'Net::Frame::Simple') {
+      return $self->log->error("show: frame must be a Net::Frame::Simple object");
    }
 
-   my $str = $data->print;
+   my $str = $frame->print;
 
    print $str."\n";
 
