@@ -406,7 +406,7 @@
       },
       "Metabrik::Repository" : {
          "file" : "lib/Metabrik/Repository.pm",
-         "version" : "1.11"
+         "version" : "1.12"
       },
       "Metabrik::Server::Agent" : {
          "file" : "lib/Metabrik/Server/Agent.pm"
@@ -535,5 +535,5 @@
          "http://opensource.org/licenses/BSD-3-Clause"
       ]
    },
-   "version" : "1.11"
+   "version" : "1.12"
 }
