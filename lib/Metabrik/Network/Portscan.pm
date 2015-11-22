@@ -14,6 +14,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable portscan synscan tcpscan) ],
       attributes => {
+         device => [ qw(device) ],
          ports => [ qw(port_array) ],
          top10 => [ qw(top10_port_array) ],
          top100 => [ qw(top100_port_array) ],
@@ -134,6 +135,16 @@ sub brik_properties {
    };
 }
 
+sub brik_use_properties {
+   my $self = shift;
+
+   return {
+      attributes_default => {
+         device => $self->global->device,
+      },
+   };
+}
+
 sub tcp_syn {
    my $self = shift;
    my ($ip_list, $port_list, $pps) = @_;
@@ -170,8 +181,7 @@ sub tcp_syn {
    my $try = $self->try;
 
    my $nd = Metabrik::Network::Device->new_from_brik_init($self) or return;
-   my $get = $nd->get($self->global->device)
-      or return $self->log->error("tcp_syn: device failed");
+   my $get = $nd->get($self->device) or return;
 
    my $ip = $get->{ipv4};
    my $ip6 = $get->{ipv6};

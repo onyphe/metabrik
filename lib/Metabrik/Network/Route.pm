@@ -55,15 +55,17 @@ sub show {
    my $nr4 = Net::Routing->new(
       target => Net::Routing::NR_TARGET_ALL(),
       family => Net::Routing::NR_FAMILY_INET4(),
-   );
+   ) or return $self->log->error("show: Net::Routing new failed: [$Net::Routing::Error]");
    $nr4->list;
 
-   $self->log->info("\nshow: IPv6 network routes:");
+   print "\n";
+
+   $self->log->info("show: IPv6 network routes:");
 
    my $nr6 = Net::Routing->new(
       target => Net::Routing::NR_TARGET_ALL(),
       family => Net::Routing::NR_FAMILY_INET6(),
-   );
+   ) or return $self->log->error("show: Net::Routing new failed: [$Net::Routing::Error]");
    $nr6->list;
 
    return 1;
@@ -75,7 +77,7 @@ sub list {
    my $nr4 = Net::Routing->new(
       target => Net::Routing::NR_TARGET_ALL(),
       family => Net::Routing::NR_FAMILY_INET4(),
-   );
+   ) or return $self->log->error("list: Net::Routing new failed: [$Net::Routing::Error]");
    my $route4 = $nr4->get || [];
 
    for (@$route4) {
@@ -85,7 +87,7 @@ sub list {
    my $nr6 = Net::Routing->new(
       target => Net::Routing::NR_TARGET_ALL(),
       family => Net::Routing::NR_FAMILY_INET6(),
-   );
+   ) or return $self->log->error("list: Net::Routing new failed: [$Net::Routing::Error]");
    my $route6 = $nr6->get || [];
 
    for (@$route6) {

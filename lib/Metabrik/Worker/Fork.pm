@@ -36,8 +36,6 @@ sub start {
    if ($pid) { # Father
       my $restore = $SIG{INT};
 
-      $SIG{CHLD} = "IGNORE";
-
       $self->pid($pid);
 
       $SIG{INT} = sub {
@@ -56,9 +54,8 @@ sub stop {
    my $self = shift;
 
    if ($self->pid) {
-      kill('QUIT', $self->pid);
-      # Not needed now, we just ignore SIGCHLD
-      #waitpid($self->pid, POSIX::WNOHANG());  # Cleanup zombie state
+      kill('TERM', $self->pid);
+      waitpid($self->pid, POSIX::WNOHANG());  # Cleanup zombie state in case it is dead
       $self->pid(undef);
    }
 
@@ -70,7 +67,9 @@ sub is_son_alive {
 
    my $pid = $self->pid;
    if (defined($pid)) {
+      waitpid($pid, POSIX::WNOHANG());  # Cleanup zombie state in case it is dead
       my $r = kill('ZERO', $pid);
+      $self->debug && $self->log->debug("is_son_alive: kill returned [$r] for pid [$pid]");
       if ($r) { # Son still alive
          return 1;
       }

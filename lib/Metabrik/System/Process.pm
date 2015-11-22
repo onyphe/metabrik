@@ -31,6 +31,7 @@ sub brik_properties {
          list_daemons => [ ],
          get_latest_daemon_id => [ ],
          kill_from_pidfile => [ qw(pidfile) ],
+         is_running_from_pidfile => [ qw(pidfile) ],
       },
       require_modules => {
          'Daemon::Daemonize' => [ ],
@@ -242,6 +243,21 @@ sub kill_from_pidfile {
    }
 
    return 1;
+}
+
+sub is_running_from_pidfile {
+   my $self = shift;
+   my ($pidfile) = @_;
+
+   if (! defined($pidfile)) {
+      return $self->log->error($self->brik_help_run('is_running_from_pidfile'));
+   }
+
+   if (my $pid = Daemon::Daemonize->check_pidfile($pidfile)) {
+      return 1;
+   }
+
+   return 0;
 }
 
 1;
