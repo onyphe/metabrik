@@ -251,7 +251,7 @@ sub tcp_syn {
    my %open;
    my %closed;
    while (! $nr->has_timeout) {
-      if (my $f = $nr->next) {
+      if (my $f = $nr->read_next) {
          my $s = Net::Frame::Simple->newFromDump($f);
          #printf STDERR "flags: 0x%02x\n", $s->ref->{TCP}->flags;
          if ($s->ref->{TCP}) {

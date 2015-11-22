@@ -33,8 +33,8 @@ sub brik_properties {
       },
       commands => {
          open => [ qw(layer|OPTIONAL device|OPTIONAL filter|OPTIONAL) ],
-         next => [ ],
-         next_until_timeout => [ ],
+         read_next => [ ],
+         read_until_timeout => [ ],
          close => [ ],
          has_timeout => [ ],
          reset_timeout => [ ],
@@ -93,7 +93,7 @@ sub open {
    return $self->_dump($dump);
 }
 
-sub next {
+sub read_next {
    my $self = shift;
 
    my $dump = $self->_dump;
@@ -106,7 +106,7 @@ sub next {
    return defined($next) ? $next : 0;
 }
 
-sub next_until_timeout {
+sub read_until_timeout {
    my $self = shift;
 
    my $dump = $self->_dump;

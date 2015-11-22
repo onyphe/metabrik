@@ -149,16 +149,16 @@ sub list_source_ip_addresses {
    my ($stream) = @_;
 
    if (! defined($stream)) {
-      return $self->log->error($self->brik_help_run('list_src_ips'));
+      return $self->log->error($self->brik_help_run('list_source_ip_addresses'));
    }
    if (ref($stream) ne 'ARRAY') {
-      return $self->log->error("list_src_ips: stream Argument must be an ARRAYREF");
+      return $self->log->error("list_source_ip_addresses: stream Argument must be an ARRAYREF");
    }
    if (@$stream <= 0) {
-      return $self->log->error("stream: stream is empty");
+      return $self->log->error("list_source_ip_addresses: stream is empty");
    }
    if (ref($stream->[0]) ne 'Net::Frame::Simple') {
-      return $self->log->error("stream: stream must contains Net::Frame::Simple objects");
+      return $self->log->error("list_source_ip_addresses: stream must contains Net::Frame::Simple objects");
    }
 
    my %src_ips = ();
@@ -177,16 +177,16 @@ sub list_destination_ip_addresses {
    my ($stream) = @_;
 
    if (! defined($stream)) {
-      return $self->log->error($self->brik_help_run('list_dst_ips'));
+      return $self->log->error($self->brik_help_run('list_destination_ip_addresses'));
    }
    if (ref($stream) ne 'ARRAY') {
-      return $self->log->error("list_dst_ips: stream Argument must be an ARRAYREF");
+      return $self->log->error("list_destination_ip_addresses: stream Argument must be an ARRAYREF");
    }
    if (@$stream <= 0) {
-      return $self->log->error("stream: stream is empty");
+      return $self->log->error("list_destination_ip_addresses: stream is empty");
    }
    if (ref($stream->[0]) ne 'Net::Frame::Simple') {
-      return $self->log->error("stream: stream must contains Net::Frame::Simple objects");
+      return $self->log->error("list_destination_ip_addresses: stream must contains Net::Frame::Simple objects");
    }
 
    my %dst_ips = ();

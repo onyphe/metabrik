@@ -201,7 +201,6 @@ sub scan {
          next;
       }
 
-      # XXX: move to network::arp so there is one place for ARP cache handling
       my $mac;
       if (exists($local_arp_cache->{$ip})) {
          $mac = $local_arp_cache->{$ip};
@@ -243,7 +242,7 @@ sub scan {
       }
 
       # Then we wait for all replies until a timeout occurs
-      my $h_list = $nr->next_until_timeout;
+      my $h_list = $nr->read_until_timeout;
       for my $h (@$h_list) {
          my $r = $self->from_read($h);
          #$self->log->verbose("scan: read next returned some stuff".$r->print);
@@ -277,6 +276,16 @@ sub scan {
       $self->log->verbose(sprintf("%-16s => %s  [%s]", $ip4, $mac, $ip6));
       $results{by_ipv4}{$ip4} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
       $results{by_mac}{$mac} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
+      $results{by_ipv6}{$ip6} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
+   }
+
+   # And complete with the cache table
+   for (keys %{$arp_cache->{mac}}) {
+      my $mac = $_;
+      my $ip4 = $arp_cache->{mac}{$_};
+      my $ip6 = $self->mac2eui64($mac);
+      $results{by_mac}{$mac} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
+      $results{by_ipv4}{$ip4} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
       $results{by_ipv6}{$ip6} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
    }
 

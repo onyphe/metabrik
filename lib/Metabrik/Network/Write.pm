@@ -206,14 +206,14 @@ sub fnsend_reply {
       $target = $ip->dst;
    }
 
-   my $read = Metabrik::Network::Read->new_from_brik($self) or return;
-   $read->layer(2);
-   $read->device($self->device);
-   $read->rtimeout($self->global->rtimeout);
+   my $nr = Metabrik::Network::Read->new_from_brik_init($self) or return;
+   $nr->layer(2);
+   $nr->device($self->device);
+   $nr->rtimeout($self->global->rtimeout);
 
-   $self->log->verbose("fnsend_reply: using device [".$read->device."]");
+   $self->log->verbose("fnsend_reply: using device [".$nr->device."]");
 
-   my $in = $read->open or return $self->log->error("fnsend_reply: network::read open failed");
+   my $in = $nr->open or return;
 
    # Save state
    my $saved_layer = $self->layer;
@@ -233,7 +233,7 @@ sub fnsend_reply {
    }
 
    $self->close;
-   $read->close;
+   $nr->close;
 
    # Restore state
    $self->layer($saved_layer);

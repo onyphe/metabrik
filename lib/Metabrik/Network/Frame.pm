@@ -29,11 +29,13 @@ sub brik_properties {
          frame => [ qw(layers_array) ],
          arp => [ qw(destination_ipv4_address|OPTIONAL destination_mac|OPTIONAL) ],
          eth => [ qw(destination_mac|OPTIONAL type|OPTIONAL) ],
-         ipv4 => [ qw(destination_ipv4_address|OPTIONAL protocol|OPTIONAL) ],
-         tcp => [ qw(destination_port|OPTIONAL source_port|OPTIONAL flags|OPTIONAL) ],
-         udp => [ qw(destination_port|OPTIONAL source_port|OPTIONAL payload|OPTIONAL) ],
+         ipv4 => [ qw(destination_ipv4_address protocol|OPTIONAL source_ipv4_address|OPTIONAL) ],
+         tcp => [ qw(destination_port source_port|OPTIONAL flags|OPTIONAL) ],
+         udp => [ qw(destination_port source_port|OPTIONAL payload|OPTIONAL) ],
          icmpv4 => [ ],
          echo_icmpv4 => [ ],
+         is_read => [ qw(data) ],
+         is_simple => [ qw(data) ],
       },
       require_modules => {
          'Net::Frame::Simple' => [ ],
@@ -299,15 +301,18 @@ sub eth {
 
 sub ipv4 {
    my $self = shift;
-   my ($dst, $protocol) = @_;
+   my ($dst, $protocol, $src) = @_;
+
+   $protocol ||= 6;  # TCP
+   if (! defined($dst)) {
+      return $self->log->error($self->brik_help_run('ipv4'));
+   }
 
    my $device_info = $self->device_info;
-
-   $dst ||= '127.0.0.1';
-   $protocol ||= 6;  # TCP
+   $src ||= $device_info->{ipv4};
 
    my $hdr = Net::Frame::Layer::IPv4->new(
-      src => $device_info->{ipv4},
+      src => $src,
       dst => $dst,
       protocol => $protocol,
    );
@@ -319,7 +324,10 @@ sub tcp {
    my $self = shift;
    my ($dst, $src, $flags) = @_;
 
-   $dst ||= 80;
+   if (! defined($dst)) {
+      return $self->log->error($self->brik_help_run('tcp'));
+   }
+
    $src ||= 1025;
    $flags ||= 0x02;   # SYN
 
@@ -334,7 +342,10 @@ sub udp {
    my $self = shift;
    my ($dst, $src, $payload) = @_;
 
-   $dst ||= 123;
+   if (! defined($dst)) {
+      return $self->log->error($self->brik_help_run('tcp'));
+   }
+
    $src ||= 1025;
    $payload ||= '';
 
@@ -383,6 +394,39 @@ sub frame {
    );
 
    return $request;
+}
+
+sub is_read {
+   my $self = shift;
+   my ($data) = @_;
+
+   if (! defined($data)) {
+      return $self->log->error($self->brik_help_run('is_read'))
+   }
+
+   if (ref($data) eq 'HASH'
+   &&  exists($data->{raw})
+   &&  exists($data->{firstLayer})
+   &&  exists($data->{timestamp})) {
+      return 1;
+   }
+
+   return 0;
+}
+
+sub is_simple {
+   my $self = shift;
+   my ($data) = @_;
+
+   if (! defined($data)) {
+      return $self->log->error($self->brik_help_run('is_simple'))
+   }
+
+   if (ref($data) eq 'Net::Frame::Simple') {
+      return 1;
+   }
+
+   return 0;
 }
 
 1;

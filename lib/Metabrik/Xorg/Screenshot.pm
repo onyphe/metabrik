@@ -14,15 +14,19 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable screenshot) ],
       attributes => {
-         output => [ qw(file) ],
+         datadir => [ qw(datadir) ],
+         output => [ qw(output) ],
       },
       attributes_default => {
-         output => 'screenshot.png',
+         output => 'screenshot-001.png',
       },
       commands => {
-         active_window => [ qw(output_file|OPTIONAL) ],
-         full_screen => [ qw(output_file|OPTIONAL) ],
-         select_window => [ qw(output_file|OPTIONAL) ],
+         active_window => [ qw(output|OPTIONAL) ],
+         full_screen => [ qw(output|OPTIONAL) ],
+         select_window => [ qw(output|OPTIONAL) ],
+      },
+      require_modules => {
+         'Metabrik::File::Find' => [ ],
       },
       require_binaries => {
          'scrot' => [ ],
@@ -30,11 +34,29 @@ sub brik_properties {
    };
 }
 
+sub _get_new_output {
+   my $self = shift;
+
+   my $datadir = $self->datadir;
+
+   my $ff = Metabrik::File::Find->new_from_brik_init($self) or return;
+   my $files = $ff->files($datadir, 'screenshot-\d+\.png') or return;
+
+   if (@$files == 0) {
+      return "$datadir/screenshot-001.png"; # First output file
+   }
+
+   my @sorted = sort { $a cmp $b } @$files;
+   my ($id) = $sorted[-1] =~ m{screenshot-(\d+)\.png};
+
+   return $self->output(sprintf("$datadir/screenshot-%03d.png", $id + 1));
+}
+
 sub active_window {
    my $self = shift;
    my ($output) = @_;
 
-   $output ||= $self->output;
+   $output ||= $self->_get_new_output;
 
    $self->log->verbose("active_window: saving to file [$output]");
 
@@ -48,7 +70,7 @@ sub full_screen {
    my $self = shift;
    my ($output) = @_;
 
-   $output ||= $self->output;
+   $output ||= $self->_get_new_output;
 
    $self->log->verbose("full_screen: saving to file [$output]");
 
@@ -62,7 +84,7 @@ sub select_window {
    my $self = shift;
    my ($output) = @_;
 
-   $output ||= $self->output;
+   $output ||= $self->_get_new_output;
 
    $self->log->verbose("select_window: saving to file [$output]");
 
