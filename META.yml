@@ -117,6 +117,8 @@ provides:
     file: lib/Metabrik/File/Json.pm
   Metabrik::File::Ole:
     file: lib/Metabrik/File/Ole.pm
+  Metabrik::File::Pcap:
+    file: lib/Metabrik/File/Pcap.pm
   Metabrik::File::Psv:
     file: lib/Metabrik/File/Psv.pm
   Metabrik::File::Read:
@@ -175,6 +177,8 @@ provides:
     file: lib/Metabrik/Network/Frame.pm
   Metabrik::Network::Ftp:
     file: lib/Metabrik/Network/Ftp.pm
+  Metabrik::Network::Grep:
+    file: lib/Metabrik/Network/Grep.pm
   Metabrik::Network::Http:
     file: lib/Metabrik/Network/Http.pm
   Metabrik::Network::Icmp:
@@ -207,6 +211,8 @@ provides:
     file: lib/Metabrik/Network/Sqlmap.pm
   Metabrik::Network::Ssdp:
     file: lib/Metabrik/Network/Ssdp.pm
+  Metabrik::Network::Stream:
+    file: lib/Metabrik/Network/Stream.pm
   Metabrik::Network::Tor:
     file: lib/Metabrik/Network/Tor.pm
   Metabrik::Network::Traceroute:
@@ -278,6 +284,10 @@ provides:
     file: lib/Metabrik/String/Uri.pm
   Metabrik::String::Xml:
     file: lib/Metabrik/String/Xml.pm
+  Metabrik::String::Yara:
+    file: lib/Metabrik/String/Yara.pm
+  Metabrik::System::Docker:
+    file: lib/Metabrik/System/Docker.pm
   Metabrik::System::Freebsd::Jail:
     file: lib/Metabrik/System/Freebsd/Jail.pm
   Metabrik::System::Freebsd::Package:

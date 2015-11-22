@@ -233,6 +233,9 @@
       "Metabrik::File::Ole" : {
          "file" : "lib/Metabrik/File/Ole.pm"
       },
+      "Metabrik::File::Pcap" : {
+         "file" : "lib/Metabrik/File/Pcap.pm"
+      },
       "Metabrik::File::Psv" : {
          "file" : "lib/Metabrik/File/Psv.pm"
       },
@@ -320,6 +323,9 @@
       "Metabrik::Network::Ftp" : {
          "file" : "lib/Metabrik/Network/Ftp.pm"
       },
+      "Metabrik::Network::Grep" : {
+         "file" : "lib/Metabrik/Network/Grep.pm"
+      },
       "Metabrik::Network::Http" : {
          "file" : "lib/Metabrik/Network/Http.pm"
       },
@@ -367,6 +373,9 @@
       },
       "Metabrik::Network::Ssdp" : {
          "file" : "lib/Metabrik/Network/Ssdp.pm"
+      },
+      "Metabrik::Network::Stream" : {
+         "file" : "lib/Metabrik/Network/Stream.pm"
       },
       "Metabrik::Network::Tor" : {
          "file" : "lib/Metabrik/Network/Tor.pm"
@@ -473,6 +482,12 @@
       },
       "Metabrik::String::Xml" : {
          "file" : "lib/Metabrik/String/Xml.pm"
+      },
+      "Metabrik::String::Yara" : {
+         "file" : "lib/Metabrik/String/Yara.pm"
+      },
+      "Metabrik::System::Docker" : {
+         "file" : "lib/Metabrik/System/Docker.pm"
       },
       "Metabrik::System::Freebsd::Jail" : {
          "file" : "lib/Metabrik/System/Freebsd/Jail.pm"
