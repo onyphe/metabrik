@@ -187,28 +187,28 @@ sub scan {
    my $arp_cache = $self->cache
       or return $self->log->error("scan: cache failed");
 
+   my $scan_arp_cache = {};
+   for my $this (keys %{$arp_cache->{mac}}) {
+      my $mac = $this;
+      my $ip = $arp_cache->{mac}{$this};
+      $self->log->verbose("scan: found MAC [$mac] in cache for IPv4 [$ip]");
+      $scan_arp_cache->{$ip} = $mac;
+   }
+
    my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
 
    my $ip_list = $na->ipv4_list($subnet) or return;
 
    my $reply_cache = {};
-   my $local_arp_cache = {};
    my @frame_list = ();
-
    for my $ip (@$ip_list) {
       # We scan ARP for everyone but our own IP
       if (exists($interface->{ipv4}) && $ip eq $interface->{ipv4}) {
          next;
       }
 
-      my $mac;
-      if (exists($local_arp_cache->{$ip})) {
-         $mac = $local_arp_cache->{$ip};
-         $reply_cache->{$ip} = $mac;
-      }
-      elsif ($mac = $arp_cache->{$ip}) {
-         $self->log->verbose("scan: found mac [$mac] for ipv4 [$ip] in ARP cache");
-         $local_arp_cache->{$ip} = $mac;
+      if (exists($scan_arp_cache->{$ip})) {
+         my $mac = $scan_arp_cache->{$ip};
          $reply_cache->{$ip} = $mac;
       }
       else {
@@ -254,11 +254,11 @@ sub scan {
          my $src_ip = $r->ref->{ARP}->srcIp;
          if (! exists($reply_cache->{$src_ip})) {
             my $mac = $r->ref->{ARP}->src;
-            $self->log->info("scan: received mac [$mac] for ipv4 [$src_ip]");
+            $self->log->info("scan: received MAC [$mac] for IPV4 [$src_ip]");
             $reply_cache->{$src_ip} = $r->ref->{ARP}->src;
 
             # Put it in ARP cache table for next round
-            $local_arp_cache->{$src_ip} = $mac;
+            $scan_arp_cache->{$src_ip} = $mac;
          }
       }
 
@@ -276,16 +276,6 @@ sub scan {
       $self->log->verbose(sprintf("%-16s => %s  [%s]", $ip4, $mac, $ip6));
       $results{by_ipv4}{$ip4} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
       $results{by_mac}{$mac} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
-      $results{by_ipv6}{$ip6} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
-   }
-
-   # And complete with the cache table
-   for (keys %{$arp_cache->{mac}}) {
-      my $mac = $_;
-      my $ip4 = $arp_cache->{mac}{$_};
-      my $ip6 = $self->mac2eui64($mac);
-      $results{by_mac}{$mac} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
-      $results{by_ipv4}{$ip4} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
       $results{by_ipv6}{$ip6} = { ipv6 => $ip6, mac => $mac, ipv4 => $ip4 };
    }
 
