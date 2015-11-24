@@ -59,7 +59,11 @@ sub load {
          or return $self->log->error("local: can't open rc file [$file]: $!");
    while (defined(my $line = <$in>)) {
       chomp($line);
-      push @lines, $line;
+      next if $line =~ /^\s*$/;   # Skip blank lines
+      next if $line =~ /^\s*#/;   # Skip comments
+      $line =~ s/^(.*)#.*$/$1/;   # Strip comments at end of line
+      push @lines, "$line ";      # Add a trailing slash in case of a multiline
+                                  # So when joining them, there is no unwanted concatenation
    }
    close($in);
 
