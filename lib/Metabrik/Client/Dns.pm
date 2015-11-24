@@ -55,15 +55,20 @@ sub _nslookup {
    # Reset timeout indicator
    $self->timeout(0);
 
+   local $SIG{__WARN__} = sub {
+      my $message = shift;
+      die($message);
+   };
+
    my @r;
    eval {
       @r = Net::Nslookup::nslookup(host => $host, %args);
    };
-   if ($@ && $@ ne "alarm\n") {
+   if ($@ && $@ ne "alarm\n" && $@ !~ m{Timeout: nslookup}) {
       chomp($@);
       return $self->log->error("nslookup: failed for host [$host] with type [$type]: $@");
    }
-   elsif ($@ && $@ eq "alarm\n") {
+   elsif ($@ && ($@ eq "alarm\n" || $@ =~ m{Timeout: nslookup})) {
       $self->timeout(1);
       $self->log->info("nslookup: timeout waiting response for host [$host] with type [$type]");
    }
