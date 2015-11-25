@@ -591,13 +591,16 @@ sub mirror {
          return $self->log->error("mirror: mirroring URL [$url] to local file [$output] failed: $@");
       }
       my $code = $rc->code;
-      if ($rc->code == 200) {
+      if ($code == 200) {
          my $file = $datadir.'/'.$output;
          push @files, $file;
          $self->log->info("mirror: downloading URL [$url] to local file [$file] done");
       }
-      elsif ($rc->code == 304) { # Not modified
+      elsif ($code == 304) { # Not modified
          $self->log->info("mirror: file [$output] not modified since last check");
+      }
+      else {
+         return $self->log->error("mirror: error while mirroring URL [$url] with code: [$code]");
       }
    }
 

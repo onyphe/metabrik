@@ -127,6 +127,7 @@ sub brik_properties {
          'Net::Frame::Simple' => [ ],
          'Net::Frame::Dump' => [ ],
          'List::Util' => [ ],
+         'POSIX' => [ qw(ceil) ],
          'Metabrik::Network::Device' => [ ],
          'Metabrik::Network::Read' => [ ],
          'Metabrik::Network::Address' => [ ],
@@ -157,15 +158,34 @@ sub tcp_syn {
 
    if (ref($ip_list) eq 'ARRAY') {
       if (@$ip_list == 0) {
-         return $self->log->error("tcp_syn: ip_list is empty");
+         return $self->log->error("tcp_syn: ARRAY Argument is empty");
       }
+
+      # We take the ARRAY of elements (IP addresses or subnets)
+      # And convert it to an IP address list
+      my $new_list = [];
+      for my $this (@$ip_list) {
+         if ($na->is_ipv4_subnet($this)) {
+            my $list = $na->ipv4_list($this) or next;
+            push @$new_list, @$list;
+         }
+         elsif ($na->is_ipv4-$this) {
+            push @$new_list, $this;
+         }
+      }
+      $ip_list = $new_list;
    }
-   else {
-      if (! $na->is_ip($ip_list)) {
-         return $self->log->error("tcp_syn: argument 0 must be IP or ARRAYREF");
+   # We gave a simple SCALAR
+   elsif (! ref($ip_list)) {
+      if ($na->is_ipv4_subnet($ip_list)) {
+         $ip_list = $na->ipv4_list($ip_list) or return;
       }
-      # A single IP has been provided, we put it back into an ARRAYREF
-      $ip_list = [ $ip_list ];
+      elsif ($na->is_ipv4($ip_list)) {
+         $ip_list = [ $ip_list ];
+      }
+      else {
+         return $self->log->error("tcp_syn: invalid IP [$ip_list] given");
+      }
    }
 
    $port_list ||= $self->ports || $self->top100;
@@ -231,17 +251,33 @@ sub tcp_syn {
 
    if (! $pid) { # Son
       $self->debug && $self->log->debug("tcp_syn: son starts its task...");
-      my $r = Net::Write::Fast::l4_send_tcp_syn_multi(
-         $use_ipv6 ? $ip6 : $ip,
-         $ip_list,
-         $port_list,
-         $pps,
-         $try,
-         $use_ipv6,
-         1,  # display warnings or not
-      );
-      if ($r == 0) {
-         $self->log->error("tcp_syn: l4_send_tcp_syn_multi: ".Net::Write::Fast::nwf_geterror());
+      # We have to split by chunks of 500_000 elements, to avoid taking to
+      # much memory in one row. And there is a SIGSEGV if we don't do so ;)
+      my $n_chunks = POSIX::ceil($n_targets / 500_000);
+      for my $n (0..$n_chunks-1) {
+         my $first = 500_000 * $n;
+         my $last = 499_999 + (500_000 * $n);
+         if ($last > ($n_targets - 1)) {
+            $last = $n_targets - 1;
+         }
+
+         if ($n_chunks > 1) {
+            $self->log->verbose("tcp_syn: scanning chunk @{[$n+1]}/@{[($n_chunks)]} ($first-$last)");
+         }
+
+         my @this = @$ip_list[$first..$last];
+         my $r = Net::Write::Fast::l4_send_tcp_syn_multi(
+            $use_ipv6 ? $ip6 : $ip,
+            \@this,
+            $port_list,
+            $pps,
+            $try,
+            $use_ipv6,
+            1,  # display warnings or not
+         );
+         if ($r == 0) {
+            $self->log->error("tcp_syn: l4_send_tcp_syn_multi: ".Net::Write::Fast::nwf_geterror());
+         }
       }
       $self->debug && $self->log->debug("tcp_syn: son finished its task, exiting");
       exit(0);

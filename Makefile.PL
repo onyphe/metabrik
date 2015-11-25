@@ -48,6 +48,7 @@ WriteMakefile(
       'Net::Nslookup' => 0,
       'Net::Pcap' => 0,
       'Net::Routing' => 0,
+      'Net::SinFP3' => '1.23',
       'Net::SSL' => 0,
       'Net::SSLeay' => 0,
       'Net::Write' => 0,
