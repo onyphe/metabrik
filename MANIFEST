@@ -13,6 +13,7 @@ lib/Metabrik/Audit/Elasticsearch.pm
 lib/Metabrik/Audit/Https.pm
 lib/Metabrik/Audit/Smtp.pm
 lib/Metabrik/Audit/Twiki.pm
+lib/Metabrik/Brik/Tool.pm
 lib/Metabrik/Client/Dns.pm
 lib/Metabrik/Client/Openssh.pm
 lib/Metabrik/Client/Rest.pm
@@ -190,4 +191,5 @@ t/29-use-briks-email.t
 t/30-use-briks-image.t
 t/31-use-briks-lookup.t
 t/32-use-briks-worker.t
+t/33-use-briks-brik.t
 UPDATING
