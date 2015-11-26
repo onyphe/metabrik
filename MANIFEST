@@ -149,6 +149,7 @@ lib/Metabrik/System/Ubuntu/Package.pm
 lib/Metabrik/Terminal/Control.pm
 lib/Metabrik/Time/Universal.pm
 lib/Metabrik/Worker/Fork.pm
+lib/Metabrik/Www/Shorten.pm
 lib/Metabrik/Www/Splunk.pm
 lib/Metabrik/Xorg/Screenshot.pm
 LICENSE
