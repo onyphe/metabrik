@@ -22,6 +22,7 @@ sub brik_properties {
          rtimeout => 2,
          nameserver => '127.0.0.1',
       },
+         # XXX: version should use network::dns version_bind Command
       commands => {
          version => [ qw(nameserver|$nameserver_list|OPTIONAL) ],
          recursion => [ qw(nameserver|$nameserver_list|OPTIONAL) ],

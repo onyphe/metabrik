@@ -14,209 +14,296 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable client dns) ],
       commands => {
-         a_lookup => [ qw(ip_address|$ip_address_list nameserver|$nameserver_list|OPTIONAL) ],
-         ptr_lookup => [ qw(ip_address|$ip_address_list nameserver|$nameserver_list|OPTIONAL) ],
-         mx_lookup => [ qw(ip_address|$ip_address_list nameserver|$nameserver_list|OPTIONAL) ],
-         ns_lookup => [  qw(ip_address|$ip_address_list nameserver|$nameserver_list|OPTIONAL) ],
-         cname_lookup => [  qw(ip_address|$ip_address_list nameserver|$nameserver_list|OPTIONAL) ],
-         soa_lookup => [  qw(ip_address|$ip_address_list nameserver|$nameserver_list|OPTIONAL) ],
-         srv_lookup => [  qw(ip_address|$ip_address_list nameserver|$nameserver_list|OPTIONAL) ],
-         txt_lookup => [  qw(ip_address|$ip_address_list nameserver|$nameserver_list|OPTIONAL) ],
+         get_local_resolver => [ qw(file|OPTIONAL) ],
+         a_lookup => [ qw(host|$host_list nameserver|$nameserver_list|OPTIONAL port|OPTIONAL) ],
+         aaaa_lookup => [ qw(host|$host_list nameserver|$nameserver_list|OPTIONAL port|OPTIONAL) ],
+         ptr_lookup => [ qw(ip_address|$ip_address_list nameserver|$nameserver_list|OPTIONAL port|OPTIONAL) ],
+         mx_lookup => [ qw(host|$host_list nameserver|$nameserver_list|OPTIONAL port|OPTIONAL) ],
+         ns_lookup => [  qw(host|$host_list nameserver|$nameserver_list|OPTIONAL port|OPTIONAL) ],
+         cname_lookup => [  qw(host|$host_list nameserver|$nameserver_list|OPTIONAL port|OPTIONAL) ],
+         soa_lookup => [  qw(host|$host_list nameserver|$nameserver_list|OPTIONAL port|OPTIONAL) ],
+         srv_lookup => [  qw(host|$host_list nameserver|$nameserver_list|OPTIONAL port|OPTIONAL) ],
+         txt_lookup => [  qw(host|$host_list nameserver|$nameserver_list|OPTIONAL port|OPTIONAL) ],
       },
       attributes => {
          nameserver => [ qw(ip_address|$ip_address_list) ],
          timeout => [ qw(0|1) ],
          rtimeout => [ qw(timeout) ],
          return_list => [ qw(0|1) ],
+         port => [ qw(port) ],
       },
       attributes_default => {
          timeout => 0,
          rtimeout => 2,
          return_list => 1,
+         port => 53,
       },
       require_modules => {
-         'Net::Nslookup' => [ ],
+         'Metabrik::File::Text' => [ ],
+         'Metabrik::Network::Dns' => [ ],
       },
    };
 }
 
-sub _nslookup {
+sub brik_init {
    my $self = shift;
-   my ($host, $type, $nameserver) = @_;
 
-   my %args = (
-      type => $type,
-      timeout => $self->rtimeout,
-   );
-   if (defined($nameserver)) {
-      $args{server} = $nameserver;  # Accepts a string or an arrayref
+   my $ns = $self->get_local_resolver;
+   if (defined($ns)) {
+      $self->nameserver($ns);
    }
 
-   # Reset timeout indicator
-   $self->timeout(0);
-
-   local $SIG{__WARN__} = sub {
-      my $message = shift;
-      die($message);
-   };
-
-   my @r;
-   eval {
-      @r = Net::Nslookup::nslookup(host => $host, %args);
-   };
-   if ($@ && $@ ne "alarm\n" && $@ !~ m{Timeout: nslookup}) {
-      chomp($@);
-      return $self->log->error("nslookup: failed for host [$host] with type [$type]: $@");
-   }
-   elsif ($@ && ($@ eq "alarm\n" || $@ =~ m{Timeout: nslookup})) {
-      $self->timeout(1);
-      $self->log->info("nslookup: timeout waiting response for host [$host] with type [$type]");
-   }
-   elsif (@r == 0) {
-      $self->log->info("nslookup: no response for host [$host] with type [$type]");
-   }
-
-   return \@r;
+   return $self->SUPER::brik_init(@_);
 }
 
-sub _resolve {
+sub get_local_resolver {
    my $self = shift;
-   my ($ip, $type, $nameserver) = @_;
+   my($file) = @_;
 
-   if (ref($ip) eq 'ARRAY') {
-      my %results = ();
-      for my $host (@$ip) {
-         my $r = $self->_nslookup($host, $type, $nameserver) 
-            or next;
-         if ($self->return_list) {
-            $results{$host} = $r;
-         }
-         else {
-            $results{$host} = $r->[0];
+   $file ||= "/etc/resolv.conf";
+
+   my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+   $ft->as_array(1);
+   $ft->strip_crlf(1);
+
+   my @nameservers = ();
+   if (-f $file) {
+      my $lines = $ft->read($file) or return;
+      for (@$lines) {
+         if (/^\s*nameserver\s+/) {
+            my @toks = split(/\s+/);
+            push @nameservers, $toks[1];
          }
       }
 
-      return \%results;
+      $self->log->verbose("brik_init: using resolve.conf DNS: [@nameservers]");
    }
-   elsif (! ref($ip)) {
-      my $r = $self->_nslookup($ip, $type, $nameserver)
-         or return;
-      if ($self->return_list) {
-         return $r;
-      }
-      else {
-         return $r->[0];
-      }
+
+   my $google_ns = [ qw(8.8.8.8 8.8.4.4) ];
+   if (@nameservers > 0) {
+      $self->nameserver(\@nameservers);
    }
    else {
-      return $self->log->error("resolve: don't know how to resolve host [$ip]");
+      $self->nameserver($google_ns);
    }
 
-   return;
+   return @nameservers > 0 ? \@nameservers : $google_ns;
 }
 
 sub a_lookup {
    my $self = shift;
-   my ($ip_address, $nameserver) = @_;
+   my ($host, $nameserver, $port) = @_;
 
-   if (! defined($ip_address)) {
+   $nameserver ||= $self->nameserver;
+   $port ||= $self->port || 53;
+   if (! defined($host)) {
       return $self->log->error($self->brik_help_run('a_lookup'));
    }
 
-   $nameserver ||= $self->nameserver;
+   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
+   $nd->use_recursion(1);
+   my $list = $nd->lookup($host, 'A', $nameserver, $port) or return;
 
-   return $self->_resolve($ip_address, 'A', $nameserver);
+   my @res = ();
+   for (@$list) {
+      if (defined($_->{address})) {
+         push @res, $_->{address};
+      }
+   }
+
+   return $self->return_list ? \@res : ($res[0] || 'undef');
+}
+
+sub aaaa_lookup {
+   my $self = shift;
+   my ($host, $nameserver, $port) = @_;
+
+   $nameserver ||= $self->nameserver;
+   $port ||= $self->port || 53;
+   if (! defined($host)) {
+      return $self->log->error($self->brik_help_run('aaaa_lookup'));
+   }
+
+   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
+   $nd->use_recursion(1);
+   my $list = $nd->lookup($host, 'AAAA', $nameserver, $port) or return;
+
+   my @res = ();
+   for (@$list) {
+      if (defined($_->{address})) {
+         push @res, $_->{address};
+      }
+   }
+
+   return $self->return_list ? \@res : ($res[0] || 'undef');
 }
 
 sub ptr_lookup {
    my $self = shift;
-   my ($ip_address, $nameserver) = @_;
+   my ($host, $nameserver, $port) = @_;
 
-   if (! defined($ip_address)) {
+   $nameserver ||= $self->nameserver;
+   $port ||= $self->port || 53;
+   if (! defined($host)) {
       return $self->log->error($self->brik_help_run('ptr_lookup'));
    }
 
-   $nameserver ||= $self->nameserver;
+   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
+   $nd->use_recursion(1);
+   my $list = $nd->lookup($host, 'PTR', $nameserver, $port) or return;
 
-   return $self->_resolve($ip_address, 'PTR', $nameserver);
+   my @res = ();
+   for (@$list) {
+      if (defined($_->{ptrdname})) {
+         push @res, $_->{ptrdname};
+      }
+   }
+
+   return $self->return_list ? \@res : ($res[0] || 'undef');
 }
 
 sub mx_lookup {
    my $self = shift;
-   my ($ip_address, $nameserver) = @_;
+   my ($host, $nameserver, $port) = @_;
 
-   if (! defined($ip_address)) {
+   $nameserver ||= $self->nameserver;
+   $port ||= $self->port || 53;
+   if (! defined($host)) {
       return $self->log->error($self->brik_help_run('mx_lookup'));
    }
 
-   $nameserver ||= $self->nameserver;
+   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
+   $nd->use_recursion(1);
+   my $list = $nd->lookup($host, 'MX', $nameserver, $port) or return;
 
-   return $self->_resolve($ip_address, 'MX', $nameserver);
+   my @res = ();
+   for (@$list) {
+      if (defined($_->{exchange})) {
+         push @res, $_->{exchange};
+      }
+   }
+
+   return $self->return_list ? \@res : ($res[0] || 'undef');
 }
 
 sub ns_lookup {
    my $self = shift;
-   my ($ip_address, $nameserver) = @_;
+   my ($host, $nameserver, $port) = @_;
 
-   if (! defined($ip_address)) {
+   $nameserver ||= $self->nameserver;
+   $port ||= $self->port || 53;
+   if (! defined($host)) {
       return $self->log->error($self->brik_help_run('ns_lookup'));
    }
 
-   $nameserver ||= $self->nameserver;
+   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
+   $nd->use_recursion(1);
+   my $list = $nd->lookup($host, 'NS', $nameserver, $port) or return;
 
-   return $self->_resolve($ip_address, 'NS', $nameserver);
+   my @res = ();
+   for (@$list) {
+      if (defined($_->{nsdname})) {
+         push @res, $_->{nsdname};
+      }
+   }
+
+   return $self->return_list ? \@res : ($res[0] || 'undef');
 }
 
 sub soa_lookup {
    my $self = shift;
-   my ($ip_address, $nameserver) = @_;
+   my ($host, $nameserver, $port) = @_;
 
-   if (! defined($ip_address)) {
+   $nameserver ||= $self->nameserver;
+   $port ||= $self->port || 53;
+   if (! defined($host)) {
       return $self->log->error($self->brik_help_run('soa_lookup'));
    }
 
-   $nameserver ||= $self->nameserver;
+   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
+   $nd->use_recursion(1);
+   my $list = $nd->lookup($host, 'SOA', $nameserver, $port) or return;
 
-   return $self->_resolve($ip_address, 'SOA', $nameserver);
+   my @res = ();
+   for (@$list) {
+      if (defined($_->{rdatastr})) {
+         push @res, $_->{rdatastr};
+      }
+   }
+
+   return $self->return_list ? \@res : ($res[0] || 'undef');
 }
 
 sub txt_lookup {
    my $self = shift;
-   my ($ip_address, $nameserver) = @_;
+   my ($host, $nameserver, $port) = @_;
 
-   if (! defined($ip_address)) {
+   $nameserver ||= $self->nameserver;
+   $port ||= $self->port || 53;
+   if (! defined($host)) {
       return $self->log->error($self->brik_help_run('txt_lookup'));
    }
 
-   $nameserver ||= $self->nameserver;
+   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
+   $nd->use_recursion(1);
+   my $list = $nd->lookup($host, 'TXT', $nameserver, $port) or return;
 
-   return $self->_resolve($ip_address, 'TXT', $nameserver);
+   my @res = ();
+   for (@$list) {
+      if (defined($_->{rdatastr})) {
+         push @res, $_->{rdatastr};
+      }
+   }
+
+   return $self->return_list ? \@res : ($res[0] || 'undef');
 }
 
 sub srv_lookup {
    my $self = shift;
-   my ($ip_address, $nameserver) = @_;
+   my ($host, $nameserver, $port) = @_;
 
-   if (! defined($ip_address)) {
+   $nameserver ||= $self->nameserver;
+   $port ||= $self->port || 53;
+   if (! defined($host)) {
       return $self->log->error($self->brik_help_run('srv_lookup'));
    }
 
-   $nameserver ||= $self->nameserver;
+   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
+   $nd->use_recursion(1);
+   my $list = $nd->lookup($host, 'SRV', $nameserver, $port) or return;
 
-   return $self->_resolve($ip_address, 'SRV', $nameserver);
+   my @res = ();
+   for (@$list) {
+      if (defined($_->{target})) {
+         push @res, $_->{target};
+      }
+   }
+
+   return $self->return_list ? \@res : ($res[0] || 'undef');
 }
 
 sub cname_lookup {
    my $self = shift;
-   my ($ip_address, $nameserver) = @_;
+   my ($host, $nameserver, $port) = @_;
 
-   if (! defined($ip_address)) {
+   $nameserver ||= $self->nameserver;
+   $port ||= $self->port || 53;
+   if (! defined($host)) {
       return $self->log->error($self->brik_help_run('cname_lookup'));
    }
 
-   $nameserver ||= $self->nameserver;
+   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
+   $nd->use_recursion(1);
+   my $list = $nd->lookup($host, 'CNAME', $nameserver, $port) or return;
 
-   return $self->_resolve($ip_address, 'CNAME', $nameserver);
+   my @res = ();
+   for (@$list) {
+      if (defined($_->{cname})) {
+         push @res, $_->{cname};
+      }
+   }
+
+   return $self->return_list ? \@res : ($res[0] || 'undef');
 }
 
 1;

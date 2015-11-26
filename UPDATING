@@ -1,3 +1,9 @@
+20151126
+   AFFECT: network::dns
+
+   - network::dns renamed check_version Command to version_bind
+   - network::dns version_bind now returns only a SCALAR with $version and not a HASHREF
+
 20151122
    AFFECT: network::read
 
