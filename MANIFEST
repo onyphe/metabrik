@@ -139,6 +139,7 @@ lib/Metabrik/String/Uri.pm
 lib/Metabrik/String/Xml.pm
 lib/Metabrik/String/Yara.pm
 lib/Metabrik/System/Docker.pm
+lib/Metabrik/System/File.pm
 lib/Metabrik/System/Freebsd/Jail.pm
 lib/Metabrik/System/Freebsd/Package.pm
 lib/Metabrik/System/Freebsd/Pf.pm
