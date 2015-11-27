@@ -118,6 +118,7 @@ push \@INC, \$repository
 run core::context update_available
 
 set core::global datadir \$datadir
+set core::global repository \$repository
 set core::global ctimeout 20
 set core::global rtimeout 20
 
