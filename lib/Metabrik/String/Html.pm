@@ -18,7 +18,7 @@ sub brik_properties {
          decode => [ qw($data) ],
       },
       require_modules => {
-         'URI::Escape' => [ ],
+         'HTML::Entities' => [ ],
       },
    };
 }
@@ -31,7 +31,7 @@ sub encode {
       return $self->log->error($self->brik_help_run('encode'));
    }
 
-   my $encoded = URI::Escape::uri_escape($data);
+   my $encoded = HTML::Entities::encode_entities($data);
 
    return $encoded;
 }
@@ -44,7 +44,7 @@ sub decode {
       return $self->log->error($self->brik_help_run('decode'));
    }
 
-   my $decoded = URI::Escape::uri_unescape($data);
+   my $decoded = HTML::Entities::decode_entities($data);
 
    return $decoded;
 }

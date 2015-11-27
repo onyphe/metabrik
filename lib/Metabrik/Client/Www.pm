@@ -52,7 +52,7 @@ sub brik_properties {
          screenshot => [ qw(uri output) ],
          eval_javascript => [ qw(js uri|OPTIONAL) ],
          info => [ ],
-         mirror => [ qw(url|$url_list output|OPTIONAL datadir|OPTIONAL) ],
+         mirror => [ qw(url|$url_list output datadir|OPTIONAL) ],
       },
       require_modules => {
          'Progress::Any::Output' => [ ],
@@ -340,25 +340,31 @@ sub forms {
       print Data::Dumper::Dumper($last->headers)."\n";
    }
 
+   my @result = ();
    my @forms = $client->forms;
-   my $count = 0; 
    for my $form (@forms) {
-      my $name = $form->{attr}->{name} || '(undef)';
-      print "$count: name: $name\n";
+      my $name = $form->{attr}{name} || 'undef';
+      my $action = $form->{action};
+      my $method = $form->{method} || 'undef';
+
+      my $h = {
+         action => $action,
+         method => $method,
+      };
 
       for my $input (@{$form->{inputs}}) {
-         print "   title:    ".$input->{title}."\n"    if exists $input->{title};
-         print "   type:     ".$input->{type}."\n"     if exists $input->{type};
-         print "   name:     ".$input->{name}."\n"     if exists $input->{name};
-         print "   value:    ".$input->{value}."\n"    if exists $input->{value};
-         print "   readonly: ".$input->{readonly}."\n" if exists $input->{readonly};
-         print "\n";
+         my $type = $input->{type} || '';
+         my $name = $input->{name} || '';
+         my $value = $input->{value} || '';
+         if ($type eq 'text') {
+            push @{$h->{input}}, $name;
+         }
       }
 
-      $count++;
+      push @result, $h;
    }
 
-   return $client;
+   return \@result;
 }
 
 sub trace_redirect {

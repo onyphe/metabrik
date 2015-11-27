@@ -33,7 +33,7 @@ sub brik_properties {
          'File::MMagic' => [ ],
          'File::Copy' => [ qw(mv) ],
          'File::Spec' => [ ],
-         'File::Path' => [ ],
+         'File::Path' => [ qw(make_path) ],
       },
    };
 }

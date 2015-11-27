@@ -14,7 +14,7 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(unstable client twitter) ],
       commands => {
-         connect => [ qw(consumer_key consumer_secret access_token access_token_secret) ],
+         connect => [ qw(consumer_key|OPTIONAL consumer_secret|OPTIONAL access_token|OPTIONAL access_token_secret|OPTIONAL) ],
          tweet => [ qw(message) ],
       },
       attributes => {
@@ -57,6 +57,10 @@ sub connect {
    if (! defined($access_token_secret)) {
       return $self->log->error($self->brik_help_run('tweet'));
    }
+
+   # Without that, we got:
+   # "500 Can't connect to api.twitter.com:443 (Crypt-SSLeay can't verify hostnames)"
+   $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
 
    my $nt;
    eval {

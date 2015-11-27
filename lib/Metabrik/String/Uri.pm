@@ -33,9 +33,12 @@ sub brik_properties {
          query_form => [ ],
          userinfo => [ ],
          is_https_scheme => [ ],
+         encode => [ qw($data) ],
+         decode => [ qw($data) ],
       },
       require_modules => {
          'URI' => [ ],
+         'URI::Escape' => [ ],
       },
    };
 }
@@ -109,6 +112,32 @@ sub path_query { return shift->_this('path_query'); }
 sub authority { return shift->_this('authority'); }
 sub query_form { return shift->_this('query_form'); }
 sub userinfo { return shift->_this('userinfo'); }
+
+sub encode {
+   my $self = shift;
+   my ($data) = @_;
+
+   if (! defined($data)) {
+      return $self->log->error($self->brik_help_run('encode'));
+   }
+
+   my $encoded = URI::Escape::uri_escape($data);
+
+   return $encoded;
+}
+
+sub decode {
+   my $self = shift;
+   my ($data) = @_;
+
+   if (! defined($data)) {
+      return $self->log->error($self->brik_help_run('decode'));
+   }
+
+   my $decoded = URI::Escape::uri_unescape($data);
+
+   return $decoded;
+}
 
 1;
 

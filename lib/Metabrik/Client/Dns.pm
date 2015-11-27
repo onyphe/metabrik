@@ -7,7 +7,7 @@ package Metabrik::Client::Dns;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Network::Dns);
 
 sub brik_properties {
    return {
@@ -31,16 +31,17 @@ sub brik_properties {
          rtimeout => [ qw(timeout) ],
          return_list => [ qw(0|1) ],
          port => [ qw(port) ],
+         use_recursion => [ qw(0|1) ],
       },
       attributes_default => {
          timeout => 0,
          rtimeout => 2,
          return_list => 1,
          port => 53,
+         use_recursion => 1,
       },
       require_modules => {
          'Metabrik::File::Text' => [ ],
-         'Metabrik::Network::Dns' => [ ],
       },
    };
 }
@@ -100,9 +101,7 @@ sub a_lookup {
       return $self->log->error($self->brik_help_run('a_lookup'));
    }
 
-   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
-   $nd->use_recursion(1);
-   my $list = $nd->lookup($host, 'A', $nameserver, $port) or return;
+   my $list = $self->lookup($host, 'A', $nameserver, $port) or return;
 
    my @res = ();
    for (@$list) {
@@ -124,9 +123,7 @@ sub aaaa_lookup {
       return $self->log->error($self->brik_help_run('aaaa_lookup'));
    }
 
-   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
-   $nd->use_recursion(1);
-   my $list = $nd->lookup($host, 'AAAA', $nameserver, $port) or return;
+   my $list = $self->lookup($host, 'AAAA', $nameserver, $port) or return;
 
    my @res = ();
    for (@$list) {
@@ -148,9 +145,7 @@ sub ptr_lookup {
       return $self->log->error($self->brik_help_run('ptr_lookup'));
    }
 
-   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
-   $nd->use_recursion(1);
-   my $list = $nd->lookup($host, 'PTR', $nameserver, $port) or return;
+   my $list = $self->lookup($host, 'PTR', $nameserver, $port) or return;
 
    my @res = ();
    for (@$list) {
@@ -172,9 +167,7 @@ sub mx_lookup {
       return $self->log->error($self->brik_help_run('mx_lookup'));
    }
 
-   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
-   $nd->use_recursion(1);
-   my $list = $nd->lookup($host, 'MX', $nameserver, $port) or return;
+   my $list = $self->lookup($host, 'MX', $nameserver, $port) or return;
 
    my @res = ();
    for (@$list) {
@@ -196,9 +189,7 @@ sub ns_lookup {
       return $self->log->error($self->brik_help_run('ns_lookup'));
    }
 
-   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
-   $nd->use_recursion(1);
-   my $list = $nd->lookup($host, 'NS', $nameserver, $port) or return;
+   my $list = $self->lookup($host, 'NS', $nameserver, $port) or return;
 
    my @res = ();
    for (@$list) {
@@ -220,9 +211,7 @@ sub soa_lookup {
       return $self->log->error($self->brik_help_run('soa_lookup'));
    }
 
-   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
-   $nd->use_recursion(1);
-   my $list = $nd->lookup($host, 'SOA', $nameserver, $port) or return;
+   my $list = $self->lookup($host, 'SOA', $nameserver, $port) or return;
 
    my @res = ();
    for (@$list) {
@@ -244,9 +233,7 @@ sub txt_lookup {
       return $self->log->error($self->brik_help_run('txt_lookup'));
    }
 
-   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
-   $nd->use_recursion(1);
-   my $list = $nd->lookup($host, 'TXT', $nameserver, $port) or return;
+   my $list = $self->lookup($host, 'TXT', $nameserver, $port) or return;
 
    my @res = ();
    for (@$list) {
@@ -268,9 +255,7 @@ sub srv_lookup {
       return $self->log->error($self->brik_help_run('srv_lookup'));
    }
 
-   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
-   $nd->use_recursion(1);
-   my $list = $nd->lookup($host, 'SRV', $nameserver, $port) or return;
+   my $list = $self->lookup($host, 'SRV', $nameserver, $port) or return;
 
    my @res = ();
    for (@$list) {
@@ -292,9 +277,7 @@ sub cname_lookup {
       return $self->log->error($self->brik_help_run('cname_lookup'));
    }
 
-   my $nd = Metabrik::Network::Dns->new_from_brik_init($self) or return;
-   $nd->use_recursion(1);
-   my $list = $nd->lookup($host, 'CNAME', $nameserver, $port) or return;
+   my $list = $self->lookup($host, 'CNAME', $nameserver, $port) or return;
 
    my @res = ();
    for (@$list) {
