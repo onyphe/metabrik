@@ -166,7 +166,6 @@ t/04-use-briks-convert.t
 t/05-use-briks-crypto.t
 t/06-use-briks-database.t
 t/07-use-briks-encoding.t
-t/08-use-briks-example.t
 t/09-use-briks-file.t
 t/10-use-briks-http.t
 t/11-use-briks-identify.t

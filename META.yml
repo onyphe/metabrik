@@ -35,6 +35,8 @@ provides:
     file: lib/Metabrik/Audit/Smtp.pm
   Metabrik::Audit::Twiki:
     file: lib/Metabrik/Audit/Twiki.pm
+  Metabrik::Brik::Tool:
+    file: lib/Metabrik/Brik/Tool.pm
   Metabrik::Client::Dns:
     file: lib/Metabrik/Client/Dns.pm
   Metabrik::Client::Openssh:
@@ -95,8 +97,6 @@ provides:
     file: lib/Metabrik/Email/Message.pm
   Metabrik::Email::Send:
     file: lib/Metabrik/Email/Send.pm
-  Metabrik::Example::Template:
-    file: lib/Metabrik/Example/Template.pm
   Metabrik::File::Compress:
     file: lib/Metabrik/File/Compress.pm
   Metabrik::File::Create:
@@ -288,6 +288,8 @@ provides:
     file: lib/Metabrik/String/Yara.pm
   Metabrik::System::Docker:
     file: lib/Metabrik/System/Docker.pm
+  Metabrik::System::File:
+    file: lib/Metabrik/System/File.pm
   Metabrik::System::Freebsd::Jail:
     file: lib/Metabrik/System/Freebsd/Jail.pm
   Metabrik::System::Freebsd::Package:
@@ -310,6 +312,8 @@ provides:
     file: lib/Metabrik/Time/Universal.pm
   Metabrik::Worker::Fork:
     file: lib/Metabrik/Worker/Fork.pm
+  Metabrik::Www::Shorten:
+    file: lib/Metabrik/Www/Shorten.pm
   Metabrik::Www::Splunk:
     file: lib/Metabrik/Www/Splunk.pm
   Metabrik::Xorg::Screenshot:
@@ -353,6 +357,7 @@ requires:
   Net::Routing: '0'
   Net::SSL: '0'
   Net::SSLeay: '0'
+  Net::SinFP3: '1.23'
   Net::Write: '0'
   Net::Write::Fast: '0'
   NetAddr::IP: '0'
