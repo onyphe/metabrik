@@ -49,8 +49,13 @@ sub install {
    if (! defined($package)) {
       return $self->log->error($self->brik_help_run('install'));
    }
+   my $ref = ref($package);
+   if ($ref ne '' && $ref ne 'ARRAY') {
+      return $self->log->error("install: package [$package] has invalid format");
+   }
 
-   my $cmd = "sudo pkg install $package";
+   my $cmd = "sudo pkg install ";
+   $ref eq 'ARRAY' ? ($cmd .= join(' ', @$package)) : ($cmd .= $package);
 
    return $self->system($cmd);
 }

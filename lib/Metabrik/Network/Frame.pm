@@ -84,7 +84,7 @@ sub get_device_info {
 
    my $device_info = $nd->get($device) or return;
 
-   $self->log->verbose("get_device_info: got info from device [$device]");
+   $self->debug && $self->log->debug("get_device_info: got info from device [$device]");
 
    return $device_info;
 }

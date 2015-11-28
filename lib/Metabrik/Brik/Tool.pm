@@ -212,12 +212,13 @@ sub create_brik {
    for (@toks) {
       $_ = ucfirst($_);
    }
+
    my $directory;
    if (@toks > 2) {
-      $directory = join('/', $repository, @toks[0..$#toks-1]);
+      $directory = join('/', $repository, 'Metabrik', @toks[0..$#toks-1]);
    }
    else {
-      $directory = join('/', $repository, $toks[0]);
+      $directory = join('/', $repository, 'Metabrik', $toks[0]);
    }
    my $filename = $directory.'/'.$toks[-1].'.pm';
    my $package = join('::', 'Metabrik', @toks);
@@ -271,6 +272,11 @@ sub brik_use_properties {
 }
 
 sub brik_preinit {
+   my \$self = shift;
+
+   # Do your preinit here, return 0 on error.
+
+   return \$self->SUPER::brik_preinit;
 }
 
 sub brik_init {
@@ -282,6 +288,11 @@ sub brik_init {
 }
 
 sub brik_fini {
+   my \$self = shift;
+
+   # Do your fini here, return 0 on error.
+
+   return \$self->SUPER::brik_fini;
 }
 
 1;

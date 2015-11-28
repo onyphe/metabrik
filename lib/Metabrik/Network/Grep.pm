@@ -20,12 +20,15 @@ sub brik_properties {
          filter => [ qw(filter) ],
       },
       attributes_default => {
+         filter => '',
       },
       commands => {
-         from_string => [ qw(string filter|OPTIONAL device|OPTIONAL) ],
+         from_network => [ qw(string filter|OPTIONAL device|OPTIONAL) ],
+         from_pcap_file => [ qw(string pcap_file filter|OPTIONAL) ],
       },
       require_modules => {
          'Net::Frame::Simple' => [ ],
+         'Metabrik::File::Pcap' => [ ],
       },
    };
 }
@@ -40,14 +43,14 @@ sub brik_use_properties {
    };
 }
 
-sub from_string {
+sub from_network {
    my $self = shift;
    my ($string, $filter, $device) = @_;
 
    $device ||= $self->device;
-   $filter ||= '';
+   $filter ||= $self->filter;
    if (! defined($string)) {
-      return $self->log->error($self->brik_help_run('from_string'));
+      return $self->log->error($self->brik_help_run('from_network'));
    }
    if (! defined($device)) {
       return $self->log->error($self->brik_help_set('device'));
@@ -55,26 +58,54 @@ sub from_string {
 
    $self->open(2, $device, $filter) or return;
 
-   {
-      # So we can interrupt execution
-      local $SIG{INT} = sub {
-         die("interrupted by user\n");
-      };
-
-      while (1) {
-         my $h = $self->next or next;
-         my $simple = Net::Frame::Simple->newFromDump($h) or next;
-         my $layer = $simple->ref->{TCP} || $simple->ref->{UDP};
-         if (defined($layer) && length($layer->payload)) {
-            my $payload = $layer->payload;
-            if ($payload =~ /$string/) {
-               $self->log->info("payload: [$payload]");
-            }
+   my @match = ();
+   while (1) {
+      my $h = $self->next or next;
+      my $simple = Net::Frame::Simple->newFromDump($h) or next;
+      my $layer = $simple->ref->{TCP} || $simple->ref->{UDP};
+      if (defined($layer) && length($layer->payload)) {
+         my $payload = $layer->payload;
+         if ($payload =~ m{$string}) {
+            $self->log->info("from_network: payload: [$payload]");
+            push @match, $simple;
          }
       }
-   };
+   }
 
-   return 0;
+   return \@match;
+}
+
+sub from_pcap_file {
+   my $self = shift;
+   my ($string, $pcap_file, $filter) = @_;
+
+   $filter ||= $self->filter;
+   if (! defined($string) || ! defined($pcap_file)) {
+      return $self->log->error($self->brik_help_run('from_pcap_file'));
+   }
+   if (! -f $pcap_file) {
+      return $self->log->error("from_pcap_file: file [$pcap_file] not found");
+   }
+
+   my $fp = Metabrik::File::Pcap->new_from_brik_init($self) or return;
+   $fp->open($pcap_file, 'read', $filter) or return;
+   my $read = $fp->read or return;
+   $fp->close;
+
+   my @match = ();
+   for my $h (@$read) {
+      my $simple = Net::Frame::Simple->newFromDump($h) or next;
+      my $layer = $simple->ref->{TCP} || $simple->ref->{UDP};
+      if (defined($layer) && length($layer->payload)) {
+         my $payload = $layer->payload;
+         if ($payload =~ m{$string}) {
+            $self->log->info("from_pcap_file: payload: [$payload]");
+            push @match, $simple;
+         }
+      }
+   }
+
+   return \@match;
 }
 
 1;

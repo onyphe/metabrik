@@ -22,12 +22,12 @@ sub brik_properties {
          protocol => [ qw(tcp|udp) ],
          layer => [ qw(2|3|4) ],
          filter => [ qw(pcap_filter) ],
-         max_read => [ qw(integer_packet_count) ],
+         count => [ qw(count) ],
          _dump => [ qw(INTERNAL) ],
       },
       attributes_default => {
          layer => 2,
-         max_read => 0,
+         count => 0,
          family => 'ipv4',
          protocol => 'tcp',
          rtimeout => 5,
@@ -35,8 +35,9 @@ sub brik_properties {
       },
       commands => {
          open => [ qw(layer|OPTIONAL device|OPTIONAL filter|OPTIONAL) ],
-         read_next => [ ],
-         read_until_timeout => [ ],
+         read => [ ],
+         read_next => [ qw(count) ],
+         read_until_timeout => [ qw(count) ],
          close => [ ],
          has_timeout => [ ],
          reset_timeout => [ ],
@@ -84,7 +85,7 @@ sub open {
          dev => $device,
          timeoutOnNext => $self->rtimeout,
          filter => $filter,
-      );
+      ) or return $self->log->error("open: Net::Frame::Dump::Online2->new failed");
    }
    elsif ($self->layer != 3) {
       return $self->log->error("open: not implemented");
@@ -95,7 +96,7 @@ sub open {
    return $self->_dump($dump);
 }
 
-sub read_next {
+sub read {
    my $self = shift;
 
    my $dump = $self->_dump;
@@ -103,33 +104,69 @@ sub read_next {
       return $self->log->error($self->brik_help_run('open'));
    }
 
-   my $next = $dump->next;
+   my @next = ();
+   my $count = 0;
+   while (my $next = $dump->next) {
+      $self->log->verbose("read: read ".++$count." packet(s)");
+      if (ref($next) eq 'ARRAY') {
+         push @next, @$next;
+      }
+      else {
+         push @next, $next;
+      }
+   }
 
-   return defined($next) ? $next : 0;
+   return \@next;
+}
+
+sub read_next {
+   my $self = shift;
+   my ($count) = @_;
+
+   $count ||= $self->count;
+   my $dump = $self->_dump;
+   if (! defined($dump)) {
+      return $self->log->error($self->brik_help_run('open'));
+   }
+
+   my @next = ();
+   my $read_count = 0;
+   while (1) {
+      my $next = $dump->next;
+      if (defined($next)) {
+         $self->log->verbose("read_next: read ".++$read_count." packet(s)");
+         push @next, $next;
+         last if ++$read_count == $count;
+      }
+   }
+
+   return \@next;
 }
 
 sub read_until_timeout {
    my $self = shift;
+   my ($count) = @_;
 
+   $count ||= $self->count;
    my $dump = $self->_dump;
    if (! defined($dump)) {
       return $self->log->error($self->brik_help_run('open'));
    }
 
    my $rtimeout = $self->rtimeout;
-   my $max_read = $self->max_read;
-   $self->log->verbose("next_until_timeout: will read until $rtimeout seconds timeout or $max_read max read packet(s) has been read");
 
-   my $count = 0;
+   $self->log->verbose("next_until_timeout: will read until $rtimeout seconds timeout or $count packet(s) has been read");
+
+   my $read_count = 0;
    my @next = ();
    while (! $dump->timeout) {
-      if ($max_read && $count == $max_read) {
+      if ($count && $read_count == $count) {
          last;
       }
 
       if (my $next = $dump->next) {
+         $self->log->verbose("read_until_timeout: read ".++$read_count." packet(s)");
          push @next, $next;
-         $self->debug && $self->log->debug("next_until_timeout: read one packet");
          $count++;
       }
    }
@@ -141,17 +178,17 @@ sub reply {
    my $self = shift;
    my ($frame) = @_;
 
+   my $dump = $self->_dump;
+   if (! defined($dump)) {
+      return $self->log->error($self->brik_help_run('open'));
+   }
+
    if (! defined($frame)) {
       return $self->log->error($self->brik_help_run('reply'));
    }
 
    if (ref($frame) ne 'Net::Frame::Simple') {
       return $self->log->error("reply: frame must be Net::Frame::Simple object");
-   }
-
-   my $dump = $self->_dump;
-   if (! defined($dump)) {
-      return $self->log->error($self->brik_help_run('open'));
    }
 
    return $dump->getFramesFor($frame);
