@@ -16,7 +16,12 @@ sub brik_properties {
       commands => {
          install => [ qw(module|$module_list) ],
       },
+      attributes => {
+         use_test => [ qw(0|1) ],
+         use_sudo => [ qw(0|1) ],
+      },
       attributes_default => {
+         use_test => 0,
          use_sudo => 1,
       },
       require_binaries => {
@@ -32,25 +37,18 @@ sub install {
    if (! defined($module)) {
       return $self->log->error($self->brik_help_run('install'));
    }
-
-   if (ref($module) eq 'ARRAY') {
-      for my $this (@$module) {
-         if ($this !~ /^[A-Za-z0-9:_]+$/) {
-            $self->log->error("install: invalid format for module [$module]");
-            next;
-         }
-
-         $self->system("cpanm $this");
-      }
-
-      return 1;
+   my $ref = ref($module);
+   if ($ref ne '' && $ref ne 'ARRAY') {
+      return $self->log->error("install: module [$module] has invalid format");
    }
-   elsif (! ref($module)) {
-      if ($module !~ /^[A-Za-z0-9:_]+$/) {
-         return $self->log->error("install: invalid format for module [$module]");
-      }
 
-      return $self->system("cpanm $module");
+   my $cmd = $self->use_test ? "cpanm" : "cpanm -n";
+
+   if ($ref eq 'ARRAY') {
+      $self->system(join(' ', $cmd, @$module));
+   }
+   elsif ($ref eq '') {
+      $self->system(join(' ', $cmd, $module));
    }
 
    return 1;
