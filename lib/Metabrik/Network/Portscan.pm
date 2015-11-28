@@ -289,7 +289,8 @@ sub tcp_syn {
    my %open;
    my %closed;
    while (! $nr->has_timeout) {
-      if (my $next = $nr->read_next) {
+      if (my $next = $nr->read_until_timeout) {
+         $self->debug && $self->log->debug("tcp_syn: read_until_timeout has some stuff");
          for my $f (@$next) {
             my $s = Net::Frame::Simple->newFromDump($f);
             #printf STDERR "flags: 0x%02x\n", $s->ref->{TCP}->flags;

@@ -1,11 +1,12 @@
 20151128
-   AFFECT: network::arp, network::grep, network::read
+   AFFECT: network::arp, network::grep, network::read, file::pcap
 
    - network::arp renamed max_read Attribute to count
    - network::grep renamed from_string Command to from_network
    - network::grep from_network Command now returns an ARRAY of matched frames
    - network::read renamed max_read Attribute to count
    - network::read read_next Command now always returns an ARRAY
+   - file::pcap read_next Command now always returns an ARRAY
 
 20151126
    AFFECT: network::dns

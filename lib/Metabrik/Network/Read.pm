@@ -155,7 +155,7 @@ sub read_until_timeout {
 
    my $rtimeout = $self->rtimeout;
 
-   $self->log->verbose("next_until_timeout: will read until $rtimeout seconds timeout or $count packet(s) has been read");
+   $self->debug && $self->log->debug("next_until_timeout: will read until $rtimeout seconds timeout or $count packet(s) has been read");
 
    my $read_count = 0;
    my @next = ();

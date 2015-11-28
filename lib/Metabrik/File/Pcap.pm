@@ -145,15 +145,14 @@ sub read_next {
       return $self->log->error($self->brik_help_run('open'));
    }
 
-   my @h = ();
-   my $read = 0;
+   my @next = ();
+   my $read_count = 0;
    while (my $h = $dump->next) {
-      push @h, $h;
-      last if ++$read == $count;
+      push @next, $h;
+      last if ++$read_count == $count;
    }
 
-   # Return only one item in case we asked for only one.
-   return ($count == 1) ? $h[0] : \@h;
+   return \@next;
 }
 
 sub is_eof {
