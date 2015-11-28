@@ -289,42 +289,44 @@ sub tcp_syn {
    my %open;
    my %closed;
    while (! $nr->has_timeout) {
-      if (my $f = $nr->read_next) {
-         my $s = Net::Frame::Simple->newFromDump($f);
-         #printf STDERR "flags: 0x%02x\n", $s->ref->{TCP}->flags;
-         if ($s->ref->{TCP}) {
-            my $ip  = $use_ipv6 ? $s->ref->{IPv6} : $s->ref->{IPv4};
-            my $tcp = $s->ref->{TCP};
-            if ($tcp->flags == 0x12) { # SYN+ACK
-               #print STDERR "open: [".$ip->src."]:".$tcp->src."/tcp\n";
-               $self->log->verbose("tcp_syn: open port [".$ip->src."]:".$tcp->src."/tcp");
-               $open{$ip->src}{$tcp->src} = {
-                  id => $use_ipv6 ? $ip->flowLabel : $ip->id,
-                  ttl => $use_ipv6 ? $ip->hopLimit  : $ip->ttl,
-                  win => $tcp->win,
-                  opt => unpack('H*', $tcp->options),
-                  flags => 'SA',
-               };
-            }
-            elsif ($tcp->flags == 0x14) { # RST+ACK
-               $closed{$ip->src}{$tcp->src} = {
-                  id => $use_ipv6 ? $ip->flowLabel : $ip->id,
-                  ttl => $use_ipv6 ? $ip->hopLimit  : $ip->ttl,
-                  win => $tcp->win,
-                  opt => unpack('H*', $tcp->options),
-                  flags => 'RA',
-               };
+      if (my $next = $nr->read_next) {
+         for my $f (@$next) {
+            my $s = Net::Frame::Simple->newFromDump($f);
+            #printf STDERR "flags: 0x%02x\n", $s->ref->{TCP}->flags;
+            if ($s->ref->{TCP}) {
+               my $ip  = $use_ipv6 ? $s->ref->{IPv6} : $s->ref->{IPv4};
+               my $tcp = $s->ref->{TCP};
+               if ($tcp->flags == 0x12) { # SYN+ACK
+                  #print STDERR "open: [".$ip->src."]:".$tcp->src."/tcp\n";
+                  $self->log->verbose("tcp_syn: open port [".$ip->src."]:".$tcp->src."/tcp");
+                  $open{$ip->src}{$tcp->src} = {
+                     id => $use_ipv6 ? $ip->flowLabel : $ip->id,
+                     ttl => $use_ipv6 ? $ip->hopLimit  : $ip->ttl,
+                     win => $tcp->win,
+                     opt => unpack('H*', $tcp->options),
+                     flags => 'SA',
+                  };
+               }
+               elsif ($tcp->flags == 0x14) { # RST+ACK
+                  $closed{$ip->src}{$tcp->src} = {
+                     id => $use_ipv6 ? $ip->flowLabel : $ip->id,
+                     ttl => $use_ipv6 ? $ip->hopLimit  : $ip->ttl,
+                     win => $tcp->win,
+                     opt => unpack('H*', $tcp->options),
+                     flags => 'RA',
+                  };
+               }
             }
          }
-      }
-      if ($nr->has_timeout) {
-         $self->debug && $self->log->debug("tcp_syn: has_timeout");
-         if (! $wf->is_son_alive) {
-            $self->log->verbose("tcp_syn: no more son, stopping loop");
-            last;
+         if ($nr->has_timeout) {
+            $self->debug && $self->log->debug("tcp_syn: has_timeout");
+            if (! $wf->is_son_alive) {
+               $self->log->verbose("tcp_syn: no more son, stopping loop");
+               last;
+            }
+            $self->debug && $self->log->debug("tcp_syn: reset_timeout");
+            $nr->reset_timeout;
          }
-         $self->debug && $self->log->debug("tcp_syn: reset_timeout");
-         $nr->reset_timeout;
       }
    }
    

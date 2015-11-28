@@ -18,7 +18,7 @@ sub brik_properties {
       attributes => {
          try => [ qw(try_count) ],
          rtimeout => [ qw(timeout_seconds) ],
-         max_read => [ qw(max_read_packet) ],
+         count => [ qw(count) ],
          max_runtime => [ qw(max_runtime) ],
          device => [ qw(device) ],
          _pidfile => [ qw(INTERNAL) ],
@@ -225,7 +225,7 @@ sub scan {
 
    my $nr = Metabrik::Network::Read->new_from_brik_init($self) or return;
    $nr->rtimeout($self->rtimeout);
-   $nr->max_read($self->max_read || 0);
+   $nr->count($self->count || 0);
 
    my $filter = 'arp and src net '.$subnet.' and dst host '.$interface->{ipv4};
    my $read = $nr->open(2, $interface->{device}, $filter) or return;
