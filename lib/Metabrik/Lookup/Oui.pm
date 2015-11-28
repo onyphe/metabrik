@@ -12,7 +12,9 @@ use base qw(Metabrik::File::Text);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable lookup oui ieee) ],
+      tags => [ qw(unstable ieee) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          datadir => [ qw(datadir) ],
          input => [ qw(input) ],

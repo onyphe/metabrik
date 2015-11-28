@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable convert number) ],
+      tags => [ qw(unstable) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          to_hex => [ qw(int_number) ],
          to_int => [ qw(hex_number) ],

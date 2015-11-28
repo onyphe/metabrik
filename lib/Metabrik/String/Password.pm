@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable password random) ],
+      tags => [ qw(unstable random) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          charset => [ qw($character_list) ],
          length => [ qw(integer) ],

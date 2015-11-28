@@ -12,7 +12,9 @@ use base qw(Metabrik::File::Write);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable file dump read write) ],
+      tags => [ qw(unstable read write) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          input => [ qw(file) ],
          output => [ qw(file) ],

@@ -15,7 +15,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable database ripe netname country as) ],
+      tags => [ qw(unstable netname country as) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          datadir => [ qw(datadir) ],
          input => [ qw(ripe.db) ],

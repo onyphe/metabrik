@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable client twitter) ],
+      tags => [ qw(unstable) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          connect => [ qw(consumer_key|OPTIONAL consumer_secret|OPTIONAL access_token|OPTIONAL access_token_secret|OPTIONAL) ],
          tweet => [ qw(message) ],

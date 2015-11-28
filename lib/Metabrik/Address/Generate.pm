@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable address ipv4 routable reserved) ],
+      tags => [ qw(unstable ipv4 ipv6 routable reserved) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          datadir => [ qw(directory) ],
          file_count => [ qw(integer) ],

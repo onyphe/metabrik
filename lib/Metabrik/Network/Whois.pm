@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable network whois) ],
+      tags => [ qw(unstable) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          rtimeout => [ qw(timeout) ],
          last_server => [ qw(server) ],

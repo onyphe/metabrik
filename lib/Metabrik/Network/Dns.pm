@@ -13,7 +13,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable dns nameserver) ],
+      tags => [ qw(unstable ns nameserver) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          nameserver => [ qw(ip_address|$ip_address_list) ],
          port => [ qw(port) ],

@@ -12,7 +12,9 @@ use base qw(Metabrik::Server::Http);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable server rest api) ],
+      tags => [ qw(unstable api) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          datadir => [ qw(datadir) ],
          hostname => [ qw(listen_hostname) ],

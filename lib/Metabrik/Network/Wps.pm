@@ -12,7 +12,9 @@ use base qw(Metabrik::Network::Wlan);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable wifi wlan network wps) ],
+      tags => [ qw(unstable wifi wlan wireless) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          brute_force_wps => [ qw(essid bssid|OPTIONAL) ],
       },

@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable gzip gunzip uncompress compress) ],
+      tags => [ qw(unstable gzip gunzip unzip uncompress) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          data => [ qw($data) ],
          memory_limit => [ qw(integer) ],

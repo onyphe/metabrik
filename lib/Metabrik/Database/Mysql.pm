@@ -12,7 +12,9 @@ use base qw(Metabrik::Database::Sqlite);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable database mysql) ],
+      tags => [ qw(unstable) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          db => [ qw(db_name) ],
          autocommit => [ qw(0|1) ],

@@ -12,7 +12,9 @@ use base qw(Metabrik::Network::Frame);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable arp cache poison eui64 discover scan) ],
+      tags => [ qw(unstable cache poison eui64 discover scan eui-64) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          try => [ qw(try_count) ],
          rtimeout => [ qw(timeout_seconds) ],

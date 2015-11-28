@@ -12,7 +12,9 @@ use base qw(Metabrik::Shell::Command);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable wifi wlan network monitor) ],
+      tags => [ qw(unstable wifi wlan wireless monitor) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          device => [ qw(device) ],
          monitor => [ qw(device) ],

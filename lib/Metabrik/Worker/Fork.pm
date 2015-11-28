@@ -13,7 +13,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable worker fork process) ],
+      tags => [ qw(unstable process) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          pid => [ qw(forked_process_id) ],
       },

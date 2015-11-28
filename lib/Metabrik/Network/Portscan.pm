@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable portscan synscan tcpscan) ],
+      tags => [ qw(unstable scan syn port synscan tcpscan) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          device => [ qw(device) ],
          ports => [ qw(port_array) ],

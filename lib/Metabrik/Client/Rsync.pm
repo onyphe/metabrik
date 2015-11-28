@@ -12,7 +12,9 @@ use base qw(Metabrik::Shell::Command);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable client network rsync) ],
+      tags => [ qw(unstable network) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          sync => [ qw(source destination) ],
       },

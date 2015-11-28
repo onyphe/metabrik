@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable encode decode json) ],
+      tags => [ qw(unstable encode decode) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          encode => [ qw($data_list|$data_hash) ],
          decode => [ qw($data) ],

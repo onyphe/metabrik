@@ -13,6 +13,8 @@ sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(unstable dd) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          output => [ qw(output) ],
          max_size => [ qw(integer) ],

@@ -12,7 +12,9 @@ use base qw(Metabrik::Client::Tcp);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable client udp socket netcat) ],
+      tags => [ qw(unstable socket netcat) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          host => [ qw(host) ],
          port => [ qw(port) ],

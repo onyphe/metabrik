@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable pgp gpg gnupg) ],
+      tags => [ qw(unstable pgp gnupg) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          public_keyring => [ qw(file.gpg) ],
          secret_keyring => [ qw(file.gpg) ],

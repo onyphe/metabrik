@@ -7,11 +7,11 @@ RUN apt-get -y update
 #
 # Packaged programs
 #
-RUN apt-get install -y build-essential sudo less cpanminus nvi iputils-ping
+RUN apt-get install -y build-essential sudo less cpanminus nvi iputils-ping mercurial
 #
 # Packaged Perl modules
 #
-RUN apt-get install -y liblexical-persistence-perl liblocal-lib-perl libppi-perl libterm-readline-gnu-perl libnet-pcap-perl libnet-libdnet-perl libnet-libdnet6-perl mercurial libclass-gomor-perl libclass-gomor-perl libdata-dump-perl libppi-perl libexporter-tiny-perl libterm-readline-gnu-perl libfile-homedir-perl libio-all-perl libterm-shell-perl libipc-run3-perl
+RUN apt-get install -y liblexical-persistence-perl liblocal-lib-perl libppi-perl libterm-readline-gnu-perl libclass-gomor-perl libdata-dump-perl libppi-perl libexporter-tiny-perl libfile-homedir-perl libio-all-perl libterm-shell-perl libipc-run3-perl
 #
 # Unpackaged Perl modules
 #
@@ -26,7 +26,7 @@ RUN apt-get install -y libssl-dev phantomjs rng-tools tcptraceroute nmap python 
 #
 # Packaged Perl modules
 #
-RUN apt-get install -y libdbi-perl libnet-ssleay-perl libxml-simple-perl libdbd-sqlite3-perl libcrypt-ssleay-perl libnet-openssh-perl libnet-ssh2-perl libdbd-mysql-perl libdatetime-perl libgnupg-interface-perl libxml-libxml-perl
+RUN apt-get install -y libnet-pcap-perl libnet-libdnet-perl libnet-libdnet6-perl libdbi-perl libnet-ssleay-perl libxml-simple-perl libdbd-sqlite3-perl libcrypt-ssleay-perl libnet-openssh-perl libnet-ssh2-perl libdbd-mysql-perl libdatetime-perl libgnupg-interface-perl libxml-libxml-perl
 #
 # Unpackaged Perl modules
 #

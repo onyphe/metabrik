@@ -12,7 +12,9 @@ use base qw(Metabrik::Network::Smtp);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable email send smtp) ],
+      tags => [ qw(unstable smtp) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          from => [ qw(from) ],
          to => [ qw(to) ],

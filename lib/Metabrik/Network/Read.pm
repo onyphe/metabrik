@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable network read ethernet ip raw socket) ],
+      tags => [ qw(unstable ethernet ip raw socket) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          device => [ qw(device) ],
          rtimeout => [ qw(seconds) ],

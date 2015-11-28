@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable elasticsearch elk) ],
+      tags => [ qw(unstable elk) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          nodes => [ qw(node_list) ],
          cxn_pool => [ qw(Sniff|Static|Static::NoPing) ],

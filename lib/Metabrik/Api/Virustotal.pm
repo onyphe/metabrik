@@ -12,7 +12,9 @@ use base qw(Metabrik::Client::Rest);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable rest api virustotal domain virtualhost) ],
+      tags => [ qw(unstable rest domain virtualhost) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          apikey => [ qw(apikey) ],
          output_mode => [ qw(json|xml) ],

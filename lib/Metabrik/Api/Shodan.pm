@@ -14,7 +14,9 @@ use base qw(Metabrik::Client::Rest);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable rest api shodan) ],
+      tags => [ qw(unstable rest) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          output_mode => [ qw(json|xml) ],
          apikey => [ qw(apikey) ],

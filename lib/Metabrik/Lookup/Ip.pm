@@ -12,7 +12,9 @@ use base qw(Metabrik::Lookup::Ethernet);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable lookup ipv4 ipv6 ip) ],
+      tags => [ qw(unstable ipv4 ipv6) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          from_dec => [ qw(dec_number) ],
          from_hex => [ qw(hex_number) ],

@@ -13,16 +13,22 @@ sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(unstable program) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          repository => [ qw(repository) ],
       },
       commands => {
+         install_ubuntu_packages => [ ],
+         install_perl_modules => [ ],
          create_tool => [ qw(filename.pl repository|OPTIONAL) ],
          create_brik => [ qw(Brik repository|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::File::Text' => [ ],
+         'Metabrik::Perl::Module' => [ ],
          'Metabrik::System::File' => [ ],
+         'Metabrik::System::Package' => [ ],
       },
    };
 }
@@ -35,6 +41,113 @@ sub brik_use_properties {
          repository => $self->global->repository,
       },
    };
+}
+
+sub install_ubuntu_packages {
+   my $self = shift;
+
+   my @programs = qw(
+      aptitude
+      dsniff
+      libssl-dev
+      mysql-client
+      nmap
+      phantomjs
+      python
+      rng-tools
+      scrot
+      tcptraceroute
+      unzip
+      wget
+   );
+
+   my @modules = qw(
+      libcrypt-ssleay-perl
+      libdatetime-perl
+      libdbd-mysql-perl
+      libdbd-sqlite3-perl
+      libdbi-perl
+      libgnupg-interface-perl
+      libnet-libdnet6-perl
+      libnet-libdnet-perl
+      libnet-openssh-perl
+      libnet-pcap-perl
+      libnet-ssh2-perl
+      libnet-ssleay-perl
+      libxml-libxml-perl
+      libxml-simple-perl
+   );
+
+   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
+   return $sp->install([ @programs, @modules ]);
+}
+
+sub install_perl_modules {
+   my $self = shift;
+
+   my @modules = qw(
+      Config::Tiny
+      Crypt::Digest
+      Daemon::Daemonize
+      File::Copy
+      File::MMagic
+      File::Path
+      File::Spec
+      Geo::IP
+      HTML::Entities
+      HTTP::Proxy
+      IO::Handle
+      IO::Scalar
+      IO::Socket::INET6
+      IO::Socket::Multicast
+      IO::Socket::SSL
+      List::Util
+      LWP::Protocol::connect
+      LWP::UserAgent
+      LWP::UserAgent::ProgressAny
+      MIME::Base64
+      NetAddr::IP
+      Net::CIDR
+      Net::Cmd
+      Net::DNS
+      Net::Frame
+      Net::Frame::Dump
+      Net::Frame::Layer::ICMPv4
+      Net::Frame::Layer::ICMPv6
+      Net::Frame::Layer::IPv6
+      Net::Frame::Simple
+      Net::FTP
+      Net::IPv4Addr
+      Net::IPv6Addr
+      Net::NBName
+      Net::Netmask
+      Net::Nslookup
+      Net::Routing
+      Net::Server
+      Net::SinFP3
+      Net::SMTP
+      Net::SSL
+      Net::Twitter
+      Net::Whois::Raw
+      Net::Write
+      Net::Write::Fast
+      Parse::YARA
+      Progress::Any::Output
+      Progress::Any::Output::TermProgressBarColor
+      Redis
+      Search::Elasticsearch
+      String::Random
+      Term::ReadPassword
+      Text::CSV_XS
+      URI
+      URI::Escape
+      WWW::Mechanize
+      WWW::Mechanize::PhantomJS
+      WWW::Splunk
+   );
+
+   my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;
+   return $pm->install(\@modules);
 }
 
 sub create_tool {

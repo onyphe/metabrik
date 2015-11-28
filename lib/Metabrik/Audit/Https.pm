@@ -12,7 +12,9 @@ use base qw(Metabrik::Shell::Command);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable https audit ssl openssl) ],
+      tags => [ qw(unstable ssl openssl) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          uri => [ qw(uri) ],
       },

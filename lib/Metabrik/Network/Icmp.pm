@@ -12,7 +12,9 @@ use base qw(Metabrik::Network::Frame);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable icmp ping redirect doubleredirect mitm) ],
+      tags => [ qw(unstable ping redirect doubleredirect mitm) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          ping => [ qw(ipv4_address) ],
          half_poison => [ ],

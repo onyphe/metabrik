@@ -13,6 +13,8 @@ sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(tag1 tag2) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          attribute1 => [ qw(value_type) ],
          attribute2 => [ qw($value_list $value_hash) ],

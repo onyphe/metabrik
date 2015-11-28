@@ -12,7 +12,9 @@ use base qw(Metabrik::Shell::Command);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable system service daemon) ],
+      tags => [ qw(unstable daemon) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          status => [ qw(service_name) ],
          start => [ qw(service_name) ],

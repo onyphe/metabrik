@@ -12,10 +12,12 @@ use base qw(Metabrik::Shell::Command);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable system package ubuntu) ],
+      tags => [ qw(unstable) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          search => [ qw(string) ],
-         install => [ qw(package) ],
+         install => [ qw(package|$package_list) ],
          update => [ ],
          upgrade => [ ],
          list => [ ],
@@ -48,8 +50,13 @@ sub install {
    if (! defined($package)) {
       return $self->log->error($self->brik_help_run('install'));
    }
+   my $ref = ref($package);
+   if ($ref ne '' && $ref ne 'ARRAY') {
+      return $self->log->error("install: package [$package] has invalid format");
+   }
 
-   my $cmd = "sudo apt-get install $package";
+   my $cmd = "sudo apt-get install ";
+   $ref eq 'ARRAY' ? ($cmd .= join(' ', @$package)) : ($cmd .= $package);
 
    return $self->system($cmd);
 }

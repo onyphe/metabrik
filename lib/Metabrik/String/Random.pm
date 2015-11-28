@@ -12,7 +12,9 @@ use base qw(Metabrik::String::Password);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable string random) ],
+      tags => [ qw(unstable) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes_default => {
          datadir => [ qw(datadir) ],
          charset => [ 'A'..'K', 'M'..'Z', 'a'..'k', 'm'..'z', 2..9, '_', '-' ],

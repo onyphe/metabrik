@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable network sinfp sinfp3 scanner signature) ],
+      tags => [ qw(unstable network sinfp scanner signature) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          db => [ qw(sinfp3_db) ],
       },

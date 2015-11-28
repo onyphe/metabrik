@@ -12,7 +12,9 @@ use base qw(Metabrik::Network::Dns);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable client dns) ],
+      tags => [ qw(unstable) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          get_local_resolver => [ qw(file|OPTIONAL) ],
          a_lookup => [ qw(host|$host_list nameserver|$nameserver_list|OPTIONAL port|OPTIONAL) ],

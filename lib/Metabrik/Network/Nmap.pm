@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable network security scanner nmap) ],
+      tags => [ qw(unstable security scan vulnerability vuln port portscan synscan syn udpscan scanner nmap) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          datadir => [ qw(datadir) ],
          targets => [ qw(nmap_targets) ],

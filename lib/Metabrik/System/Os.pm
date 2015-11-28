@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable os uname linux freebsd distribution) ],
+      tags => [ qw(unstable uname linux freebsd distribution) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          _uname => [ qw(INTERNAL) ],
       },

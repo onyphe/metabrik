@@ -12,7 +12,9 @@ use base qw(Metabrik::File::Text);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable hardware temperature) ],
+      tags => [ qw(unstable) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          cpu => [ ],
       },

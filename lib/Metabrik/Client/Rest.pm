@@ -12,7 +12,9 @@ use base qw(Metabrik::Client::Www);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable http client rest api) ],
+      tags => [ qw(unstable http api) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          output_mode => [ qw(json|xml) ],
       },

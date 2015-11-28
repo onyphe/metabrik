@@ -12,7 +12,9 @@ use base qw(Metabrik::Client::Tcp);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable modbus) ],
+      tags => [ qw(unstable) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          probe => [ qw(host port|OPTIONAL) ],
       },

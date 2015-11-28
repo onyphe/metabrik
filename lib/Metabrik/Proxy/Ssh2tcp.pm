@@ -12,7 +12,9 @@ use base qw(Metabrik::System::Process);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable proxy ssh tcp ssh2tcp socket netcat) ],
+      tags => [ qw(unstable ssh tcp socket netcat) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          hostname => [ qw(listen_hostname) ],
          port => [ qw(listen_port) ],

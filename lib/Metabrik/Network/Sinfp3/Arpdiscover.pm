@@ -12,7 +12,9 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable network sinfp3 sinfp arpdiscover arp arpscan ipv6) ],
+      tags => [ qw(unstable network sinfp scan arp arpscan ipv6) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          subnet => [ qw(target_subnet) ],
          use_ipv6 => [ qw(0|1) ],

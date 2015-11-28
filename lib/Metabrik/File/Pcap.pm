@@ -13,6 +13,8 @@ sub brik_properties {
    return {
       revision => '$Revision$',
       tags => [ qw(unstable frame packet) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          input => [ qw(input) ],
          output => [ qw(output) ],
