@@ -46,10 +46,8 @@ lib/Metabrik/Email/Mbox.pm
 lib/Metabrik/Email/Message.pm
 lib/Metabrik/Email/Send.pm
 lib/Metabrik/File/Compress.pm
-lib/Metabrik/File/Create.pm
 lib/Metabrik/File/Csv.pm
 lib/Metabrik/File/Dump.pm
-lib/Metabrik/File/Fetch.pm
 lib/Metabrik/File/Find.pm
 lib/Metabrik/File/Hash.pm
 lib/Metabrik/File/Ini.pm
@@ -113,7 +111,6 @@ lib/Metabrik/Proxy/Http.pm
 lib/Metabrik/Proxy/Ssh2tcp.pm
 lib/Metabrik/Remote/Tcpdump.pm
 lib/Metabrik/Repository.pm
-lib/Metabrik/Server/Agent.pm
 lib/Metabrik/Server/Dns.pm
 lib/Metabrik/Server/Http.pm
 lib/Metabrik/Server/Rest.pm

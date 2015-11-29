@@ -1,3 +1,10 @@
+20151129
+   AFFECT: file::create, file::fetch, server::agent
+
+   - file::create merged with system::file
+   - file::fetch merged with client::www (get Command is now mirror Command)
+   - server::agent is obsolete
+
 20151128
    AFFECT: network::arp, network::grep, network::read, file::pcap
 

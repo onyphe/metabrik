@@ -16,8 +16,10 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         overwrite => [ qw(0|1) ],
       },
       attributes_default => {
+         overwrite => 0,
       },
       commands => {
          identify => [ qw(file) ],
@@ -30,6 +32,7 @@ sub brik_properties {
          remove => [ qw(file) ],
          rename => [ qw(source destination) ],
          cat => [ qw(source destination) ],
+         create => [ qw(file size) ],
       },
       require_modules => {
          'File::MMagic' => [ ],
@@ -51,9 +54,7 @@ sub mkdir {
    my $self = shift;
    my ($path) = @_;
 
-   if (! defined($path)) {
-      return $self->log->error($self->brik_help_run('mkdir'));
-   }
+   $self->brik_help_run_undef_arg("mkdir", $path) or return;
 
    my $no_error = 1;
    File::Path::make_path($path, { error => \my $error });
@@ -73,12 +74,54 @@ sub mkdir {
    return $no_error;
 }
 
+sub remove {
+   my $self = shift;
+   my ($file) = @_;
+
+   $self->brik_help_run_undef_arg("remove", $file) or return;
+   my $ref = $self->brik_help_run_invalid_arg("remove", $file, 'ARRAY', '') or return;
+
+   if ($ref eq 'ARRAY') {
+      unlink(@$file) or return $self->log->error("remove: unable to unlink files: [$!]");
+   }
+   else {
+      unlink($file) or return $self->log->error("remove: unable to unlink file: [$!]");
+   }
+
+   return $file;
+}
+
 sub move {
 #eval('use File::Copy qw(mv);');
 }
 
 sub cat {
 #File::Spec->catfile(source, dest)
+}
+
+sub create {
+   my $self = shift;
+   my ($file, $size) = @_;
+
+   $self->brik_help_run_undef_arg("create", $file) or return;
+   $self->brik_help_run_undef_arg("create", $size) or return;
+
+   my $overwrite = $self->overwrite;
+   if (-f $file && ! $self->overwrite) {
+      return $self->log->error("create: file [$file] already exists, use overwrite Attribute");
+   }
+
+   if (-f $file) {
+      $self->remove($file) or return;
+   }
+
+   my $fw = Metabrik::File::Write->new_from_brik_init($self) or return;
+   $fw->overwrite(1);
+   $fw->open($file) or return;
+   $fw->write(sprintf("G"x$size));
+   $fw->close;
+
+   return 1;
 }
 
 1;

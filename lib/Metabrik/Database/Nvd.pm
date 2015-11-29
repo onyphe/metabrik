@@ -7,7 +7,7 @@ package Metabrik::Database::Nvd;
 use strict;
 use warnings;
 
-use base qw(Metabrik::File::Fetch);
+use base qw(Metabrik::Client::Www);
 
 sub brik_properties {
    return {
@@ -70,15 +70,15 @@ sub update {
 
    my $datadir = $self->datadir;
 
-   my $compress = Metabrik::File::Compress->new_from_brik($self) or return;
+   my $fc = Metabrik::File::Compress->new_from_brik($self) or return;
 
    if ($type eq 'recent') {
       (my $uri = $resource->{uri}) =~ s/NAME/Recent/;
       (my $gz = $resource->{gz}) =~ s/NAME/Recent/;
       (my $xml = $resource->{xml}) =~ s/NAME/Recent/;
       my $output = "$datadir/$gz";
-      $self->get($uri, $output) or return $self->log->error("update: get failed");
-      $compress->gunzip($output, $datadir.'/'.$xml) or return $self->log->error("update: gunzip failed");
+      $self->mirror($uri, $output) or return;
+      $fc->gunzip($output, $datadir.'/'.$xml) or return;
       return $datadir.'/'.$xml;
    }
    elsif ($type eq 'modified') {
@@ -86,8 +86,8 @@ sub update {
       (my $gz = $resource->{gz}) =~ s/NAME/Modified/;
       (my $xml = $resource->{xml}) =~ s/NAME/Modified/;
       my $output = "$datadir/$gz";
-      $self->get($uri, $output) or return $self->log->error("update: get failed");
-      $compress->gunzip($output, $datadir.'/'.$xml) or return $self->log->error("update: gunzip failed");
+      $self->mirror($uri, $output) or return;
+      $fc->gunzip($output, $datadir.'/'.$xml) or return;
       return $datadir.'/'.$xml;
    }
    elsif ($type eq 'others') {
@@ -97,8 +97,8 @@ sub update {
          (my $gz = $resource->{gz}) =~ s/NAME/$year/;
          (my $xml = $resource->{xml}) =~ s/NAME/$year/;
          my $output = "$datadir/$gz";
-         $self->get($uri, $output) or return $self->log->error("update: get failed");
-         $compress->gunzip($output, $datadir.'/'.$xml) or return $self->log->error("update: gunzip failed");
+         $self->mirror($uri, $output) or return;
+         $fc->gunzip($output, $datadir.'/'.$xml) or return;
          push @output, $datadir.'/'.$xml;
       }
       return \@output;

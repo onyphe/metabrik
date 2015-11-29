@@ -32,7 +32,7 @@ sub brik_properties {
          ip_to_asn => [ qw(ipv4_address) ],
       },
       require_modules => {
-         'Metabrik::File::Fetch' => [ ],
+         'Metabrik::Client::Www' => [ ],
          'Metabrik::File::Read' => [ ],
       },
    };
@@ -49,7 +49,7 @@ sub update {
       ftp://ftp.lacnic.net/pub/stats/lacnic/delegated-lacnic-latest
    );
 
-   my $file_fetch = Metabrik::File::Fetch->new_from_brik($self) or return;
+   my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
 
    my @fetched = ();
    for my $url (@urls) {
@@ -58,8 +58,8 @@ sub update {
       (my $filename = $url) =~ s/^.*\/(.*?)$/$1/;
 
       my $output = $self->datadir.'/'.$filename;
-      my $get = $file_fetch->get($url, $output);
-      if (! defined($get)) {
+      my $r = $cw->mirror($url, $output);
+      if (! defined($r)) {
          $self->log->warning("update: can't fetch url [$url]");
          next;
       }

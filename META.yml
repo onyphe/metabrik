@@ -101,14 +101,10 @@ provides:
     file: lib/Metabrik/Email/Send.pm
   Metabrik::File::Compress:
     file: lib/Metabrik/File/Compress.pm
-  Metabrik::File::Create:
-    file: lib/Metabrik/File/Create.pm
   Metabrik::File::Csv:
     file: lib/Metabrik/File/Csv.pm
   Metabrik::File::Dump:
     file: lib/Metabrik/File/Dump.pm
-  Metabrik::File::Fetch:
-    file: lib/Metabrik/File/Fetch.pm
   Metabrik::File::Find:
     file: lib/Metabrik/File/Find.pm
   Metabrik::File::Hash:
@@ -236,10 +232,6 @@ provides:
   Metabrik::Repository:
     file: lib/Metabrik/Repository.pm
     version: '1.12'
-  Metabrik::Server::Agent:
-    file: lib/Metabrik/Server/Agent.pm
-  Metabrik::Server::Agent::Server:
-    file: lib/Metabrik/Server/Agent.pm
   Metabrik::Server::Dns:
     file: lib/Metabrik/Server/Dns.pm
   Metabrik::Server::Http:

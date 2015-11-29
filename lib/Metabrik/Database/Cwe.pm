@@ -7,7 +7,7 @@ package Metabrik::Database::Cwe;
 use strict;
 use warnings;
 
-use base qw(Metabrik::File::Fetch);
+use base qw(Metabrik::Client::Www);
 
 sub brik_properties {
    return {
@@ -43,8 +43,7 @@ sub update {
    my $uri = 'http://cwe.mitre.org/data/xml/views/2000.xml.zip';
    my $file = "$datadir/2000.xml.zip";
 
-   $self->get($uri, $file)
-      or return $self->log->error("update: get failed");
+   $self->mirror($uri, $file) or return;
 
    my $file_compress = Metabrik::File::Compress->new_from_brik($self) or return;
 

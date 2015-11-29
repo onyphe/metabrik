@@ -31,7 +31,7 @@ sub brik_properties {
          next_record => [ qw(file.ripe|OPTIONAL) ],
       },
       require_modules => {
-         'Metabrik::File::Fetch' => [ ],
+         'Metabrik::Client::Www' => [ ],
          'Metabrik::File::Read' => [ ],
          'Metabrik::File::Text' => [ ],
       },
@@ -52,7 +52,7 @@ sub update {
       ftp://ftp.ripe.net/ripe/dbase/ripe.db.gz
    );
 
-   my $file_fetch = Metabrik::File::Fetch->new_from_brik($self) or return;
+   my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
 
    my @fetched = ();
    for my $url (@urls) {
@@ -62,8 +62,8 @@ sub update {
       (my $unzipped = $filename) =~ s/\.gz$//;
 
       my $output = $self->datadir."/$filename";
-      my $get = $file_fetch->get($url, $output);
-      if (! defined($get)) {
+      my $r = $cw->mirror($url, $output);
+      if (! defined($r)) {
          $self->log->warning("update: can't fetch url [$url]");
          next;
       }

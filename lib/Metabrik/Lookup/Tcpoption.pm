@@ -32,7 +32,7 @@ sub brik_properties {
          from_string => [ qw(protocol_string) ],
       },
       require_modules => {
-         'Metabrik::File::Fetch' => [ ],
+         'Metabrik::Client::Www' => [ ],
          'Metabrik::File::Text' => [ ],
       },
    };
@@ -45,11 +45,11 @@ sub update {
    my $url = 'http://www.iana.org/assignments/tcp-parameters/tcp-parameters-1.csv';
    my ($file) = $self->input;
 
-   $output ||= $self->datadir.'/'.$file;
+   my $datadir = $self->datadir;
+   $output ||= $datadir.'/'.$file;
 
-   my $ff = Metabrik::File::Fetch->new_from_brik_init($self) or return;
-   $ff->get($url, $output)
-      or return $self->log->error("update: get failed");
+   my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
+   $cw->mirror($url, $file, $datadir) or return;
 
    # We have to rewrite the CSV file, cause some entries are multiline.
    my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
