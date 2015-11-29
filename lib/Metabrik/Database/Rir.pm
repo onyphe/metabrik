@@ -49,6 +49,8 @@ sub update {
       ftp://ftp.lacnic.net/pub/stats/lacnic/delegated-lacnic-latest
    );
 
+   my $datadir = $self->datadir;
+
    my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
 
    my @fetched = ();
@@ -57,8 +59,8 @@ sub update {
 
       (my $filename = $url) =~ s/^.*\/(.*?)$/$1/;
 
-      my $output = $self->datadir.'/'.$filename;
-      my $r = $cw->mirror($url, $output);
+      my $output = $datadir.'/'.$filename;
+      my $r = $cw->mirror($url, $filename, $datadir);
       if (! defined($r)) {
          $self->log->warning("update: can't fetch url [$url]");
          next;

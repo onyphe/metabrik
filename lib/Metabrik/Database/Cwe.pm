@@ -41,14 +41,12 @@ sub update {
    my $datadir = $self->datadir;
 
    my $uri = 'http://cwe.mitre.org/data/xml/views/2000.xml.zip';
-   my $file = "$datadir/2000.xml.zip";
+   my $file = "2000.xml.zip";
 
-   $self->mirror($uri, $file) or return;
+   $self->mirror($uri, $file, $datadir) or return;
 
-   my $file_compress = Metabrik::File::Compress->new_from_brik($self) or return;
-
-   $file_compress->unzip($file, $datadir)
-      or return $self->log->error("update: unzip failed");
+   my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
+   $fc->unzip($datadir.'/'.$file, $datadir) or return;
 
    return $datadir;
 }

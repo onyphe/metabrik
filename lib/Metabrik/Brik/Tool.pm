@@ -287,6 +287,25 @@ sub brik_init {
    return \$self->SUPER::brik_init;
 }
 
+sub example_command {
+   my \$self = shift;
+   my (\$arg1, \$arg2) = \@_;
+
+   \$self->brik_help_run_undef_arg("example_command", \$arg1) or return;
+
+   \$arg2 ||= \$self->arg2;
+   my \$ref = \$self->brik_help_run_invalid_arg("example_command", \$arg2, 'ARRAY', '') or return;
+
+   if (\$ref eq 'ARRAY') {
+      # Do your stuff
+   }
+   else {
+      # Do other stuff
+   }
+
+   return 1;
+}
+
 sub brik_fini {
    my \$self = shift;
 

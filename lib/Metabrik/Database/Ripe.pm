@@ -52,6 +52,8 @@ sub update {
       ftp://ftp.ripe.net/ripe/dbase/ripe.db.gz
    );
 
+   my $datadir = $self->datadir;
+
    my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
 
    my @fetched = ();
@@ -61,8 +63,8 @@ sub update {
       (my $filename = $url) =~ s/^.*\/(.*?)$/$1/;
       (my $unzipped = $filename) =~ s/\.gz$//;
 
-      my $output = $self->datadir."/$filename";
-      my $r = $cw->mirror($url, $output);
+      my $output = $datadir."/$filename";
+      my $r = $cw->mirror($url, $filename, $datadir);
       if (! defined($r)) {
          $self->log->warning("update: can't fetch url [$url]");
          next;
@@ -70,8 +72,8 @@ sub update {
 
       $self->log->verbose("update: gunzipping file to [$unzipped]");
 
-      my $file_compress = Metabrik::File::Compress->new_from_brik($self) or return;
-      my $gunzip = $file_compress->gunzip($output, $unzipped);
+      my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
+      my $gunzip = $fc->gunzip($output, $unzipped, $datadir);
       if (! defined($gunzip)) {
          $self->log->warning("update: can't gunzip file [$output]");
          next;

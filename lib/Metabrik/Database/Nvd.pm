@@ -77,8 +77,8 @@ sub update {
       (my $gz = $resource->{gz}) =~ s/NAME/Recent/;
       (my $xml = $resource->{xml}) =~ s/NAME/Recent/;
       my $output = "$datadir/$gz";
-      $self->mirror($uri, $output) or return;
-      $fc->gunzip($output, $datadir.'/'.$xml) or return;
+      $self->mirror($uri, $gz, $datadir) or return;
+      $fc->gunzip($output, $xml, $datadir) or return;
       return $datadir.'/'.$xml;
    }
    elsif ($type eq 'modified') {
@@ -86,8 +86,8 @@ sub update {
       (my $gz = $resource->{gz}) =~ s/NAME/Modified/;
       (my $xml = $resource->{xml}) =~ s/NAME/Modified/;
       my $output = "$datadir/$gz";
-      $self->mirror($uri, $output) or return;
-      $fc->gunzip($output, $datadir.'/'.$xml) or return;
+      $self->mirror($uri, $gz, $datadir) or return;
+      $fc->gunzip($output, $xml, $datadir) or return;
       return $datadir.'/'.$xml;
    }
    elsif ($type eq 'others') {
@@ -97,8 +97,8 @@ sub update {
          (my $gz = $resource->{gz}) =~ s/NAME/$year/;
          (my $xml = $resource->{xml}) =~ s/NAME/$year/;
          my $output = "$datadir/$gz";
-         $self->mirror($uri, $output) or return;
-         $fc->gunzip($output, $datadir.'/'.$xml) or return;
+         $self->mirror($uri, $gz, $datadir) or return;
+         $fc->gunzip($output, $xml, $datadir) or return;
          push @output, $datadir.'/'.$xml;
       }
       return \@output;
