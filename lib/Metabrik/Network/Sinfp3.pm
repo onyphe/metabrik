@@ -20,6 +20,7 @@ sub brik_properties {
          db => [ qw(sinfp3_db) ],
          target => [ qw(target_host) ],
          port => [ qw(tcp_port) ],
+         device => [ qw(device) ],
       },
       attributes_default => {
          port => 80,
@@ -54,6 +55,16 @@ sub brik_properties {
    };
 }
 
+sub brik_use_properties {
+   my $self = shift;
+
+   return {
+      attributes_default => {
+         device => $self->global->device,
+      },
+   };
+}
+
 sub update {
    my $self = shift;
 
@@ -79,6 +90,7 @@ sub active_ipv4 {
 
    $target ||= $self->target;
    $port ||= $self->port;
+   my $device = $self->device;
 
    my $datadir = $self->datadir;
    my $file = $datadir.'/'.$self->db;
@@ -97,6 +109,7 @@ sub active_ipv4 {
       ipv6 => 0,
       dnsReverse => 0,
       worker => 'single',
+      device => $device,
    ) or return $self->log->error("active: global failed");
 
    my $input = Net::SinFP3::Input::IpPort->new(
@@ -112,7 +125,7 @@ sub active_ipv4 {
       global => $global,
       doP1 => 1,
       doP2 => 1,
-      doP3 => 0,
+      doP3 => 1,
    );
 
    my $search = Net::SinFP3::Search::Active->new(
@@ -176,6 +189,7 @@ sub save_active_ipv4_fingerprint {
 
    $target_host ||= $self->target;
    $target_port ||= $self->port;
+   my $device = $self->device;
    if (! defined($target_host) || ! defined($target_port)) {
       return $self->log->error($self->brik_help_run('save_active_ipv4_fingerprint'));
    }
@@ -196,6 +210,7 @@ sub save_active_ipv4_fingerprint {
       port => $target_port,
       ipv6 => 0,
       dnsReverse => 0,
+      device => $device,
    ) or return $self->log->error("save_active_ipv4_fingerprint: global failed");
 
    my $input = Net::SinFP3::Input::IpPort->new(
@@ -249,6 +264,7 @@ sub save_active_ipv6_fingerprint {
 
    $target_host ||= $self->target;
    $target_port ||= $self->port;
+   my $device = $self->device;
    if (! defined($target_host) || ! defined($target_port)) {
       return $self->log->error($self->brik_help_run('save_active_ipv6_fingerprint'));
    }
@@ -269,6 +285,7 @@ sub save_active_ipv6_fingerprint {
       port => $target_port,
       ipv6 => 1,
       dnsReverse => 0,
+      device => $device,
    ) or return $self->log->error("save_active_ipv6_fingerprint: global failed");
 
    my $input = Net::SinFP3::Input::IpPort->new(
@@ -321,6 +338,7 @@ sub active_ipv4_from_pcap {
    my $self = shift;
    my ($pcap_file) = @_;
 
+   my $device = $self->device;
    if (! defined($pcap_file)) {
       return $self->log->error($self->brik_help_run('active_ipv4_from_pcap'));
    }
@@ -342,6 +360,7 @@ sub active_ipv4_from_pcap {
       log => $log,
       ipv6 => 0,
       dnsReverse => 0,
+      device => $device,
    ) or return $self->log->error("active_ipv4_from_pcap: global failed");
 
    my $input = Net::SinFP3::Input::Pcap->new(
@@ -390,6 +409,7 @@ sub active_ipv6_from_pcap {
    my $self = shift;
    my ($pcap_file) = @_;
 
+   my $device = $self->device;
    if (! defined($pcap_file)) {
       return $self->log->error($self->brik_help_run('active_ipv6_from_pcap'));
    }
@@ -411,6 +431,7 @@ sub active_ipv6_from_pcap {
       log => $log,
       ipv6 => 1,
       dnsReverse => 0,
+      device => $device,
    ) or return $self->log->error("active_ipv6_from_pcap: global failed");
 
    my $input = Net::SinFP3::Input::Pcap->new(

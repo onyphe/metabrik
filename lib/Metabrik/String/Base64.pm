@@ -34,6 +34,7 @@ sub encode {
    }
 
    my $encoded = MIME::Base64::encode_base64($data);
+   chomp($encoded);
 
    return $encoded;
 }
@@ -47,6 +48,7 @@ sub decode {
    }
 
    my $decoded = MIME::Base64::decode_base64($data);
+   chomp($decoded);
 
    return $decoded;
 }

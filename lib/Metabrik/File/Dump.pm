@@ -64,6 +64,12 @@ sub read {
       }
    }
 
+   # Gather last remaining line, if any
+   if (length($buf)) {
+      push @vars, $buf;
+      $buf = '';
+   }
+
    my @res = ();
    for (@vars) {
       my $h = eval($_);

@@ -34,6 +34,7 @@ sub brik_properties {
          get_latest_daemon_id => [ ],
          kill_from_pidfile => [ qw(pidfile) ],
          is_running_from_pidfile => [ qw(pidfile) ],
+         grep_by_name => [ qw(process_name) ],
       },
       require_modules => {
          'Daemon::Daemonize' => [ ],
@@ -257,6 +258,20 @@ sub is_running_from_pidfile {
 
    if (my $pid = Daemon::Daemonize->check_pidfile($pidfile)) {
       return 1;
+   }
+
+   return 0;
+}
+
+sub grep_by_name {
+   my $self = shift;
+   my ($process_name) = @_;
+
+   my $list = $self->list or return;
+   for my $p (@$list) {
+      if (lc($p->{COMMAND}) =~ m{$process_name}i) {
+         return $p;
+      }
    }
 
    return 0;

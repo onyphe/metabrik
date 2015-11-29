@@ -171,7 +171,11 @@ sub tcp_syn {
             my $list = $na->ipv4_list($this) or next;
             push @$new_list, @$list;
          }
-         elsif ($na->is_ipv4-$this) {
+         #elsif ($na->is_ipv6_subnet($this)) { # XXX: not impl
+            #my $list = $na->ipv6_list($this) or next;
+            #push @$new_list, @$list;
+         #}
+         elsif ($na->is_ip($this)) {
             push @$new_list, $this;
          }
       }
@@ -182,7 +186,10 @@ sub tcp_syn {
       if ($na->is_ipv4_subnet($ip_list)) {
          $ip_list = $na->ipv4_list($ip_list) or return;
       }
-      elsif ($na->is_ipv4($ip_list)) {
+      #elsif ($na->is_ipv6_subnet($ip_list)) { # XXX: not impl
+         #$ip_list = $na->ipv6_list($ip_list) or return;
+      #}
+      elsif ($na->is_ip($ip_list)) {
          $ip_list = [ $ip_list ];
       }
       else {
