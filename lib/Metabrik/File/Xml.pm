@@ -39,8 +39,6 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         input => $self->global->input || '/tmp/input.xml',
-         output => $self->global->output || '/tmp/output.xml',
          encoding => $self->global->encoding || 'utf8',
       },
    };
@@ -51,17 +49,14 @@ sub read {
    my ($input) = @_;
 
    $input ||= $self->input;
+   $self->brik_help_run_undef_arg("read", $input) or return;
 
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_set('input'));
-   }
-
-   $self->open($input) or return $self->log->error("read: open failed");
-   my $data = $self->read or return $self->log->error("read: read failed");
+   $self->open($input) or return;
+   my $data = $self->SUPER::read or return;
    $self->close;
 
-   my $xml = Metabrik::String::Xml->new_from_brik($self) or return;
-   my $decode = $xml->decode($data) or return $self->log->error("read: decode failed");
+   my $xml = Metabrik::String::Xml->new_from_brik_init($self) or return;
+   my $decode = $xml->decode($data) or return;
 
    return $decode;
 }
@@ -71,18 +66,16 @@ sub write {
    my ($xml_hash, $output) = @_;
 
    $output ||= $self->output;
+   $self->brik_help_run_undef_arg("write", $xml_hash) or return;
+   $self->brik_help_run_undef_arg("write", $output) or return;
 
-   if (! defined($xml_hash)) {
-      return $self->log->error($self->brik_help_run('write'));
-   }
+   my $xml = Metabrik::String::Xml->new_from_brik_init($self) or return;
+   my $data = $xml->encode($xml_hash) or return;
 
-   my $xml = Metabrik::String::Xml->new_from_brik($self) or return;
-   my $data = $xml->encode($xml_hash) or return $self->log->error("write: encode failed");
-
-   my $write = Metabrik::File::Write->new_from_brik($self) or return;
-   $write->open($output) or return $self->log->error("write: open failed");
-   $write->write($data) or return $self->log->error("write: write failed");
-   $write->close;
+   my $fw = Metabrik::File::Write->new_from_brik_init($self) or return;
+   $fw->open($output) or return;
+   $fw->write($data) or return;
+   $fw->close;
 
    return $data;
 }

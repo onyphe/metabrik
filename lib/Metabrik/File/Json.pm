@@ -40,8 +40,6 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         input => $self->global->input || '/tmp/input.txt',
-         output => $self->global->output || '/tmp/output.txt',
          encoding => $self->global->encoding || 'utf8',
       },
    };
@@ -52,17 +50,12 @@ sub read {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_set('input'));
-   }
+   $self->brik_help_run_undef_arg("read", $input) or return;
 
-   my $data = $self->read($input)
-      or return $self->log->error("read: read failed");
+   my $data = $self->SUPER::read($input) or return;
 
-   my $string_json = Metabrik::String::Json->new_from_brik($self) or return;
-
-   my $json = $string_json->decode($data)
-      or return $self->log->error("read: decode failed");
+   my $sj = Metabrik::String::Json->new_from_brik_init($self) or return;
+   my $json = $sj->decode($data) or return;
 
    return $json;
 }
@@ -71,22 +64,14 @@ sub write {
    my $self = shift;
    my ($json_hash, $output) = @_;
 
-   if (! defined($json_hash)) {
-      return $self->log->error($self->brik_help_run('write'));
-   }
-
    $output ||= $self->output;
-   if (! defined($output)) {
-      return $self->log->error($self->brik_help_set('output'));
-   }
+   $self->brik_help_run_undef_arg("write", $json_hash) or return;
+   $self->brik_help_run_undef_arg("write", $output) or return;
 
-   my $string_json = Metabrik::String::Json->new_from_brik($self) or return;
+   my $sj = Metabrik::String::Json->new_from_brik_init($self) or return;
+   my $data = $sj->encode($json_hash) or return;
 
-   my $data = $string_json->encode($json_hash)
-      or return $self->log->error("write: encode failed");
-
-   $self->write($data, $output)
-      or return $self->log->error("write: write failed");
+   $self->SUPER::write($data, $output) or return;
 
    return $output;
 }

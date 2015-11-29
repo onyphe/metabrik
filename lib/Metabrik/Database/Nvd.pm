@@ -159,7 +159,7 @@ sub load {
 
    my $datadir = $self->datadir;
 
-   my $brik_xml = Metabrik::File::Xml->new_from_brik($self) or return;
+   my $fx = Metabrik::File::Xml->new_from_brik_init($self) or return;
 
    my $old = $self->loaded_xml;
 
@@ -167,7 +167,9 @@ sub load {
       (my $xml = $resource->{xml}) =~ s/NAME/Recent/;
       my $file = $datadir.'/'.$xml;
 
-      my $new = $brik_xml->read($file) or return $self->log->error("load: read failed");
+      $self->log->verbose("load: reading file [$file]");
+      my $new = $fx->read($file) or return;
+      print Dumper($new)."\n";
 
       my $merged = $self->_merge_xml($old, $new, $type);
 
@@ -177,7 +179,7 @@ sub load {
       (my $xml = $resource->{xml}) =~ s/NAME/Modified/;
       my $file = $datadir.'/'.$xml;
 
-      my $new = $brik_xml->read($file) or return $self->log->error("load: read failed");
+      my $new = $fx->read($file) or return;
 
       my $merged = $self->_merge_xml($old, $new, $type);
 
@@ -190,7 +192,7 @@ sub load {
          (my $xml = $resource->{xml}) =~ s/NAME/$year/;
          my $file = $datadir.'/'.$xml;
 
-         my $new = $brik_xml->read($file) or return $self->log->error("load: read failed");
+         my $new = $fx->read($file);
 
          $merged = $self->_merge_xml($merged, $new, $type);
       }

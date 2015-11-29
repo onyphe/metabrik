@@ -38,20 +38,8 @@ sub brik_properties {
       },
       require_modules => {
          'Text::CSV_XS' => [ ],
-         #'Text::CSV' => [ ],
          'Metabrik::File::Read' => [ ],
          'Metabrik::File::Write' => [ ],
-      },
-   };
-}
-
-sub brik_use_properties {
-   my $self = shift;
-
-   return {
-      attributes_default => {
-         input => $self->global->input,
-         output => $self->global->output,
       },
    };
 }
@@ -61,23 +49,18 @@ sub read {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_run('read'));
-   }
+   $self->brik_help_run_undef_arg("read", $input) or return;
 
    my $csv = Text::CSV_XS->new({
-   #my $csv = Text::CSV->new({
       binary => 1,
       sep_char => $self->separator,
       allow_loose_quotes => 1,
       allow_loose_escapes => 1,
    }) or return $self->log->error('read: Text::CSV_XS new failed');
-   #}) or return $self->log->error('read: Text::CSV new failed');
 
-   my $read = Metabrik::File::Read->new_from_brik_init($self) or return;
-   $read->encoding($self->encoding);
-   my $fd = $read->open($input)
-      or return $self->log->error('read: read failed');
+   my $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
+   $fr->encoding($self->encoding);
+   my $fd = $fr->open($input) or return;
 
    my $sep = $self->separator;
    my $headers;
@@ -111,7 +94,7 @@ sub read {
       return \@rows;
    }
 
-   $read->close;
+   $fr->close;
 
    return \@rows;
 }
@@ -120,14 +103,9 @@ sub write {
    my $self = shift;
    my ($csv_struct, $output) = @_;
 
-   if (! defined($csv_struct)) {
-      return $self->log->error($self->brik_help_run('write'));
-   }
-
    $output ||= $self->output;
-   if (! defined($output)) {
-      return $self->log->error($self->brik_help_run('write'));
-   }
+   $self->brik_help_run_undef_arg("write", $csv_struct) or return;
+   $self->brik_help_run_undef_arg("write", $output) or return;
 
    # We handle handle array of hashes format (aoh) for writing
    if (ref($csv_struct) ne 'ARRAY') {
@@ -144,11 +122,10 @@ sub write {
 
    my $context = $self->context;
 
-   my $write = Metabrik::File::Write->new_from_brik($self) or return;
-   $write->output($output);
-   $write->encoding($self->encoding);
-   my $fd = $write->open
-      or return $self->log->error('write: open failed');
+   my $fw = Metabrik::File::Write->new_from_brik($self) or return;
+   $fw->output($output);
+   $fw->encoding($self->encoding);
+   my $fd = $fw->open or return;
 
    my $written = '';
 
@@ -175,16 +152,15 @@ sub write {
 
       my $data = join($self->separator, @fields)."\n";
 
-      my $r = $write->write($data);
+      my $r = $fw->write($data);
       if (! defined($r)) {
-         $self->log->error("write: write failed");
          next;
       }
 
       $written .= $data;
    }
 
-   $write->close;
+   $fw->close;
 
    if (! length($written)) {
       return $self->log->error("write: nothing to write");
@@ -197,9 +173,8 @@ sub get_column_values {
    my $self = shift;
    my ($data, $column) = @_;
 
-   if (! defined($data) && ! defined($column)) {
-      return $self->log->error($self->brik_help_run('get_column_values'));
-   }
+   $self->brik_help_run_undef_arg("get_column_values", $data) or return;
+   $self->brik_help_run_undef_arg("get_column_values", $column) or return;
 
    if (ref($data) ne 'ARRAY') {
       return $self->log->error("get_column_values: arg1 must be ARRAYREF");
