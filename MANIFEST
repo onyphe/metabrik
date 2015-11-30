@@ -60,6 +60,7 @@ lib/Metabrik/File/Text.pm
 lib/Metabrik/File/Tsv.pm
 lib/Metabrik/File/Write.pm
 lib/Metabrik/File/Xml.pm
+lib/Metabrik/Forensic/Scalpel.pm
 lib/Metabrik/Hardware/Battery.pm
 lib/Metabrik/Hardware/Fan.pm
 lib/Metabrik/Hardware/Temperature.pm
@@ -164,6 +165,7 @@ t/04-use-briks-convert.t
 t/05-use-briks-crypto.t
 t/06-use-briks-database.t
 t/07-use-briks-encoding.t
+t/08-use-briks-forensic.t
 t/09-use-briks-file.t
 t/10-use-briks-http.t
 t/11-use-briks-identify.t

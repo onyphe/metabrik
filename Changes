@@ -5,6 +5,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: brik::tool Brik
    - new: system::file Brik
    - new: client::tcpdump Brik
+   - new: forensic::scalpel Brik
 
 1.11 Sun Nov 22 17:46:43 CET 2015
    - new: api::shodan Brik
