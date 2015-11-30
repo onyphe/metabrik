@@ -167,9 +167,7 @@ sub load {
       (my $xml = $resource->{xml}) =~ s/NAME/Recent/;
       my $file = $datadir.'/'.$xml;
 
-      $self->log->verbose("load: reading file [$file]");
       my $new = $fx->read($file) or return;
-      print Dumper($new)."\n";
 
       my $merged = $self->_merge_xml($old, $new, $type);
 
