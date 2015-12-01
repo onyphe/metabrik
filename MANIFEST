@@ -62,10 +62,12 @@ lib/Metabrik/File/Tsv.pm
 lib/Metabrik/File/Write.pm
 lib/Metabrik/File/Xml.pm
 lib/Metabrik/Forensic/Scalpel.pm
+lib/Metabrik/Forensic/Volatility.pm
 lib/Metabrik/Hardware/Battery.pm
 lib/Metabrik/Hardware/Fan.pm
 lib/Metabrik/Hardware/Temperature.pm
 lib/Metabrik/Identify/Ssh.pm
+lib/Metabrik/Image/Exif.pm
 lib/Metabrik/Image/Jpg.pm
 lib/Metabrik/Log/Dual.pm
 lib/Metabrik/Log/Null.pm
