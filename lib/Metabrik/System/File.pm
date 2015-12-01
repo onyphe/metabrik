@@ -22,7 +22,8 @@ sub brik_properties {
          overwrite => 0,
       },
       commands => {
-         identify => [ qw(file) ],
+         identify_mime_type => [ qw(file) ],
+         identify_magic_type => [ qw(file) ],
          mkdir => [ qw(directory) ],
          rmdir => [ qw(directory) ],
          chmod => [ qw(file) ],
@@ -35,19 +36,38 @@ sub brik_properties {
          create => [ qw(file size) ],
       },
       require_modules => {
-         'File::MMagic' => [ ],
          'File::Copy' => [ qw(mv) ],
-         'File::Spec' => [ ],
+         'File::LibMagic' => [ ],
          'File::Path' => [ qw(make_path) ],
+         'File::Spec' => [ ],
       },
    };
 }
 
-sub identify {
+sub identify_mime_type {
    my $self = shift;
    my ($file) = @_;
 
-   return 1;
+   $self->brik_help_run_undef_arg("identify_mime_type", $file) or return;
+   $self->brik_help_run_file_not_found("identify_mime_type", $file) or return;
+
+   my $magic = File::LibMagic->new;
+   my $info = $magic->info_from_filename($file);
+
+   return $info->{mime_type};
+}
+
+sub identify_magic_type {
+   my $self = shift;
+   my ($file) = @_;
+
+   $self->brik_help_run_undef_arg("identify_magic_type", $file) or return;
+   $self->brik_help_run_file_not_found("identify_magic_type", $file) or return;
+
+   my $magic = File::LibMagic->new;
+   my $info = $magic->info_from_filename($file);
+
+   return $info->{description};
 }
 
 sub mkdir {

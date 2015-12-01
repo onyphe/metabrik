@@ -21,6 +21,7 @@ sub brik_properties {
       commands => {
          sha1 => [ qw(input|OPTIONAL) ],
          sha256 => [ qw(input|OPTIONAL) ],
+         sha512 => [ qw(input|OPTIONAL) ],
          md5 => [ qw(input|OPTIONAL) ],
       },
       require_modules => {
@@ -71,6 +72,28 @@ sub sha256 {
    }
 
    return Crypt::Digest::SHA256::sha256_file_hex($input);
+}
+
+sub sha512 {
+   my $self = shift;
+   my ($input) = @_;
+
+   $input ||= $self->input;
+   if (! defined($input)) {
+      return $self->log->error($self->brik_help_run('sha512'));
+   }
+
+   if (! -f $input) {
+      return $self->log->error("sha512: file [$input] not found");
+   }
+
+   eval("use Crypt::Digest::SHA512 qw(sha512_file_hex);");
+   if ($@) {
+      chomp($@);
+      return $self->log->error("sha512: unable to load function: $@");
+   }
+
+   return Crypt::Digest::SHA512::sha512_file_hex($input);
 }
 
 sub md5 {

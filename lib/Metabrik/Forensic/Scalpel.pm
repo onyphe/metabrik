@@ -132,7 +132,8 @@ sub scan {
    $self->brik_help_run_undef_arg("scan", $file) or return;
 
    my $datadir = $self->datadir;
-   $output ||= $datadir.'/'.$file.'.scalp';
+   my ($base) = $file =~ m{^.*/(.*)$};
+   $output ||= $datadir.'/'.$base.'.scalp';
    $conf ||= $datadir.'/'.$self->conf;
    $self->brik_help_run_file_not_found("scan", $file) or return;
    $self->brik_help_run_file_not_found("scan", $conf) or return;

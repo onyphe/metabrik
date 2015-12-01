@@ -22,7 +22,7 @@ RUN cpanm -n File::Find Term::ANSIColor Module::Reload
 #
 # Packaged programs
 #
-RUN apt-get install -y libssl-dev phantomjs rng-tools tcptraceroute nmap python wget unzip aptitude mysql-client scrot dsniff
+RUN apt-get install -y libssl-dev phantomjs rng-tools tcptraceroute nmap python wget unzip aptitude mysql-client scrot dsniff libmagic-dev scalpel dcfldd clamav
 #
 # Packaged Perl modules
 #

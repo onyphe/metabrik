@@ -29,6 +29,8 @@ sub brik_properties {
          to_pcap => [ qw(stream file) ],
          list_source_ip_addresses => [ qw(stream) ],
          list_destination_ip_addresses => [ qw(stream) ],
+         list_tcp_streams => [ qw($simple_frames_list) ],
+         save_stream_payload => [ qw($simple_frames_list) ],
       },
       require_modules => {
          'Net::Frame::Layer::TCP' => [ ],
@@ -53,13 +55,10 @@ sub from_pcap {
    my $self = shift;
    my ($file, $filter) = @_;
 
+   $self->brik_help_run_undef_arg('from_pcap', $file) or return;
+   $self->brik_help_run_file_not_found('from_pcap', $file) or return;
+
    $filter ||= $self->filter;
-   if (! defined($file)) {
-      return $self->log->error($self->brik_help_run('from_pcap'));
-   }
-   if (! -f $file) {
-      return $self->log->error("from_pcap: file [$file] not found");
-   }
 
    my $fp = Metabrik::File::Pcap->new_from_brik_init($self) or return;
    $fp->open($file, 'read', $filter) or return;
@@ -122,20 +121,15 @@ sub to_pcap {
    my $self = shift;
    my ($stream, $file) = @_;
 
-   if (! defined($file) || ! defined($stream)) {
-      return $self->log->error($self->brik_help_run('to_pcap'));
-   }
-   if (ref($stream) ne 'ARRAY') {
-      return $self->log->error("to_pcap: stream Argument must be an ARRAYREF");
-   }
-   if (@$stream <= 0) {
-      return $self->log->error("to_pcap: stream is empty");
-   }
-   if (ref($stream->[0]) ne 'Net::Frame::Simple') {
-      return $self->log->error("to_pcap: stream must contains Net::Frame::Simple objects");
-   }
+   $self->brik_help_run_undef_arg('to_pcap', $file) or return;
+   $self->brik_help_run_undef_arg('to_pcap', $stream) or return;
+   $self->brik_help_run_invalid_arg('to_pcap', $stream, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('to_pcap', $stream) or return;
 
    my $first = $stream->[0];
+   if (ref($first) ne 'Net::Frame::Simple') {
+      return $self->log->error("to_pcap: stream must contains Net::Frame::Simple objects");
+   }
 
    my $fp = Metabrik::File::Pcap->new_from_brik_init($self) or return;
    $fp->open($file, 'write', $first->firstLayer) or return;
@@ -150,15 +144,10 @@ sub list_source_ip_addresses {
    my $self = shift;
    my ($stream) = @_;
 
-   if (! defined($stream)) {
-      return $self->log->error($self->brik_help_run('list_source_ip_addresses'));
-   }
-   if (ref($stream) ne 'ARRAY') {
-      return $self->log->error("list_source_ip_addresses: stream Argument must be an ARRAYREF");
-   }
-   if (@$stream <= 0) {
-      return $self->log->error("list_source_ip_addresses: stream is empty");
-   }
+   $self->brik_help_run_undef_arg('list_source_ip_addresses', $stream) or return;
+   $self->brik_help_run_invalid_arg('list_source_ip_addresses', $stream, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('list_source_ip_addresses', $stream) or return;
+
    if (ref($stream->[0]) ne 'Net::Frame::Simple') {
       return $self->log->error("list_source_ip_addresses: stream must contains Net::Frame::Simple objects");
    }
@@ -178,15 +167,10 @@ sub list_destination_ip_addresses {
    my $self = shift;
    my ($stream) = @_;
 
-   if (! defined($stream)) {
-      return $self->log->error($self->brik_help_run('list_destination_ip_addresses'));
-   }
-   if (ref($stream) ne 'ARRAY') {
-      return $self->log->error("list_destination_ip_addresses: stream Argument must be an ARRAYREF");
-   }
-   if (@$stream <= 0) {
-      return $self->log->error("list_destination_ip_addresses: stream is empty");
-   }
+   $self->brik_help_run_undef_arg('list_destination_ip_addresses', $stream) or return;
+   $self->brik_help_run_invalid_arg('list_destination_ip_addresses', $stream, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('list_destination_ip_addresses', $stream) or return;
+
    if (ref($stream->[0]) ne 'Net::Frame::Simple') {
       return $self->log->error("list_destination_ip_addresses: stream must contains Net::Frame::Simple objects");
    }
@@ -200,6 +184,65 @@ sub list_destination_ip_addresses {
    }
 
    return [ sort { $a cmp $b } keys %dst_ips ];
+}
+
+sub list_tcp_streams {
+   my $self = shift;
+   my ($frames) = @_;
+
+   $self->brik_help_run_undef_arg('list_tcp_streams', $frames) or return;
+   $self->brik_help_run_invalid_arg('list_tcp_streams', $frames, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('list_tcp_streams', $frames) or return;
+
+   if (ref($frames->[0]) ne 'Net::Frame::Simple') {
+      return $self->log->error("list_tcp_streams: frames Argument must contain Net::Frame::Simple objects");
+   }
+
+   my %streams = ();
+   for my $simple (@$frames) {
+      my $transport = $simple->ref->{TCP} || next;
+      my $network = $simple->ref->{IPv4} || $simple->ref->{IPv6} || next;
+
+      my $src = $network->src;
+      my $dst = $network->dst;
+      my $src_port = $transport->src;
+      my $dst_port = $transport->dst;
+
+      my $id1 = "$src:$src_port-$dst:$dst_port"; # Try one way of dialog
+      my $id2 = "$dst:$dst_port-$src:$src_port"; # Or the other
+      if (exists($streams{$id1})) {
+         push @{$streams{$id1}}, $simple;
+      }
+      else {
+         push @{$streams{$id2}}, $simple;
+      }
+   }
+
+   return \%streams;
+}
+
+sub save_stream_payload {
+   my $self = shift;
+   my ($frames) = @_;
+
+   $self->brik_help_run_undef_arg('save_stream_payload', $frames) or return;
+   $self->brik_help_run_invalid_arg('save_stream_payload', $frames, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('save_stream_payload', $frames) or return;
+
+   if (ref($frames->[0]) ne 'Net::Frame::Simple') {
+      return $self->log->error("save_stream_payload: frames Argument must contain Net::Frame::Simple objects");
+   }
+
+   my $data = '';
+   for my $simple (@$frames) {
+      my $transport = $simple->ref->{TCP} || $simple->ref->{UDP} || next;
+      my $payload = $transport->payload or next;
+      if (length($payload)) {
+         $data .= $payload;
+      }
+   }
+
+   return $data;
 }
 
 1;

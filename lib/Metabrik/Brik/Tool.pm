@@ -240,7 +240,6 @@ use warnings;
 
 use base qw(Metabrik);
 
-# Default attribute values put here will BE inherited by subclasses
 sub brik_properties {
    return {
       revision => '\$Revision\$',
@@ -248,6 +247,7 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         datadir => [ qw(datadir) ],
       },
       attributes_default => {
       },

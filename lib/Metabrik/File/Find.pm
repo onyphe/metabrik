@@ -67,6 +67,7 @@ sub files {
    @tmp_files = map { s/^\.\///; $_ } @tmp_files;  # Remove leading dot slash
    my %uniq_files = map { $_ => 1 } @tmp_files;
    my @files = sort { $a cmp $b } keys %uniq_files;
+   @files = grep { -f $_ } @files; # Keep only files
 
    return \@files;
 }

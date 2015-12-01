@@ -148,19 +148,22 @@ sub normalize_raw_ip_whois {
    # We search for the first chunk with an inetnum.
    my $general;
    for (@$chunks) {
-      if (exists($_->{inetnum}) || exists($_->{netrange}) || exists($_->{network})) {
+      if (exists($_->{inetnum}) || exists($_->{netrange}) || exists($_->{network}) || exists($_->{ip_network})) {
          $general = $_;
          last;
       }
    }
    if (! defined($general)) {
+      use Data::Dumper;
+      print Dumper($chunks)."\n";
       return $self->log->error("normalize_raw_ip_whois: no inetnum found in this record");
    }
 
-   # inetnum,netrange,network,
+   # inetnum,netrange,network,ip_network
    $self->_ip_lookup($general, 'inetnum', 'inetnum', $r);
    $self->_ip_lookup($general, 'netrange', 'inetnum', $r);
    $self->_ip_lookup($general, 'network', 'inetnum', $r);
+   $self->_ip_lookup($general, 'ip_network', 'inetnum', $r);
    # cidr,
    $self->_ip_lookup($general, 'cidr', 'cidr', $r);
    # nethandle,
