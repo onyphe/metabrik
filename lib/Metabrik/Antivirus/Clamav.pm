@@ -35,7 +35,11 @@ sub brik_properties {
 sub update {
    my $self = shift;
 
-   my $cmd = "freshclam";
+   my $datadir = $self->datadir;
+
+   my $cmd = "freshclam --datadir=$datadir --log=$datadir/freshclam.log";
+
+   $self->log->verbose($cmd);
 
    return $self->system($cmd);
 }

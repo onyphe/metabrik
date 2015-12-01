@@ -294,7 +294,7 @@ sub example_command {
    \$self->brik_help_run_undef_arg("example_command", \$arg1) or return;
 
    \$arg2 ||= \$self->arg2;
-   my \$ref = \$self->brik_help_run_invalid_arg("example_command", \$arg2, 'ARRAY', '') or return;
+   my \$ref = \$self->brik_help_run_invalid_arg("example_command", \$arg2, 'ARRAY', 'SCALAR') or return;
 
    if (\$ref eq 'ARRAY') {
       # Do your stuff

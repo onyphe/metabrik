@@ -20,14 +20,18 @@ sub brik_properties {
          input => [ qw(file) ],
          output => [ qw(file) ],
       },
+      attributes_default => {
+         datadir => '.', # Uncompress in current directory by default
+      },
       commands => {
          unzip => [ qw(input|OPTIONAL datadir|OPTIONAL) ],
          gunzip => [ qw(input|OPTIONAL output|OPTIONAL datadir|OPTIONAL) ],
          uncompress => [ qw(input|OPTIONAL output|OPTIONAL datadir|OPTIONAL) ],
       },
       require_modules => {
-         'Metabrik::File::Write' => [ ],
          'Compress::Zlib' => [ ],
+         'Metabrik::File::Write' => [ ],
+         'Metabrik::System::File' => [ ],
       },
       require_binaries => {
          'unzip' => [ ],
@@ -40,11 +44,8 @@ sub unzip {
    my ($input, $datadir) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_run('unzip'));
-   }
-
    $datadir ||= $self->datadir;
+   $self->brik_help_run_undef_arg('unzip', $input) or return;
 
    my $cmd = "unzip -o $input -d $datadir/";
 
@@ -58,17 +59,14 @@ sub gunzip {
    my ($input, $output, $datadir) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_run('gunzip'));
-   }
-
    $output ||= $self->output;
-   # If no output given, we used the input file name by removing .gz like gunzip command
+   $datadir ||= $self->datadir;
+   $self->brik_help_run_undef_arg('gunzip', $input) or return;
+
+   # If no output given, we use the input file name by removing .gz like gunzip command
    if (! defined($output)) {
       ($output = $input) =~ s/.gz$//;
    }
-
-   $datadir ||= $self->datadir;
 
    my $gz = Compress::Zlib::gzopen($input, "rb");
    if (! $gz) {
@@ -80,10 +78,7 @@ sub gunzip {
    $fw->encoding('ascii');
    $fw->overwrite(1);
 
-   my $fd = $fw->open($datadir.'/'.$output);
-   if (! defined($fd)) {
-      return $self->log->error("gunzip: open failed");
-   }
+   my $fd = $fw->open($datadir.'/'.$output) or return;
 
    my $no_error = 1;
    my $buffer = '';
@@ -98,9 +93,13 @@ sub gunzip {
       }
    }
 
+   if (! $no_error) {
+      $self->log->warning("gunzip: had some errors during gunzipping");
+   }
+
    $fw->close;
 
-   return $no_error;
+   return $output;
 }
 
 sub uncompress {
@@ -108,20 +107,22 @@ sub uncompress {
    my ($input, $output, $datadir) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_run('uncompress'));
-   }
-
    $datadir ||= $self->datadir;
+   $self->brik_help_run_undef_arg('uncompress', $input) or return;
 
-   if ($input =~ /\.gz$/) {
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   my $type = $sf->get_mime_type($input) or return;
+
+   if ($type eq 'application/gzip') {
       return $self->gunzip($input, $output, $datadir);
    }
-   elsif ($input =~ /\.zip$/) {
+   elsif ($type eq 'application/zip'
+   ||     $type eq 'application/vnd.oasis.opendocument.text'
+   ||     $type eq 'application/java-archive') {
       return $self->unzip($input, $datadir);
    }
 
-   return $self->log->error("uncompress: don't know how to uncompress file [$input]");
+   return $self->log->error("uncompress: don't know how to uncompress file [$input] with MIME type [$type]");
 }
 
 1;

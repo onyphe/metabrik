@@ -22,11 +22,11 @@ sub brik_properties {
          conf => [ qw(file) ],
       },
       attributes_default => {
-         extensions => [ qw(doc pdf jpg png zip) ],
+         extensions => [ qw(doc pdf jpg png zip odt) ],
          conf => 'scalpel.conf',
       },
       commands => {
-         generate_conf => [ qw(file|OPTIONAL $extensions_list|OPTIONAL) ],
+         generate_conf => [ qw($extensions_list|OPTIONAL file|OPTIONAL) ],
          scan => [ qw(file output|OPTIONAL conf|OPTIONAL) ],
       },
       require_modules => {
@@ -42,14 +42,17 @@ sub brik_properties {
 
 sub generate_conf {
    my $self = shift;
-   my ($file, $extensions) = @_;
+   my ($extensions, $file) = @_;
 
    my $datadir = $self->datadir;
-   $file ||= $datadir.'/'.$self->conf;
    $extensions ||= $self->extensions;
-
-   $self->brik_help_run_undef_arg("generate_conf", $file) or return;
+   $file ||= $datadir.'/'.$self->conf;
    $self->brik_help_run_undef_arg("generate_conf", $extensions) or return;
+   $self->brik_help_run_invalid_arg("generate_conf", $extensions, 'ARRAY') or return;
+   $self->brik_help_run_undef_arg("generate_conf", $file) or return;
+
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   $sf->remove($file) or return;
 
    my $ext = [
       { case => "y", ext => "art", footer => "\\xcf\\xc7\\xcb", header => "\\x4a\\x47\\x04\\x0e", size => 150000, },
@@ -100,6 +103,15 @@ sub generate_conf {
       { case => "y", ext => "java", footer => undef, header => "\\xca\\xfe\\xba\\xbe", size => 1000000, },
       { case => "y", ext => "max", footer => "\\x00\\x00\\x05\\x80\\x00\\x00", header => "\\x56\\x69\\x47\\x46\\x6b\\x1a\\x00\\x00\\x00\\x00", size => 1000000, },
       { case => "y", ext => "pins", footer => undef, header => "\\x50\\x49\\x4e\\x53\\x20\\x34\\x2e\\x32\\x30\\x0d", size => 8000, },
+      { ext => "odt", case => "y", size => 20000000, header => "PK????????????????????????????mimetypeapplication/vnd.oasis.opendocument.textPK", footer => "META-INF/manifest.xmlPK????????????????????" },
+      { ext => "ods", case => "y", size => 10000000, header => "PK????????????????????????????mimetypeapplication/vnd.oasis.opendocument.spreadsheetPK", footer => "META-INF/manifest.xmlPK????????????????????" },
+      { ext => "odp", case => "y", size => 10000000, header => "PK????????????????????????????mimetypeapplication/vnd.oasis.opendocument.presentationPK", footer => "META-INF/manifest.xmlPK????????????????????" },
+      { ext => "odg", case => "y", size => 10000000, header => "PK????????????????????????????mimetypeapplication/vnd.oasis.opendocument.graphicsPK", footer => "META-INF/manifest.xmlPK????????????????????" },
+      { ext => "odc", case => "y", size => 10000000, header => "PK????????????????????????????mimetypeapplication/vnd.oasis.opendocument.chartPK", footer => "META-INF/manifest.xmlPK????????????????????" },
+      { ext => "odf", case => "y", size => 10000000, header => "PK????????????????????????????mimetypeapplication/vnd.oasis.opendocument.formulaPK", footer => "META-INF/manifest.xmlPK????????????????????" },
+      { ext => "odi", case => "y", size => 10000000, header => "PK????????????????????????????mimetypeapplication/vnd.oasis.opendocument.imagePK", footer => "META-INF/manifest.xmlPK????????????????????" },
+      { ext => "odm", case => "y", size => 10000000, header => "PK????????????????????????????mimetypeapplication/vnd.oasis.opendocument.text-masterPK", footer => "META-INF/manifest.xmlPK????????????????????" },
+      { ext => "sxw", case => "y", size => 10000000, header => "PK????????????????????????????mimetypeapplication/vnd.sun.xml.writerPK", footer => "META-INF/manifest.xmlPK????????????????????" },
    ];
 
    my @lines = ();
@@ -107,7 +119,7 @@ sub generate_conf {
    push @lines, '# occurences in the formost.conf file.';
    push @lines, '#wildcard  ?';
 
-   my $wanted = { map { $_ => } @$extensions };
+   my $wanted = { map { $_ => 1 } @$extensions };
    for my $this (@$ext) {
       my $ext = $this->{ext};
       next unless exists($wanted->{$ext});
@@ -115,7 +127,8 @@ sub generate_conf {
       my $size = $this->{size};
       my $header = $this->{header};
       my $footer = $this->{footer} || '';
-      push @lines, "   $ext $case $size $header $footer";
+      my $line = "   $ext $case $size $header $footer";
+      push @lines, $line;
    }
 
    my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
@@ -132,7 +145,7 @@ sub scan {
    $self->brik_help_run_undef_arg("scan", $file) or return;
 
    my $datadir = $self->datadir;
-   my ($base) = $file =~ m{^.*/(.*)$};
+   my ($base) = $file =~ m{^.*/(.*)$} || $file;
    $output ||= $datadir.'/'.$base.'.scalp';
    $conf ||= $datadir.'/'.$self->conf;
    $self->brik_help_run_file_not_found("scan", $file) or return;
@@ -157,6 +170,7 @@ sub scan {
       'pdf' => 'application/pdf',
       'png' => 'image/png',
       'zip' => 'application/zip',
+      'odt' => 'application/vnd.oasis.opendocument.text',
    };
 
    my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
@@ -167,7 +181,7 @@ sub scan {
    for my $file (@$files) {
       my ($this) = $file =~ m{\.(\w+)$};
       if (exists($ext->{$this})) {
-         my $check = $sf->identify_mime_type($file) or next;
+         my $check = $sf->get_mime_type($file) or next;
          if ($check eq $ext->{$this}) {
             push @verified, $file;
          }
@@ -179,6 +193,10 @@ sub scan {
          push @unverified, $file;
       }
    }
+
+   # We remove the audit.txt file which is generated by Scalpel itself
+   @verified = grep {!/audit.txt$/} @verified;
+   @unverified = grep {!/audit.txt$/} @unverified;
 
    return { verified => \@verified, unverified => \@unverified };
 }
