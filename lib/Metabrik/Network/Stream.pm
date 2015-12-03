@@ -82,13 +82,13 @@ sub from_pcap {
             my $this_src_port = $transport->src;
             my $this_dst_port = $transport->dst;
             # We found a new stream
-            if ($transport->flags == Net::Frame::Layer::TCP::NF_TCP_FLAGS_SYN()) {
+            #if ($transport->flags == Net::Frame::Layer::TCP::NF_TCP_FLAGS_SYN()) {
                $src_ip = $this_src_ip;
                $dst_ip = $this_dst_ip;
                $src_port = $this_src_port;
                $dst_port = $this_dst_port;
                $self->log->info("from_pcap: new stream [$src_ip:$src_port] [$dst_ip:$dst_port]");
-            }
+            #}
 
             next unless defined($src_ip);  # We haven't found a stream yet
 

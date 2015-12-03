@@ -34,21 +34,6 @@ sub brik_properties {
    };
 }
 
-sub brik_init {
-   my $self = shift;
-
-   my $restore = $SIG{INT};
-
-   $SIG{INT} = sub {
-      $self->debug && $self->log->debug("brik_init: INT caught");
-      kill('HUP', $$);
-      $SIG{INT} = $restore;
-      return 1;
-   };
-
-   return $self->SUPER::brik_init(@_);
-}
-
 sub start {
    my $self = shift;
    my ($hostname, $port, $root) = @_;

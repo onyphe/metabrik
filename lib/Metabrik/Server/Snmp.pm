@@ -46,21 +46,6 @@ sub brik_properties {
    };
 }
 
-sub brik_init {
-   my $self = shift;
-
-   my $restore = $SIG{INT};
-
-   $SIG{INT} = sub {
-      $self->debug && $self->log->debug("brik_init: INT caught");
-      $self->stop;
-      $SIG{INT} = $restore;
-      return 1;
-   };
-
-   return $self->SUPER::brik_init(@_);
-}
-
 sub _create_snmpd_conf {
    my $self = shift;
 

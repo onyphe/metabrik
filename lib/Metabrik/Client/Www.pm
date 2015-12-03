@@ -52,7 +52,7 @@ sub brik_properties {
          links => [ ],
          trace_redirect => [ qw(uri|OPTIONAL) ],
          screenshot => [ qw(uri output) ],
-         eval_javascript => [ qw(js uri|OPTIONAL) ],
+         eval_javascript => [ qw(js uri) ],
          info => [ ],
          mirror => [ qw(url|$url_list output datadir|OPTIONAL) ],
       },

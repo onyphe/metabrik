@@ -75,6 +75,7 @@ sub open {
       $dump = Net::Frame::Dump::Offline->new(
          file => $file,
          filter => $filter,
+         keepTimestamp => 1,
       );
       $dump->start or return $self->log->error("open: offline start failed");
    }

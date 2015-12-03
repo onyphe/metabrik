@@ -44,18 +44,6 @@ sub brik_properties {
    };
 }
 
-sub brik_init {
-   my $self = shift;
-
-   $SIG{INT} = sub {
-      $self->log->verbose("brik_init: INT caught, exiting.");
-      $self->shell->run_exit; # So history will be correctly saved.
-      exit(1);
-   };
-
-   return $self->SUPER::brik_init(@_);
-}
-
 sub start {
    my $self = shift;
    my ($hostname, $port) = @_;

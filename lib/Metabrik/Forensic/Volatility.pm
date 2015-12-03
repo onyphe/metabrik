@@ -24,11 +24,12 @@ sub brik_properties {
       },
       attributes_default => {
          profile => 'Win7SP1x64',
-         capture_mode => 0,
+         capture_mode => 1,
       },
       commands => {
          imageinfo => [ qw(file|OPTIONAL) ],
          command => [ qw(command file|OPTIONAL profile|OPTIONAL) ],
+         envars => [ qw(file|OPTIONAL profile|OPTIONAL) ],
          pstree => [ qw(file|OPTIONAL profile|OPTIONAL) ],
          netscan => [ qw(file|OPTIONAL profile|OPTIONAL) ],
          hashdump => [ qw(file|OPTIONAL profile|OPTIONAL) ],
@@ -37,6 +38,10 @@ sub brik_properties {
          hivedump => [ qw(offset file|OPTIONAL profile|OPTIONAL) ],
          filescan => [ qw(file|OPTIONAL profile|OPTIONAL) ],
          consoles => [ qw(file|OPTIONAL profile|OPTIONAL) ],
+         memdump => [ qw(pid file|OPTIONAL profile|OPTIONAL) ],
+      },
+      require_modules => {
+         'Metabrik::System::File' => [ ],
       },
       require_binaries => {
          'volatility' => [ ],
@@ -64,6 +69,9 @@ sub imageinfo {
       if ($line =~ m{suggested profile}i) {
          my @toks = split(/\s+/, $line);
          @profiles = @toks[4..$#toks];
+         for (@profiles) {
+            s/,$//g;
+         }
       }
    }
 
@@ -85,6 +93,20 @@ sub command {
    return $self->execute($cmd);
 }
 
+sub envars {
+   my $self = shift;
+   my ($file, $profile) = @_;
+
+   $file ||= $self->input;
+   $profile ||= $self->profile;
+   $self->brik_help_run_undef_arg("envars", $file) or return;
+   $self->brik_help_run_undef_arg("envars", $profile) or return;
+
+   my $cmd = "volatility --profile $profile envars -f $file";
+
+   return $self->execute($cmd);
+}
+
 sub pstree {
    my $self = shift;
    my ($file, $profile) = @_;
@@ -94,7 +116,7 @@ sub pstree {
    $self->brik_help_run_undef_arg("pstree", $file) or return;
    $self->brik_help_run_undef_arg("pstree", $profile) or return;
 
-   my $cmd = "volatility --profile $profile pstree -f $file";
+   my $cmd = "volatility --profile $profile pstree -v -f $file";
 
    return $self->execute($cmd);
 }
@@ -108,9 +130,28 @@ sub netscan {
    $self->brik_help_run_undef_arg("netscan", $file) or return;
    $self->brik_help_run_undef_arg("netscan", $profile) or return;
 
-   my $cmd = "volatility --profile $profile netscan -f $file";
+   my $cmd = "volatility --profile $profile netscan -v -f $file";
 
    return $self->execute($cmd);
+}
+
+sub memdump {
+   my $self = shift;
+   my ($pid, $file, $profile) = @_;
+
+   $file ||= $self->input;
+   $profile ||= $self->profile;
+   $self->brik_help_run_undef_arg("memdump", $pid) or return;
+   $self->brik_help_run_undef_arg("memdump", $file) or return;
+   $self->brik_help_run_undef_arg("memdump", $profile) or return;
+
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   $sf->mkdir($pid) or return;
+
+   my $cmd = "volatility --profile $profile memdump -p $pid --dump-dir $pid/ -f $file";
+   $self->execute($cmd) or return;
+
+   return "$pid/$pid.dmp";
 }
 
 sub hashdump {
@@ -187,11 +228,10 @@ sub filescan {
 
 sub consoles {
    my $self = shift;
-   my ($offset, $file, $profile) = @_;
+   my ($file, $profile) = @_;
 
    $file ||= $self->input;
    $profile ||= $self->profile;
-   $self->brik_help_run_undef_arg("consoles", $offset) or return;
    $self->brik_help_run_undef_arg("consoles", $file) or return;
    $self->brik_help_run_undef_arg("consoles", $profile) or return;
 

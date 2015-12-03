@@ -15,21 +15,35 @@ sub brik_properties {
       tags => [ qw(unstable jail) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
+      attributes => {
+         name => [ qw(name) ],
+         username => [ qw(username) ],
+         password => [ qw(password) ],
+         email => [ qw(email) ],
+         force => [ qw(0|1) ],
+      },
+      attributes_default => {
+         force => 1,
+      },
       commands => {
          install => [ ],
-         build => [ qw(jail_name directory) ],
-         search => [ qw(jail_name) ],
+         build => [ qw(name directory) ],
+         search => [ qw(name) ],
+         get_image_id => [ qw(name) ],
          list => [ ],
-         start => [ qw(jail_name|$jail_list) ],
-         stop => [ qw(jail_name|$jail_list) ],
-         restart => [ qw(jail_name|$jail_list) ],
-         create => [ qw(jail_name ip_address) ],
-         backup => [ qw(jail_name|$jail_list) ],
-         restore => [ qw(jail_name ip_address archive_tar_gz) ],
-         delete => [ qw(jail_name) ],
+         start => [ qw(name|$name_list) ],
+         stop => [ qw(name|$name_list) ],
+         restart => [ qw(name|$name_list) ],
+         create => [ qw(name ip_address) ],
+         backup => [ qw(name|$name_list) ],
+         restore => [ qw(name ip_address archive_tar_gz) ],
+         delete => [ qw(name) ],
          update => [ ],
-         exec => [ qw(jail_name command) ],
-         console => [ qw(jail_name) ],
+         exec => [ qw(name command) ],
+         console => [ qw(name) ],
+         login => [ qw(email|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         push => [ qw(name) ],
+         tag => [ qw(id tag) ],
       },
       # Have to be optional because of install Command
       optional_binaries => {
@@ -54,23 +68,20 @@ sub brik_init {
 sub install {
    my $self = shift;
 
-   return $self->system("wget -qO- https://get.docker.com/ | sh");
+   return $self->execute("wget -qO- https://get.docker.com/ | sh");
 }
 
 sub build {
    my $self = shift;
-   my ($jail_name, $directory) = @_;
+   my ($name, $directory) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('build'));
-   }
-   if (! defined($directory)) {
-      return $self->log->error($self->brik_help_run('build'));
-   }
+   $self->brik_help_run_undef_arg('build', $name) or return;
+   $self->brik_help_run_undef_arg('build', $directory) or return;
+   $self->brik_help_run_directory_not_found('build', $directory) or return;
 
-   my $cmd = "docker build -t $jail_name $directory";
+   my $cmd = "docker build -t $name $directory";
 
-   return $self->system($cmd);
+   return $self->execute($cmd);
 }
 
 sub search {
@@ -83,7 +94,7 @@ sub search {
 
    my $cmd = "docker search $jail_name";
 
-   return $self->system($cmd);
+   return $self->execute($cmd);
 }
 
 sub exec {
@@ -100,25 +111,40 @@ sub exec {
    return $self->console($jail_name, $exec);
 }
 
+sub get_image_id {
+   my $self = shift;
+   my ($name) = @_;
+
+   $self->brik_help_run_undef_arg('get_image_id', $name) or return;
+
+   my $lines = $self->list or return;
+   for my $line (@$lines) {
+      my @toks = split(/\s+/, $line);
+      if ($toks[0] eq $name) {
+         return $toks[2];
+      }
+   }
+
+   return 'undef';
+}
+
 sub list {
    my $self = shift;
 
    my $cmd = "docker images";
 
-   return $self->system($cmd);
+   return $self->capture($cmd);
 }
 
 sub stop {
    my $self = shift;
-   my ($jail_name) = @_;
+   my ($name) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('stop'));
-   }
+   $self->brik_help_run_undef_arg('stop', $name) or return;
 
-   my $cmd = "";
+   my $cmd = "docker stop $name";
 
-   return $self->system($cmd);
+   return $self->execute($cmd);
 }
 
 sub start {
@@ -131,7 +157,7 @@ sub start {
 
    my $cmd = "";
 
-   return $self->system($cmd);
+   return $self->execute($cmd);
 }
 
 sub restart {
@@ -144,7 +170,7 @@ sub restart {
 
    my $cmd = "";
 
-   return $self->system($cmd);
+   return $self->execute($cmd);
 }
 
 sub create {
@@ -157,7 +183,7 @@ sub create {
 
    my $cmd = "docker pull $jail_name";
 
-   return $self->system($cmd);
+   return $self->execute($cmd);
 }
 
 sub backup {
@@ -170,7 +196,7 @@ sub backup {
 
    my $cmd = "";
 
-   return $self->system($cmd);
+   return $self->execute($cmd);
 }
 
 sub restore {
@@ -186,20 +212,18 @@ sub restore {
       
    my $cmd = "";
 
-   return $self->system($cmd);
+   return $self->execute($cmd);
 }
 
 sub delete {
    my $self = shift;
-   my ($jail_name) = @_;
+   my ($name) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('delete'));
-   }
+   $self->brik_help_run_undef_arg('delete', $name) or return;
 
-   my $cmd = "docker rmi -f $jail_name";
+   my $cmd = "docker rmi -f $name";
 
-   return $self->system($cmd);
+   return $self->execute($cmd);
 }
 
 sub update {
@@ -217,7 +241,50 @@ sub console {
    $shell ||= '/bin/bash';
    my $cmd = "docker run -it $jail_name '$shell'";
 
-   return $self->system($cmd);
+   return $self->execute($cmd);
+}
+
+sub login {
+   my $self = shift;
+   my ($email, $username, $password) = @_;
+
+   $email ||= $self->email;
+   $username ||= $self->username;
+   $password ||= $self->password;
+   $self->brik_help_run_undef_arg('login', $email) or return;
+   $self->brik_help_run_undef_arg('login', $username) or return;
+   $self->brik_help_run_undef_arg('login', $password) or return;
+
+   my $cmd = "docker login --username=$username --email=$email";
+   if ($password) {
+      $cmd .= " --password=$password";
+   }
+
+   return $self->execute($cmd);
+}
+
+sub push {
+   my $self = shift;
+   my ($name) = @_;
+
+   $name ||= $self->name;
+   $self->brik_help_run_undef_arg('push', $name) or return;
+
+   my $cmd = "docker push $name";
+
+   return $self->execute($cmd);
+}
+
+sub tag {
+   my $self = shift;
+   my ($id, $tag) = @_;
+
+   $self->brik_help_run_undef_arg('tag', $id) or return;
+   $self->brik_help_run_undef_arg('tag', $tag) or return;
+
+   my $cmd = "docker tag $id $tag";
+
+   return $self->execute($cmd);
 }
 
 1;
