@@ -253,7 +253,6 @@ sub login {
    $password ||= $self->password;
    $self->brik_help_run_undef_arg('login', $email) or return;
    $self->brik_help_run_undef_arg('login', $username) or return;
-   $self->brik_help_run_undef_arg('login', $password) or return;
 
    my $cmd = "docker login --username=$username --email=$email";
    if ($password) {
