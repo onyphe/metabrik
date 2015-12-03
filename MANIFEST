@@ -62,6 +62,7 @@ lib/Metabrik/File/Text.pm
 lib/Metabrik/File/Tsv.pm
 lib/Metabrik/File/Write.pm
 lib/Metabrik/File/Xml.pm
+lib/Metabrik/Forensic/Dcfldd.pm
 lib/Metabrik/Forensic/Scalpel.pm
 lib/Metabrik/Forensic/Volatility.pm
 lib/Metabrik/Hardware/Battery.pm
