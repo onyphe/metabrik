@@ -16,13 +16,13 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
-         repository => [ qw(repository) ],
+         repository => [ qw(Repository) ],
       },
       commands => {
          install_ubuntu_packages => [ ],
-         install_perl_modules => [ ],
-         create_tool => [ qw(filename.pl repository|OPTIONAL) ],
-         create_brik => [ qw(Brik repository|OPTIONAL) ],
+         install_modules => [ ],
+         create_tool => [ qw(filename.pl Repository|OPTIONAL) ],
+         create_brik => [ qw(Brik Repository|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::File::Text' => [ ],
@@ -48,52 +48,56 @@ sub install_ubuntu_packages {
 
    my @programs = qw(
       aptitude
+      clamav
+      dcfldd
       dsniff
+      exif
+      libexpat-dev
+      libmagic-dev
+      libmysqlclient-dev
+      libpcap-dev
+      libssh2-1-dev
       libssl-dev
+      libxml2-dev
       mysql-client
       nmap
       phantomjs
       python
       rng-tools
+      scalpel
       scrot
       tcptraceroute
       unzip
+      volatility
       wget
    );
 
    my @modules = qw(
-      libcrypt-ssleay-perl
-      libdatetime-perl
-      libdbd-mysql-perl
-      libdbd-sqlite3-perl
-      libdbi-perl
-      libgnupg-interface-perl
-      libnet-libdnet6-perl
       libnet-libdnet-perl
-      libnet-openssh-perl
-      libnet-pcap-perl
-      libnet-ssh2-perl
-      libnet-ssleay-perl
-      libxml-libxml-perl
-      libxml-simple-perl
    );
 
    my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
    return $sp->install([ @programs, @modules ]);
 }
 
-sub install_perl_modules {
+sub install_modules {
    my $self = shift;
 
    my @modules = qw(
       Config::Tiny
       Crypt::Digest
+      Crypt::SSLeay
       Daemon::Daemonize
+      DateTime
+      DBD::mysql
+      DBD::SQLite
+      DBI
       File::Copy
       File::MMagic
       File::Path
       File::Spec
       Geo::IP
+      GnuPG::Interface
       HTML::Entities
       HTTP::Proxy
       IO::Handle
@@ -119,14 +123,19 @@ sub install_perl_modules {
       Net::FTP
       Net::IPv4Addr
       Net::IPv6Addr
+      Net::Libdnet6
       Net::NBName
       Net::Netmask
       Net::Nslookup
+      Net::OpenSSH
+      Net::Pcap
       Net::Routing
       Net::Server
       Net::SinFP3
       Net::SMTP
+      Net::SSH2
       Net::SSL
+      Net::SSLeay
       Net::Twitter
       Net::Whois::Raw
       Net::Write
@@ -144,6 +153,8 @@ sub install_perl_modules {
       WWW::Mechanize
       WWW::Mechanize::PhantomJS
       WWW::Splunk
+      XML::LibXML
+      XML::Simple
    );
 
    my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;

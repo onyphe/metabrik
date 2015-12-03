@@ -22,8 +22,10 @@ sub brik_properties {
          upgrade => [ ],
          list => [ ],
       },
-      require_binaries => {
+      optional_binaries => {
          'aptitude' => [ ],
+      },
+      require_binaries => {
          'apt-get' => [ ],
          'sudo' => [ ],
       },
@@ -34,13 +36,14 @@ sub search {
    my $self = shift;
    my ($package) = @_;
 
-   if (! defined($package)) {
-      return $self->log->error($self->brik_help_run('search'));
-   }
+   $self->brik_help_run_undef_arg('search', $package) or return;
 
    my $cmd = "aptitude search $package";
+   if ($self->brik_has_binary('aptitude')) {
+      return $self->capture($cmd);
+   }
 
-   return $self->capture($cmd);
+   return $self->log->error("search: you have to install aptitude package");
 }
 
 sub install {
@@ -55,7 +58,7 @@ sub install {
       return $self->log->error("install: package [$package] has invalid format");
    }
 
-   my $cmd = "sudo apt-get install ";
+   my $cmd = "sudo apt-get install -y ";
    $ref eq 'ARRAY' ? ($cmd .= join(' ', @$package)) : ($cmd .= $package);
 
    return $self->system($cmd);

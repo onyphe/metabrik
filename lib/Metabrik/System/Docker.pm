@@ -236,10 +236,12 @@ sub update {
 
 sub console {
    my $self = shift;
-   my ($jail_name, $shell) = @_;
+   my ($name, $shell) = @_;
 
    $shell ||= '/bin/bash';
-   my $cmd = "docker run -it $jail_name '$shell'";
+   $self->brik_help_run_undef_arg('console', $name) or return;
+
+   my $cmd = "docker run -it $name '$shell'";
 
    return $self->execute($cmd);
 }
