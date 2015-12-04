@@ -17,6 +17,7 @@ sub brik_properties {
          build => [ qw(module|$module_list|OPTIONAL) ],
          test => [ qw(module|$module_list|OPTIONAL) ],
          install => [ qw(module|$module_list|OPTIONAL) ],
+         dist => [ qw(module|$module_list|OPTIONAL) ],
       },
       attributes => {
          use_test => [ qw(0|1) ],
@@ -40,7 +41,7 @@ sub build {
    if (-f 'Build.PL') {
       @cmd = ( 'perl Build.PL', 'perl Build' );
    }
-   elsif (-f 'Makfile.PL') {
+   elsif (-f 'Makefile.PL') {
       @cmd = ( 'perl Makefile.PL', 'make' );
    }
    else {
@@ -62,10 +63,10 @@ sub test {
    my ($module) = @_;
 
    my $cmd;
-   if (-f 'Build.PL') {
+   if (-f 'Build') {
       $cmd = 'perl Build test';
    }
-   elsif (-f 'Makfile.PL') {
+   elsif (-f 'Makefile') {
       $cmd = 'make test';
    }
    else {
@@ -111,6 +112,27 @@ sub install {
    return $self->execute($cmd);
 }
 
+sub dist {
+   my $self = shift;
+   my ($module) = @_;
+
+   my $cmd;
+   if (-f 'Build') {
+      $cmd = 'perl Build dist';
+   }
+   elsif (-f 'Makefile') {
+      $cmd = 'make dist';
+   }
+   else {
+      return $self->log->error("build: neither Build nor Makefile were found, abort");
+   }
+
+   $self->use_sudo(0);
+   my $r = $self->execute($cmd);
+   $self->use_sudo(1);
+
+   return $r;
+}
 1;
 
 __END__
