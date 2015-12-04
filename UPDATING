@@ -1,3 +1,8 @@
+20151203
+   AFFECT: brik::tool
+
+   - brik::tool renamed install_perl_modules to install_modules
+
 20151129
    AFFECT: file::create, file::fetch, server::agent
 
