@@ -155,7 +155,7 @@ sub show {
 
    my $count = 0;
    for (@$history) {
-      $self->log->info("[".$count++."] $_");
+      print $count++.":\n   $_\n";
    }
 
    return $count - 1;

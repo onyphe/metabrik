@@ -22,6 +22,7 @@ sub brik_properties {
          capture_mode => [ qw(0|1) ],
          ignore_error => [ qw(0|1) ],
          use_sudo => [ qw(0|1) ],
+         use_pager => [ qw(0|1) ],
          sudo_args => [ qw(args) ],
       },
       attributes_default => {
@@ -31,6 +32,7 @@ sub brik_properties {
          capture_mode => 0,
          ignore_error => 1,
          use_sudo => 0,
+         use_pager => 0,
          sudo_args => '-E',  # Keep environment
       },
       commands => {
@@ -90,6 +92,11 @@ sub system {
       $command = join(' ', @sudo)." $command";
       @toks = ( @sudo, @toks );
       $self->log->verbose("system: using sudo: running [$command]");
+   }
+
+   if ($self->use_pager) {
+      my $pager = $ENV{PAGER} || 'less';
+      $command .= " | $pager";
    }
 
    my $r = CORE::system($command);
