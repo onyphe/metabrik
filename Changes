@@ -11,6 +11,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: image::exif Brik
    - new: file::raw Brik
    - new: forensic::dcfldd Brik
+   - new: devel::mercurial Brik
 
 1.11 Sun Nov 22 17:46:43 CET 2015
    - new: api::shodan Brik
