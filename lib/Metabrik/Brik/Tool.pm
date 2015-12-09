@@ -16,6 +16,7 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         datadir => [ qw(datadir) ],
          repository => [ qw(Repository) ],
       },
       commands => {
@@ -23,8 +24,12 @@ sub brik_properties {
          install_modules => [ ],
          create_tool => [ qw(filename.pl Repository|OPTIONAL) ],
          create_brik => [ qw(Brik Repository|OPTIONAL) ],
+         update_core => [ ],
+         update_repository => [ ],
+         test_repository => [ ],
       },
       require_modules => {
+         'Metabrik::Devel::Mercurial' => [ ],
          'Metabrik::File::Text' => [ ],
          'Metabrik::Perl::Module' => [ ],
          'Metabrik::System::File' => [ ],
@@ -349,6 +354,72 @@ EOF
 ;
 
    return $ft->write($data, $filename);
+}
+
+sub update_core {
+   my $self = shift;
+
+   my $datadir = $self->datadir;
+
+   my $url = 'http://trac.metabrik.org/hg/core';
+
+   my $dm = Metabrik::Devel::Mercurial->new_from_brik_init($self) or return;
+   $dm->use_pager(0);
+   my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;
+   $pm->use_pager(0);
+
+   if (! -d $datadir.'/core') {
+      $dm->clone($url, $datadir.'/core') or return;
+   }
+   else {
+      $dm->update($url, $datadir.'/core') or return;
+   }
+
+   $pm->build($datadir.'/core') or return;
+   $pm->test($datadir.'/core') or return;
+   $pm->install($datadir.'/core') or return;
+
+   return 1;
+}
+
+sub update_repository {
+   my $self = shift;
+
+   my $repository = $self->global->repository;
+
+   my $url = 'http://trac.metabrik.org/hg/repository';
+
+   my $dm = Metabrik::Devel::Mercurial->new_from_brik_init($self) or return;
+   $dm->use_pager(0);
+   my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;
+   $pm->use_pager(0);
+
+   $repository =~ s{/lib$}{};
+   if (! -d $repository) {
+      $dm->clone($url, $repository) or return;
+   }
+   else {
+      $dm->update($url, $repository) or return;
+   }
+
+   $pm->build($repository) or return;
+   $pm->test($repository) or return;
+
+   return 1;
+}
+
+sub test_repository {
+   my $self = shift;
+
+   my $repository = $self->global->repository;
+   $repository =~ s{/lib$}{};
+
+   my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;
+   $pm->use_pager(0);
+
+   $pm->test($repository) or return;
+
+   return 1;
 }
 
 1;

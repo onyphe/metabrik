@@ -26,9 +26,10 @@ sub brik_properties {
          use_pager => 1,
       },
       commands => {
-         clone => [ qw(repository) ],
+         clone => [ qw(repository directory|OPTIONAL) ],
          push => [ ],
          pull => [ ],
+         update => [ ],
          diff => [ qw(directory|file|OPTIONAL) ],
          add => [ qw(directory|file) ],
          commit => [ qw(directory|file|OPTIONAL) ],
@@ -43,11 +44,12 @@ sub brik_properties {
 
 sub clone {
    my $self = shift;
-   my ($repository) = @_;
+   my ($repository, $directory) = @_;
 
-   $self->brik_help_run_undef_arg("clone", $repository) or return;
+   $directory ||= '';
+   $self->brik_help_run_undef_arg('clone', $repository) or return;
 
-   my $cmd = "hg clone $repository";
+   my $cmd = "hg clone $repository $directory";
 
    return $self->execute($cmd);
 }
@@ -72,6 +74,12 @@ sub pull {
    my $cmd = "hg pull -u";
 
    return $self->execute($cmd);
+}
+
+sub update {
+   my $self = shift;
+
+   return $self->pull(@_);
 }
 
 sub diff {
