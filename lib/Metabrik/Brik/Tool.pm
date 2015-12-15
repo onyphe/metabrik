@@ -7,7 +7,7 @@ package Metabrik::Brik::Tool;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command);
 
 sub brik_properties {
    return {
@@ -19,8 +19,11 @@ sub brik_properties {
          datadir => [ qw(datadir) ],
          repository => [ qw(Repository) ],
       },
+      attributes_default => {
+         use_pager => 1,
+      },
       commands => {
-         install_ubuntu_packages => [ ],
+         install_packages => [ ],
          install_modules => [ ],
          create_tool => [ qw(filename.pl Repository|OPTIONAL) ],
          create_brik => [ qw(Brik Repository|OPTIONAL) ],
@@ -48,43 +51,52 @@ sub brik_use_properties {
    };
 }
 
-sub install_ubuntu_packages {
+sub install_packages {
    my $self = shift;
 
-   my @programs = qw(
-      aptitude
-      clamav
-      dcfldd
-      dsniff
-      exif
-      ffmpeg
-      libexpat-dev
-      libmagic-dev
-      libmysqlclient-dev
-      libpcap-dev
-      libssh2-1-dev
-      libssl-dev
-      libxml2-dev
-      mysql-client
-      nmap
-      phantomjs
-      python
-      redis-server
-      rng-tools
-      scalpel
-      scrot
-      tcptraceroute
-      unzip
-      volatility
-      wget
-   );
+   my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
+   if ($so->is_ubuntu) {
+      my @programs = qw(
+         aptitude
+         clamav
+         dcfldd
+         dsniff
+         exif
+         ffmpeg
+         libexpat-dev
+         libmagic-dev
+         libmysqlclient-dev
+         libpcap-dev
+         libssh2-1-dev
+         libssl-dev
+         libxml2-dev
+         mysql-client
+         nmap
+         phantomjs
+         python
+         redis-server
+         rng-tools
+         scalpel
+         scrot
+         tcptraceroute
+         unzip
+         volatility
+         wget
+      );
 
-   my @modules = qw(
-      libnet-libdnet-perl
-   );
+      my @modules = qw(
+         libnet-libdnet-perl
+      );
 
-   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
-   return $sp->install([ @programs, @modules ]);
+      my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
+      $sp->install([ @programs, @modules ]);
+   }
+   else {
+      return $self->log->error("install_packages: sorry, don't know what to do for your OS.\n".
+                               "Fill a complaint to GomoR[at]metabrik.org");
+   }
+
+   return 1;
 }
 
 sub install_modules {
@@ -407,7 +419,13 @@ sub update_repository {
    $pm->build($repository) or return;
    $pm->test($repository) or return;
 
-   return 1;
+   my $pager = $ENV{PAGER};
+   $self->execute("$pager $repository/UPDATING");
+
+   $self->log->info("update_repository: the file just showed contains information that ".
+                    "helps you follow API changes. Read it again at [$repository/UPDATING].");
+
+   return "$repository/UPDATING";
 }
 
 sub test_repository {

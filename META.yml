@@ -15,6 +15,8 @@ name: Metabrik-Repository
 provides:
   Metabrik::Address::Generate:
     file: lib/Metabrik/Address/Generate.pm
+  Metabrik::Antivirus::Clamav:
+    file: lib/Metabrik/Antivirus/Clamav.pm
   Metabrik::Api::Bluecoat:
     file: lib/Metabrik/Api/Bluecoat.pm
   Metabrik::Api::Shodan:
@@ -93,6 +95,8 @@ provides:
     file: lib/Metabrik/Database/Sqlite.pm
   Metabrik::Database::Vfeed:
     file: lib/Metabrik/Database/Vfeed.pm
+  Metabrik::Devel::Mercurial:
+    file: lib/Metabrik/Devel/Mercurial.pm
   Metabrik::Email::Mbox:
     file: lib/Metabrik/Email/Mbox.pm
   Metabrik::Email::Message:
@@ -119,6 +123,8 @@ provides:
     file: lib/Metabrik/File/Pcap.pm
   Metabrik::File::Psv:
     file: lib/Metabrik/File/Psv.pm
+  Metabrik::File::Raw:
+    file: lib/Metabrik/File/Raw.pm
   Metabrik::File::Read:
     file: lib/Metabrik/File/Read.pm
   Metabrik::File::Text:
@@ -129,6 +135,12 @@ provides:
     file: lib/Metabrik/File/Write.pm
   Metabrik::File::Xml:
     file: lib/Metabrik/File/Xml.pm
+  Metabrik::Forensic::Dcfldd:
+    file: lib/Metabrik/Forensic/Dcfldd.pm
+  Metabrik::Forensic::Scalpel:
+    file: lib/Metabrik/Forensic/Scalpel.pm
+  Metabrik::Forensic::Volatility:
+    file: lib/Metabrik/Forensic/Volatility.pm
   Metabrik::Hardware::Battery:
     file: lib/Metabrik/Hardware/Battery.pm
   Metabrik::Hardware::Fan:
@@ -137,6 +149,8 @@ provides:
     file: lib/Metabrik/Hardware/Temperature.pm
   Metabrik::Identify::Ssh:
     file: lib/Metabrik/Identify/Ssh.pm
+  Metabrik::Image::Exif:
+    file: lib/Metabrik/Image/Exif.pm
   Metabrik::Image::Jpg:
     file: lib/Metabrik/Image/Jpg.pm
   Metabrik::Log::Dual:
@@ -231,7 +245,7 @@ provides:
     file: lib/Metabrik/Remote/Tcpdump.pm
   Metabrik::Repository:
     file: lib/Metabrik/Repository.pm
-    version: '1.12'
+    version: '1.20'
   Metabrik::Server::Dns:
     file: lib/Metabrik/Server/Dns.pm
   Metabrik::Server::Http:
@@ -368,4 +382,4 @@ requires:
   perl: v5.6.1
 resources:
   license: http://opensource.org/licenses/BSD-3-Clause
-version: '1.12'
+version: '1.20'

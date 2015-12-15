@@ -1,3 +1,8 @@
+20151215
+   AFFECT: brik::tool
+
+   - brik::tool renamed install_ubuntu_packages to install_packages
+
 20151203
    AFFECT: brik::tool
 

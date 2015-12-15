@@ -5,7 +5,7 @@ package Metabrik::Repository;
 use strict;
 use warnings;
 
-our $VERSION = '1.12';
+our $VERSION = '1.20';
 
 1;
 
