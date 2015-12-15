@@ -14,12 +14,23 @@ INSTALLATION
 
 DEPENDENCIES
 
-   This module requires these other modules and libraries:
+   This module requires these other programs and modules:
+
+   A. For Debian-based systems:
 
    sudo
    mercurial
-   apt-get (for Debian-based systems)
-   pkg (for FreeBSD systems)
+   apt-get
+   cpanminus
+
+   B. For FreeBSD systems
+
+   pkg
+   devel/mercurial
+   devel/p5-App-cpanminus
+   security/sudo
+
+   C. For all systems
 
    Perl v5.6.1
    Metabrik
