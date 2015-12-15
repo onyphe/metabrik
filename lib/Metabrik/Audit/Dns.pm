@@ -28,7 +28,7 @@ sub brik_properties {
       commands => {
          version => [ qw(nameserver|$nameserver_list|OPTIONAL) ],
          recursion => [ qw(nameserver|$nameserver_list|OPTIONAL) ],
-         axfr => [ qw(nameserver|$nameserver_list|OPTIONAL domainname|$domainname_list|OPTIONAL) ],
+         axfr => [ qw(nameserver|$nameserver_list domainname|$domainname_list) ],
          all => [ qw(nameserver|$nameserver_list|OPTIONAL domainname|$domainname_list|OPTIONAL) ],
       },
       require_modules => {
@@ -122,12 +122,8 @@ sub axfr {
 
    $nameserver ||= $self->nameserver;
    $domainname ||= $self->domainname;
-   if (! defined($nameserver)) {
-      return $self->log->error($self->brik_help_run('nameserver'));
-   }
-   if (! defined($domainname)) {
-      return $self->log->error($self->brik_help_run('nameserver'));
-   }
+   $self->brik_help_run_undef_arg('axfr', $nameserver) or return;
+   $self->brik_help_run_undef_arg('axfr', $domainname) or return;
 
    my $result = {};
    if (ref($nameserver) eq 'ARRAY') {
@@ -147,7 +143,10 @@ sub axfr {
       ) or return $self->log->error("axfr: Net::DNS::Resolver::new failed");
 
       my $axfr_allowed = 0;
-      my @res = $dns->axfr;
+      my @res;
+      eval {
+         @res = $dns->axfr;  # May fail with 'improperly terminated AXFR'
+      };
       if (@res) {
          $axfr_allowed = 1;
       }

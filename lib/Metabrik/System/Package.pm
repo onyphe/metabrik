@@ -23,6 +23,8 @@ sub brik_properties {
          install => [ qw(package) ],
          update => [ ],
          upgrade => [ ],
+         is_os_ubuntu => [ ],
+         is_os_freebsd => [ ],
       },
       require_modules => {
          'Metabrik::System::Os' => [ ],
@@ -37,15 +39,11 @@ sub brik_init {
 
    my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
 
-   my $distrib = $so->distribution
-      or return $self->log->error("brik_init: distribution failed");
-
    my $sp;
-   my $name = $distrib->{name};
-   if ($name eq 'Ubuntu') {
+   if ($so->is_ubuntu) {
       $sp = Metabrik::System::Ubuntu::Package->new_from_brik_init($self) or return;
    }
-   elsif ($name eq 'FreeBSD') {
+   elsif ($so->is_freebsd) {
       $sp = Metabrik::System::Freebsd::Package->new_from_brik_init($self) or return;
    }
 
@@ -62,9 +60,7 @@ sub search {
    my $self = shift;
    my ($package) = @_;
 
-   if (! defined($package)) {
-      return $self->log->error($self->brik_help_run('search'));
-   }
+   $self->brik_help_run_undef_arg('search', $package) or return;
 
    return $self->_sp->search($package);
 }
@@ -73,9 +69,7 @@ sub install {
    my $self = shift;
    my ($package) = @_;
 
-   if (! defined($package)) {
-      return $self->log->error($self->brik_help_run('install'));
-   }
+   $self->brik_help_run_undef_arg('install', $package) or return;
 
    return $self->_sp->install($package);
 }
@@ -96,6 +90,20 @@ sub list {
    my $self = shift;
 
    return $self->_sp->list;
+}
+
+sub is_os_ubuntu {
+   my $self = shift;
+
+   my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
+   return $so->is_ubuntu;
+}
+
+sub is_os_freebsd {
+   my $self = shift;
+
+   my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
+   return $so->is_freebsd;
 }
 
 1;

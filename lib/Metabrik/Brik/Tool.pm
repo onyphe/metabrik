@@ -57,6 +57,7 @@ sub install_ubuntu_packages {
       dcfldd
       dsniff
       exif
+      ffmpeg
       libexpat-dev
       libmagic-dev
       libmysqlclient-dev
@@ -68,6 +69,7 @@ sub install_ubuntu_packages {
       nmap
       phantomjs
       python
+      redis-server
       rng-tools
       scalpel
       scrot

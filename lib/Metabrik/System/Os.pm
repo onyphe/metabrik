@@ -25,6 +25,9 @@ sub brik_properties {
          hostname => [ ],
          arch => [ ],
          distribution => [ ],
+         is_ubuntu => [ ],
+         is_linux => [ ],
+         is_freebsd => [ ],
       },
       require_modules => {
          'POSIX' => [ ],
@@ -139,6 +142,37 @@ sub distribution {
       codename => $name,
       description => "$name $release",
    };
+}
+
+sub is_ubuntu {
+   my $self = shift;
+
+   my $distrib = $self->distribution or return;
+   if (exists($distrib->{name}) && $distrib->{name} eq 'Ubuntu') {
+      return 1;
+   }
+
+   return 0;
+}
+
+sub is_linux {
+   my $self = shift;
+
+   if ($self->name eq 'Linux') {
+      return 1;
+   }
+
+   return 0;
+}
+
+sub is_freebsd {
+   my $self = shift;
+
+   if ($self->name eq 'FreeBSD') {
+      return 1;
+   }
+
+   return 0;
 }
 
 1;

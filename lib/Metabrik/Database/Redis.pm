@@ -25,8 +25,12 @@ sub brik_properties {
          port => 6379,
       },
       commands => {
-         self => [ ],
+         install => [ ],
+         start => [ ],
+         stop => [ ],
+         status => [ ],
          connect => [ ],
+         command => [ qw(command $arg1 $arg2 ... $argN) ],
          time => [ ],
          disconnect => [ ],
          quit => [ ],  # Same as disconnect
@@ -36,27 +40,78 @@ sub brik_properties {
          set => [ qw(key value) ],
          del => [ qw(key) ],
          mget => [ qw($key_list) ],
-         hset => [ qw(hash_name $hash_hash) ],
+         hset => [ qw(key $hash) ],
+         hget => [ qw(key hash_field) ],
+         hgetall => [ qw(key) ],
       },
       require_modules => {
          'Redis' => [ ],
+         'Metabrik::System::Package' => [ ],
+         'Metabrik::System::Service' => [ ],
       },
    };
 }
 
-# Command list: http://redis.io/commands
-
-sub self {
+sub install {
    my $self = shift;
 
-   my $redis = $self->_redis;
-   if (defined($redis)) {
-      return $redis;
+   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
+   if ($sp->is_os_ubuntu) {
+      $sp->install('redis-server') or return;
+   }
+   else {
+      return $self->log->error("install: don't know how to do with this OS");
    }
 
-   $self->log->info("redis: not connected?");
+   return 1;
+}
 
-   return 0;
+sub start {
+   my $self = shift;
+
+   my $r;
+   my $ss = Metabrik::System::Service->new_from_brik_init($self) or return;
+   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
+   if ($sp->is_os_ubuntu) {
+      $r = $ss->start('redis-server') or return;
+   }
+   else {
+      return $self->log->error("start: don't know how to do with this OS");
+   }
+
+   return $r;
+}
+
+sub stop {
+   my $self = shift;
+
+   my $r;
+   my $ss = Metabrik::System::Service->new_from_brik_init($self) or return;
+   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
+   if ($sp->is_os_ubuntu) {
+      $r = $ss->stop('redis-server') or return;
+   }
+   else {
+      return $self->log->error("stop: don't know how to do with this OS");
+   }
+
+   return $r;
+}
+
+sub status {
+   my $self = shift;
+
+   my $r;
+   my $ss = Metabrik::System::Service->new_from_brik_init($self) or return;
+   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
+   if ($sp->is_os_ubuntu) {
+      $r = $ss->status('redis-server') or return;
+   }
+   else {
+      return $self->log->error("stop: don't know how to do with this OS");
+   }
+
+   return $r;
 }
 
 sub connect {
@@ -70,37 +125,49 @@ sub connect {
       write_timeout => $self->global->rtimeout,
    ) or return $self->log->error("connect: redis connection error");
 
-   $self->_redis($redis);
+   return $self->_redis($redis);
+}
 
-   return 1;
+sub _get_redis {
+   my $self = shift;
+
+   my $redis = $self->_redis;
+   if (! defined($redis)) {
+      return $self->log->error($self->brik_help_run('connect'));
+   }
+
+   return $redis;
+}
+
+# Command list: http://redis.io/commands
+
+sub command {
+   my $self = shift;
+   my ($cmd, @args) = @_;
+
+   my $redis = $self->_get_redis or return;
+
+   my $r = $redis->$cmd(@args);
+   if (! defined($r)) {
+      return $self->log->error("command: $cmd failed");
+   }
+
+   return $r;
 }
 
 sub time {
    my $self = shift;
 
-   my $redis = $self->_redis;
-   if (! defined($redis)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
-   my $value = $redis->time;
-
-   return $value;
+   return $self->command('time');
 }
 
 sub disconnect {
    my $self = shift;
 
-   my $redis = $self->_redis;
-   if (! defined($redis)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
-   my $value = $redis->quit;
-
+   my $r = $self->command('quit') or return;
    $self->_redis(undef);
 
-   return $value;
+   return $r;
 }
 
 sub quit {
@@ -112,132 +179,96 @@ sub quit {
 sub dbsize {
    my $self = shift;
 
-   my $redis = $self->_redis;
-   if (! defined($redis)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
-   my $value = $redis->dbsize;
-
-   return $value;
+   return $self->command('dbsize');
 }
 
 sub exists {
    my $self = shift;
    my ($key) = @_;
 
-   if (! defined($key)) {
-      return $self->log->error($self->brik_help_run('get'));
-   }
+   $self->brik_help_run_undef_arg('exists', $key) or return;
 
-   my $redis = $self->_redis;
-   if (! defined($redis)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
-   my $value = $redis->exists($key);
-
-   return $value;
+   return $self->command('exists', $key);
 }
 
 sub get {
    my $self = shift;
    my ($key) = @_;
 
-   if (! defined($key)) {
-      return $self->log->error($self->brik_help_run('get'));
-   }
+   $self->brik_help_run_undef_arg('get', $key) or return;
 
-   my $redis = $self->_redis;
-   if (! defined($redis)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
-   my $value = $redis->get($key);
-
-   return $value;
+   return $self->command('get', $key);
 }
 
 sub set {
    my $self = shift;
    my ($key, $value) = @_;
 
-   if (! defined($key) || ! defined($value)) {
-      return $self->log->error($self->brik_help_run('set'));
-   }
+   $self->brik_help_run_undef_arg('set', $key) or return;
+   $self->brik_help_run_undef_arg('set', $value) or return;
 
-   my $redis = $self->_redis;
-   if (! defined($redis)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
-   my $r = $redis->set($key => $value);
-
-   return $r;
+   return $self->command('set', $key, $value);
 }
 
 sub del {
    my $self = shift;
    my ($key) = @_;
 
-   if (! defined($key)) {
-      return $self->log->error($self->brik_help_run('get'));
-   }
+   $self->brik_help_run_undef_arg('del', $key) or return;
 
-   my $redis = $self->_redis;
-   if (! defined($redis)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
-   my $value = $redis->del($key);
-
-   return $value;
+   return $self->command('del', $key);
 }
 
 sub mget {
    my $self = shift;
    my ($key_list) = @_;
 
-   if (! defined($key_list)) {
-      return $self->log->error($self->brik_help_run('mget'));
-   }
+   $self->brik_help_run_undef_arg('mget', $key_list) or return;
+   $self->brik_help_run_invalid_arg('mget', $key_list, 'ARRAY') or return;
 
-   if (ref($key_list) ne 'ARRAY') {
-      return $self->log->error('mget: argument 2 must be ARRAYREF');
-   }
-
-   my $redis = $self->_redis;
-   if (! defined($redis)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
-   my @values = $redis->mget(@$key_list);
-
-   return \@values;
+   return $self->command('mget', @$key_list);
 }
 
 sub hset {
    my $self = shift;
    my ($hashname, $hash) = @_;
 
-   if (! defined($hashname) || ! defined($hash)) {
-      return $self->log->error($self->brik_help_run('hset'));
-   }
+   $self->brik_help_run_undef_arg('hset', $hashname) or return;
+   $self->brik_help_run_undef_arg('hset', $hash) or return;
+   $self->brik_help_run_invalid_arg('hset', $hash, 'HASH') or return;
 
-   if (ref($hash) ne 'HASH') {
-      return $self->log->error('hset: argument 2 must be HASHREF');
-   }
-
-   my $redis = $self->_redis;
-   if (! defined($redis)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
+   my $redis = $self->_get_redis or return;
 
    for (keys %$hash) {
-      $redis->hset($hashname, $_, $hash->{$_});
+      $redis->hset($hashname, $_, $hash->{$_}) or next;
    }
 
-   return $redis->wait_all_responses;
+   $redis->wait_all_responses;
+
+   return $hash;
+}
+
+sub hget {
+   my $self = shift;
+   my ($hashname, $field) = @_;
+
+   $self->brik_help_run_undef_arg('hget', $hashname) or return;
+   $self->brik_help_run_undef_arg('hget', $field) or return;
+
+   return $self->command('hget', $hashname, $field);
+}
+
+sub hgetall {
+   my $self = shift;
+   my ($hashname) = @_;
+
+   $self->brik_help_run_undef_arg('hgetall', $hashname) or return;
+
+   my $r = $self->command('hgetall', $hashname) or return;
+
+   my %h = @{$r};
+
+   return \%h;
 }
 
 1;

@@ -32,7 +32,7 @@ sub brik_properties {
          chgrp => [ qw(file) ],
          copy => [ qw(source destination) ],
          move => [ qw(source destination) ],
-         remove => [ qw(file) ],
+         remove => [ qw(file|$file_list) ],
          rename => [ qw(source destination) ],
          cat => [ qw(source destination) ],
          create => [ qw(file size) ],
