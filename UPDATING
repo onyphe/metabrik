@@ -1,7 +1,9 @@
 20151215
-   AFFECT: brik::tool
+   AFFECT: brik::tool, system::file
 
    - brik::tool renamed install_ubuntu_packages to install_packages
+   - system::file get_mime_type, get_magic_type, is_mime_type and is_magic_type Commands
+     moved to new file::type Brik
 
 20151203
    AFFECT: brik::tool

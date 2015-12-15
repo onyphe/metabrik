@@ -30,8 +30,8 @@ sub brik_properties {
       },
       require_modules => {
          'Compress::Zlib' => [ ],
+         'Metabrik::File::Type' => [ ],
          'Metabrik::File::Write' => [ ],
-         'Metabrik::System::File' => [ ],
       },
       require_binaries => {
          'unzip' => [ ],
@@ -110,8 +110,8 @@ sub uncompress {
    $datadir ||= $self->datadir;
    $self->brik_help_run_undef_arg('uncompress', $input) or return;
 
-   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
-   my $type = $sf->get_mime_type($input) or return;
+   my $ft = Metabrik::File::Type->new_from_brik_init($self) or return;
+   my $type = $ft->get_mime_type($input) or return;
 
    if ($type eq 'application/gzip') {
       return $self->gunzip($input, $output, $datadir);

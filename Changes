@@ -1,6 +1,6 @@
 Revision history for Perl extension Metabrik::Repository.
 
-1.12
+1.20
    - new: www::shorten Brik
    - new: brik::tool Brik
    - new: system::file Brik
@@ -12,6 +12,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: file::raw Brik
    - new: forensic::dcfldd Brik
    - new: devel::mercurial Brik
+   - new: file::type Brik
 
 1.11 Sun Nov 22 17:46:43 CET 2015
    - new: api::shodan Brik

@@ -16,9 +16,17 @@ DEPENDENCIES
 
    This module requires these other modules and libraries:
 
+   sudo
+   mercurial
+   apt-get (for Debian-based systems)
+   pkg (for FreeBSD systems)
+
    Perl v5.6.1
    Metabrik
-   See Makefile.PL for others.
+   File::Copy
+   File::Path
+   File::Spec
+   POSIX
 
 COPYRIGHT AND LICENSE
 

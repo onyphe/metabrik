@@ -32,6 +32,7 @@ sub brik_properties {
       require_modules => {
          'Metabrik::File::Find' => [ ],
          'Metabrik::File::Text' => [ ],
+         'Metabrik::File::Type' => [ ],
          'Metabrik::System::File' => [ ],
       },
       require_binaries => {
@@ -174,7 +175,7 @@ sub scan {
       'odt' => 'application/vnd.oasis.opendocument.text',
    };
 
-   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   my $ft = Metabrik::File::Type->new_from_brik_init($self) or return;
 
    # If we know the supposed MIME-type of a file, we correlate with it
    my @verified = ();
@@ -182,7 +183,7 @@ sub scan {
    for my $file (@$files) {
       my ($this) = $file =~ m{\.(\w+)$};
       if (exists($ext->{$this})) {
-         my $check = $sf->get_mime_type($file) or next;
+         my $check = $ft->get_mime_type($file) or next;
          if ($check eq $ext->{$this}) {
             push @verified, $file;
          }

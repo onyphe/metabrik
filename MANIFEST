@@ -61,6 +61,7 @@ lib/Metabrik/File/Raw.pm
 lib/Metabrik/File/Read.pm
 lib/Metabrik/File/Text.pm
 lib/Metabrik/File/Tsv.pm
+lib/Metabrik/File/Type.pm
 lib/Metabrik/File/Write.pm
 lib/Metabrik/File/Xml.pm
 lib/Metabrik/Forensic/Dcfldd.pm
