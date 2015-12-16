@@ -186,12 +186,6 @@ sub show_require_modules {
 
    # Don't show require for Metabrik::Core
    my $core = {
-      'shell::script',
-      'shell::rc',
-      'shell::history',
-      'shell::command',
-      'brik::search',
-      'perl::module',
       'core::context',
       'core::log',
       'core::shell',

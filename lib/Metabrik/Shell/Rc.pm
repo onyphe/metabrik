@@ -122,32 +122,9 @@ set core::global repository \$repository
 set core::global ctimeout 20
 set core::global rtimeout 20
 
-use shell::command
-use brik::search
-use perl::module
-
 alias update_available "run core::context update_available"
 alias reuse "run core::context reuse"
-alias system "run shell::command system"
-alias capture "run shell::command capture"
-alias build "run perl::module build"
-alias test "run perl::module test"
-alias install "run perl::module install"
-alias dist "run perl::module dist"
-alias search "run brik::search"
-alias show "run brik::search all"
-alias ls "run shell::command capture ls -F"
-alias l "run shell::command capture ls -lF"
-alias ll "run shell::command capture ls -lF"
-alias w "run shell::command capture w"
-alias history "run shell::history show"
-alias ! "run shell::history exec"
-alias cat "run shell::command capture cat"
 alias pwd "run core::shell pwd"
-alias su "run shell::command system \$sudo"
-
-use shell::history
-run shell::history load
 
 set core::shell echo 1
 EOF
