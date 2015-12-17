@@ -14,6 +14,7 @@ my $builder = Module::Build->new(
    requires => {
       'perl' => '5.6.1',
       'Metabrik' => '1.20',
+      'IPC::Run3' => 0,
       'File::Copy' => 0,
       'File::Path' => 0,
       'File::Spec' => 0,

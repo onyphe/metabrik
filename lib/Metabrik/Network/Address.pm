@@ -34,6 +34,7 @@ sub brik_properties {
          count_ipv4 => [ qw(subnet|OPTIONAL) ],
          get_ipv4_cidr => [ qw(subnet|OPTIONAL) ],
          is_ipv4_subnet => [ qw(subnet|OPTIONAL) ],
+         merge_cidr => [ qw($cidr_list) ],
       },
       require_modules => {
          'Net::Netmask' => [ ],
@@ -369,6 +370,18 @@ sub is_ipv4_subnet {
    }
 
    return 1;
+}
+
+sub merge_cidr {
+   my $self = shift;
+   my ($list) = @_;
+
+   $self->brik_help_run_undef_arg('merge_cidr', $list) or return;
+   $self->brik_help_run_invalid_arg('merge_cidr', $list, 'ARRAY') or return;
+
+   my @list = Net::CIDR::cidradd(@$list) or return;
+
+   return \@list;
 }
 
 1;

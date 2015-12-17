@@ -144,13 +144,13 @@ sub getcertificate {
    return $sock;
 }
 
-use Net::SSLeay qw/XN_FLAG_RFC2253 ASN1_STRFLGS_ESC_MSB/;
+eval("use Net::SSLeay qw/XN_FLAG_RFC2253 ASN1_STRFLGS_ESC_MSB/;");
 
 # Taken from http://cpansearch.perl.org/src/MIKEM/Net-SSLeay-1.57/examples/x509_cert_details.pl
 sub get_cert_details {
   my $x509 = shift;
   my $rv = {};
-  my $flag_rfc22536_utf8 = (XN_FLAG_RFC2253) & (~ ASN1_STRFLGS_ESC_MSB);
+  my $flag_rfc22536_utf8 = (Net::SSLeay::XN_FLAG_RFC2253()) & (~ Net::SSLeay::ASN1_STRFLGS_ESC_MSB());
 
   die 'ERROR: $x509 is NULL, gonna quit' unless $x509;
 
@@ -302,7 +302,7 @@ sub getcertificate2 {
       return $self->log->error($self->brik_help_run('getcertificate2'));
    }
 
-   use Net::SSLeay qw(print_errs set_fd);
+   eval("use Net::SSLeay qw(print_errs set_fd);");
 
    if (defined($ENV{HTTPS_PROXY})) {
       my $proxy = URI->new($ENV{HTTPS_PROXY});

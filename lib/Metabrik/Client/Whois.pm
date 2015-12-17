@@ -21,6 +21,7 @@ sub brik_properties {
          is_available_domain => [ qw(domain) ],
          parse_raw_whois => [ qw($lines_list) ],
          normalize_raw_ip_whois => [ qw($chunks $lines_list) ],
+         is_ip_from_owner => [ qw(ip_address owner) ],
       },
       require_modules => {
          'Metabrik::Network::Address' => [ ],
@@ -438,6 +439,22 @@ sub is_available_domain {
    my $info = $self->domain($domain) or return;
 
    return $info->{domain_exists};
+}
+
+sub is_ip_from_owner {
+   my $self = shift;
+   my ($ip, $owner) = @_;
+
+   $self->brik_help_run_undef_arg('is_ip_from_owner', $ip) or return;
+   $self->brik_help_run_undef_arg('is_ip_from_owner', $owner) or return;
+
+   my $r = $self->ip($ip) or return;
+   if ((exists($r->{description}) && $r->{description} =~ m{$owner}i)
+   ||  (exists($r->{organization}) && $r->{organization} =~ m{$owner}i)) {
+      return 1;
+   }
+
+   return 0;
 }
 
 1;
