@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable main core) ],
+      tags => [ qw(unstable) ],
       commands => {
          all => [ ],
          string => [ qw(string) ],

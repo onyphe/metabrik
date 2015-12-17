@@ -12,7 +12,7 @@ use base qw(Metabrik::Shell::Command);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable core build test install cpan cpanm) ],
+      tags => [ qw(unstable build test install cpan cpanm) ],
       commands => {
          build => [ qw(directory|OPTIONAL) ],
          test => [ qw(directory|OPTIONAL) ],

@@ -14,7 +14,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(main core) ],
+      tags => [ qw(command) ],
       attributes => {
          history_file => [ qw(file) ],
       },
