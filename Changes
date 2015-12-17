@@ -1,6 +1,8 @@
 Revision history for Perl extension Metabrik::Repository.
 
 1.20
+   - MERGE: brik::search, perl::module, shell::command, shell::history, shell::rc
+            and shell::script moved to Repository away from Core
    - new: www::shorten Brik
    - new: brik::tool Brik
    - new: system::file Brik

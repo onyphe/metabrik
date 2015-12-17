@@ -13,6 +13,7 @@ WriteMakefile(
    AUTHOR => 'GomoR <gomor_at_metabrik.org>',
    PREREQ_PM => {
       'Metabrik' => '1.20',
+      'Cwd' => 0,
       'IPC::Run3' => 0,
       'File::Copy' => 0,
       'File::Path' => 0,

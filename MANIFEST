@@ -14,6 +14,7 @@ lib/Metabrik/Audit/Elasticsearch.pm
 lib/Metabrik/Audit/Https.pm
 lib/Metabrik/Audit/Smtp.pm
 lib/Metabrik/Audit/Twiki.pm
+lib/Metabrik/Brik/Search.pm
 lib/Metabrik/Brik/Tool.pm
 lib/Metabrik/Client/Dns.pm
 lib/Metabrik/Client/Openssh.pm
@@ -115,6 +116,7 @@ lib/Metabrik/Network/Whois.pm
 lib/Metabrik/Network/Wlan.pm
 lib/Metabrik/Network/Wps.pm
 lib/Metabrik/Network/Write.pm
+lib/Metabrik/Perl/Module.pm
 lib/Metabrik/Proxy/Http.pm
 lib/Metabrik/Proxy/Ssh2tcp.pm
 lib/Metabrik/Remote/Tcpdump.pm
@@ -125,6 +127,10 @@ lib/Metabrik/Server/Rest.pm
 lib/Metabrik/Server/Snmp.pm
 lib/Metabrik/Server/Snmptrap.pm
 lib/Metabrik/Server/Tcp.pm
+lib/Metabrik/Shell/Command.pm
+lib/Metabrik/Shell/History.pm
+lib/Metabrik/Shell/Rc.pm
+lib/Metabrik/Shell/Script.pm
 lib/Metabrik/Ssl/Heartbleed.pm
 lib/Metabrik/String/Ascii.pm
 lib/Metabrik/String/Base64.pm
@@ -188,7 +194,7 @@ t/20-use-briks-www.t
 t/21-use-briks-log.t
 t/22-use-briks-proxy.t
 t/23-use-briks-perl.t
-t/24-use-briks-brik.t
+t/24-use-briks-shell.t
 t/25-use-briks-hardware.t
 t/26-use-briks-xorg.t
 t/27-use-briks-client.t
