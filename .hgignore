@@ -1,0 +1,8 @@
+blib
+_build
+Build
+MYMETA.*
+TODO
+work
+MANIFEST.SKIP.bak
+MANIFEST.bak

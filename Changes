@@ -1,0 +1,60 @@
+Revision history for Perl extension Metabrik::Repository.
+
+1.20
+   - new: www::shorten Brik
+   - new: brik::tool Brik
+   - new: system::file Brik
+   - new: client::tcpdump Brik
+   - new: forensic::scalpel Brik
+   - new: antivirus::clamav Brik
+   - new: forensic::volatility Brik
+   - new: image::exif Brik
+   - new: file::raw Brik
+   - new: forensic::dcfldd Brik
+   - new: devel::mercurial Brik
+   - new: file::type Brik
+
+1.11 Sun Nov 22 17:46:43 CET 2015
+   - new: api::shodan Brik
+   - new: system::process Brik
+   - new: network::sinfp3::arpdiscover Brik
+   - new: server::tcp Brik
+   - new: proxy::ssh2tcp Brik
+   - new: client::openssh Brik
+   - new: server::rest Brik
+   - new: log::null Brik
+   - new: lookup::threatlist Brik
+   - new: system::docker Brik
+   - new: string::yara Brik
+   - new: network::grep Brik
+   - new: file::pcap Brik
+   - new: network::stream Brik
+
+1.10 Tue Oct 27 20:11:54 CET 2015
+   - update: version bump
+   - UPDATE: see UPDATING file
+
+1.09 N/A
+   - update: version bump
+   - UPDATE: see UPDATING file
+
+1.08 Thu Mar 19 06:46:02 CET 2015
+   - update: version bump
+   - UPDATE: see UPDATING file
+
+1.07 Sun Mar  8 17:52:48 CET 2015
+   - update: version bump
+   - UPDATE: see UPDATING file
+
+1.06 Fri Feb 27 07:18:52 CET 2015
+   - update: version bump
+   - UPDATE: see UPDATING file
+
+1.05 Tue Feb 10 08:01:53 CET 2015
+   - update: version bump
+   - UPDATE: see UPDATING file
+
+1.04 Sun Jan  4 13:32:53 CET 2015
+   - update: version bump
+   - UPDATE: see UPDATING file
+
