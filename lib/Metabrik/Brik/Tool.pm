@@ -399,7 +399,10 @@ sub update_core {
 sub update_repository {
    my $self = shift;
 
-   my $repository = $self->global->repository;
+   # If we define the core::global repository Attribute, we use that as 
+   # a local repository. We will not install Metabrik::Repository in that case.
+   my $datadir = $self->datadir;
+   my $repository = $self->global->repository || $datadir.'/repository';
 
    my $url = 'http://trac.metabrik.org/hg/repository';
 
@@ -419,8 +422,13 @@ sub update_repository {
    $pm->build($repository) or return;
    $pm->test($repository) or return;
 
-   my $pager = $ENV{PAGER};
-   $self->execute("$pager $repository/UPDATING");
+   # If we define the core::global repository Attribute, we use that as 
+   # a local repository. We will not install Metabrik::Repository in that case.
+   if (! defined($self->global->repository)) {
+      $pm->install($repository) or return;
+   }
+
+   $self->execute("cat $repository/UPDATING");
 
    $self->log->info("update_repository: the file just showed contains information that ".
                     "helps you follow API changes. Read it again at [$repository/UPDATING].");
