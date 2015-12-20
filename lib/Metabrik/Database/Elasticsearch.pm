@@ -7,7 +7,7 @@ package Metabrik::Database::Elasticsearch;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Service Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -43,7 +43,10 @@ sub brik_properties {
          get => [ qw(id index|OPTIONAL type|OPTIONAL) ],
          www_search => [ qw(query index|OPTIONAL) ],
          delete => [ qw(index) ],
-         search => [ qw(query_string) ],
+         start => [ ], # Inherited
+         stop => [ ], # Inherited
+         status => [ ], # Inherited
+         install => [ ], # Inherited
          # XXX: ./bin/plugin -install lmenezes/elasticsearch-kopf
          #install_plugin => [ qw(plugin) ],
       },
@@ -52,12 +55,23 @@ sub brik_properties {
          'Metabrik::Client::Www' => [ ],
          'Metabrik::String::Json' => [ ],
       },
+      need_packages => {
+         'ubuntu' => [ qw(elasticsearch) ],
+      },
+      need_services => {
+         'ubuntu' => [ qw(elasticsearch) ],
+      },
    };
 }
 
 sub open {
    my $self = shift;
    my ($index, $type) = @_;
+
+   $index ||= $self->index_name;
+   $type ||= $self->type_document;
+   $self->brik_help_run_undef_arg('open', $index) or return;
+   $self->brik_help_run_undef_arg('open', $type) or return;
 
    my $nodes = $self->nodes;
    my $cxn_pool = $self->cxn_pool;
@@ -73,16 +87,6 @@ sub open {
    $self->_elk($elk);
 
    if ($self->bulk_mode) {
-      $index ||= $self->index_name;
-      if (! defined($index)) {
-         return $self->log->error($self->brik_help_set('index_name'));
-      }
-
-      $type ||= $self->type_document;
-      if (! defined($type)) {
-         return $self->log->error($self->brik_help_set('type_document'));
-      }
-
       my $bulk = $elk->bulk_helper(
          index => $index,
          type => $type,
@@ -102,35 +106,19 @@ sub index {
    my ($doc, $index, $type) = @_;
 
    my $elk = $self->_elk;
-   if (! defined($elk)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
-
-   if (! defined($doc)) {
-      return $self->log->error($self->brik_help_run('index'));
-   }
-
-   if (ref($doc) ne 'HASH') {
-      return $self->log->error("index: argument 1 MUST be HASHREF");
-   }
-
    $index ||= $self->index_name;
-   if (! defined($index)) {
-      return $self->log->error($self->brik_help_set('index_name'));
-   }
-
    $type ||= $self->type_document;
-   if (! defined($type)) {
-      return $self->log->error($self->brik_help_set('type_document'));
-   }
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('index', $index) or return;
+   $self->brik_help_run_undef_arg('index', $type) or return;
+   $self->brik_help_run_undef_arg('index', $doc) or return;
+   $self->brik_help_run_invalid_arg('index', $doc, 'HASH') or return;
 
    my $r = $elk->index(
       index => $index,
       type => $type,
       body => $doc,
    );
-
-   $self->log->verbose("index: indexation done");
 
    return $r;
 }
@@ -148,19 +136,11 @@ sub count {
    my ($index, $type) = @_;
 
    my $elk = $self->_elk;
-   if (! defined($elk)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
-
    $index ||= $self->index_name;
-   if (! defined($index)) {
-      return $self->log->error($self->brik_help_set('index_name'));
-   }
-
    $type ||= $self->type_document;
-   if (! defined($type)) {
-      return $self->log->error($self->brik_help_set('type_document'));
-   }
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('count', $index) or return;
+   $self->brik_help_run_undef_arg('count', $type) or return;
 
    my $r = $elk->search(
       index => $index,
@@ -176,28 +156,19 @@ sub count {
    return $r;
 }
 
-# http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-multi-match-query.html
+#
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/full-text-queries.html
+#
 sub query {
    my $self = shift;
    my ($query, $index) = @_;
 
    my $elk = $self->_elk;
-   if (! defined($elk)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
-
-   if (! defined($query)) {
-      return $self->log->error($self->brik_help_run('search'));
-   }
-
-   if (ref($query) ne 'HASH') {
-      return $self->log->error("index: argument 1 MUST be HASHREF");
-   }
-
    $index ||= $self->index_name;
-   if (! defined($index)) {
-      return $self->log->error($self->brik_help_set('index_name'));
-   }
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('query', $query) or return;
+   $self->brik_help_run_undef_arg('query', $index) or return;
+   $self->brik_help_run_invalid_arg('query', $query, 'HASH') or return;
 
    my $r = $elk->search(
       index => $index,
@@ -216,23 +187,12 @@ sub get {
    my ($id, $index, $type) = @_;
 
    my $elk = $self->_elk;
-   if (! defined($elk)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
-
-   if (! defined($id)) {
-      return $self->log->error($self->brik_help_run('get'));
-   }
-
    $index ||= $self->index_name;
-   if (! defined($index)) {
-      return $self->log->error($self->brik_help_set('index_name'));
-   }
-
    $type ||= $self->type_document;
-   if (! defined($type)) {
-      return $self->log->error($self->brik_help_set('type_document'));
-   }
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('get', $id) or return;
+   $self->brik_help_run_undef_arg('get', $index) or return;
+   $self->brik_help_run_undef_arg('get', $type) or return;
 
    my $r = $elk->get(
       index => $index,
@@ -247,34 +207,24 @@ sub www_search {
    my $self = shift;
    my ($query, $index_name) = @_;
 
-   if (! defined($query)) {
-      return $self->log->error($self->brik_help_run('www_search'));
-   }
-
    $index_name ||= $self->index_name;
-   if (! defined($index_name)) {
-      return $self->log->error($self->brik_help_set('index_name'));
-   }
+   $self->brik_help_run_undef_arg('www_search', $index_name) or return;
+   $self->brik_help_run_undef_arg('www_search', $query) or return;
 
    my $size = $self->size;
 
-   my $client_www = Metabrik::Client::Www->new_from_brik($self) or return;
+   my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
+   my $sj = Metabrik::String::Json->new_from_brik_init($self) or return;
 
    my $nodes = $self->nodes;
    for my $node (@$nodes) {
       # http://localhost:9200/INDEX/_search/?size=SIZE&q=QUERY
       my $url = "$node/$index_name/_search/?size=$size&q=".$query;
 
-      my $get = $client_www->get($url);
-      if (! defined($get)) {
-         $self->log->warning("www_search: get failed");
-         next;
-      }
-
+      my $get = $cw->get($url) or next;
       my $body = $get->{content};
-      my $string_json = Metabrik::String::Json->new_from_brik($self) or return;
-      my $decoded = $string_json->decode($body)
-         or return $self->log->error("www_search: decode failed");
+
+      my $decoded = $sj->decode($body) or next;
 
       return $decoded;
    }
@@ -287,52 +237,12 @@ sub delete {
    my ($index) = @_;
 
    my $elk = $self->_elk;
-   if (! defined($elk)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
-
-   if (! defined($index)) {
-      return $self->log->error($self->brik_help_run('delete'));
-   }
+   $index ||= $self->index_name;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('delete', $index) or return;
 
    my $r = $elk->indices->delete(
       index => $index,
-   );
-
-   return $r;
-}
-
-sub search {
-   my $self = shift;
-   my ($query, $index) = @_;
-
-   my $elk = $self->_elk;
-   if (! defined($elk)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
-
-   if (! defined($query)) {
-      return $self->log->error($self->brik_help_run('search'));
-   }
-
-   my $dsl_query = {
-      query_string => {
-         query => $query,
-      },
-   };
-
-   $index ||= $self->index_name;
-   if (defined($index)) {
-      $dsl_query->{query_string}->{query} = $index;
-   }
-
-   my $r = $elk->search(
-      index => $index,
-      from => $self->from,
-      size => $self->size,
-      body => {
-         query => $dsl_query,
-      },
    );
 
    return $r;

@@ -25,6 +25,8 @@ sub brik_properties {
          list_timezones => [ ],
          search_timezone => [ qw(string) ],
          localtime => [ qw(timezone|OPTIONAL) ],
+         today => [ ],
+         date => [ ],
       },
       require_modules => {
          'DateTime' => [ ],
@@ -83,6 +85,23 @@ sub localtime {
    }
 
    return $time;
+}
+
+sub today {
+   my $self = shift;
+
+   my @a = CORE::localtime();
+   my $y = $a[5] + 1900;
+   my $m = $a[4] + 1;
+   my $d = $a[3];
+
+   return "$y-$m-$d";
+}
+
+sub date {
+   my $self = shift;
+
+   return CORE::localtime()."";
 }
 
 1;

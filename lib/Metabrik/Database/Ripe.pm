@@ -32,6 +32,7 @@ sub brik_properties {
       },
       require_modules => {
          'Metabrik::Client::Www' => [ ],
+         'Metabrik::File::Compress' => [ ],
          'Metabrik::File::Read' => [ ],
          'Metabrik::File::Text' => [ ],
       },
@@ -67,6 +68,9 @@ sub update {
       my $r = $cw->mirror($url, $filename, $datadir);
       if (! defined($r)) {
          $self->log->warning("update: can't fetch url [$url]");
+         next;
+      }
+      elsif (@$r == 0) { # Already up to date
          next;
       }
 

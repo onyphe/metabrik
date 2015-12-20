@@ -20,6 +20,10 @@ sub brik_properties {
          start => [ qw(service_name) ],
          stop => [ qw(service_name) ],
          restart => [ qw(service_name) ],
+         my_os => [ ],
+      },
+      require_modules => {
+         'Metabrik::System::Os' => [ ],
       },
       require_binaries => {
          'service', => [ ],
@@ -31,48 +35,115 @@ sub status {
    my $self = shift;
    my ($name) = @_;
 
-   if (! defined($name)) {
+   if (defined($name)) {
+      return $self->execute("service $name status");
+   }
+   elsif (! exists($self->brik_properties->{need_services})) {
       return $self->log->error($self->brik_help_run('status'));
    }
+   else {
+      my $os = $self->my_os;
+      if (exists($self->brik_properties->{need_services}{$os})) {
+         my $need_services = $self->brik_properties->{need_services}{$os};
+         for my $service (@$need_services) {
+            $self->execute("service $service status");
+         }
+      }
+      else {
+         return $self->log->error("status: don't know how to do that for OS [$os]");
+      }
+   }
 
-   return $self->system("service $name status");
+   return 1;
 }
 
 sub start {
    my $self = shift;
    my ($name) = @_;
 
-   if (! defined($name)) {
+   if (defined($name)) {
+      return $self->execute("sudo service $name start");
+   }
+   elsif (! exists($self->brik_properties->{need_services})) {
       return $self->log->error($self->brik_help_run('start'));
    }
+   else {
+      my $os = $self->my_os;
+      if (exists($self->brik_properties->{need_services}{$os})) {
+         my $need_services = $self->brik_properties->{need_services}{$os};
+         for my $service (@$need_services) {
+            $self->execute("sudo service $service start");
+         }
+      }
+      else {
+         return $self->log->error("start: don't know how to do that for OS [$os]");
+      }
+   }
 
-   return $self->system("sudo service $name start");
+   return 1;
 }
 
 sub stop {
    my $self = shift;
    my ($name) = @_;
 
-   if (! defined($name)) {
+   if (defined($name)) {
+      return $self->execute("sudo service $name stop");
+   }
+   elsif (! exists($self->brik_properties->{need_services})) {
       return $self->log->error($self->brik_help_run('stop'));
    }
+   else {
+      my $os = $self->my_os;
+      if (exists($self->brik_properties->{need_services}{$os})) {
+         my $need_services = $self->brik_properties->{need_services}{$os};
+         for my $service (@$need_services) {
+            $self->execute("sudo service $service stop");
+         }
+      }
+      else {
+         return $self->log->error("stop: don't know how to do that for OS [$os]");
+      }
+   }
 
-   return $self->system("sudo service $name stop");
+   return 1;
 }
 
 sub restart {
    my $self = shift;
    my ($name) = @_;
 
-   if (! defined($name)) {
+   if (defined($name)) {
+      $self->stop($name) or return;
+      sleep(1);
+      return $self->start($name);
+   }
+   elsif (! exists($self->brik_properties->{need_services})) {
       return $self->log->error($self->brik_help_run('restart'));
    }
+   else {
+      my $os = $self->my_os;
+      if (exists($self->brik_properties->{need_services}{$os})) {
+         my $need_services = $self->brik_properties->{need_services}{$os};
+         for my $service (@$need_services) {
+            $self->stop($name) or next;
+            sleep(1);
+            $self->start($name);
+         }
+      }
+      else {
+         return $self->log->error("restart: don't know how to do that for OS [$os]");
+      }
+   }
 
-   $self->stop($name) or return;
+   return 1;
+}
 
-   sleep(1);
+sub my_os {
+   my $self = shift;
 
-   return $self->start($name);
+   my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
+   return $so->my;
 }
 
 1;

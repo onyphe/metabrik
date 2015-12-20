@@ -7,7 +7,7 @@ package Metabrik::Database::Redis;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Service Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -25,10 +25,10 @@ sub brik_properties {
          port => 6379,
       },
       commands => {
-         install => [ ],
-         start => [ ],
-         stop => [ ],
-         status => [ ],
+         install => [ ], # Inherited
+         start => [ ], # Inherited
+         stop => [ ], # Inherited
+         status => [ ], # Inherited
          connect => [ ],
          command => [ qw(command $arg1 $arg2 ... $argN) ],
          time => [ ],
@@ -46,72 +46,14 @@ sub brik_properties {
       },
       require_modules => {
          'Redis' => [ ],
-         'Metabrik::System::Package' => [ ],
-         'Metabrik::System::Service' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(redis-server) ],
+      },
+      need_services => {
+         'ubuntu' => [ qw(redis-server) ],
       },
    };
-}
-
-sub install {
-   my $self = shift;
-
-   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
-   if ($sp->is_os_ubuntu) {
-      $sp->install('redis-server') or return;
-   }
-   else {
-      return $self->log->error("install: don't know how to do with this OS");
-   }
-
-   return 1;
-}
-
-sub start {
-   my $self = shift;
-
-   my $r;
-   my $ss = Metabrik::System::Service->new_from_brik_init($self) or return;
-   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
-   if ($sp->is_os_ubuntu) {
-      $r = $ss->start('redis-server') or return;
-   }
-   else {
-      return $self->log->error("start: don't know how to do with this OS");
-   }
-
-   return $r;
-}
-
-sub stop {
-   my $self = shift;
-
-   my $r;
-   my $ss = Metabrik::System::Service->new_from_brik_init($self) or return;
-   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
-   if ($sp->is_os_ubuntu) {
-      $r = $ss->stop('redis-server') or return;
-   }
-   else {
-      return $self->log->error("stop: don't know how to do with this OS");
-   }
-
-   return $r;
-}
-
-sub status {
-   my $self = shift;
-
-   my $r;
-   my $ss = Metabrik::System::Service->new_from_brik_init($self) or return;
-   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
-   if ($sp->is_os_ubuntu) {
-      $r = $ss->status('redis-server') or return;
-   }
-   else {
-      return $self->log->error("stop: don't know how to do with this OS");
-   }
-
-   return $r;
 }
 
 sub connect {

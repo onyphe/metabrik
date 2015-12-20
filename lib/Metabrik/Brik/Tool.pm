@@ -61,6 +61,7 @@ sub install_packages {
          clamav
          dcfldd
          dsniff
+         elasticsearch
          exif
          ffmpeg
          libexpat-dev
@@ -93,7 +94,7 @@ sub install_packages {
    }
    else {
       return $self->log->error("install_packages: sorry, don't know what to do for your OS.\n".
-                               "Fill a complaint to GomoR[at]metabrik.org");
+                               "File a complaint to GomoR[at]metabrik.org");
    }
 
    return 1;
@@ -108,6 +109,7 @@ sub install_modules {
       Crypt::SSLeay
       Daemon::Daemonize
       DateTime
+      DateTime::TimeZone
       DBD::mysql
       DBD::SQLite
       DBI
@@ -386,7 +388,7 @@ sub update_core {
       $dm->clone($url, $datadir.'/core') or return;
    }
    else {
-      $dm->update($url, $datadir.'/core') or return;
+      $dm->update($datadir.'/core') or return;
    }
 
    $pm->build($datadir.'/core') or return;
@@ -416,7 +418,7 @@ sub update_repository {
       $dm->clone($url, $repository) or return;
    }
    else {
-      $dm->update($url, $repository) or return;
+      $dm->update($repository) or return;
    }
 
    $pm->build($repository) or return;

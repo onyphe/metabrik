@@ -21,6 +21,7 @@ sub brik_properties {
          update => [ ],
          upgrade => [ ],
          list => [ ],
+         is_installed => [ qw(package|$package_list) ],
       },
       require_binaries => {
          'sudo' => [ ],
@@ -33,9 +34,7 @@ sub search {
    my $self = shift;
    my ($package) = @_;
 
-   if (! defined($package)) {
-      return $self->log->error($self->brik_help_run('search'));
-   }
+   $self->brik_help_run_undef_arg('search', $package) or return;
 
    my $cmd = "pkg search $package";
 
@@ -46,13 +45,9 @@ sub install {
    my $self = shift;
    my ($package) = @_;
 
-   if (! defined($package)) {
-      return $self->log->error($self->brik_help_run('install'));
-   }
-   my $ref = ref($package);
-   if ($ref ne '' && $ref ne 'ARRAY') {
-      return $self->log->error("install: package [$package] has invalid format");
-   }
+   $self->brik_help_run_undef_arg('install', $package) or return;
+   my $ref = $self->brik_help_run_invalid_arg('install', $package, 'ARRAY', 'SCALAR')
+      or return;
 
    my $cmd = "sudo pkg install ";
    $ref eq 'ARRAY' ? ($cmd .= join(' ', @$package)) : ($cmd .= $package);
@@ -82,6 +77,12 @@ sub list {
    my $cmd = "pkg info";
 
    return $self->system($cmd);
+}
+
+sub is_installed {
+   my $self = shift;
+
+   return $self->log->info("is_installed: not implemented on this system");
 }
 
 1;

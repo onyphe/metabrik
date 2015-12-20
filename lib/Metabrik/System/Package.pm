@@ -15,16 +15,18 @@ sub brik_properties {
       tags => [ qw(unstable) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
-      attributes => {
-         _sp => [ qw(INTERNAL) ],
-      },
       commands => {
+         get_system_package => [ ],
          search => [ qw(string) ],
-         install => [ qw(package) ],
+         install => [ qw(package|$package_list) ],
+         remove => [ qw(package|$package_list) ],
          update => [ ],
          upgrade => [ ],
+         is_os => [ qw(os) ],
          is_os_ubuntu => [ ],
          is_os_freebsd => [ ],
+         is_installed => [ qw(package|$package_list) ],
+         my_os => [ ],
       },
       require_modules => {
          'Metabrik::System::Os' => [ ],
@@ -34,26 +36,25 @@ sub brik_properties {
    };
 }
 
-sub brik_init {
+sub get_system_package {
    my $self = shift;
+
+   my $os = $self->my_os;
 
    my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
 
    my $sp;
-   if ($so->is_ubuntu) {
+   if ($os eq 'ubuntu') {
       $sp = Metabrik::System::Ubuntu::Package->new_from_brik_init($self) or return;
    }
-   elsif ($so->is_freebsd) {
+   elsif ($os eq 'freebsd') {
       $sp = Metabrik::System::Freebsd::Package->new_from_brik_init($self) or return;
    }
-
-   if (! defined($sp)) {
-      return $self->log->error("brik_init: cannot determine system distribution");
+   else {
+      return $self->log->error("get_system_package: cannot determine package system for OS [os]");
    }
 
-   $self->_sp($sp);
-
-   return $self->SUPER::brik_init(@_);
+   return $sp;
 }
 
 sub search {
@@ -62,48 +63,112 @@ sub search {
 
    $self->brik_help_run_undef_arg('search', $package) or return;
 
-   return $self->_sp->search($package);
+   my $sp = $self->get_system_package or return;
+
+   return $sp->search($package);
 }
 
 sub install {
    my $self = shift;
    my ($package) = @_;
 
-   $self->brik_help_run_undef_arg('install', $package) or return;
+   my $sp = $self->get_system_package or return;
 
-   return $self->_sp->install($package);
+   if (defined($package)) {
+      return $sp->install($package);
+   }
+   elsif (! exists($self->brik_properties->{need_packages})) {
+      return $self->log->error($self->brik_help_run('install'));
+   }
+   else {
+      my $os = $self->my_os;
+      if (exists($self->brik_properties->{need_packages}{$os})) {
+         my $need_packages = $self->brik_properties->{need_packages}{$os};
+         return $sp->install($need_packages);
+      }
+      else {
+         return $self->log->error("install: don't know how to do that for OS [$os]");
+      }
+   }
+
+   return 1;
+}
+
+sub remove {
+   my $self = shift;
+   my ($package) = @_;
+
+   $self->brik_help_run_undef_arg('remove', $package) or return;
+
+   my $sp = $self->get_system_package or return;
+
+   return $sp->remove($package);
 }
 
 sub update {
    my $self = shift;
 
-   return $self->_sp->update;
+   my $sp = $self->get_system_package or return;
+
+   return $sp->update;
 }
 
 sub upgrade {
    my $self = shift;
 
-   return $self->_sp->upgrade;
+   my $sp = $self->get_system_package or return;
+
+   return $sp->upgrade;
 }
 
 sub list {
    my $self = shift;
 
-   return $self->_sp->list;
+   my $sp = $self->get_system_package or return;
+
+   return $sp->list;
+}
+
+sub is_os {
+   my $self = shift;
+   my ($os) = @_;
+
+   $self->brik_help_run_undef_arg('is_os', $os) or return;
+
+   my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
+   return $so->is($os);
 }
 
 sub is_os_ubuntu {
    my $self = shift;
 
-   my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
-   return $so->is_ubuntu;
+   return $self->is_os('ubuntu');
 }
 
 sub is_os_freebsd {
    my $self = shift;
 
+   return $self->is_os('freebsd');
+}
+
+sub is_installed {
+   my $self = shift;
+   my ($package) = @_;
+
+   $self->brik_help_run_undef_arg('is_installed', $package) or return;
+   my $ref = $self->brik_help_run_invalid_arg('is_installed', $package, 'ARRAY', 'SCALAR')
+      or return;
+
+   my $sp = $self->get_system_package or return;
+
+   return $sp->is_installed($package);
+}
+
+sub my_os {
+   my $self = shift;
+
    my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
-   return $so->is_freebsd;
+   return $so->my;
 }
 
 1;

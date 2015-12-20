@@ -25,9 +25,11 @@ sub brik_properties {
          hostname => [ ],
          arch => [ ],
          distribution => [ ],
+         is => [ qw(os) ],
          is_ubuntu => [ ],
          is_linux => [ ],
          is_freebsd => [ ],
+         my => [ ],
       },
       require_modules => {
          'POSIX' => [ ],
@@ -144,35 +146,65 @@ sub distribution {
    };
 }
 
-sub is_ubuntu {
+sub is {
    my $self = shift;
+   my ($os) = @_;
 
+   $self->brik_help_run_undef_arg('is', $os) or return;
+
+   $os = lc($os);
+
+   my $name = $self->name or return;
    my $distrib = $self->distribution or return;
-   if (exists($distrib->{name}) && $distrib->{name} eq 'Ubuntu') {
-      return 1;
+   if (exists($distrib->{name})) {
+      my $this = lc($distrib->{name});
+      if ($this eq $os) {
+         return 1;
+      }
+   }
+   if (defined($name)) {
+      my $this = lc($name);
+      if ($this eq $os) {
+         return 1;
+      }
    }
 
    return 0;
+}
+
+sub is_ubuntu {
+   my $self = shift;
+
+   return $self->is('ubuntu');
 }
 
 sub is_linux {
    my $self = shift;
 
-   if ($self->name eq 'Linux') {
-      return 1;
-   }
-
-   return 0;
+   return $self->is('linux');
 }
 
 sub is_freebsd {
    my $self = shift;
 
-   if ($self->name eq 'FreeBSD') {
-      return 1;
+   return $self->is('freebsd');
+}
+
+sub my {
+   my $self = shift;
+
+   my $name = $self->name or return;
+   my $distrib = $self->distribution or return;
+   if (exists($distrib->{name})) {
+      my $this = lc($distrib->{name});
+      return $this;
+   }
+   if (defined($name)) {
+      my $this = lc($name);
+      return $this;
    }
 
-   return 0;
+   return 'undef';
 }
 
 1;

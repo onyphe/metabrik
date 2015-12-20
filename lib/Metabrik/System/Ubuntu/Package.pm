@@ -18,9 +18,11 @@ sub brik_properties {
       commands => {
          search => [ qw(string) ],
          install => [ qw(package|$package_list) ],
+         remove => [ qw(package|$package_list) ],
          update => [ ],
          upgrade => [ ],
          list => [ ],
+         is_installed => [ qw(package|$package_list) ],
       },
       optional_binaries => {
          'aptitude' => [ ],
@@ -38,8 +40,8 @@ sub search {
 
    $self->brik_help_run_undef_arg('search', $package) or return;
 
-   my $cmd = "aptitude search $package";
    if ($self->brik_has_binary('aptitude')) {
+      my $cmd = "aptitude search $package";
       return $self->capture($cmd);
    }
 
@@ -50,15 +52,25 @@ sub install {
    my $self = shift;
    my ($package) = @_;
 
-   if (! defined($package)) {
-      return $self->log->error($self->brik_help_run('install'));
-   }
-   my $ref = ref($package);
-   if ($ref ne '' && $ref ne 'ARRAY') {
-      return $self->log->error("install: package [$package] has invalid format");
-   }
+   $self->brik_help_run_undef_arg('install', $package) or return;
+   my $ref = $self->brik_help_run_invalid_arg('install', $package, 'ARRAY', 'SCALAR')
+      or return;
 
    my $cmd = "sudo apt-get install -y ";
+   $ref eq 'ARRAY' ? ($cmd .= join(' ', @$package)) : ($cmd .= $package);
+
+   return $self->system($cmd);
+}
+
+sub remove {
+   my $self = shift;
+   my ($package) = @_;
+
+   $self->brik_help_run_undef_arg('remove', $package) or return;
+   my $ref = $self->brik_help_run_invalid_arg('remove', $package, 'ARRAY', 'SCALAR')
+      or return;
+
+   my $cmd = "sudo apt-get remove -y ";
    $ref eq 'ARRAY' ? ($cmd .= join(' ', @$package)) : ($cmd .= $package);
 
    return $self->system($cmd);
@@ -84,6 +96,36 @@ sub list {
    my $self = shift;
 
    return $self->log->info("list: not available on this system");
+}
+
+sub is_installed {
+   my $self = shift;
+   my ($package) = @_;
+
+   $self->brik_help_run_undef_arg('is_installed', $package) or return;
+   my $ref = $self->brik_help_run_invalid_arg('is_installed', $package, 'ARRAY', 'SCALAR')
+      or return;
+
+   if ($ref eq 'ARRAY') {
+      my $installed = {};
+      for my $p (@$package) {
+         my $r = $self->is_installed($p);
+         next unless defined($r);
+         $installed->{$p} = $r;
+      }
+      return $installed;
+   }
+   else {
+      my $r = $self->search($package) or return;
+      for my $this (@$r) {
+         my @toks = split(/\s+/, $this);
+         if ($toks[1] eq $package && $toks[0] =~ m{^i}) {
+            return 1;
+         }
+      }
+   }
+
+   return 0;
 }
 
 1;
