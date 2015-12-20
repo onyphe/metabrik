@@ -7,8 +7,6 @@ package Metabrik::Shell::Script;
 use strict;
 use warnings;
 
-our $VERSION = '1.20';
-
 use base qw(Metabrik);
 
 sub brik_properties {
@@ -16,31 +14,26 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(scripting) ],
       attributes => {
-         file => [ qw(file) ],
-      },
-      attributes_default => {
-         file => 'script.meta',
+         input => [ qw(file) ],
       },
       commands => {
-         load => [ qw(input_file|OPTIONAL) ],
+         load => [ qw(input|OPTIONAL) ],
          exec => [ qw($line_list) ],
+         load_and_exec => [ qw(input|OPTIONAL) ],
       },
    };
 }
 
 sub load {
    my $self = shift;
-   my ($file) = @_;
+   my ($input) = @_;
 
-   $file ||= $self->file;
-
-   if (! -f $file) {
-      return $self->log->info("load: can't find file [$file]");
-   }
+   $input ||= $self->input;
+   $self->brik_help_run_file_not_found('load', $input) or return;
 
    my @lines = ();
-   open(my $in, '<', $file)
-      or return $self->log->error("load: can't open file [$file]: $!");
+   open(my $in, '<', $input)
+      or return $self->log->error("load: can't open file [$input]: $!");
    while (defined(my $line = <$in>)) {
       chomp($line);
       next if $line =~ /^\s*$/;   # Skip blank lines
@@ -51,8 +44,6 @@ sub load {
    }
    close($in);
 
-   $self->debug && $self->log->debug("load: success");
-
    return \@lines;
 }
 
@@ -60,19 +51,26 @@ sub exec {
    my $self = shift;
    my ($lines) = @_;
 
-   if (! defined($lines)) {
-      return $self->log->error($self->brik_help_run('exec'));
-   }
-
-   if (ref($lines) ne 'ARRAY') {
-      return $self->log->error("exec: must give an ARRAYREF as argument");
-   }
+   $self->brik_help_run_undef_arg('exec', $lines) or return;
+   $self->brik_help_run_invalid_arg('exec', $lines, 'ARRAY') or return;
 
    my $shell = $self->shell;
 
    $shell->cmdloop($lines);
 
    return 1;
+}
+
+sub load_and_exec {
+   my $self = shift;
+   my ($input) = @_;
+
+   $input ||= $self->input;
+   $self->brik_help_run_undef_arg('load_and_exec', $input) or return;
+   $self->brik_help_run_file_not_found('load_and_exec', $input) or return;
+
+   my $lines = $self->load($input) or return;
+   return $self->exec($lines);
 }
 
 1;

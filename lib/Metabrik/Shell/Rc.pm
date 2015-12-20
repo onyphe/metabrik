@@ -7,8 +7,6 @@ package Metabrik::Shell::Rc;
 use strict;
 use warnings;
 
-our $VERSION = '1.20';
-
 use base qw(Metabrik);
 
 sub brik_properties {
@@ -16,16 +14,17 @@ sub brik_properties {
       revision => '$Revision$',
       tags => [ qw(custom) ],
       attributes => {
-         file => [ qw(file) ],
+         input => [ qw(file) ],
          create_default => [ qw(0|1) ],
       },
       attributes_default => {
          create_default => 1,
       },
       commands => {
-         load => [ qw(input_file|OPTIONAL) ],
+         load => [ qw(input|OPTIONAL) ],
          exec => [ qw($line_list) ],
          write_default => [ ],
+         load_and_exec => [ qw(input|OPTIONAL) ],
       },
    };
 }
@@ -35,28 +34,28 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         file => $self->global->homedir.'/.metabrik_rc',
+         input => $self->global->homedir.'/.metabrik_rc',
       },
    };
 }
 
 sub load {
    my $self = shift;
-   my ($file) = @_;
+   my ($input) = @_;
 
-   $file ||= $self->file;
+   $input ||= $self->input;
 
-   if (! -f $file && $self->create_default) {
+   if (! -f $input && $self->create_default) {
       $self->write_default;
    }
 
-   if (! -f $file && ! $self->create_default) {
-      return $self->log->error("load: can't find rc file [$file]");
+   if (! -f $input && ! $self->create_default) {
+      return $self->log->error("load: can't find rc file [$input]");
    }
 
    my @lines = ();
-   open(my $in, '<', $file)
-         or return $self->log->error("local: can't open rc file [$file]: $!");
+   open(my $in, '<', $input)
+      or return $self->log->error("local: can't open rc file [$input]: $!");
    while (defined(my $line = <$in>)) {
       chomp($line);
       next if $line =~ /^\s*$/;   # Skip blank lines
@@ -76,13 +75,8 @@ sub exec {
    my $self = shift;
    my ($lines) = @_;
 
-   if (! defined($lines)) {
-      return $self->log->error($self->brik_help_run('exec'));
-   }
-
-   if (ref($lines) ne 'ARRAY') {
-      return $self->log->error("exec: must give an ARRAYREF as argument");
-   }
+   $self->brik_help_run_undef_arg('exec', $lines) or return;
+   $self->brik_help_run_invalid_arg('exec', $lines, 'ARRAY') or return;
 
    my $shell = $self->shell;
 
@@ -95,14 +89,14 @@ sub write_default {
    my $self = shift;
    my ($file) = @_;
 
-   $file ||= $self->file;
+   $file ||= $self->input;
 
    if (-f $file) {
-      return $self->log->error("create: file [$file] already exists");
+      return $self->log->error("write_default: file [$file] already exists");
    }
 
    open(my $out, '>', $file)
-      or return $self->log->error("create: open: file [$file]: $!");
+      or return $self->log->error("write_default: open: file [$file]: $!");
 
    my $content = <<EOF;
 set core::shell echo 0
@@ -111,17 +105,12 @@ my \$home = \$ENV{HOME}
 my \$user = \$ENV{USER}
 
 my \$datadir = "\$home/metabrik"
-my \$repository = "\$datadir/repository/lib"
 my \$sudo = "sudo -E \$0 --no-splash"
 
-push \@INC, \$repository
-run core::context update_available
-
 set core::global datadir \$datadir
-set core::global ctimeout 20
-set core::global rtimeout 20
+set core::global ctimeout 5
+set core::global rtimeout 5
 
-alias update_available "run core::context update_available"
 alias reuse "run core::context reuse"
 alias pwd "run core::shell pwd"
 
@@ -132,9 +121,20 @@ EOF
 
    close($out);
 
-   $self->log->verbose("create: default rc file [$file] created");
+   $self->log->verbose("write_default: default rc file [$file] created");
 
    return 1;
+}
+
+sub load_and_exec {
+   my $self = shift;
+   my ($input) = @_;
+
+   $input ||= $self->input;
+   $self->brik_help_run_file_not_found('load_and_exec', $input) or return;
+
+   my $lines = $self->load($input) or return;
+   return $self->exec($lines);
 }
 
 1;
