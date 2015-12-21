@@ -35,13 +35,8 @@ sub sha1 {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_run('sha1'));
-   }
-
-   if (! -f $input) {
-      return $self->log->error("sha1: file [$input] not found");
-   }
+   $self->brik_help_run_undef_arg('sha1', $input) or return;
+   $self->brik_help_run_file_not_found('sha1', $input) or return;
 
    eval("use Crypt::Digest::SHA1 qw(sha1_file_hex);");
    if ($@) {
@@ -57,13 +52,8 @@ sub sha256 {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_run('sha256'));
-   }
-
-   if (! -f $input) {
-      return $self->log->error("sha256: file [$input] not found");
-   }
+   $self->brik_help_run_undef_arg('sha256', $input) or return;
+   $self->brik_help_run_file_not_found('sha256', $input) or return;
 
    eval("use Crypt::Digest::SHA256 qw(sha256_file_hex);");
    if ($@) {
@@ -79,13 +69,8 @@ sub sha512 {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_run('sha512'));
-   }
-
-   if (! -f $input) {
-      return $self->log->error("sha512: file [$input] not found");
-   }
+   $self->brik_help_run_undef_arg('sha512', $input) or return;
+   $self->brik_help_run_file_not_found('sha512', $input) or return;
 
    eval("use Crypt::Digest::SHA512 qw(sha512_file_hex);");
    if ($@) {
@@ -101,13 +86,8 @@ sub md5 {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_run('md5'));
-   }
-
-   if (! -f $input) {
-      return $self->log->error("md5: file [$input] not found");
-   }
+   $self->brik_help_run_undef_arg('md5', $input) or return;
+   $self->brik_help_run_file_not_found('md5', $input) or return;
 
    eval("use Crypt::Digest::MD5 qw(md5_file_hex);");
    if ($@) {

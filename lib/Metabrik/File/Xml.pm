@@ -66,8 +66,8 @@ sub write {
    my ($xml_hash, $output) = @_;
 
    $output ||= $self->output;
-   $self->brik_help_run_undef_arg("write", $xml_hash) or return;
-   $self->brik_help_run_undef_arg("write", $output) or return;
+   $self->brik_help_run_undef_arg('write', $xml_hash) or return;
+   $self->brik_help_run_undef_arg('write', $output) or return;
 
    my $xml = Metabrik::String::Xml->new_from_brik_init($self) or return;
    my $data = $xml->encode($xml_hash) or return;

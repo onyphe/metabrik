@@ -7,7 +7,7 @@ package Metabrik::File::Compress;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -27,6 +27,7 @@ sub brik_properties {
          unzip => [ qw(input|OPTIONAL datadir|OPTIONAL) ],
          gunzip => [ qw(input|OPTIONAL output|OPTIONAL datadir|OPTIONAL) ],
          uncompress => [ qw(input|OPTIONAL output|OPTIONAL datadir|OPTIONAL) ],
+         install => [ ], # Inherited
       },
       require_modules => {
          'Compress::Zlib' => [ ],
@@ -35,6 +36,9 @@ sub brik_properties {
       },
       require_binaries => {
          'unzip' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(unzip) ],
       },
    };
 }

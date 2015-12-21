@@ -7,7 +7,7 @@ package Metabrik::File::Ole;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -24,16 +24,19 @@ sub brik_properties {
          olevba => '/usr/local/lib/python2.7/dist-packages/oletools/olevba.py',
       },
       commands => {
-         install => [ ],
          extract_vbs => [ qw(input|OPTIONAL output|OPTIONAL) ],
+         install => [ ], # Inherited
       },
       require_modules => {
+         'Metabrik::File::Text' => [ ],
          'Metabrik::System::Os' => [ ],
          'Metabrik::System::Package' => [ ],
-         'Metabrik::File::Text' => [ ],
       },
       require_binaries => {
          'python' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(python python-pip) ],
       },
    };
 }
@@ -41,22 +44,14 @@ sub brik_properties {
 sub install {
    my $self = shift;
 
-   my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
-   my $distrib = $so->distribution or return;
-   my $os = $distrib->{name};
+   # Install system dependant packages
+   $self->SUPER::install or return;
 
-   if ($os eq 'Ubuntu') {
-      my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
-      $sp->install('python-pip') or return;
-
-      my $prev = $self->use_sudo;
-      $self->use_sudo(1);
-      $self->system('pip install oletools --upgrade');
-      $self->use_sudo($prev);
-   }
-   else {
-      return $self->log->error("install: OS [$os] not supported for install Command");
-   }
+   # Then Python dependant packages
+   my $prev = $self->use_sudo;
+   $self->use_sudo(1);
+   $self->system('pip install oletools --upgrade');
+   $self->use_sudo($prev);
 
    return 1;
 }
@@ -67,21 +62,12 @@ sub extract_vbs {
 
    $input ||= $self->input;
    $output ||= $self->output;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_run('extract_vbs'));
-   }
-   if (! defined($output)) {
-      return $self->log->error($self->brik_help_run('extract_vbs'));
-   }
-
    my $olevba = $self->olevba;
-   if (! -f $olevba) {
-      return $self->log->error("extract_vbs: olevba.py not found at [$olevba]");
-   }
+   $self->brik_help_run_undef_arg('extract_vbs', $input) or return;
+   $self->brik_help_run_undef_arg('extract_vbs', $output) or return;
+   $self->brik_help_run_file_not_found('extract_vbs', $olevba) or return;
 
    my $out = $self->capture("python $olevba $input");
-
-   #for (@$out) { print "LINE[$_]\n"; }
 
    my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
    $ft->write($out, $output) or return;

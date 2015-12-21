@@ -76,6 +76,7 @@ sub install_packages {
          nmap
          phantomjs
          python
+         python-pip
          redis-server
          rng-tools
          scalpel

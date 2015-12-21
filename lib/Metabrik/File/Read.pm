@@ -57,9 +57,7 @@ sub open {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! -f $input) {
-      return $self->log->error("open: file [$input] not found");
-   }
+   $self->brik_help_run_undef_arg('open', $input) or return;
 
    my $r;
    my $out;
@@ -92,9 +90,7 @@ sub read {
    my $self = shift;
 
    my $fd = $self->fd;
-   if (! defined($fd)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $fd) or return;
 
    my $strip_crlf = $self->strip_crlf;
 
@@ -125,9 +121,7 @@ sub read_until_blank_line {
    my $self = shift;
 
    my $fd = $self->fd;
-   if (! defined($fd)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $fd) or return;
 
    my $strip_crlf = $self->strip_crlf;
 
@@ -165,9 +159,7 @@ sub read_line {
    my ($count) = @_;
 
    my $fd = $self->fd;
-   if (! defined($fd)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $fd) or return;
 
    $count ||= $self->count;
 

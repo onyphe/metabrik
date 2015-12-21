@@ -57,19 +57,13 @@ sub open {
    }
 
    $mode ||= $self->mode;
-   if (! defined($mode)) {
-      return $self->log->error($self->brik_help_set('mode'));
-   }
+   $self->brik_help_run_undef_arg('open', $mode) or return;
 
    my $dump;
    if ($mode eq 'read') {
       $file ||= $self->input;
-      if (! defined($file)) {
-         return $self->log->error($self->brik_help_run('open'));
-      }
-      if (! -f $file) {
-         return $self->log->error("open: file [$file] not found");
-      }
+      $self->brik_help_run_undef_arg('open', $file) or return;
+      $self->brik_help_run_file_not_found('open', $file) or return;
 
       my $filter = $arg3 || $self->filter || '';
       $dump = Net::Frame::Dump::Offline->new(
@@ -81,9 +75,7 @@ sub open {
    }
    elsif ($mode eq 'write') {
       $file ||= $self->output;
-      if (! defined($file)) {
-         return $self->log->error($self->brik_help_run('open'));
-      }
+      $self->brik_help_run_undef_arg('open', $file) or return;
 
       my $first_layer = $arg3 || $self->first_layer || 'ETH';
       $dump = Net::Frame::Dump::Writer->new(
@@ -122,9 +114,7 @@ sub read {
    }
 
    my $dump = $self->_dump;
-   if (! defined($dump)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $dump) or return;
 
    my @h = ();
    while (my $h = $dump->next) {
@@ -142,9 +132,7 @@ sub read_next {
 
    $count ||= 1;
    my $dump = $self->_dump;
-   if (! defined($dump)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $dump) or return;
 
    my @next = ();
    my $read_count = 0;
@@ -167,15 +155,11 @@ sub write {
    my ($frames) = @_;
 
    my $dump = $self->_dump;
-   if (! defined($dump)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $dump) or return;
+   $self->brik_help_run_undef_arg('write', $frames) or return;
+   my $ref = $self->brik_help_run_invalid_arg('write', $frames, 'ARRAY', 'HASH')
+      or return;
 
-   if (! defined($frames)) {
-      return $self->log->error($self->brik_help_run('write'));
-   }
-
-   my $ref = ref($frames);
    my $first = $ref eq 'ARRAY' ? $frames->[0] : $frames;
    if ($ref eq 'ARRAY') {
       if (@$frames <= 0) {
@@ -187,15 +171,12 @@ sub write {
          return $self->log->error("write: frames ARRAYREF does not contain a valid frame");
       }
    }
-   elsif ($ref eq 'HASH') {
+   else { # Must be HASH because of previous checks
       if (! exists($first->{raw})
       ||  ! exists($first->{timestamp})
       ||  ! exists($first->{firstLayer})) {
          return $self->log->error("write: frames HASHREF does not contain a valid frame");
       }
-   }
-   else {
-      return $self->log->error("write: frames Argument must be an ARRAYREF or a HASHREF");
    }
 
    if ($ref eq 'ARRAY') {

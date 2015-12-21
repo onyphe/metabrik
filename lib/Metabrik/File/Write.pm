@@ -42,7 +42,6 @@ sub brik_use_properties {
    # encoding: see `perldoc Encode::Supported' for other types
    return {
       attributes_default => {
-         output => $self->global->output || '/tmp/output.txt',
          encoding => $self->global->encoding || 'utf8',
       },
    };
@@ -53,9 +52,7 @@ sub open {
    my ($output) = @_;
 
    $output ||= $self->output;
-   if (! defined($output)) {
-      return $self->log->error($self->brik_help_set('output'));
-   }
+   $self->brik_help_run_undef_arg('open', $output) or return;
 
    my $encoding = $self->encoding;
    if ($encoding eq 'ascii') {
@@ -107,16 +104,11 @@ sub write {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('write'));
-   }
+   my $fd = $self->fd;
+   $self->brik_help_run_undef_arg('open', $fd) or return;
+   $self->brik_help_run_undef_arg('write', $data) or return;
 
    $self->debug && $self->log->debug("write: data[$data]");
-
-   my $fd = $self->fd;
-   if (! defined($fd)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
 
    if (ref($data) eq 'ARRAY') {
       for my $this (@$data) {

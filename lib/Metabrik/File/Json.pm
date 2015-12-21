@@ -50,7 +50,7 @@ sub read {
    my ($input) = @_;
 
    $input ||= $self->input;
-   $self->brik_help_run_undef_arg("read", $input) or return;
+   $self->brik_help_run_undef_arg('read', $input) or return;
 
    my $data = $self->SUPER::read($input) or return;
 
@@ -65,8 +65,8 @@ sub write {
    my ($json_hash, $output) = @_;
 
    $output ||= $self->output;
-   $self->brik_help_run_undef_arg("write", $json_hash) or return;
-   $self->brik_help_run_undef_arg("write", $output) or return;
+   $self->brik_help_run_undef_arg('write', $json_hash) or return;
+   $self->brik_help_run_undef_arg('write', $output) or return;
 
    my $sj = Metabrik::String::Json->new_from_brik_init($self) or return;
    my $data = $sj->encode($json_hash) or return;

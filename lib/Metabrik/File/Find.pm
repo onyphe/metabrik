@@ -37,10 +37,7 @@ sub files {
 
    $directory ||= '.';
    $filepattern ||= '.*';
-
-   if (! -d $directory) {
-      return $self->log->error("files: directory [$directory] not found");
-   }
+   $self->brik_help_run_directory_not_found('files', $directory) or return;
 
    my $file_regex = qr/$filepattern/;
    my $dot_regex = qr/^\.$/;
@@ -79,17 +76,14 @@ sub all {
    my $self = shift;
    my ($dirpattern, $filepattern) = @_;
 
-   if (! defined($dirpattern) || ! defined($filepattern)) {
-      return $self->log->error($self->brik_help_run('all'));
-   }
+   my $path = $self->path;
+   $self->brik_help_run_undef_arg('all', $dirpattern) or return;
+   $self->brik_help_run_undef_arg('all', $filepattern) or return;
+   $self->brik_help_run_undef_arg('all', $path) or return;
+   $self->brik_help_run_invalid_arg('all', $path, 'ARRAY') or return;
 
    my @dirs = ();
    my @files = ();
-
-   my $path = $self->path;
-   if (ref($path) ne 'ARRAY') {
-      return $self->log->error("all: path must be an ARRAYREF");
-   }
 
    # Escape dirpattern if we are searching for a directory hierarchy
    $dirpattern =~ s/\//\\\//g;

@@ -175,10 +175,7 @@ sub get_column_values {
 
    $self->brik_help_run_undef_arg("get_column_values", $data) or return;
    $self->brik_help_run_undef_arg("get_column_values", $column) or return;
-
-   if (ref($data) ne 'ARRAY') {
-      return $self->log->error("get_column_values: arg1 must be ARRAYREF");
-   }
+   $self->brik_help_run_invalid_arg("get_column_values", $data, 'ARRAY') or return;
 
    my @results = ();
    # CSV structure is an ARRAYREF of HASHREFs

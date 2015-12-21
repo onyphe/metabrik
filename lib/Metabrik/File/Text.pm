@@ -43,9 +43,7 @@ sub read {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_run('read'));
-   }
+   $self->brik_help_run_undef_arg('read', $input) or return;
 
    my $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
    $fr->input($input);
@@ -65,9 +63,7 @@ sub read_split_by_blank_line {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_run('read_split_by_blank_line'));
-   }
+   $self->brik_help_run_undef_arg('read_split_by_blank_line', $input) or return;
 
    my $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
    $fr->input($input);
@@ -93,12 +89,8 @@ sub write {
    my ($data, $output) = @_;
 
    $output ||= $self->output;
-   if (! defined($output)) {
-      return $self->log->error($self->brik_help_run('write'));
-   }
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('write'));
-   }
+   $self->brik_help_run_undef_arg('write', $data) or return;
+   $self->brik_help_run_undef_arg('write', $output) or return;
 
    $self->debug && $self->log->debug("write: data[$data]");
 

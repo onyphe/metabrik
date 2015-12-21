@@ -28,8 +28,8 @@ sub brik_properties {
          write => [ qw($data|$data_ref|$data_list output|OPTIONAL) ],
       },
       require_modules => {
-         'Metabrik::File::Read' => [ ],
          'Data::Dump' => [ ],
+         'Metabrik::File::Read' => [ ],
       },
    };
 }
@@ -39,9 +39,7 @@ sub read {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_run('read'));
-   }
+   $self->brik_help_run_undef_arg('read', $input) or return;
 
    my $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
    $fr->input($input);
@@ -49,8 +47,8 @@ sub read {
    $fr->as_array(1);
    $fr->strip_crlf(1);
 
-   $fr->open or return $self->log->error("read: open failed");
-   my $data = $fr->read or return $self->log->error("read: read failed");
+   $fr->open or return;
+   my $data = $fr->read or return;
    $fr->close;
 
    my @vars = ();
@@ -88,18 +86,13 @@ sub write {
    my $self = shift;
    my ($data, $output) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('write'));
-   }
-
    $output ||= $self->output;
-   if (! defined($output)) {
-      return $self->log->error($self->brik_help_run('write'));
-   }
+   $self->brik_help_run_undef_arg('write', $data) or return;
+   $self->brik_help_run_undef_arg('write', $output) or return;
 
    $self->debug && $self->log->debug("write: data[$data]");
 
-   $self->open($output) or return $self->log->error("write: open failed");
+   $self->open($output) or return;
 
    if (ref($data) eq 'ARRAY') {
       for (@$data) {

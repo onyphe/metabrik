@@ -42,9 +42,7 @@ sub read {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_set('input'));
-   }
+   $self->brik_help_run_undef_arg('read', $input) or return;
 
    my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
    $ft->encoding($self->encoding);
@@ -62,18 +60,10 @@ sub write {
    my $self = shift;
    my ($ini_hash, $output) = @_;
 
-   if (! defined($ini_hash)) {
-      return $self->log->error($self->brik_help_run('write'));
-   }
-
    $output ||= $self->output;
-   if (! defined($output)) {
-      return $self->log->error($self->brik_help_set('output'));
-   }
-
-   if (ref($ini_hash) ne 'HASH') {
-      return $self->log->error("write: argument 1 must be HASHREF");
-   }
+   $self->brik_help_run_undef_arg('write', $output) or return;
+   $self->brik_help_run_undef_arg('write', $ini_hash) or return;
+   $self->brik_help_run_invalid_arg('write', $ini_hash, 'HASH') or return;
 
    my $si = Metabrik::String::Ini->new_from_brik_init($self) or return;
 
