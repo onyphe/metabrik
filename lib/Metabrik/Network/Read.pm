@@ -37,7 +37,7 @@ sub brik_properties {
          open => [ qw(layer|OPTIONAL device|OPTIONAL filter|OPTIONAL) ],
          read => [ ],
          read_next => [ qw(count) ],
-         read_until_timeout => [ qw(count) ],
+         read_until_timeout => [ qw(count timeout|OPTIONAL) ],
          close => [ ],
          has_timeout => [ ],
          reset_timeout => [ ],
@@ -64,9 +64,7 @@ sub open {
    my $self = shift;
    my ($layer, $device, $filter) = @_;
 
-   if ($< != 0) {
-      return $self->log->error("open: must be root to run");
-   }
+   $self->brik_help_run_must_be_root('open') or return;
 
    $layer ||= 2;
    $device ||= $self->device;
@@ -100,9 +98,7 @@ sub read {
    my $self = shift;
 
    my $dump = $self->_dump;
-   if (! defined($dump)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $dump) or return;
 
    my @next = ();
    my $count = 0;
@@ -125,9 +121,7 @@ sub read_next {
 
    $count ||= $self->count;
    my $dump = $self->_dump;
-   if (! defined($dump)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $dump) or return;
 
    my @next = ();
    my $read_count = 0;
@@ -145,15 +139,12 @@ sub read_next {
 
 sub read_until_timeout {
    my $self = shift;
-   my ($count) = @_;
+   my ($count, $rtimeout) = @_;
 
    $count ||= $self->count;
+   $rtimeout ||= $self->rtimeout;
    my $dump = $self->_dump;
-   if (! defined($dump)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
-
-   my $rtimeout = $self->rtimeout;
+   $self->brik_help_run_undef_arg('open', $dump) or return;
 
    $self->debug && $self->log->debug("next_until_timeout: will read until $rtimeout seconds timeout or $count packet(s) has been read");
 
@@ -179,17 +170,9 @@ sub reply {
    my ($frame) = @_;
 
    my $dump = $self->_dump;
-   if (! defined($dump)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
-
-   if (! defined($frame)) {
-      return $self->log->error($self->brik_help_run('reply'));
-   }
-
-   if (ref($frame) ne 'Net::Frame::Simple') {
-      return $self->log->error("reply: frame must be Net::Frame::Simple object");
-   }
+   $self->brik_help_run_undef_arg('open', $dump) or return;
+   $self->brik_help_run_undef_arg('reply', $frame) or return;
+   $self->brik_help_run_invalid_arg('reply', $frame, 'Net::Frame::Simple') or return;
 
    return $dump->getFramesFor($frame);
 }

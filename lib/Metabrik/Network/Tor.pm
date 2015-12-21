@@ -37,20 +37,13 @@ sub brik_properties {
 sub exit_nodes_list {
    my $self = shift;
 
-   my $get = $self->get or return $self->log->error('exit_nodes_list: get failed');
+   my $get = $self->get or return;
 
    my $ip_list = $get->{content};
 
    my @ip_list = split(/\n/, $ip_list);
-   my %ip_list = ();
-   for my $ip (@ip_list) {
-      $ip_list{$ip} = 1;
-   }
 
-   return {
-      as_list => \@ip_list,
-      as_hash => \%ip_list,
-   };
+   return \@ip_list;
 }
 
 1;

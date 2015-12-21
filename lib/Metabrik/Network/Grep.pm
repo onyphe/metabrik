@@ -49,12 +49,8 @@ sub from_network {
 
    $device ||= $self->device;
    $filter ||= $self->filter;
-   if (! defined($string)) {
-      return $self->log->error($self->brik_help_run('from_network'));
-   }
-   if (! defined($device)) {
-      return $self->log->error($self->brik_help_set('device'));
-   }
+   $self->brik_help_run_undef_arg('from_network', $string) or return;
+   $self->brik_help_run_undef_arg('from_network', $device) or return;
 
    $self->open(2, $device, $filter) or return;
 
@@ -80,12 +76,9 @@ sub from_pcap_file {
    my ($string, $pcap_file, $filter) = @_;
 
    $filter ||= $self->filter;
-   if (! defined($string) || ! defined($pcap_file)) {
-      return $self->log->error($self->brik_help_run('from_pcap_file'));
-   }
-   if (! -f $pcap_file) {
-      return $self->log->error("from_pcap_file: file [$pcap_file] not found");
-   }
+   $self->brik_help_run_undef_arg('from_pcap_file', $string) or return;
+   $self->brik_help_run_undef_arg('from_pcap_file', $pcap_file) or return;
+   $self->brik_help_run_file_not_found('from_pcap_file', $pcap_file) or return;
 
    my $fp = Metabrik::File::Pcap->new_from_brik_init($self) or return;
    $fp->open($pcap_file, 'read', $filter) or return;

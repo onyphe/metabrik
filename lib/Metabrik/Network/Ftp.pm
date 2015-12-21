@@ -26,7 +26,7 @@ sub brik_properties {
       attributes_default => {
          port => 21,
          username => 'anonymous',
-         password => 'nop@no.fr',
+         password => 'nop@metabrik.org',
          recurse => 0,
       },
       commands => {
@@ -39,7 +39,7 @@ sub brik_properties {
          ascii => [ ],
          rmdir => [ qw(directory) ],
          mkdir => [ qw(directory) ],
-         get => [ qw(remote_file local_file|OPTIONAL) ],
+         get => [ qw(remote_file local_file) ],
          close => [ ],
       },
       require_modules => {
@@ -52,9 +52,7 @@ sub open {
    my $self = shift;
 
    my $hostname = $self->hostname;
-   if (! defined($hostname)) {
-      return $self->log->error($self->brik_help_set('hostname'));
-   }
+   $self->brik_help_run_undef_arg('open', $hostname) or return;
 
    my $port = $self->port;
    my $username = $self->username;
@@ -77,11 +75,8 @@ sub cwd {
    my ($directory) = @_;
 
    $directory ||= '';
-
    my $ftp = $self->_ftp;
-   if (! defined($ftp)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $ftp) or return;
 
    my $r = $ftp->cwd($directory);
 
@@ -92,9 +87,7 @@ sub pwd {
    my $self = shift;
 
    my $ftp = $self->_ftp;
-   if (! defined($ftp)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $ftp) or return;
 
    my $r = $ftp->pwd;
 
@@ -106,9 +99,7 @@ sub ls {
    my ($directory) = @_;
 
    my $ftp = $self->_ftp;
-   if (! defined($ftp)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $ftp) or return;
 
    $directory ||= $ftp->pwd;
 
@@ -122,9 +113,7 @@ sub dir {
    my ($directory) = @_;
 
    my $ftp = $self->_ftp;
-   if (! defined($ftp)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $ftp) or return;
 
    $directory ||= $ftp->pwd;
 
@@ -137,14 +126,9 @@ sub rmdir {
    my $self = shift;
    my ($directory) = @_;
 
-   if (! defined($directory)) {
-      return $self->log->error($self->brik_help_run('rmdir'));
-   }
-
    my $ftp = $self->_ftp;
-   if (! defined($ftp)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $ftp) or return;
+   $self->brik_help_run_undef_arg('rmdir', $directory) or return;
 
    my $r = $ftp->rmdir($directory, $self->recurse);
 
@@ -155,14 +139,9 @@ sub mkdir {
    my $self = shift;
    my ($directory) = @_;
 
-   if (! defined($directory)) {
-      return $self->log->error($self->brik_help_run('mkdir'));
-   }
-
    my $ftp = $self->_ftp;
-   if (! defined($ftp)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $ftp) or return;
+   $self->brik_help_run_undef_arg('mkdir', $directory) or return;
 
    my $r = $ftp->mkdir($directory, $self->recurse);
 
@@ -173,9 +152,7 @@ sub binary {
    my $self = shift;
 
    my $ftp = $self->_ftp;
-   if (! defined($ftp)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $ftp) or return;
 
    my $r = $ftp->binary;
 
@@ -186,9 +163,7 @@ sub ascii {
    my $self = shift;
 
    my $ftp = $self->_ftp;
-   if (! defined($ftp)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $ftp) or return;
 
    my $r = $ftp->ascii;
 
@@ -200,15 +175,9 @@ sub get {
    my ($remote, $local) = @_;
 
    my $ftp = $self->_ftp;
-   if (! defined($ftp)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
-
-   if (! defined($remote)) {
-      return $self->log->error($self->brik_help_run('get'));
-   }
-
-   $local ||= $self->global->output;
+   $self->brik_help_run_undef_arg('open', $ftp) or return;
+   $self->brik_help_run_undef_arg('get', $remote) or return;
+   $self->brik_help_run_undef_arg('get', $local) or return;
 
    my $r = $ftp->get($remote, $local);
 

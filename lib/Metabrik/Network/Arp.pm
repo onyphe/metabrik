@@ -7,7 +7,7 @@ package Metabrik::Network::Arp;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Network::Frame);
+use base qw(Metabrik::Network::Frame Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -37,6 +37,7 @@ sub brik_properties {
          get_ipv6_neighbors => [ qw(subnet|OPTIONAL device|OPTIONAL) ],
          get_mac_neighbors => [ qw(subnet|OPTIONAL device|OPTIONAL) ],
          stop_poison => [ ],
+         install => [ ], # Inherited
       },
       require_modules => {
          'Net::Frame::Layer::ARP' => [ ],
@@ -50,6 +51,9 @@ sub brik_properties {
       },
       optional_binaries => {
          'arpspoof' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(dsniff) ],
       },
    };
 }
@@ -93,9 +97,8 @@ sub half_poison {
    }
 
    $device ||= $self->device;
-   if (! defined($gateway)) {
-      return $self->log->error($self->brik_help_run('half_poison'))
-   }
+   $self->brik_help_run_undef_arg('half_poison', $gateway) or return;
+   $self->brik_help_run_undef_arg('half_poison', $device) or return;
 
    my $cmd = "arpspoof -i $device -c both";
    $cmd .= " -t $victim" if defined($victim);  # Or default to all LAN hosts
@@ -120,9 +123,8 @@ sub full_poison {
    }
 
    $device ||= $self->device;
-   if (! defined($gateway)) {
-      return $self->log->error($self->brik_help_run('full_poison'))
-   }
+   $self->brik_help_run_undef_arg('full_poison', $gateway) or return;
+   $self->brik_help_run_undef_arg('full_poison', $device) or return;
 
    my $cmd = "arpspoof -i $device -c both -r";
    $cmd .= " -t $victim" if defined($victim);  # Or default to all LAN hosts
@@ -143,9 +145,7 @@ sub mac2eui64 {
    my $self = shift;
    my ($mac) = @_;
 
-   if (! defined($mac)) {
-      return $self->log->error($self->brik_help_run('mac2eui64'));
-   }
+   $self->brik_help_run_undef_arg('mac2eui64', $mac) or return;
 
    if ($mac !~ /^[0-9a-z]{2}:[0-9a-z]{2}:[0-9a-z]{2}:[0-9a-z]{2}:[0-9a-z]{2}:[0-9a-z]{2}$/i) {
       return $self->log->error("mac2eui64: invalid MAC address [$mac]");
@@ -175,16 +175,15 @@ sub scan {
    my $self = shift;
    my ($subnet, $device) = @_;
 
-   if ($< != 0) {
-      return $self->log->error("scan: must be root to run");
-   }
+   $self->brik_help_run_must_be_root('scan') or return;
+
+   $device ||= $self->device;
+   $self->brik_help_run_undef_arg('scan', $device) or return;
 
    my $interface = $self->get_device_info($device) or return;
 
    $subnet ||= $interface->{subnet4};
-   if (! defined($subnet)) {
-      return $self->log->error($self->brik_help_run('scan'));
-   }
+   $self->brik_help_run_undef_arg('scan', $subnet) or return;
 
    my $arp_cache = $self->cache
       or return $self->log->error("scan: cache failed");
@@ -286,9 +285,9 @@ sub scan {
 
 sub get_ipv4_neighbors {
    my $self = shift;
-   my ($subnet) = @_;
+   my ($subnet, $device) = @_;
 
-   my $scan = $self->scan($subnet) or return;
+   my $scan = $self->scan($subnet, $device) or return;
    my $ipv4 = $scan->{by_ipv4};
    if (! defined($ipv4)) {
       return $self->log->info("get_ipv4_neighbors: no IPv4 neighbor found");
@@ -299,9 +298,9 @@ sub get_ipv4_neighbors {
 
 sub get_ipv6_neighbors {
    my $self = shift;
-   my ($subnet) = @_;
+   my ($subnet, $device) = @_;
 
-   my $scan = $self->scan($subnet) or return;
+   my $scan = $self->scan($subnet, $device) or return;
    my $ipv6 = $scan->{by_ipv6};
    if (! defined($ipv6)) {
       return $self->log->info("get_ipv6_neighbors: no IPv6 neighbor found");
@@ -312,9 +311,9 @@ sub get_ipv6_neighbors {
 
 sub get_mac_neighbors {
    my $self = shift;
-   my ($subnet) = @_;
+   my ($subnet, $device) = @_;
 
-   my $scan = $self->scan($subnet) or return;
+   my $scan = $self->scan($subnet, $device) or return;
    my $mac = $scan->{by_mac};
    if (! defined($mac)) {
       return $self->log->info("get_mac_neighbors: no MAC neighbor found");

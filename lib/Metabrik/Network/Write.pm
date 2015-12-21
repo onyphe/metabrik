@@ -59,9 +59,7 @@ sub open {
    my $self = shift;
    my ($layer, $arg2, $arg3) = @_;
 
-   if ($< != 0) {
-      return $self->log->error("open: must be root to run");
-   }
+   $self->brik_help_run_must_be_root('open') or return;
 
    $layer ||= $self->layer;
 
@@ -124,13 +122,8 @@ sub send {
    my ($data) = @_;
 
    my $fd = $self->_fd;
-   if (! defined($fd)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
-
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('send'));
-   }
+   $self->brik_help_run_undef_arg('open', $fd) or return;
+   $self->brik_help_run_undef_arg('send', $data) or return;
 
    $fd->send($data);
 
@@ -155,12 +148,14 @@ sub lsend {
    my $self = shift;
    my ($data) = @_;
 
+   $self->brik_help_run_undef_arg('lsend', $data) or return;
+
    # Save state
    my $layer = $self->layer;
    $self->layer(2);
 
-   $self->open or return $self->log->error("nsend: open failed");
-   $self->send($data) or return $self->log->error("nsend: send failed");
+   $self->open or return;
+   $self->send($data) or return;
    $self->close;
 
    # Restore state
@@ -173,12 +168,14 @@ sub nsend {
    my $self = shift;
    my ($data) = @_;
 
+   $self->brik_help_run_undef_arg('nsend', $data) or return;
+
    # Save state
    my $layer = $self->layer;
    $self->layer(3);
 
-   $self->open or return $self->log->error("nsend: open failed");
-   $self->send($data) or return $self->log->error("nsend: send failed");
+   $self->open or return;
+   $self->send($data) or return;
    $self->close;
 
    # Restore state
@@ -191,13 +188,8 @@ sub fnsend_reply {
    my $self = shift;
    my ($frame, $target) = @_;
 
-   if (! defined($frame)) {
-      return $self->log->error($self->brik_help_run('fnsend_reply'));
-   }
-
-   if (ref($frame) ne 'Net::Frame::Simple') {
-      return $self->log->error("fnsend_reply: frame must be Net::Frame::Simple object");
-   }
+   $self->brik_help_run_undef_arg('fnsend_reply', $frame) or return;
+   $self->brik_help_run_invalid_arg('fnsend_reply', $frame, 'Net::Frame::Simple') or return;
 
    # Try to find the target by myself
    if (! defined($target)) {
@@ -223,9 +215,9 @@ sub fnsend_reply {
    $self->layer(3);
    $self->target($target);
 
-   my $out = $self->open or return $self->log->error("fnsend_reply: open failed");
+   my $out = $self->open or return;
 
-   $frame->send($out);
+   $frame->send($out) or return;
 
    my $reply;
    until ($in->timeout) {

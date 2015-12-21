@@ -33,10 +33,7 @@ sub probe {
 
    $host ||= $self->host;
    $port ||= 80;
-
-   if (! defined($host)) {
-      return $self->log->error($self->brik_help_run('probe'));
-   }
+   $self->brik_help_run_undef_arg('probe', $host) or return;
 
    my $probe = "GET / HTTP/1.0\r\n\r\n";
    if ($self->host_header) {
@@ -45,14 +42,14 @@ sub probe {
 
    $self->host($host);
    $self->port($port);
-   $self->connect or return $self->log->error("probe: connect failed");
-   $self->write($probe) or return $self->log->error("probe: write failed");
-   my $response = $self->read or return $self->log->error("probe: read failed");
+   $self->connect or return;
+   $self->write($probe) or return;
+   my $response = $self->read or return;
    $self->disconnect;
 
    if (length($response)) {
-      my $parse = Metabrik::String::Parse->new_from_brik_init($self) or return;
-      return $parse->to_array($response);
+      my $sp = Metabrik::String::Parse->new_from_brik_init($self) or return;
+      return $sp->to_array($response);
    }
 
    return $response;

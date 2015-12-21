@@ -7,7 +7,7 @@ package Metabrik::Network::Wps;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Network::Wlan);
+use base qw(Metabrik::Network::Wlan Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -17,6 +17,7 @@ sub brik_properties {
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          brute_force_wps => [ qw(essid bssid|OPTIONAL) ],
+         install => [ ], # Inherited
       },
       require_modules => {
          'Metabrik::Shell::Command' => [ ],
@@ -25,6 +26,9 @@ sub brik_properties {
          'sudo', => [ ],
          'reaver', => [ ],
       },
+      need_packages => {
+         'ubuntu' => [ qw(reaver) ],
+      },
    };
 }
 
@@ -32,11 +36,7 @@ sub brute_force_wps {
    my $self = shift;
    my ($essid, $bssid) = @_;
 
-   if (! defined($essid)) {
-      return $self->log->error($self->brik_help_run('brute_force_wps'));
-   }
-
-   my $context = $self->context;
+   $self->brik_help_run_undef_arg('brute_force_wps', $essid) or return;
 
    # If user provided bssid, we skip auto-detection
    if (! defined($bssid)) {

@@ -52,7 +52,7 @@ sub brik_use_properties {
 sub show {
    my $self = shift;
 
-   $self->log->info("show: IPv4 network routes:");
+   print "show: IPv4 network routes:\n";
 
    my $nr4 = Net::Routing->new(
       target => Net::Routing::NR_TARGET_ALL(),
@@ -62,7 +62,7 @@ sub show {
 
    print "\n";
 
-   $self->log->info("show: IPv6 network routes:");
+   print "show: IPv6 network routes:\n";
 
    my $nr6 = Net::Routing->new(
       target => Net::Routing::NR_TARGET_ALL(),
@@ -160,17 +160,15 @@ sub is_router_ipv4 {
    my ($device) = @_;
 
    $device ||= $self->device;
-   if (! defined($device)) {
-      return $self->log->error($self->brik_help_run('is_router_ipv4'));
-   }
+   $self->brik_help_run_undef_arg('is_router_ipv4', $device) or return;
 
-   my $command = Metabrik::Shell::Command->new_from_brik_init($self) or return;
-   $command->as_matrix(0);
-   $command->as_array(0);
-   $command->capture_stderr(1);
+   my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
+   $sc->as_matrix(0);
+   $sc->as_array(0);
+   $sc->capture_stderr(1);
 
    my $cmd = "sysctl net.ipv4.conf.$device.forwarding";
-   chomp(my $line = $command->capture($cmd));
+   chomp(my $line = $sc->capture($cmd));
 
    $self->log->verbose("is_router_ipv4: cmd [$cmd]");
    $self->log->verbose("is_router_ipv4: returned [$line]");
@@ -189,17 +187,15 @@ sub enable_router_ipv4 {
    my ($device) = @_;
 
    $device ||= $self->device;
-   if (! defined($device)) {
-      return $self->log->error($self->brik_help_run('enable_router_ipv4'));
-   }
+   $self->brik_help_run_undef_arg('enable_router_ipv4', $device) or return;
 
-   my $command = Metabrik::Shell::Command->new_from_brik_init($self) or return;
-   $command->as_matrix(0);
-   $command->as_array(0);
-   $command->capture_stderr(1);
+   my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
+   $sc->as_matrix(0);
+   $sc->as_array(0);
+   $sc->capture_stderr(1);
 
    my $cmd = "sudo sysctl -w net.ipv4.conf.$device.forwarding=1";
-   chomp(my $line = $command->capture($cmd));
+   chomp(my $line = $sc->capture($cmd));
 
    $self->log->verbose("enable_router_ipv4: cmd [$cmd]"); 
    $self->log->verbose("enable_router_ipv4: returned [$line]");
@@ -218,17 +214,15 @@ sub disable_router_ipv4 {
    my ($device) = @_;
 
    $device ||= $self->device;
-   if (! defined($device)) {
-      return $self->log->error($self->brik_help_run('disable_router_ipv4'));
-   }
+   $self->brik_help_run_undef_arg('disable_router_ipv4', $device) or return;
 
-   my $command = Metabrik::Shell::Command->new_from_brik_init($self) or return;
-   $command->as_matrix(0);
-   $command->as_array(0);
-   $command->capture_stderr(1);
+   my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
+   $sc->as_matrix(0);
+   $sc->as_array(0);
+   $sc->capture_stderr(1);
 
    my $cmd = "sudo sysctl -w net.ipv4.conf.$device.forwarding=0";
-   chomp(my $line = $command->capture($cmd));
+   chomp(my $line = $sc->capture($cmd));
 
    $self->log->verbose("disable_router_ipv4: cmd [$cmd]");
    $self->log->verbose("disable_router_ipv4: returned [$line]");

@@ -58,9 +58,7 @@ sub get {
    my $self = shift;
    my ($device) = @_;
 
-   if (! defined($device)) {
-      return $self->log->error($self->brik_help_run('get'));
-   }
+   $self->brik_help_run_undef_arg('get', $device) or return;
 
    my $intf = Net::Libdnet::Intf->new;
    if (! defined($intf)) {
@@ -155,10 +153,7 @@ sub show {
    my $self = shift;
    my ($devices) = @_;
 
-   $devices ||= $self->list;
-   if (! defined($devices)) {
-      return $self->log->error("show: list failed");
-   } 
+   $devices ||= $self->list or return;
 
    for my $this (@$devices) {
       $self->debug && $self->log->debug("show: found device [$this]");
@@ -170,9 +165,9 @@ sub show {
       }
 
       printf("device: %s\nipv4: %s  subnet4: %s\nipv6: %s  subnet6: %s\n\n",
-         $device->{device},
-         $device->{ipv4},
-         $device->{subnet4},
+         $device->{device} || 'undef',
+         $device->{ipv4} || 'undef',
+         $device->{subnet4} || 'undef',
          $device->{ipv6} || 'undef',
          $device->{subnet6} || 'undef'
       );
@@ -188,8 +183,7 @@ sub internet_address {
 
    #my $url = 'http://ip.nu';
    my $url = 'http://www.whatsmyip.net/';
-   my $get = $cw->get($url)
-      or return $self->log->error("internet_address: get failed");
+   my $get = $cw->get($url) or return;
 
    my $html = $get->{content};
 

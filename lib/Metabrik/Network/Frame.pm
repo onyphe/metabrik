@@ -100,12 +100,12 @@ sub from_read {
    my $self = shift;
    my ($frames) = @_;
 
-   if (! defined($frames)) {
-      return $self->log->error($self->brik_help_run('from_read'));
-   }
+   $self->brik_help_run_undef_arg('from_read', $frames) or return;
+   my $ref = $self->brik_help_run_invalid_arg('from_read', $frames, 'HASH', 'ARRAY')
+      or return;
 
    # We accept a one frame Argument...
-   if (ref($frames) eq 'HASH') {
+   if ($ref eq 'HASH') {
       if (! exists($frames->{raw})
       ||  ! exists($frames->{firstLayer})
       ||  ! exists($frames->{timestamp})) {
@@ -117,7 +117,7 @@ sub from_read {
    }
 
    # Or an ARRAY or frames
-   if (ref($frames) ne 'ARRAY') {
+   if ($ref ne 'ARRAY') {
       return $self->log->error("from_read: frames Argument must be an ARRAYREF");
    }
    if (@$frames <= 0) {
@@ -146,11 +146,10 @@ sub to_read {
    my $self = shift;
    my ($frame) = @_;
 
-   if (! defined($frame)) {
-      return $self->log->error($self->brik_help_run('to_read'));
-   }
+   $self->brik_help_run_undef_arg('to_read', $frame) or return;
+   my $ref = $self->brik_help_run_invalid_arg('to_read', $frame, 'ARRAY', 'Net::Frame::Simple')
+      or return;
 
-   my $ref = ref($frame);
    my $first = $ref eq 'ARRAY' ? $frame->[0] : $frame;
    if ($ref eq 'ARRAY') {
       # We just check the first item in the list.
@@ -177,9 +176,6 @@ sub to_read {
       };
       return $h;
    }
-   else {
-      return $self->log->error("to_read: frame Argument must be a Net::Frame::Simple object or an ARRAYREF");
-   }
 
    return $self->log->error("to_read: unknown error occured");
 }
@@ -188,11 +184,8 @@ sub from_hexa {
    my $self = shift;
    my ($data, $first_layer) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('from_hexa'));
-   }
-
    $first_layer ||= 'IPv4';
+   $self->brik_help_run_undef_arg('from_hexa', $data) or return;
 
    my $sh = Metabrik::String::Hexa->new_from_brik_init($self) or return;
 
@@ -200,8 +193,7 @@ sub from_hexa {
       return $self->log->error('from_hexa: data is not hexa');
    }
 
-   my $raw = $sh->decode($data)
-      or return $self->log->error("from_hexa: decode failed");
+   my $raw = $sh->decode($data) or return;
 
    my $frame;
    eval {
@@ -219,9 +211,7 @@ sub from_raw {
    my $self = shift;
    my ($raw, $first_layer) = @_;
 
-   if (! defined($raw)) {
-      return $self->log->error($self->brik_help_run('from_raw'));
-   }
+   $self->brik_help_run_undef_arg('from_raw', $raw) or return;
 
    return $self->from_hexa(unpack('H*', $raw), $first_layer);
 }
@@ -230,13 +220,8 @@ sub show {
    my $self = shift;
    my ($frame) = @_;
 
-   if (! defined($frame)) {
-      return $self->log->error($self->brik_help_run('show'));
-   }
-
-   if (ref($frame) ne 'Net::Frame::Simple') {
-      return $self->log->error("show: frame must be a Net::Frame::Simple object");
-   }
+   $self->brik_help_run_undef_arg('show', $frame) or return;
+   $self->brik_help_run_invalid_arg('show', $frame, 'Net::Frame::Simple') or return;
 
    my $str = $frame->print;
 
@@ -250,9 +235,7 @@ sub mac2eui64 {
    my $self = shift;
    my ($mac) = @_;
 
-   if (! defined($mac)) {
-      return $self->log->error($self->brik_help_run('mac2eui64'));
-   }
+   $self->brik_help_run_undef_arg('mac2eui64', $mac) or return;
 
    my @b  = split(':', $mac);
    my $b0 = hex($b[0]) ^ 2;
@@ -306,9 +289,7 @@ sub ipv4 {
    my ($dst, $protocol, $src) = @_;
 
    $protocol ||= 6;  # TCP
-   if (! defined($dst)) {
-      return $self->log->error($self->brik_help_run('ipv4'));
-   }
+   $self->brik_help_run_undef_arg('ipv4', $dst) or return;
 
    my $device_info = $self->device_info;
    $src ||= $device_info->{ipv4};
@@ -326,12 +307,9 @@ sub tcp {
    my $self = shift;
    my ($dst, $src, $flags) = @_;
 
-   if (! defined($dst)) {
-      return $self->log->error($self->brik_help_run('tcp'));
-   }
-
    $src ||= 1025;
    $flags ||= 0x02;   # SYN
+   $self->brik_help_run_undef_arg('tcp', $dst) or return;
 
    return Net::Frame::Layer::TCP->new(
       dst => $dst,
@@ -344,12 +322,9 @@ sub udp {
    my $self = shift;
    my ($dst, $src, $payload) = @_;
 
-   if (! defined($dst)) {
-      return $self->log->error($self->brik_help_run('tcp'));
-   }
-
    $src ||= 1025;
    $payload ||= '';
+   $self->brik_help_run_undef_arg('udp', $dst) or return;
 
    return Net::Frame::Layer::UDP->new(
       dst => $dst,
@@ -383,13 +358,8 @@ sub frame {
    my $self = shift;
    my ($layers) = @_;
 
-   if (! defined($layers)) {
-      return $self->log->error($self->brik_help_run('frame'));
-   }
-
-   if (ref($layers) ne 'ARRAY') {
-      return $self->log->error("frame: Argument must be ARRAY");
-   }
+   $self->brik_help_run_undef_arg('frame', $layers) or return;
+   $self->brik_help_run_invalid_arg('frame', $layers, 'ARRAY') or return;
 
    my $request = Net::Frame::Simple->new(
       layers => $layers,
@@ -402,9 +372,7 @@ sub is_read {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('is_read'))
-   }
+   $self->brik_help_run_undef_arg('is_read', $data) or return;
 
    if (ref($data) eq 'HASH'
    &&  exists($data->{raw})
@@ -420,9 +388,7 @@ sub is_simple {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('is_simple'))
-   }
+   $self->brik_help_run_undef_arg('is_simple', $data) or return;
 
    if (ref($data) eq 'Net::Frame::Simple') {
       return 1;

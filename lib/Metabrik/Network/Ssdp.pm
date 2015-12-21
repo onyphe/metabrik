@@ -19,7 +19,7 @@ sub brik_properties {
          device => [ qw(device) ],
       },
       commands => {
-         discover => [ ],
+         discover => [ qw(device|OPTIONAL) ],
       },
       require_modules => {
          'IO::Socket::Multicast' => [ ],
@@ -29,12 +29,10 @@ sub brik_properties {
 
 sub discover {
    my $self = shift;
+   my ($device) = @_;
 
-   if (! defined($self->device)) {
-      return $self->log->error($self->brik_help_set('device'));
-   }
-
-   my $device = $self->device;
+   $device ||= $self->device;
+   $self->brik_help_run_undef_arg('discover', $device) or return;
 
    my $ssdpAddr = '239.255.255.250';
    my $ssdpPort = 1900;

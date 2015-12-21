@@ -51,9 +51,7 @@ sub match {
    my ($ip, $subnet) = @_;
 
    $subnet ||= $self->subnet;
-   if (! defined($subnet)) {
-      return $self->log->error($self->brik_help_run('match'));
-   }
+   $self->brik_help_run_undef_arg('match', $subnet) or return;
 
    if (! $self->is_ip($ip) || ! $self->is_ip($subnet)) {
       return $self->log->error("match: invalid format for ip [$ip] or subnet [$subnet]");
@@ -76,9 +74,7 @@ sub network_address {
    my ($subnet) = @_;
 
    $subnet ||= $self->subnet;
-   if (! defined($subnet)) {
-      return $self->log->error($self->brik_help_run('network_address'));
-   }
+   $self->brik_help_run_undef_arg('network_address', $subnet) or return;
 
    if (! $self->is_ipv4($subnet)) {
       return $self->log->error("network_address: invalid format [$subnet], not an IPv4 address");
@@ -94,9 +90,7 @@ sub broadcast_address {
    my ($subnet) = @_;
 
    $subnet ||= $self->subnet;
-   if (! defined($subnet)) {
-      return $self->log->error($self->brik_help_run('broadcast_address'));
-   }
+   $self->brik_help_run_undef_arg('broadcast_address', $subnet) or return;
 
    if (! $self->is_ipv4($subnet)) {
       return $self->log->error("broadcast_address: invalid format [$subnet], not an IPv4 address");
@@ -112,9 +106,7 @@ sub netmask_address {
    my ($subnet) = @_;
 
    $subnet ||= $self->subnet;
-   if (! defined($subnet)) {
-      return $self->log->error($self->brik_help_run('netmask_address'));
-   }
+   $self->brik_help_run_undef_arg('netmask_address', $subnet) or return;
 
    # XXX: Not IPv6 compliant
    my $block = Net::Netmask->new($subnet);
@@ -127,9 +119,8 @@ sub range_to_cidr {
    my $self = shift;
    my ($first, $last) = @_;
 
-   if (! defined($first) || ! defined($last)) {
-      return $self->log->error($self->brik_help_run('range_to_cidr'));
-   }
+   $self->brik_help_run_undef_arg('range_to_cidr', $first) or return;
+   $self->brik_help_run_undef_arg('range_to_cidr', $last) or return;
 
    # IPv4 and IPv6 compliant
    my @list = Net::CIDR::range2cidr("$first-$last");
@@ -141,9 +132,7 @@ sub is_ip {
    my $self = shift;
    my ($ip) = @_;
 
-   if (! defined($ip)) {
-      return $self->log->error($self->brik_help_run('is_ip'));
-   }
+   $self->brik_help_run_undef_arg('is_ip', $ip) or return;
 
    (my $local = $ip) =~ s/\/\d+$//;
 
@@ -158,9 +147,7 @@ sub is_rfc1918 {
    my $self = shift;
    my ($ip) = @_;
 
-   if (! defined($ip)) {
-      return $self->log->error($self->brik_help_run('is_rfc1918'));
-   }
+   $self->brik_help_run_undef_arg('is_rfc1918', $ip) or return;
 
    if (! $self->is_ipv4($ip)) {
       return $self->log->error("is_rfc1918: invalid format [$ip]");
@@ -185,9 +172,7 @@ sub is_ipv4 {
    my $self = shift;
    my ($ip) = @_;
 
-   if (! defined($ip)) {
-      return $self->log->error($self->brik_help_run('is_ipv4'));
-   }
+   $self->brik_help_run_undef_arg('is_ipv4', $ip) or return;
 
    (my $local = $ip) =~ s/\/\d+$//;
 
@@ -202,9 +187,7 @@ sub is_ipv6 {
    my $self = shift;
    my ($ip) = @_;
 
-   if (! defined($ip)) {
-      return $self->log->error($self->brik_help_run('is_ipv6'));
-   }
+   $self->brik_help_run_undef_arg('is_ipv6', $ip) or return;
 
    (my $local = $ip) =~ s/\/\d+$//;
 
@@ -224,9 +207,7 @@ sub netmask_to_cidr {
    my $self = shift;
    my ($netmask) = @_;
 
-   if (! defined($netmask)) {
-      return $self->log->error($self->brik_help_run('netmask_to_cidr'));
-   }
+   $self->brik_help_run_undef_arg('netmask_to_cidr', $netmask) or return;
 
    # We use a fake address, cause we are only interested in netmask
    my $cidr = Net::CIDR::addrandmask2cidr("127.0.0.0", $netmask);
@@ -241,9 +222,7 @@ sub ipv4_list {
    my ($subnet) = @_;
 
    $subnet ||= $self->subnet;
-   if (! defined($subnet)) {
-      return $self->log->error($self->brik_help_run('ipv4_list'));
-   }
+   $self->brik_help_run_undef_arg('ipv4_list', $subnet) or return;
 
    if (! $self->is_ipv4($subnet)) {
       return $self->log->error("ipv4_list: invalid format [$subnet], not IPv4");
@@ -278,9 +257,7 @@ sub ipv6_list {
    my ($subnet) = @_;
 
    $subnet ||= $self->subnet;
-   if (! defined($subnet)) {
-      return $self->log->error($self->brik_help_run('ipv6_list'));
-   }
+   $self->brik_help_run_undef_arg('ipv6_list', $subnet) or return;
 
    if (! $self->is_ipv6($subnet)) {
       return $self->log->error("ipv6_list: invalid format [$subnet], not IPv6");
@@ -315,9 +292,7 @@ sub get_ipv4_cidr {
    my ($subnet) = @_;
 
    $subnet ||= $self->subnet;
-   if (! defined($subnet)) {
-      return $self->log->error($self->brik_help_run('get_ipv4_cidr'));
-   }
+   $self->brik_help_run_undef_arg('get_ipv4_cidr', $subnet) or return;
 
    my ($cidr) = $subnet =~ m{/(\d+)$};
    if (! defined($cidr)) {
@@ -336,9 +311,7 @@ sub count_ipv4 {
    my ($subnet) = @_;
 
    $subnet ||= $self->subnet;
-   if (! defined($subnet)) {
-      return $self->log->error($self->brik_help_run('count_ipv4'));
-   }
+   $self->brik_help_run_undef_arg('count_ipv4', $subnet) or return;
 
    if (! $self->is_ipv4($subnet)) {
       return $self->log->error("count_ipv4: invalid format [$subnet], not IPv4");
@@ -354,9 +327,7 @@ sub is_ipv4_subnet {
    my ($subnet) = @_;
 
    $subnet ||= $self->subnet;
-   if (! defined($subnet)) {
-      return $self->log->error($self->brik_help_run('is_ipv4_subnet'));
-   }
+   $self->brik_help_run_undef_arg('is_ipv4_subnet', $subnet) or return;
 
    my ($address, $cidr) = $subnet =~ m{^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/(\d+)$};
    if (! defined($address) || ! defined($cidr)) {

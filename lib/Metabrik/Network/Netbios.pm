@@ -28,9 +28,7 @@ sub probe {
    my $self = shift;
    my ($ip) = @_;
 
-   if (! defined($ip)) {
-      return $self->log->error($self->brik_help_run('probe'));
-   }
+   $self->brik_help_run_undef_arg('probe', $ip) or return;
 
    my $nb = Net::NBName->new;
    if (! $nb) {

@@ -37,9 +37,7 @@ sub target {
    my $self = shift;
    my ($target) = @_;
 
-   if (! defined($target)) {
-      return $self->log->error($self->brik_help_run('target'));
-   }
+   $self->brik_help_run_undef_arg('target', $target) or return;
 
    $Net::Whois::Raw::TIMEOUT = $self->rtimeout;
 
@@ -47,7 +45,7 @@ sub target {
    my $server;
    eval {
       ($info, $server) = Net::Whois::Raw::whois($target)
-        or return $self->log->error("target: whois for target [$target] failed");
+         or return $self->log->error("target: whois for target [$target] failed");
    };
    if ($@) {
       chomp($@);

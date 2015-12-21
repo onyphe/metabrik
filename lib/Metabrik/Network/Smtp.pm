@@ -25,7 +25,7 @@ sub brik_properties {
          port => 25,
       },
       commands => {
-         open => [ ],
+         open => [ qw(server|OPTIONAL port|OPTIONAL) ],
          close => [ ],
       },
       require_modules => {
@@ -36,16 +36,12 @@ sub brik_properties {
 
 sub open {
    my $self = shift;
+   my ($server, $port) = @_;
 
-   my $server = $self->server;
-   if (! defined($server)) {
-      return $self->log->error($self->brik_help_set('server'));
-   }
-
-   my $port = $self->port;
-   if (! defined($port)) {
-      return $self->log->error($self->brik_help_set('port'));
-   }
+   $server ||= $self->server;
+   $port ||= $self->port;
+   $self->brik_help_run_undef_arg('open', $server) or return;
+   $self->brik_help_run_undef_arg('open', $port) or return;
 
    my $smtp = Net::SMTP->new(
       $server,

@@ -22,12 +22,14 @@ sub brik_properties {
          use_recursion => [ qw(0|1) ],
          try => [ qw(try_number) ],
          rtimeout => [ qw(timeout) ],
+         type => [ qw(query_type) ],
       },
       attributes_default => {
          use_recursion => 0,
          port => 53,
          try => 3,
          rtimeout => 2,
+         type => 'A',
       },
       commands => {
          lookup => [ qw(hostname|ip_address type nameserver|OPTIONAL port|OPTIONAL) ],
@@ -43,18 +45,13 @@ sub lookup {
    my $self = shift;
    my ($host, $type, $nameserver, $port) = @_;
 
-   $type ||= 'A';
+   $type ||= $self->type || 'A';
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
-   if (! defined($host)) {
-      return $self->log->error($self->brik_help_run('lookup'));
-   }
-   if (! defined($nameserver)) {
-      return $self->log->error($self->brik_help_run('lookup'));
-   }
-   if (ref($nameserver) ne '' && ref($nameserver) ne 'ARRAY') {
-      return $self->log->error("lookup: invalid value for nameserver [$nameserver]");
-   }
+   $self->brik_help_run_undef_arg('lookup', $host) or return;
+   $self->brik_help_run_undef_arg('lookup', $nameserver) or return;
+   my $ref = $self->brik_help_run_invalid_arg('lookup', $nameserver, 'ARRAY', 'SCALAR')
+      or return;
 
    my $timeout = $self->rtimeout;
 
@@ -147,9 +144,7 @@ sub version_bind {
 
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
-   if (! defined($nameserver)) {
-      return $self->log->error($self->log->brik_help_run('version_bind'));
-   }
+   $self->brik_help_run_undef_arg('version_bind', $nameserver) or return;
 
    my $timeout = $self->rtimeout;
 

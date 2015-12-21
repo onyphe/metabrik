@@ -7,7 +7,7 @@ package Metabrik::Network::Wlan;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -32,13 +32,20 @@ sub brik_properties {
          set_bitrate => [ qw(bitrate|OPTIONAL device|OPTIONAL) ],
          set_wepkey => [ qw(key|OPTIONAL device|OPTIONAL) ],
          connect => [ qw(device|OPTIONAL essid|OPTIONAL) ],
-         start_monitor_mode => [ ],
-         stop_monitor_mode => [ ],
+         start_monitor_mode => [ qw(device|OPTIONAL) ],
+         stop_monitor_mode => [ qw(monitor|OPTIONAL) ],
+         install => [ ], # Inherited
       },
       require_binaries => {
          'sudo', => [ ],
          'iwlist', => [ ],
          'iwconfig', => [ ],
+      },
+      optional_binaries => {
+         'airmon-ng' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(aircrack-ng iw) ],
       },
    };
 }
@@ -48,6 +55,7 @@ sub scan {
    my ($device) = @_;
 
    $device ||= $self->device;
+   $self->brik_help_run_undef_arg('scan', $device) or return;
 
    $self->log->verbose("scan: using device [$device]");
 
@@ -163,23 +171,18 @@ sub connect {
    my ($device, $essid) = @_;
 
    $device ||= $self->device;
-
    $essid ||= $self->essid;
-   if (! defined($essid)) {
-      return $self->log->error($self->brik_help_set('essid'));
-   }
+   $self->brik_help_run_undef_arg('connect', $device) or return;
+   $self->brik_help_run_undef_arg('connect', $essid) or return;
 
    my $cmd = "sudo iwconfig $device essid $essid";
 
    $self->capture_stderr(1);
-
-   my $r = $self->capture($cmd)
-      or return $self->log->error("connect: capture failed");
+   my $r = $self->capture($cmd) or return;
 
    $self->log->verbose("connect: $r");
 
-   $self->set_bitrate
-      or return $self->log->error("connect: set_bitrate failed");
+   $self->set_bitrate or return;
 
    # For WEP, we can use:
    # "iwconfig $device key $key"
@@ -192,15 +195,13 @@ sub set_bitrate {
    my ($bitrate, $device) = @_;
 
    $bitrate ||= $self->bitrate;
-   if (! defined($bitrate)) {
-      return $self->log->error($self->brik_help_set('bitrate'));
-   }
-
    $device ||= $self->device;
-
-   $self->capture_stderr(1);
+   $self->brik_help_run_undef_arg('set_bitrate', $bitrate) or return;
+   $self->brik_help_run_undef_arg('set_bitrate', $device) or return;
 
    my $cmd = "sudo iwconfig $device rate $bitrate";
+
+   $self->capture_stderr(1);
 
    return $self->capture($cmd);
 }
@@ -210,11 +211,9 @@ sub set_wepkey {
    my ($key, $device) = @_;
 
    $key ||= $self->key;
-   if (! defined($key)) {
-      return $self->log->error($self->brik_help_set('key'));
-   }
-
    $device ||= $self->device;
+   $self->brik_help_run_undef_arg('set_wepkey', $key) or return;
+   $self->brik_help_run_undef_arg('set_wepkey', $device) or return;
 
    my $cmd = "sudo iwconfig $device key $key";
 
@@ -228,9 +227,10 @@ sub start_monitor_mode {
    my ($device) = @_;
 
    $device ||= $self->device;
+   $self->brik_help_run_undef_arg('start_monitor_mode', $device) or return;
 
    # airmon-ng is optional, so we check here.
-   my $found = $self->brik_check_require_binaries({ 'airmon-ng' => [ ] });
+   my $found = $self->brik_has_binary('airmon-ng');
    if (! $found) {
       return $self->log->error("start_monitor_mode: you have to install aircrack-ng package");
    }
@@ -269,14 +269,13 @@ sub stop_monitor_mode {
    my $self = shift;
    my ($monitor) = @_;
 
-   if (! $self->_monitor_mode_started) {
-      return $self->log->error($self->brik_help_run('start_monitor_mode'));
-   }
-
    $monitor ||= $self->monitor;
+   my $started = $self->_monitor_mode_started;
+   $self->brik_help_run_undef_arg('start_monitor_mode', $started) or return;
+   $self->brik_help_run_undef_arg('start_monitor_mode', $monitor) or return;
 
    # airmon-ng is optional, so we check here.
-   my $found = $self->brik_check_require_binaries({ 'airmon-ng' => [ ] });
+   my $found = $self->brik_has_binary('airmon-ng');
    if (! $found) {
       return $self->log->error("stop_monitor_mode: you have to install aircrack-ng package");
    }

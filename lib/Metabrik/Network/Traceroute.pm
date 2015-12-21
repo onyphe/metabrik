@@ -7,7 +7,7 @@ package Metabrik::Network::Traceroute;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 # Default attribute values put here will BE inherited by subclasses
 sub brik_properties {
@@ -30,9 +30,13 @@ sub brik_properties {
       },
       commands => {
          tcp => [ qw(host port) ],
+         install => [ ], # Inherited
       },
       require_binaries => {
          'tcptraceroute', => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(tcptraceroute) ],
       },
    };
 }
@@ -41,14 +45,12 @@ sub tcp {
    my $self = shift;
    my ($host, $port) = @_;
 
-   if (! (defined($host) && defined($port))) {
-      return $self->log->error($self->brik_help_run('tcp'));
-   }
-
    my $rtimeout = $self->rtimeout;
    my $try = $self->try;
    my $first = $self->first_hop;
    my $last = $self->last_hop;
+   $self->brik_help_run_undef_arg('tcp', $host) or return;
+   $self->brik_help_run_undef_arg('tcp', $port) or return;
 
    my $cmd = "tcptraceroute -n -q $try -f $first -m $last -w $rtimeout  $host $port";
 

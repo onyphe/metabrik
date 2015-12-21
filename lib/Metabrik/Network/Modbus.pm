@@ -27,10 +27,7 @@ sub probe {
 
    $host ||= $self->host;
    $port ||= 502;
-
-   if (! defined($host)) {
-      return $self->log->error($self->brik_help_run('probe'));
-   }
+   $self->brik_help_run_undef_arg('probe', $host) or return;
 
    # XXX: gather nmap --script modbus-discovery -p 502 <IP>
 
@@ -41,9 +38,9 @@ sub probe {
 
    $self->host($host);
    $self->port($port);
-   $self->connect or return $self->log->error("probe: connect failed");
-   $self->write($probe) or return $self->log->error("probe: write failed");
-   my $response = $self->read or return $self->log->error("probe: read failed");
+   $self->connect or return;
+   $self->write($probe) or return;
+   my $response = $self->read or return;
    $self->disconnect;
 
    return $response;

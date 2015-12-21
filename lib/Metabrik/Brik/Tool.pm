@@ -58,12 +58,14 @@ sub install_packages {
    if ($so->is_ubuntu) {
       my @programs = qw(
          aptitude
+         aircrack-ng
          clamav
          dcfldd
          dsniff
          elasticsearch
          exif
          ffmpeg
+         iw
          libexpat-dev
          libmagic-dev
          libmysqlclient-dev
@@ -77,6 +79,7 @@ sub install_packages {
          phantomjs
          python
          python-pip
+         reaver
          redis-server
          rng-tools
          scalpel

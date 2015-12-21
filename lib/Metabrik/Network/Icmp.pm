@@ -31,7 +31,7 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         device => $self->global->device || 'eth0',
+         device => $self->global->device,
       },
    };
 }
@@ -40,9 +40,7 @@ sub ping {
    my $self = shift;
    my ($target) = @_;
 
-   if (! defined($target)) {
-      return $self->log->error($self->brik_help_run('ping'));
-   }
+   $self->brik_help_run_undef_arg('ping', $target) or return;
 
    my $ipv4 = $self->ipv4;
    $ipv4->dst($target);

@@ -45,9 +45,7 @@ sub start {
    my $request_file = $datadir.'/'.$self->request_file;
    my $output_file = $datadir.'/'.$self->output_file;
 
-   if (! -f $request_file) {
-      return $self->log->error("start: request file [$request_file] not found");
-   }
+   $self->brik_help_run_file_not_found('start', $request_file) or return;
 
    my $cmd = "sqlmap -p $parameter $args -r $request_file";
    if (defined($output_file)) {

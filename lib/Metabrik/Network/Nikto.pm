@@ -65,9 +65,7 @@ sub start {
 
    $output ||= $self->output;
    $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_set('uri'));
-   }
+   $self->brik_help_run_undef_arg('start', $uri) or return;
 
    my $su = Metabrik::String::Uri->new_from_brik_init($self) or return;
    my $p = $su->parse($uri) or return;

@@ -84,9 +84,7 @@ sub active_ipv4 {
    my $self = shift;
    my ($target, $port) = @_;
 
-   if ($< != 0) {
-      return $self->log->error("active: must be root to run");
-   }
+   $self->brik_help_run_must_be_root('active_ipv4') or return;
 
    $target ||= $self->target;
    $port ||= $self->port;
@@ -94,9 +92,7 @@ sub active_ipv4 {
 
    my $datadir = $self->datadir;
    my $file = $datadir.'/'.$self->db;
-   if (! -f $file) {
-      return $self->log->error("active: SinFP3 db file [$file] not found");
-   }
+   $self->brik_help_run_file_not_found('active_ipv4', $file) or return;
 
    my $log = Net::SinFP3::Log::Console->new(
       level => $self->log->level,
@@ -173,12 +169,8 @@ sub export_active_db {
    my ($db) = @_;
 
    $db ||= $self->db;
-   if (! defined($db)) {
-      return $self->log->error($self->brik_help_run('export_active_db'));
-   }
-   if (! -f $db) {
-      return $self->log->error("export_active_db: file [$db] not found");
-   }
+   $self->brik_help_run_undef_arg('export_active_db', $db) or return;
+   $self->brik_help_run_file_not_found('export_active_db', $db) or return;
 
    return 1;
 }
@@ -190,15 +182,12 @@ sub save_active_ipv4_fingerprint {
    $target_host ||= $self->target;
    $target_port ||= $self->port;
    my $device = $self->device;
-   if (! defined($target_host) || ! defined($target_port)) {
-      return $self->log->error($self->brik_help_run('save_active_ipv4_fingerprint'));
-   }
+   $self->brik_help_run_undef_arg('save_active_ipv4_fingerprint', $target_host) or return;
+   $self->brik_help_run_undef_arg('save_active_ipv4_fingerprint', $target_port) or return;
 
    my $datadir = $self->datadir;
    my $file = $datadir.'/'.$self->db;
-   if (! -f $file) {
-      return $self->log->error("save_active_ipv4_fingerprint: SinFP3 db file [$file] not found");
-   }
+   $self->brik_help_run_file_not_found('save_active_ipv4_fingerprint', $file) or return;
 
    my $log = Net::SinFP3::Log::Console->new(
       level => $self->log->level,
@@ -265,15 +254,12 @@ sub save_active_ipv6_fingerprint {
    $target_host ||= $self->target;
    $target_port ||= $self->port;
    my $device = $self->device;
-   if (! defined($target_host) || ! defined($target_port)) {
-      return $self->log->error($self->brik_help_run('save_active_ipv6_fingerprint'));
-   }
+   $self->brik_help_run_undef_arg('save_active_ipv6_fingerprint', $target_host) or return;
+   $self->brik_help_run_undef_arg('save_active_ipv6_fingerprint', $target_port) or return;
 
    my $datadir = $self->datadir;
    my $file = $datadir.'/'.$self->db;
-   if (! -f $file) {
-      return $self->log->error("save_active_ipv6_fingerprint: SinFP3 db file [$file] not found");
-   }
+   $self->brik_help_run_file_not_found('save_active_ipv6_fingerprint', $file) or return;
 
    my $log = Net::SinFP3::Log::Console->new(
       level => $self->log->level,
@@ -339,18 +325,12 @@ sub active_ipv4_from_pcap {
    my ($pcap_file) = @_;
 
    my $device = $self->device;
-   if (! defined($pcap_file)) {
-      return $self->log->error($self->brik_help_run('active_ipv4_from_pcap'));
-   }
-   if (! -f $pcap_file) {
-      return $self->log->error("active_ipv4_from_pcap: file [$pcap_file] not found");
-   }
+   $self->brik_help_run_undef_arg('active_ipv4_from_pcap', $pcap_file) or return;
+   $self->brik_help_run_file_not_found('active_ipv4_from_pcap', $pcap_file) or return;
 
    my $datadir = $self->datadir;
    my $file = $datadir.'/'.$self->db;
-   if (! -f $file) {
-      return $self->log->error("active_ipv4_from_pcap: SinFP3 db file [$file] not found");
-   }
+   $self->brik_help_run_file_not_found('active_ipv4_from_pcap', $file) or return;
 
    my $log = Net::SinFP3::Log::Console->new(
       level => $self->log->level,
@@ -410,18 +390,12 @@ sub active_ipv6_from_pcap {
    my ($pcap_file) = @_;
 
    my $device = $self->device;
-   if (! defined($pcap_file)) {
-      return $self->log->error($self->brik_help_run('active_ipv6_from_pcap'));
-   }
-   if (! -f $pcap_file) {
-      return $self->log->error("active_ipv6_from_pcap: file [$pcap_file] not found");
-   }
+   $self->brik_help_run_undef_arg('active_ipv6_from_pcap', $pcap_file) or return;
+   $self->brik_help_run_file_not_found('active_ipv6_from_pcap', $pcap_file) or return;
 
    my $datadir = $self->datadir;
    my $file = $datadir.'/'.$self->db;
-   if (! -f $file) {
-      return $self->log->error("active_ipv6_from_pcap: SinFP3 db file [$file] not found");
-   }
+   $self->brik_help_run_file_not_found('active_ipv6_from_pcap', $file) or return;
 
    my $log = Net::SinFP3::Log::Console->new(
       level => $self->log->level,

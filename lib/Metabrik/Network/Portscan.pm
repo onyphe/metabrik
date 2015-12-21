@@ -152,13 +152,15 @@ sub tcp_syn {
    my $self = shift;
    my ($ip_list, $port_list, $pps) = @_;
 
-   if (! defined($ip_list)) {
-      return $self->log->error($self->brik_help_run('tcp_syn'));
-   }
+   $pps ||= $self->pps;
+   my $try = $self->try;
+   $self->brik_help_run_undef_arg('tcp_syn', $ip_list) or return;
+   my $refip = $self->brik_help_run_invalid_arg('tcp_syn', $ip_list, 'ARRAY', 'SCALAR')
+      or return;
 
    my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
 
-   if (ref($ip_list) eq 'ARRAY') {
+   if ($refip eq 'ARRAY') {
       if (@$ip_list == 0) {
          return $self->log->error("tcp_syn: ARRAY Argument is empty");
       }
@@ -181,8 +183,7 @@ sub tcp_syn {
       }
       $ip_list = $new_list;
    }
-   # We gave a simple SCALAR
-   elsif (! ref($ip_list)) {
+   else {  # We gave a simple SCALAR
       if ($na->is_ipv4_subnet($ip_list)) {
          $ip_list = $na->ipv4_list($ip_list) or return;
       }
@@ -198,16 +199,8 @@ sub tcp_syn {
    }
 
    $port_list ||= $self->ports || $self->top100;
-   if (ref($port_list) ne 'ARRAY') {
-      return $self->log->error("tcp_syn: argument 2 must be ARRAYREF");
-   }
-   if (@$port_list == 0) {
-      return $self->log->error("tcp_syn: port_list is empty");
-   }
-
-   $pps ||= $self->pps;
-
-   my $try = $self->try;
+   $self->brik_help_run_invalid_arg('tcp_syn', $port_list, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('tcp_syn', $port_list) or return;
 
    my $nd = Metabrik::Network::Device->new_from_brik_init($self) or return;
    my $get = $nd->get($self->device) or return;
@@ -237,7 +230,7 @@ sub tcp_syn {
    }
    $nr->filter($filter);
 
-   $nr->open or return $self->log->error("tcp_syn: open failed");
+   $nr->open or return;
 
    my $n_ports = scalar(@$port_list);
    my $n_targets = scalar(@$ip_list);
