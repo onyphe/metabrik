@@ -66,8 +66,6 @@ sub load_and_exec {
    my ($input) = @_;
 
    $input ||= $self->input;
-   $self->brik_help_run_undef_arg('load_and_exec', $input) or return;
-   $self->brik_help_run_file_not_found('load_and_exec', $input) or return;
 
    my $lines = $self->load($input) or return;
    return $self->exec($lines);
