@@ -46,16 +46,14 @@ sub read {
       return $self->log->error($self->brik_help_set('input'));
    }
 
-   my $file_text = Metabrik::File::Text->new_from_brik($self) or return;
-   $file_text->encoding($self->encoding);
+   my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+   $ft->encoding($self->encoding);
 
-   my $string = $file_text->read($input)
-      or return $self->log->error("read: read failed");
+   my $string = $ft->read($input) or return;
 
-   my $string_ini = Metabrik::String::Ini->new_from_brik($self) or return;
+   my $si = Metabrik::String::Ini->new_from_brik_init($self) or return;
 
-   my $ini_hash = $string_ini->decode($string)
-      or return $self->log->error("read: decode failed");
+   my $ini_hash = $si->decode($string) or return;
 
    return $ini_hash;
 }
@@ -77,16 +75,14 @@ sub write {
       return $self->log->error("write: argument 1 must be HASHREF");
    }
 
-   my $string_ini = Metabrik::String::Ini->new_from_brik($self) or return;
+   my $si = Metabrik::String::Ini->new_from_brik_init($self) or return;
 
-   my $string = $string_ini->encode($ini_hash)
-      or return $self->log->error("write: encode failed");
+   my $string = $si->encode($ini_hash) or return;
 
-   my $file_text = Metabrik::File::Text->new_from_brik($self) or return;
-   $file_text->encoding($self->encoding);
+   my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+   $ft->encoding($self->encoding);
 
-   $file_text->write($string, $output)
-      or return $self->log->error("write: write failed");
+   $ft->write($string, $output) or return;
 
    return $output;
 }

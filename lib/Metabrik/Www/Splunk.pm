@@ -33,9 +33,9 @@ sub brik_properties {
          'search' => [ qw(search_string) ],
       },
       require_modules => {
-         'Metabrik::String::Uri' => [ ],
          'Net::SSL' => [ ],
          'WWW::Splunk' => [ ],
+         'Metabrik::String::Uri' => [ ],
       },
    };
 }
@@ -58,7 +58,7 @@ sub connect {
       return $self->log->error($self->brik_help_set('password'));
    }
 
-   my $su = Metabrik::String::Uri->new_from_brik($self) or return;
+   my $su = Metabrik::String::Uri->new_from_brik_init($self) or return;
    my $parsed = $su->parse($uri) or return;
 
    my $splunk;

@@ -101,8 +101,8 @@ sub generate_key {
    my $filename = $sr->filename
       or return $self->log->error("generate_key: filename failed");
 
-   my $text = Metabrik::File::Text->new_from_brik($self) or return;
-   $text->output($filename);
+   my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+   $ft->output($filename);
 
    # If key is RSA, subkey will be RSA.
    # If key is DSA, subkey will be Elgamal.
@@ -111,7 +111,7 @@ sub generate_key {
       #$subkey = 'Elgamal';
    #}
 
-   $text->write([
+   $ft->write([
       '%echo Generating a standard key', "\n",
       "Key-Type: $type_key", "\n",
       "Key-Length: $length_key", "\n",
@@ -412,9 +412,9 @@ sub decrypt {
       return $self->log->error($self->brik_help_run('decrypt'));
    }
 
-   my $string_password = Metabrik::String::Password->new_from_brik($self) or return;
+   my $sp = Metabrik::String::Password->new_from_brik_init($self) or return;
 
-   my $passphrase = $string_password->prompt;
+   my $passphrase = $sp->prompt;
    if (! defined($passphrase)) {
       return $self->log->error("decrypt: invalid passphrase entered");
    }

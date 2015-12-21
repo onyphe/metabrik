@@ -65,9 +65,9 @@ sub decrypt {
    my $read = $self->read($db)
       or return $self->log->error("decrypt: read failed");
 
-   my $crypto_aes = Metabrik::Crypto::Aes->new_from_brik($self) or return;
+   my $ca = Metabrik::Crypto::Aes->new_from_brik_init($self) or return;
 
-   my $decrypted = $crypto_aes->decrypt($read)
+   my $decrypted = $ca->decrypt($read)
       or return $self->log->error("decrypt: decrypt failed");
 
    return $decrypted;
@@ -81,9 +81,9 @@ sub encrypt {
       return $self->log->error($self->brik_help_run('encrypt'));
    }
 
-   my $crypto_aes = Metabrik::Crypto::Aes->new_from_brik($self) or return;
+   my $ca = Metabrik::Crypto::Aes->new_from_brik_init($self) or return;
 
-   my $encrypted = $crypto_aes->encrypt($data)
+   my $encrypted = $ca->encrypt($data)
       or return $self->log->error("encrypt: encrypt failed");
 
    return $encrypted;

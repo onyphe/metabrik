@@ -110,7 +110,7 @@ sub distribution {
    my $release = $self->release;
 
    if ($name eq 'Linux') {
-      my $ft = Metabrik::File::Text->new_from_brik($self) or return;
+      my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
       $ft->as_array(1);
       $ft->strip_crlf(1);
 

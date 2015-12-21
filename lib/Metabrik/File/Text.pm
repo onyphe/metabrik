@@ -47,7 +47,7 @@ sub read {
       return $self->log->error($self->brik_help_run('read'));
    }
 
-   my $fr = Metabrik::File::Read->new_from_brik($self) or return;
+   my $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
    $fr->input($input);
    $fr->encoding($self->encoding);
    $fr->as_array($self->as_array);

@@ -72,6 +72,7 @@ sub install_packages {
          libssl-dev
          libxml2-dev
          mysql-client
+         nikto
          nmap
          phantomjs
          python

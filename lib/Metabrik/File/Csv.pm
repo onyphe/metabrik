@@ -122,7 +122,7 @@ sub write {
 
    my $context = $self->context;
 
-   my $fw = Metabrik::File::Write->new_from_brik($self) or return;
+   my $fw = Metabrik::File::Write->new_from_brik_init($self) or return;
    $fw->output($output);
    $fw->encoding($self->encoding);
    my $fd = $fw->open or return;

@@ -44,7 +44,7 @@ sub verify_server {
       return $self->log->error($self->brik_help_set('uri'));
    }
 
-   my $su = Metabrik::String::Uri->new_from_brik($self) or return;
+   my $su = Metabrik::String::Uri->new_from_brik_init($self) or return;
    my $parsed = $su->parse($uri) or return;
 
    my $host = $parsed->{host};

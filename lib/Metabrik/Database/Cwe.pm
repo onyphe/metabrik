@@ -62,9 +62,9 @@ sub load {
 
    my $datadir = $self->datadir;
 
-   my $file_xml = Metabrik::File::Xml->new_from_brik($self) or return;
+   my $fx = Metabrik::File::Xml->new_from_brik_init($self) or return;
 
-   my $xml = $file_xml->read($datadir.'/'.$file);
+   my $xml = $fx->read($datadir.'/'.$file) or return;
 
    return $self->xml($xml);
 }

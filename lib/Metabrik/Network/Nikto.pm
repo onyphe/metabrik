@@ -7,7 +7,7 @@ package Metabrik::Network::Nikto;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -28,6 +28,16 @@ sub brik_properties {
       },
       commands => {
          start => [ qw(uri|OPTIONAL) ],
+         install => [ ], # Inherited
+      },
+      require_modules => {
+         'Metabrik::String::Uri' => [ ],
+      },
+      require_binaries => {
+         'nikto' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(nikto) ],
       },
    };
 }
@@ -59,13 +69,13 @@ sub start {
       return $self->log->error($self->brik_help_set('uri'));
    }
 
-   my $target = Metabrik::String::Uri->new_from_brik($self) or return;
-   my $p = $target->parse($uri);
+   my $su = Metabrik::String::Uri->new_from_brik_init($self) or return;
+   my $p = $su->parse($uri) or return;
 
    my $host = $p->{host};
    my $port = $p->{port};
    my $path = $p->{path};
-   my $use_ssl = $target->is_https_scheme($p);
+   my $use_ssl = $su->is_https_scheme($p);
 
    my $args = $self->args;
 

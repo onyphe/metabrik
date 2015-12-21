@@ -34,7 +34,6 @@ sub brik_properties {
          content => [ ],
       },
       require_modules => {
-         'Metabrik::String::Uri' => [ ],
          'Metabrik::String::Xml' => [ ],
          'Metabrik::String::Json' => [ ],
       },
@@ -52,10 +51,10 @@ sub content {
    my $sm;
    my $output_mode = $self->output_mode;
    if ($output_mode eq 'json') {
-      $sm = Metabrik::String::Json->new_from_brik($self) or return;
+      $sm = Metabrik::String::Json->new_from_brik_init($self) or return;
    }
    elsif ($output_mode eq 'xml') {
-      $sm = Metabrik::String::Xml->new_from_brik($self) or return;
+      $sm = Metabrik::String::Xml->new_from_brik_init($self) or return;
    }
    else {
       return $self->log->error("content: output_mode not supported [$output_mode]");

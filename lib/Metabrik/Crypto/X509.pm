@@ -98,12 +98,11 @@ sub ca_init {
          or return $self->log->error("ca_init: mkdir failed with error [$!]");
       mkdir($ca_directory.'/certs');
 
-      my $index_txt = Metabrik::File::Text->new_from_brik($self) or return;
-      $index_txt->write('', $ca_directory.'/index.txt')
+      my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+      $ft->write('', $ca_directory.'/index.txt')
          or return $self->log->error("ca_init: write index.txt failed");
 
-      my $serial = Metabrik::File::Text->new_from_brik($self) or return;
-      $serial->write('01', $ca_directory.'/serial')
+      $ft->write('01', $ca_directory.'/serial')
          or return $self->log->error("ca_init: write serial failed");
    }
 
@@ -169,9 +168,9 @@ sub ca_init {
       "basicConstraints = CA:true",
    ];
 
-   my $file_text = Metabrik::File::Text->new_from_brik($self) or return;
-   $file_text->overwrite(1);
-   $file_text->write($content, $ca_conf)
+   my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+   $ft->overwrite(1);
+   $ft->write($content, $ca_conf)
       or return $self->log->error("ca_init: write failed");
 
    $self->log->verbose("ca_init: using conf file [$ca_conf] and cert [$ca_cert]");

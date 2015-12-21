@@ -21,6 +21,9 @@ sub brik_properties {
       commands => {
          check_ssl3_support => [ qw(uri|OPTIONAL) ],
       },
+      require_modules => {
+         'Metabrik::String::Uri' => [ ],
+      },
       require_binaries => {
          'printf' => [ ],
          'openssl' => [ ],
@@ -38,6 +41,7 @@ sub brik_use_properties {
    };
 }
 
+#
 # Poodle: http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-3566
 #
 sub check_ssl3_support {
@@ -53,9 +57,9 @@ sub check_ssl3_support {
       return $self->log->error("check_ssl3_support: uri [$uri] invalid format");
    }
 
-   my $string_uri = Metabrik::String::Uri->new_from_brik($self) or return;
+   my $su = Metabrik::String::Uri->new_from_brik_init($self) or return;
 
-   my $hash = $string_uri->parse($uri)
+   my $hash = $su->parse($uri)
       or return $self->log->error("check_ssl3_support: parse failed");
 
    my $host = $hash->{host};

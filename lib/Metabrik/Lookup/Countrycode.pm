@@ -111,12 +111,12 @@ sub save {
 
    my $datadir = $self->datadir;
 
-   my $file_csv = Metabrik::File::Csv->new_from_brik($self) or return;
-   $file_csv->overwrite(1);
-   $file_csv->encoding('utf8');
+   my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
+   $fc->overwrite(1);
+   $fc->encoding('utf8');
 
    my $output_file = $datadir.'/'.$output;
-   $file_csv->write($data, $output_file)
+   $fc->write($data, $output_file)
       or return $self->log->error("save: write failed");
 
    return $output_file;
@@ -133,10 +133,10 @@ sub load {
 
    my $datadir = $self->datadir;
 
-   my $file_csv = Metabrik::File::Csv->new_from_brik($self) or return;
-   $file_csv->first_line_is_header(1);
+   my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
+   $fc->first_line_is_header(1);
 
-   my $csv = $file_csv->read($datadir.'/'.$input);
+   my $csv = $fc->read($datadir.'/'.$input);
 
    return $csv;
 }

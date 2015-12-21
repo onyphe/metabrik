@@ -65,6 +65,9 @@ sub update {
          $self->log->warning("update: can't fetch url [$url]");
          next;
       }
+      if (@$r == 0) { # Nothing new
+         next;
+      }
       push @fetched, $output;
    }
 
@@ -75,20 +78,20 @@ sub next_record {
    my $self = shift;
    my ($input) = @_;
 
-   my $read = $self->_read;
-   if (! defined($read)) {
+   my $fr = $self->_read;
+   if (! defined($fr)) {
       $input ||= $self->datadir.'/'.$self->input;
       if (! -f $input) {
          return $self->log->error("next_record: file [$input] does not exist");
       }
 
-      $read = Metabrik::File::Read->new_from_brik($self) or return;
-      $read->encoding('ascii');
-      $read->input($input);
-      $read->as_array(0);
-      $read->open
+      $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
+      $fr->encoding('ascii');
+      $fr->input($input);
+      $fr->as_array(0);
+      $fr->open
          or return $self->log->error("next_record: file::read open failed");
-      $self->_read($read);
+      $self->_read($fr);
    }
 
    # 2|afrinic|20150119|4180|00000000|20150119|00000
@@ -98,7 +101,7 @@ sub next_record {
    # afrinic|ZA|asn|1228|1|19910301|allocated
 
    my $line;
-   while ($line = $read->read_line) {
+   while ($line = $fr->read_line) {
       next if $line =~ /^\s*#/;  # Skip comments
 
       chomp($line);

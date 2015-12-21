@@ -70,7 +70,7 @@ sub update {
 
    my $datadir = $self->datadir;
 
-   my $fc = Metabrik::File::Compress->new_from_brik($self) or return;
+   my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
 
    if ($type eq 'recent') {
       (my $uri = $resource->{uri}) =~ s/NAME/Recent/;
