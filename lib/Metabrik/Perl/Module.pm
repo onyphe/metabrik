@@ -18,6 +18,7 @@ sub brik_properties {
          test => [ qw(directory|OPTIONAL) ],
          install => [ qw(module|$module_list|directory|OPTIONAL) ],
          dist => [ qw(directory|OPTIONAL) ],
+         clean => [ qw(directory|OPTIONAL) ],
       },
       attributes => {
          use_test => [ qw(0|1) ],
@@ -91,7 +92,7 @@ sub test {
    }
    else {
       Cwd::chdir($cwd);
-      return $self->log->error("build: neither Build nor Makefile were found, abort");
+      return $self->log->error("test: neither Build nor Makefile were found, abort");
    }
 
    $self->use_sudo(0);
@@ -168,7 +169,39 @@ sub dist {
    }
    else {
       Cwd::chdir($cwd);
-      return $self->log->error("build: neither Build nor Makefile were found, abort");
+      return $self->log->error("dist: neither Build nor Makefile were found, abort");
+   }
+
+   $self->use_sudo(0);
+   my $r = $self->execute($cmd);
+   $self->use_sudo(1);
+
+   Cwd::chdir($cwd);
+
+   return $r;
+}
+
+sub clean {
+   my $self = shift;
+   my ($directory) = @_;
+
+   $directory ||= '';
+   my $cwd = Cwd::cwd();
+   if (length($directory)) {
+      $self->brik_help_run_directory_not_found('clean', $directory) or return;
+      Cwd::chdir($directory);
+   }
+
+   my $cmd;
+   if (-f 'Build') {
+      $cmd = 'perl Build clean';
+   }
+   elsif (-f 'Makefile') {
+      $cmd = 'make clean';
+   }
+   else {
+      Cwd::chdir($cwd);
+      return $self->log->error("clean: neither Build nor Makefile were found, abort");
    }
 
    $self->use_sudo(0);

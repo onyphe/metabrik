@@ -397,6 +397,8 @@ sub update_core {
    }
 
    $pm->build($datadir.'/core') or return;
+   $pm->clean($datadir.'/core') or return;
+   $pm->build($datadir.'/core') or return;
    $pm->test($datadir.'/core') or return;
    $pm->install($datadir.'/core') or return;
 
@@ -426,6 +428,8 @@ sub update_repository {
       $dm->update($repository) or return;
    }
 
+   $pm->build($repository) or return;
+   $pm->clean($repository) or return;
    $pm->build($repository) or return;
    $pm->test($repository) or return;
 
