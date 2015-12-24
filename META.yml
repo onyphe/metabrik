@@ -249,6 +249,8 @@ provides:
     file: lib/Metabrik/Proxy/Ssh2tcp.pm
   Metabrik::Remote::Tcpdump:
     file: lib/Metabrik/Remote/Tcpdump.pm
+  Metabrik::Remote::Wmi:
+    file: lib/Metabrik/Remote/Wmi.pm
   Metabrik::Repository:
     file: lib/Metabrik/Repository.pm
     version: '1.20'
@@ -266,16 +268,12 @@ provides:
     file: lib/Metabrik/Server/Tcp.pm
   Metabrik::Shell::Command:
     file: lib/Metabrik/Shell/Command.pm
-    version: '1.20'
   Metabrik::Shell::History:
     file: lib/Metabrik/Shell/History.pm
-    version: '1.20'
   Metabrik::Shell::Rc:
     file: lib/Metabrik/Shell/Rc.pm
-    version: '1.20'
   Metabrik::Shell::Script:
     file: lib/Metabrik/Shell/Script.pm
-    version: '1.20'
   Metabrik::Ssl::Heartbleed:
     file: lib/Metabrik/Ssl/Heartbleed.pm
   Metabrik::String::Ascii:

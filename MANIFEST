@@ -120,6 +120,7 @@ lib/Metabrik/Perl/Module.pm
 lib/Metabrik/Proxy/Http.pm
 lib/Metabrik/Proxy/Ssh2tcp.pm
 lib/Metabrik/Remote/Tcpdump.pm
+lib/Metabrik/Remote/Wmi.pm
 lib/Metabrik/Repository.pm
 lib/Metabrik/Server/Dns.pm
 lib/Metabrik/Server/Http.pm
