@@ -29,7 +29,6 @@ lib/Metabrik/Client/Udp.pm
 lib/Metabrik/Client/Whois.pm
 lib/Metabrik/Client/Www.pm
 lib/Metabrik/Convert/Number.pm
-lib/Metabrik/Convert/Video.pm
 lib/Metabrik/Crypto/Aes.pm
 lib/Metabrik/Crypto/Gpg.pm
 lib/Metabrik/Crypto/X509.pm
@@ -162,6 +161,7 @@ lib/Metabrik/System/Service.pm
 lib/Metabrik/System/Ubuntu/Package.pm
 lib/Metabrik/Terminal/Control.pm
 lib/Metabrik/Time/Universal.pm
+lib/Metabrik/Video/Convert.pm
 lib/Metabrik/Worker/Fork.pm
 lib/Metabrik/Www/Shorten.pm
 lib/Metabrik/Www/Splunk.pm
@@ -206,4 +206,7 @@ t/31-use-briks-lookup.t
 t/32-use-briks-worker.t
 t/33-use-briks-brik.t
 t/34-use-briks-antivirus.t
+t/35-use-briks-devel.t
+t/36-use-briks-terminal.t
+t/37-use-briks-video.t
 UPDATING

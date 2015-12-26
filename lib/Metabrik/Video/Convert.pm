@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# convert::video Brik
+# video::convert Brik
 #
-package Metabrik::Convert::Video;
+package Metabrik::Video::Convert;
 use strict;
 use warnings;
 
@@ -74,7 +74,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Convert::Video - convert::video Brik
+Metabrik::Video::Convert - video::convert Brik
 
 =head1 COPYRIGHT AND LICENSE
 
