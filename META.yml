@@ -67,8 +67,6 @@ provides:
     file: lib/Metabrik/Client/Www.pm
   Metabrik::Convert::Number:
     file: lib/Metabrik/Convert/Number.pm
-  Metabrik::Convert::Video:
-    file: lib/Metabrik/Convert/Video.pm
   Metabrik::Crypto::Aes:
     file: lib/Metabrik/Crypto/Aes.pm
   Metabrik::Crypto::Gpg:
@@ -99,6 +97,8 @@ provides:
     file: lib/Metabrik/Database/Vfeed.pm
   Metabrik::Devel::Mercurial:
     file: lib/Metabrik/Devel/Mercurial.pm
+  Metabrik::Devel::Subversion:
+    file: lib/Metabrik/Devel/Subversion.pm
   Metabrik::Email::Mbox:
     file: lib/Metabrik/Email/Mbox.pm
   Metabrik::Email::Message:
@@ -153,6 +153,8 @@ provides:
     file: lib/Metabrik/Hardware/Temperature.pm
   Metabrik::Identify::Ssh:
     file: lib/Metabrik/Identify/Ssh.pm
+  Metabrik::Image::Convert:
+    file: lib/Metabrik/Image/Convert.pm
   Metabrik::Image::Exif:
     file: lib/Metabrik/Image/Exif.pm
   Metabrik::Image::Jpg:
@@ -253,7 +255,7 @@ provides:
     file: lib/Metabrik/Remote/Wmi.pm
   Metabrik::Repository:
     file: lib/Metabrik/Repository.pm
-    version: '1.20'
+    version: v1.20.0
   Metabrik::Server::Dns:
     file: lib/Metabrik/Server/Dns.pm
   Metabrik::Server::Http:
@@ -334,6 +336,8 @@ provides:
     file: lib/Metabrik/Terminal/Control.pm
   Metabrik::Time::Universal:
     file: lib/Metabrik/Time/Universal.pm
+  Metabrik::Video::Convert:
+    file: lib/Metabrik/Video/Convert.pm
   Metabrik::Worker::Fork:
     file: lib/Metabrik/Worker/Fork.pm
   Metabrik::Www::Shorten:
@@ -348,9 +352,9 @@ requires:
   File::Path: '0'
   File::Spec: '0'
   IPC::Run3: '0'
-  Metabrik: '1.20'
+  Metabrik: v1.20.0
   POSIX: '0'
   perl: v5.6.1
 resources:
   license: http://opensource.org/licenses/BSD-3-Clause
-version: '1.20'
+version: v1.20.0

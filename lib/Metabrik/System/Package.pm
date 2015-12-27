@@ -27,6 +27,7 @@ sub brik_properties {
          is_os_freebsd => [ ],
          is_installed => [ qw(package|$package_list) ],
          my_os => [ ],
+         which => [ qw(file) ],
       },
       require_modules => {
          'Metabrik::System::Os' => [ ],
@@ -169,6 +170,17 @@ sub my_os {
 
    my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
    return $so->my;
+}
+
+sub which {
+   my $self = shift;
+   my ($file) = @_;
+
+   $self->brik_help_run_undef_arg('which', $file) or return;
+
+   my $sp = $self->get_system_package or return;
+
+   return $sp->which($file);
 }
 
 1;

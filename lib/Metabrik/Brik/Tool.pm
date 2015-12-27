@@ -24,6 +24,7 @@ sub brik_properties {
       },
       commands => {
          install_packages => [ ],
+         install_needed_packages => [ qw(Brik) ],
          install_modules => [ ],
          create_tool => [ qw(filename.pl Repository|OPTIONAL) ],
          create_brik => [ qw(Brik Repository|OPTIONAL) ],
@@ -54,8 +55,8 @@ sub brik_use_properties {
 sub install_packages {
    my $self = shift;
 
-   my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
-   if ($so->is_ubuntu) {
+   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
+   if ($sp->is_os_ubuntu) {
       my @programs = qw(
          aptitude
          aircrack-ng
@@ -94,7 +95,6 @@ sub install_packages {
          libnet-libdnet-perl
       );
 
-      my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
       $sp->install([ @programs, @modules ]);
    }
    else {
@@ -103,6 +103,23 @@ sub install_packages {
    }
 
    return 1;
+}
+
+sub install_needed_packages {
+   my $self = shift;
+   my ($brik) = @_;
+
+   my $con = $self->context;
+
+   my $avail = $con->find_available;
+   if (! exists($avail->{$brik})) {
+      return $self->log->error("install_needed_packages: Brik [$brik] not available");
+   }
+
+   my $module = $avail->{$brik};
+
+   my $b = $module->new_from_brik_init_no_checks($self) or return;
+   return $b->install;
 }
 
 sub install_modules {
@@ -174,6 +191,7 @@ sub install_modules {
       String::Random
       Term::ReadPassword
       Text::CSV_XS
+      Time::HiRes
       URI
       URI::Escape
       WWW::Mechanize
@@ -192,9 +210,8 @@ sub create_tool {
    my ($filename, $repository) = @_;
 
    $repository ||= $self->repository;
-   if (! defined($filename)) {
-      return $self->log->error($self->brik_help_run('create_tool'));
-   }
+   $self->brik_help_run_undef_arg('create_tool', $filename) or return;
+   $self->brik_help_run_undef_arg('create_tool', $repository) or return;
 
    my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
 
@@ -206,7 +223,7 @@ sub create_tool {
 use strict;
 use warnings;
 
-use lib qw($repository);
+use lib qw($repository/lib);
 
 use Data::Dumper;
 use Metabrik::Core::Context;
@@ -233,9 +250,8 @@ sub create_brik {
    my ($brik, $repository) = @_;
 
    $repository ||= $self->repository;
-   if (! defined($brik)) {
-      return $self->log->error($self->brik_help_run('create_brik'));
-   }
+   $self->brik_help_run_undef_arg('create_brik', $brik) or return;
+   $self->brik_help_run_undef_arg('create_brik', $repository) or return;
 
    $brik = lc($brik);
    if ($brik !~ m{^\w+::\w+(::\w+)*$}) {
@@ -252,10 +268,10 @@ sub create_brik {
 
    my $directory;
    if (@toks > 2) {
-      $directory = join('/', $repository, 'Metabrik', @toks[0..$#toks-1]);
+      $directory = join('/', $repository, 'lib/Metabrik', @toks[0..$#toks-1]);
    }
    else {
-      $directory = join('/', $repository, 'Metabrik', $toks[0]);
+      $directory = join('/', $repository, 'lib/Metabrik', $toks[0]);
    }
    my $filename = $directory.'/'.$toks[-1].'.pm';
    my $package = join('::', 'Metabrik', @toks);
@@ -296,6 +312,8 @@ sub brik_properties {
       },
       optional_binaries => {
       },
+      need_packages => {
+      },
    };
 }
 
@@ -328,10 +346,10 @@ sub example_command {
    my \$self = shift;
    my (\$arg1, \$arg2) = \@_;
 
-   \$self->brik_help_run_undef_arg("example_command", \$arg1) or return;
-
    \$arg2 ||= \$self->arg2;
-   my \$ref = \$self->brik_help_run_invalid_arg("example_command", \$arg2, 'ARRAY', 'SCALAR') or return;
+   \$self->brik_help_run_undef_arg('example_command', \$arg1) or return;
+   my \$ref = \$self->brik_help_run_invalid_arg('example_command', \$arg2, 'ARRAY', 'SCALAR')
+      or return;
 
    if (\$ref eq 'ARRAY') {
       # Do your stuff
@@ -420,7 +438,6 @@ sub update_repository {
    my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;
    $pm->use_pager(0);
 
-   $repository =~ s{/lib$}{};
    if (! -d $repository) {
       $dm->clone($url, $repository) or return;
    }
@@ -442,16 +459,18 @@ sub update_repository {
    $self->execute("cat $repository/UPDATING");
 
    $self->log->info("update_repository: the file just showed contains information that ".
-                    "helps you follow API changes. Read it again at [$repository/UPDATING].");
+                    "helps you follow API changes.");
+   $self->log->info("Read it here [$repository/UPDATING].");
 
    return "$repository/UPDATING";
 }
 
 sub test_repository {
    my $self = shift;
+   my ($repository) = @_;
 
-   my $repository = $self->global->repository;
-   $repository =~ s{/lib$}{};
+   $repository ||= $self->repository;
+   $self->brik_help_run_undef_arg('test_repository', $repository) or return;
 
    my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;
    $pm->use_pager(0);

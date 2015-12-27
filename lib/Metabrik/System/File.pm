@@ -32,6 +32,7 @@ sub brik_properties {
          rename => [ qw(source destination) ],
          cat => [ qw(source destination) ],
          create => [ qw(file size) ],
+         glob => [ qw(pattern) ],
       },
       require_modules => {
          'File::Copy' => [ qw(mv) ],
@@ -69,14 +70,17 @@ sub remove {
    my $self = shift;
    my ($file) = @_;
 
-   $self->brik_help_run_undef_arg("remove", $file) or return;
-   my $ref = $self->brik_help_run_invalid_arg("remove", $file, 'ARRAY', 'SCALAR') or return;
+   $self->brik_help_run_undef_arg('remove', $file) or return;
+   my $ref = $self->brik_help_run_invalid_arg('remove', $file, 'ARRAY', 'SCALAR')
+      or return;
 
    if ($ref eq 'ARRAY') {
-      unlink(@$file) or return $self->log->error("remove: unable to unlink files: [$!]");
+      for my $this (@$file) {
+         unlink($this) or $self->log->warning("remove: unable to unlink file [$file]: $!");
+      }
    }
    else {
-      unlink($file) or return $self->log->error("remove: unable to unlink file: [$!]");
+      unlink($file) or return $self->log->warning("remove: unable to unlink file [$file]: $!");
    }
 
    return $file;
@@ -113,6 +117,15 @@ sub create {
    $fw->close;
 
    return 1;
+}
+
+sub glob {
+   my $self = shift;
+   my ($pattern) = @_;
+
+   my @list = CORE::glob("$pattern");
+
+   return \@list;
 }
 
 1;

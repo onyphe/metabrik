@@ -48,9 +48,7 @@ sub system {
    my $self = shift;
    my ($cmd, @args) = @_;
 
-   if (! defined($cmd)) {
-      return $self->log->error($self->brik_help_run('system'));
-   }
+   $self->brik_help_run_undef_arg('system', $cmd) or return;
 
    # Remove undefined values from arguments
    my @new;
@@ -101,14 +99,14 @@ sub system {
 
    $self->debug && $self->log->debug("system: return code [$r] with status [$?]");
 
+   if (! $self->ignore_error && $? != 0) {
+      # Failure, we return the program exit code
+      return $? >> 8;
+   }
+
    # Success
    if ($r == 0) {
       return 1;
-   }
-
-   if (! $self->ignore_error) {
-      # Failure, we return the program exit code
-      return $?;
    }
 
    return 1;

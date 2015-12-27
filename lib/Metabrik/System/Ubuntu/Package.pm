@@ -23,12 +23,14 @@ sub brik_properties {
          upgrade => [ ],
          list => [ ],
          is_installed => [ qw(package|$package_list) ],
+         which => [ qw(file) ],
       },
       optional_binaries => {
          'aptitude' => [ ],
       },
       require_binaries => {
          'apt-get' => [ ],
+         'dpkg' => [ ],
          'sudo' => [ ],
       },
    };
@@ -126,6 +128,25 @@ sub is_installed {
    }
 
    return 0;
+}
+
+sub which {
+   my $self = shift;
+   my ($file) = @_;
+
+   $self->brik_help_run_undef_arg('which', $file) or return;
+   $self->brik_help_run_file_not_found('which', $file) or return;
+
+   my $cmd = "dpkg -S $file";
+   my $lines = $self->capture($cmd) or return;
+   for my $line (@$lines) {
+      my @toks = split(/\s*:\s*/, $line);
+      if (defined($toks[0]) && defined($toks[1]) && ($toks[1] eq $file)) {
+         return $toks[0];
+      }
+   }
+
+   return 'undef';
 }
 
 1;

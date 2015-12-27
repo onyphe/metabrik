@@ -34,7 +34,6 @@ DEPENDENCIES
 
    Perl v5.6.1
    Metabrik
-   Cwd
    IPC::Run3
    File::Copy
    File::Path

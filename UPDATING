@@ -1,3 +1,8 @@
+20151226
+   AFFECT: convert::video
+
+   - convert::video renamed to video::convert
+
 20151220
    AFFECT: shell::rc, shell::script
 

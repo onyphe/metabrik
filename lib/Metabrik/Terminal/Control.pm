@@ -7,7 +7,7 @@ package Metabrik::Terminal::Control;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -15,8 +15,21 @@ sub brik_properties {
       tags => [ qw(unstable) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
+      attributes => {
+         output => [ qw(file) ],
+      },
       commands => {
+         install => [ ], # Inherited
          title => [ qw(string) ],
+         record => [ qw(command|OPTIONAL) ],
+         replay => [ qw(script_file timing_file|OPTIONAL) ],
+      },
+      require_binaries => {
+         'script' => [ ],
+         'scriptreplay' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(bsd-utils) ],
       },
    };
 }
@@ -25,13 +38,47 @@ sub title {
    my $self = shift;
    my ($title) = @_;
 
-   if (! defined($title)) {
-      return $self->log->error($self->brik_help_run('title'));
-   }
+   $self->brik_help_run_undef_arg('title', $title) or return;
 
    print "\c[];$title\a\e[0m";
 
    return $title;
+}
+
+sub record {
+   my $self = shift;
+   my ($output, $command) = @_;
+
+   $self->brik_help_run_undef_arg('record', $output) or return;
+
+   my $cmd = 'script';
+   if (defined($command)) {
+      $cmd .= " -c \"$command\"";
+   }
+
+   my $script_file = "$output.script";
+   my $timing_file = "$output.timing";
+
+   $cmd .= " -t\"$timing_file\" \"$script_file\"";
+
+   $self->system($cmd) or return;
+
+   return [ $script_file, $timing_file ];
+}
+
+sub replay {
+   my $self = shift;
+   my ($script, $timing) = @_;
+
+   $self->brik_help_run_undef_arg('replay', $script) or return;
+
+   my $cmd = 'scriptreplay';
+   if (defined($timing)) {
+      $cmd .= " -t $timing";
+   }
+   $cmd .= " $script";
+
+   return $self->execute($cmd);
 }
 
 1;

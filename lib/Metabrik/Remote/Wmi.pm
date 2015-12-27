@@ -65,13 +65,15 @@ sub install {
 
    if (@$files > 0) {
       my $cmd = "tar jxvf $datadir/wmi-$version.tar.bz2 -C $datadir/";
-      $self->execute($cmd) or return;
+      $self->SUPER::execute($cmd) or return;
    }
 
-   # cd wmi-1.3.11/Samba/source
+   # svn co http://dev.zenoss.org/svn/tags/wmi-1.3.14
+
+   # cd wmi-1.3.14/Samba/source
    # ./autogen.sh
    # ./configure
-   # make proto bin/wmic
+   # make "CPP=gcc -E -ffreestanding"
 
    # cd wmi-$version
    # vi GNUmakefile
@@ -106,14 +108,14 @@ sub request {
    $host ||= $self->host;
    $user ||= $self->user;
    $password ||= $self->password;
-   $self->brik_help_run_undef_arg('request', $host) or return;
    $self->brik_help_run_undef_arg('request', $query) or return;
+   $self->brik_help_run_undef_arg('request', $host) or return;
    $self->brik_help_run_undef_arg('request', $user) or return;
    $self->brik_help_run_undef_arg('request', $password) or return;
 
    my $cmd = "wmic -U$user".'%'."$password //$host \"$query\"";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 #
@@ -150,8 +152,8 @@ sub get_win32_process {
 #
 # 2. Add winexesvc service
 # runas administrator a cmd.exe
-# C:\> sc create winexesvc binPath= C:\WINDOWS\WINEXESVC.EXE start= auto DisplayName= winexesvc 
-# C:\> sc description winexesvc "Remote command provider for Zenoss monitoring"
+# C:\> sc create winexesvc binPath= C:\WINDOWS\WINEXESVC.EXE start= auto DisplayName= winexesvc
+# C:\> sc description winexesvc "Remote command provider"
 #
 sub execute {
    my $self = shift;
@@ -160,8 +162,8 @@ sub execute {
    $host ||= $self->host;
    $user ||= $self->user;
    $password ||= $self->password;
-   $self->brik_help_run_undef_arg('execute', $host) or return;
    $self->brik_help_run_undef_arg('execute', $command) or return;
+   $self->brik_help_run_undef_arg('execute', $host) or return;
    $self->brik_help_run_undef_arg('execute', $user) or return;
    $self->brik_help_run_undef_arg('execute', $password) or return;
 

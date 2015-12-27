@@ -28,6 +28,7 @@ sub brik_properties {
       commands => {
          clone => [ qw(repository directory|OPTIONAL) ],
          push => [ qw(directory|OPTIONAL) ],
+         incoming => [ qw(directory|OPTIONAL) ],
          pull => [ qw(directory|OPTIONAL) ],
          update => [ qw(directory|OPTIONAL) ],
          diff => [ qw(directory|file|OPTIONAL) ],
@@ -58,16 +59,49 @@ sub push {
    my $self = shift;
    my ($directory) = @_;
 
-   $directory ||= '.';
-   $self->brik_help_run_directory_not_found('push', $directory) or return;
+   my $she = $self->shell;
+   my $cwd = $she->pwd;
+
+   $directory ||= '';
+   if (length($directory)) {
+      $self->brik_help_run_directory_not_found('push', $directory) or return;
+      $she->run_cd($directory) or return;
+   }
 
    my $prev = $self->use_pager;
 
    $self->use_pager(0);
-   my $cmd = "hg push $directory";
+   my $cmd = "hg push";
    my $r = $self->execute($cmd);
 
    $self->use_pager($prev);
+
+   if (length($directory)) {
+      $she->run_cd($cwd) or return;
+   }
+
+   return $r;
+}
+
+sub incoming {
+   my $self = shift;
+   my ($directory) = @_;
+
+   my $she = $self->shell;
+   my $cwd = $she->pwd;
+
+   $directory ||= '';
+   if (length($directory)) {
+      $self->brik_help_run_directory_not_found('incoming', $directory) or return;
+      $she->run_cd($directory) or return;
+   }
+
+   my $cmd = "hg incoming";
+   my $r = $self->execute($cmd);
+
+   if (length($directory)) {
+      $she->run_cd($cwd) or return;
+   }
 
    return $r;
 }
@@ -76,14 +110,26 @@ sub pull {
    my $self = shift;
    my ($directory) = @_;
 
-   $directory ||= '.';
-   $self->brik_help_run_directory_not_found('pull', $directory) or return;
+   my $she = $self->shell;
+   my $cwd = $she->pwd;
 
-   my $cmd = "hg pull -u $directory";
+   $directory ||= '';
+   if (length($directory)) {
+      $self->brik_help_run_directory_not_found('pull', $directory) or return;
+      $she->run_cd($directory) or return;
+   }
 
-   return $self->execute($cmd);
+   my $cmd = "hg pull -u";
+   my $r = $self->execute($cmd);
+
+   if (length($directory)) {
+      $she->run_cd($cwd) or return;
+   }
+
+   return $r;
 }
 
+# alias to pull
 sub update {
    my $self = shift;
 
@@ -110,7 +156,9 @@ sub add {
    my ($data) = @_;
 
    $self->brik_help_run_undef_arg('add', $data) or return;
-   my $ref = $self->brik_help_run_invalid_arg('add', $data, 'ARRAY', 'SCALAR') or return;
+   my $ref = $self->brik_help_run_invalid_arg('add', $data, 'ARRAY', 'SCALAR')
+      or return;
+
    if ($ref eq 'ARRAY') {
       $data = join(' ', @$data);
    }
@@ -131,7 +179,9 @@ sub commit {
    my ($data) = @_;
 
    $data ||= '.';
-   my $ref = $self->brik_help_run_invalid_arg('commit', $data, 'ARRAY', 'SCALAR') or return;
+   my $ref = $self->brik_help_run_invalid_arg('commit', $data, 'ARRAY', 'SCALAR')
+      or return;
+
    if ($ref eq 'ARRAY') {
       $data = join(' ', @$data);
    }

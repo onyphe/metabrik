@@ -22,6 +22,7 @@ sub brik_properties {
          upgrade => [ ],
          list => [ ],
          is_installed => [ qw(package|$package_list) ],
+         which => [ qw(file) ],
       },
       require_binaries => {
          'sudo' => [ ],
@@ -83,6 +84,25 @@ sub is_installed {
    my $self = shift;
 
    return $self->log->info("is_installed: not implemented on this system");
+}
+
+sub which {
+   my $self = shift;
+   my ($file) = @_;
+
+   $self->brik_help_run_undef_arg('which', $file) or return;
+   $self->brik_help_run_file_not_found('which', $file) or return;
+
+   my $cmd = "pkg which $file";
+   my $lines = $self->capture($cmd) or return;
+   for my $line (@$lines) {
+      my @toks = split(/\s+/, $line);
+      if (defined($toks[0]) && ($toks[0] eq $file) && defined($toks[5])) {
+         return $toks[5];
+      }
+   }
+
+   return 'undef';
 }
 
 1;

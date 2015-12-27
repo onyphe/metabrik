@@ -28,9 +28,6 @@ sub brik_properties {
          use_test => 0,
          use_sudo => 1,
       },
-      require_modules => {
-         'Cwd' => [ qw(chdir cwd) ],
-      },
       require_binaries => {
          'cpanm' => [ ],
       },
@@ -41,11 +38,13 @@ sub build {
    my $self = shift;
    my ($directory) = @_;
 
+   my $she = $self->shell;
+   my $cwd = $she->pwd;
+
    $directory ||= '';
-   my $cwd = Cwd::cwd();
    if (length($directory)) {
       $self->brik_help_run_directory_not_found('build', $directory) or return;
-      Cwd::chdir($directory);
+      $she->run_cd($directory) or return;
    }
 
    my @cmd = ();
@@ -56,7 +55,9 @@ sub build {
       @cmd = ( 'perl Makefile.PL', 'make' );
    }
    else {
-      Cwd::chdir($cwd);
+      if (length($directory)) {
+         $she->run_cd($cwd) or return;
+      }
       return $self->log->error("build: neither Build.PL nor Makefile.PL were found, abort");
    }
 
@@ -67,7 +68,9 @@ sub build {
    }
    $self->use_sudo(1);
 
-   Cwd::chdir($cwd);
+   if (length($directory)) {
+      $she->run_cd($cwd) or return;
+   }
 
    return $r;
 }
@@ -76,11 +79,13 @@ sub test {
    my $self = shift;
    my ($directory) = @_;
 
+   my $she = $self->shell;
+   my $cwd = $she->pwd;
+
    $directory ||= '';
-   my $cwd = Cwd::cwd();
    if (length($directory)) {
       $self->brik_help_run_directory_not_found('test', $directory) or return;
-      Cwd::chdir($directory);
+      $she->run_cd($directory) or return;
    }
 
    my $cmd;
@@ -91,7 +96,9 @@ sub test {
       $cmd = 'make test';
    }
    else {
-      Cwd::chdir($cwd);
+      if (length($directory)) {
+         $she->run_cd($cwd) or return;
+      }
       return $self->log->error("test: neither Build nor Makefile were found, abort");
    }
 
@@ -99,7 +106,9 @@ sub test {
    my $r = $self->execute($cmd);
    $self->use_sudo(1);
 
-   Cwd::chdir($cwd);
+   if (length($directory)) {
+      $she->run_cd($cwd) or return;
+   }
 
    return $r;
 }
@@ -108,14 +117,16 @@ sub install {
    my $self = shift;
    my ($module) = @_;
 
+   my $she = $self->shell;
+   my $cwd = $she->pwd;
+
    my $cmd;
-   my $cwd = Cwd::cwd();
    if ((defined($module) && -d $module) || (! defined($module))) {
       my $directory = $module || ''; # We consider there is only one arg: the directory where 
                                      # to find the module to install
       if (length($directory)) {
          $self->brik_help_run_directory_not_found('install', $directory) or return;
-         Cwd::chdir($directory);
+         $she->run_cd($directory) or return;
       }
 
       if (-f 'Build') {
@@ -125,7 +136,9 @@ sub install {
          $cmd = 'make install';
       }
       else {
-         Cwd::chdir($cwd);
+         if (length($directory)) {
+            $she->run_cd($cwd) or return;
+         }
          return $self->log->error("install: neither Build nor Makefile were found, abort");
       }
    }
@@ -144,7 +157,7 @@ sub install {
 
    my $r = $self->execute($cmd);
 
-   Cwd::chdir($cwd);
+   $she->run_cd($cwd) or return;
 
    return $r;
 }
@@ -153,11 +166,13 @@ sub dist {
    my $self = shift;
    my ($directory) = @_;
 
+   my $she = $self->shell;
+   my $cwd = $she->pwd;
+
    $directory ||= '';
-   my $cwd = Cwd::cwd();
    if (length($directory)) {
       $self->brik_help_run_directory_not_found('dist', $directory) or return;
-      Cwd::chdir($directory);
+      $she->run_cd($directory) or return;
    }
 
    my $cmd;
@@ -168,7 +183,9 @@ sub dist {
       $cmd = 'make dist';
    }
    else {
-      Cwd::chdir($cwd);
+      if (length($directory)) {
+         $she->run_cd($cwd) or return;
+      }
       return $self->log->error("dist: neither Build nor Makefile were found, abort");
    }
 
@@ -176,7 +193,9 @@ sub dist {
    my $r = $self->execute($cmd);
    $self->use_sudo(1);
 
-   Cwd::chdir($cwd);
+   if (length($directory)) {
+      $she->run_cd($cwd) or return;
+   }
 
    return $r;
 }
@@ -185,11 +204,13 @@ sub clean {
    my $self = shift;
    my ($directory) = @_;
 
+   my $she = $self->shell;
+   my $cwd = $she->pwd;
+
    $directory ||= '';
-   my $cwd = Cwd::cwd();
    if (length($directory)) {
       $self->brik_help_run_directory_not_found('clean', $directory) or return;
-      Cwd::chdir($directory);
+      $she->run_cd($directory) or return;
    }
 
    my $cmd;
@@ -200,7 +221,9 @@ sub clean {
       $cmd = 'make clean';
    }
    else {
-      Cwd::chdir($cwd);
+      if (length($directory)) {
+         $she->run_cd($cwd) or return;
+      }
       return $self->log->error("clean: neither Build nor Makefile were found, abort");
    }
 
@@ -208,7 +231,9 @@ sub clean {
    my $r = $self->execute($cmd);
    $self->use_sudo(1);
 
-   Cwd::chdir($cwd);
+   if (length($directory)) {
+      $she->run_cd($cwd) or return;
+   }
 
    return $r;
 }
