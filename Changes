@@ -17,6 +17,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: file::type Brik
    - new: remote::wmi Brik
    - new: devel::subversion Brik
+   - new: image::convert Brik
 
 1.11 Sun Nov 22 17:46:43 CET 2015
    - new: api::shodan Brik
