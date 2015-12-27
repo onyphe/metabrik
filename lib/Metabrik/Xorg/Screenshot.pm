@@ -147,6 +147,7 @@ sub continuous_by_window_id {
    my $list = $sf->glob("$datadir/continuous-*gif") or return;
    $sf->remove($list) or return;
 
+   my @files = ();
    my $file = '';
    my $frame = 1;
    while (1) {
@@ -157,11 +158,12 @@ sub continuous_by_window_id {
          last;
       }
       $self->log->verbose("continuous_by_window_id: done with [$file]");
+      push @files, $file;
       Time::HiRes::usleep($delay);
       $frame++;
    }
 
-   return $file;  # Return last filename
+   return \@files;
 }
 
 1;
