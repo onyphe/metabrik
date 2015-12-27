@@ -7,7 +7,7 @@ package Metabrik::Xorg::Screenshot;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -28,6 +28,7 @@ sub brik_properties {
          ignore_error => 0,
       },
       commands => {
+         install => [ ], # Inherited
          active_window => [ qw(output|OPTIONAL format|OPTIONAL) ],
          full_screen => [ qw(output|OPTIONAL format|OPTIONAL) ],
          select_window => [ qw(output|OPTIONAL format|OPTIONAL) ],
