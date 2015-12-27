@@ -1,6 +1,6 @@
 Revision history for Perl extension Metabrik::Repository.
 
-1.20
+1.20.0
    - MERGE: brik::search, perl::module, shell::command, shell::history, shell::rc
             and shell::script moved to Repository away from Core
    - new: www::shorten Brik
@@ -16,6 +16,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: devel::mercurial Brik
    - new: file::type Brik
    - new: remote::wmi Brik
+   - new: devel::subversion Brik
 
 1.11 Sun Nov 22 17:46:43 CET 2015
    - new: api::shodan Brik
