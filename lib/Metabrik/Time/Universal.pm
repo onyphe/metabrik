@@ -36,6 +36,8 @@ sub brik_properties {
 }
 
 sub list_timezones {
+   my $self = shift;
+
    return DateTime::TimeZone->all_names;
 }
 
@@ -43,9 +45,7 @@ sub search_timezone {
    my $self = shift;
    my ($pattern) = @_;
 
-   if (! defined($pattern)) {
-      return $self->log->error($self->brik_help_run('search_timezone'));
-   }
+   $self->brik_help_run_undef_arg('search_timezone', $pattern) or return;
 
    my $list = $self->list_timezones;
 
@@ -64,9 +64,7 @@ sub localtime {
    my ($timezone) = @_;
 
    $timezone ||= $self->timezone;
-   if (! defined($timezone)) {
-      return $self->log->error($self->brik_help_set('timezone'));
-   }
+   $self->brik_help_run_undef_arg('localtime', $timezone) or return;
 
    my $time = {};
    if (ref($timezone) eq 'ARRAY') {

@@ -101,7 +101,8 @@ sub get_one {
    my $self = shift;
    my ($number) = @_;
 
-   if (! defined($number) || $number !~ /^\d+$/) {
+   $self->brik_help_run_undef_arg('get_one', $number) or return;
+   if ($number !~ /^\d+$/) {
       return $self->log->error($self->brik_help_run('get_one'));
    }
 
@@ -126,7 +127,8 @@ sub get_range {
    my $self = shift;
    my ($range) = @_;
 
-   if (! defined($range) || $range !~ /^\d+\.\.\d+$/) {
+   $self->brik_help_run_undef_arg('get_range', $range) or return;
+   if ($range !~ /^\d+\.\.\d+$/) {
       return $self->log->error($self->brik_help_run('get_range'));
    }
 
@@ -163,9 +165,7 @@ sub exec {
    my $self = shift;
    my ($numbers) = @_;
 
-   if (! defined($numbers)) {
-      return $self->log->error($self->brik_help_run('exec'));
-   }
+   $self->brik_help_run_undef_arg('exec', $numbers) or return;
 
    # We want to exec some history command(s)
    my $lines = [];

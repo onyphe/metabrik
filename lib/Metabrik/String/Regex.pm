@@ -32,9 +32,7 @@ sub encode {
    my $self = shift;
    my ($regex) = @_;
 
-   if (! defined($regex)) {
-      return $self->log->error($self->brik_help_run('encode'));
-   }
+   $self->brik_help_run_undef_arg('encode', $regex) or return;
 
    my $ra = Regexp::Assemble->new
       or return $self->log->error("encode: Regexp::Assemble new failed");
@@ -50,7 +48,7 @@ sub encode {
 
    my $encoded;
    eval {
-      $encoded = $ra->re;
+      $encoded = $ra->as_string;
    };
    if ($@) {
       chomp($@);

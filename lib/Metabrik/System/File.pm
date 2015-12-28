@@ -46,7 +46,7 @@ sub mkdir {
    my $self = shift;
    my ($path) = @_;
 
-   $self->brik_help_run_undef_arg("mkdir", $path) or return;
+   $self->brik_help_run_undef_arg('mkdir', $path) or return;
 
    my $no_error = 1;
    File::Path::make_path($path, { error => \my $error });

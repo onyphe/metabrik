@@ -26,12 +26,10 @@ sub to_hex {
    my $self = shift;
    my ($int) = @_;
 
-   if (! defined($int)) {
-      return $self->log->error($self->brik_help_run('hex'));
-   }
+   $self->brik_help_run_undef_arg('to_hex', $int) or return;
 
    if ($int !~ /^[0-9]+/) {
-      return $self->log->error("hex: invalid format for int [$int]");
+      return $self->log->error("to_hex: invalid format for int [$int]");
    }
 
    return sprintf("0x%x", $int);
@@ -41,12 +39,10 @@ sub to_int {
    my $self = shift;
    my ($hex) = @_;
 
-   if (! defined($hex)) {
-      return $self->log->error($self->brik_help_run('int'));
-   }
+   $self->brik_help_run_undef_arg('to_int', $hex) or return;
 
    if ($hex !~ /^[0-9a-f]+$/i && $hex !~ /^0x[0-9a-f]+$/i) {
-      return $self->log->error("int: invalid format for hex [$hex]");
+      return $self->log->error("to_int: invalid format for hex [$hex]");
    }
 
    return sprintf("%d", hex($hex));

@@ -53,7 +53,7 @@ sub brik_properties {
          trace_redirect => [ qw(uri|OPTIONAL) ],
          screenshot => [ qw(uri output) ],
          eval_javascript => [ qw(js uri) ],
-         info => [ ],
+         info => [ qw(uri|OPTIONAL) ],
          mirror => [ qw(url|$url_list output datadir|OPTIONAL) ],
       },
       require_modules => {
@@ -145,9 +145,7 @@ sub _method {
    my ($uri, $username, $password, $method, $data) = @_;
 
    $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run($method));
-   }
+   $self->brik_help_run_undef_arg($method, $uri) or return;
 
    $self->timeout(0);
 
@@ -208,9 +206,7 @@ sub post {
    my $self = shift;
    my ($href, $uri, $username, $password) = @_;
 
-   if (! defined($href)) {
-      return $self->log->error($self->brik_help_run('post'));
-   }
+   $self->brik_help_run_undef_arg('post', $href) or return;
 
    return $self->_method($uri, $username, $password, 'post', $href);
 }
@@ -219,9 +215,7 @@ sub put {
    my $self = shift;
    my ($href, $uri, $username, $password) = @_;
 
-   if (! defined($href)) {
-      return $self->log->error($self->brik_help_run('put'));
-   }
+   $self->brik_help_run_undef_arg('put', $href) or return;
 
    return $self->_method($uri, $username, $password, 'put', $href);
 }
@@ -230,9 +224,7 @@ sub patch {
    my $self = shift;
    my ($href, $uri, $username, $password) = @_;
 
-   if (! defined($href)) {
-      return $self->log->error($self->brik_help_run('patch'));
-   }
+   $self->brik_help_run_undef_arg('patch', $href) or return;
 
    return $self->_method($uri, $username, $password, 'patch', $href);
 }
@@ -263,7 +255,7 @@ sub code {
 
    my $last = $self->_last;
    if (! defined($last)) {
-      return $self->log->error("status: you have to execute a request first");
+      return $self->log->error("code: you have to execute a request first");
    }
 
    return $last->code;
@@ -333,7 +325,7 @@ sub forms {
 
    my $last = $self->_last;
    if (! defined($last)) {
-      return $self->log->error("links: you have to execute a request first");
+      return $self->log->error("forms: you have to execute a request first");
    }
 
    my $client = $self->_client;
@@ -374,9 +366,7 @@ sub trace_redirect {
    my ($uri, $username, $password) = @_;
 
    $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_set('uri'));
-   }
+   $self->brik_help_run_undef_arg('trace_redirect', $uri) or return;
 
    my %args = ();
    if (! $self->ssl_verify) {
@@ -431,9 +421,8 @@ sub screenshot {
    my $self = shift;
    my ($uri, $output) = @_;
 
-   if (! defined($uri) || ! defined($output)) {
-      return $self->log->error($self->brik_help_run('screenshot'));
-   }
+   $self->brik_help_run_undef_arg('screenshot', $uri) or return;
+   $self->brik_help_run_undef_arg('screenshot', $output) or return;
 
    if ($self->brik_has_module('WWW::Mechanize::PhantomJS')
    &&  $self->brik_has_binary('phantomjs')) {
@@ -465,9 +454,8 @@ sub eval_javascript {
    my $self = shift;
    my ($js, $uri) = @_;
 
-   if (! defined($js) || ! defined($uri)) {
-      return $self->log->error($self->brik_help_run('eval_javascript'));
-   }
+   $self->brik_help_run_undef_arg('eval_javascript', $js) or return;
+   $self->brik_help_run_undef_arg('eval_javascript', $uri) or return;
 
    # Perl module Wight may also be an option.
 
@@ -490,13 +478,13 @@ sub eval_javascript {
 
 sub info {
    my $self = shift;
+   my ($uri) = @_;
 
-   if (! defined($self->mechanize)) {
-      return $self->log->error($self->brik_help_run('get'));
-   }
+   $uri ||= $self->uri;
+   $self->brik_help_run_undef_arg('info', $uri) or return;
 
-   my $mech = $self->mechanize;
-   my $headers = $mech->response->headers;
+   my $r = $self->get($uri) or return;
+   my $headers = $r->{headers};
 
    # Taken from apps.json from Wappalyzer
    my @headers = qw(
@@ -550,7 +538,7 @@ sub info {
       $info{$hdr} = $this if defined($this);
    }
 
-   my $title = $mech->title;
+   my $title = $r->{title};
    if (defined($title)) {
       print "Title: $title\n";
    }
@@ -559,18 +547,16 @@ sub info {
       print "$k: ".$info{$k}."\n";
    }
 
-   return $mech;
+   return 1;
 }
 
 sub mirror {
    my $self = shift;
    my ($url, $output, $datadir) = @_;
 
-   if (! defined($url) || ! defined($output)) {
-      return $self->log->error($self->brik_help_run('mirror'));
-   }
-
    $datadir ||= $self->datadir;
+   $self->brik_help_run_undef_arg('mirror', $url) or return;
+   $self->brik_help_run_undef_arg('mirror', $output) or return;
 
    my @files = ();
    if (ref($url) eq 'ARRAY') {

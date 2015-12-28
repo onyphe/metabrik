@@ -21,7 +21,7 @@ sub brik_properties {
       commands => {
          verify_server => [ qw(uri|OPTIONAL) ],
          getcertificate => [ qw(uri|OPTIONAL) ],
-         getcertificate2 => [ qw(SCALAR SCALAR) ],
+         getcertificate2 => [ qw(host port) ],
       },
       require_modules => {
          'Data::Dumper' => [ ],
@@ -40,9 +40,7 @@ sub verify_server {
    my ($uri) = @_;
 
    $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_set('uri'));
-   }
+   $self->brik_help_run_undef_arg('verify_server', $uri) or return;
 
    my $su = Metabrik::String::Uri->new_from_brik_init($self) or return;
    my $parsed = $su->parse($uri) or return;
@@ -79,9 +77,7 @@ sub getcertificate {
    my ($uri) = @_;
 
    $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_set('uri'));
-   }
+   $self->brik_help_run_undef_arg('getcertificate', $uri) or return;
 
    if ($uri !~ /^https:\/\//) {
       return $self->log->error("must use https to get a certificate");
@@ -298,9 +294,8 @@ sub getcertificate2 {
    my $self = shift;
    my ($host, $port) = @_;
 
-   if (! defined($port)) {
-      return $self->log->error($self->brik_help_run('getcertificate2'));
-   }
+   $self->brik_help_run_undef_arg('getcertificate2', $host) or return;
+   $self->brik_help_run_undef_arg('getcertificate2', $port) or return;
 
    eval("use Net::SSLeay qw(print_errs set_fd);");
 

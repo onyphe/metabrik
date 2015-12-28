@@ -47,16 +47,9 @@ sub connect {
    $uri ||= $self->uri;
    $username ||= $self->username;
    $password ||= $self->password;
-
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_set('uri'));
-   }
-   if (! defined($username)) {
-      return $self->log->error($self->brik_help_set('username'));
-   }
-   if (! defined($password)) {
-      return $self->log->error($self->brik_help_set('password'));
-   }
+   $self->brik_help_run_undef_arg('connect', $uri) or return;
+   $self->brik_help_run_undef_arg('connect', $username) or return;
+   $self->brik_help_run_undef_arg('connect', $password) or return;
 
    my $su = Metabrik::String::Uri->new_from_brik_init($self) or return;
    my $parsed = $su->parse($uri) or return;
@@ -88,13 +81,8 @@ sub search {
    my ($search_string) = @_;
 
    my $splunk = $self->_splunk;
-   if (! defined($splunk)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
-   if (! defined($search_string)) {
-      return $self->log->error($self->brik_help_run('search'));
-   }
+   $self->brik_help_run_undef_arg('connect', $splunk) or return;
+   $self->brik_help_run_undef_arg('search', $search_string) or return;
 
    $ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = 'Net::SSL';
 

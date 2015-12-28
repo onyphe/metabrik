@@ -36,9 +36,10 @@ sub brik_properties {
    };
 }
 
+#
 # XXX: see http://cpansearch.perl.org/src/MIKEM/Net-SSLeay-1.65/examples/https-proxy-snif.pl
 # XXX: for HTTPS mitm
-
+#
 sub requests {
    my $self = shift;
 

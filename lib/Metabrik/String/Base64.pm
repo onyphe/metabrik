@@ -29,9 +29,7 @@ sub encode {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('encode'));
-   }
+   $self->brik_help_run_undef_arg('encode', $data) or return;
 
    my $encoded = MIME::Base64::encode_base64($data);
    chomp($encoded);
@@ -43,9 +41,7 @@ sub decode {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('decode'));
-   }
+   $self->brik_help_run_undef_arg('decode', $data) or return;
 
    my $decoded = MIME::Base64::decode_base64($data);
    chomp($decoded);

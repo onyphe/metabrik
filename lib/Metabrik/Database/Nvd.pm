@@ -20,14 +20,14 @@ sub brik_properties {
          loaded_xml => [ qw(loaded_xml) ],
       },
       commands => {
-         update => [ qw(recent|modified|others|all RETURN:xml_filenames) ],
-         load => [ qw(recent|modified|others|all year|OPTIONAL RETURN:xml) ],
-         search_all => [ qw(RETURN:all_entries_list) ],
-         cve_search => [ qw(pattern RETURN:entries_list) ],
-         cpe_search => [ qw(pattern RETURN:entries_list) ],
-         get_cve_xml => [ qw(cve_id RETURN:entry_xml) ],
-         to_hash => [ qw(entry_xml RETURN:entry_hash) ],
-         to_string => [ qw(entry_hash RETURN:lines_list) ],
+         update => [ qw(recent|modified|others|all) ],
+         load => [ qw(recent|modified|others|all year|OPTIONAL) ],
+         search_all => [ ],
+         cve_search => [ qw(pattern) ],
+         cpe_search => [ qw(pattern) ],
+         get_cve_xml => [ qw(cve_id) ],
+         to_hash => [ qw(entry_xml) ],
+         to_string => [ qw(entry_hash) ],
          print => [ qw(entry_hash) ],
       },
       require_modules => {
@@ -225,9 +225,8 @@ sub print {
    my $self = shift;
    my ($h) = @_;
 
-   if (! defined($h)) {
-      return $self->log->error($self->brik_help_run('print'));
-   }
+   $self->brik_help_run_undef_arg('print', $h) or return;
+   $self->brik_help_run_invalid_arg('print', $h, 'HASH') or return;
 
    my $lines = $self->to_string($h);
    for my $line (@$lines) {
@@ -240,6 +239,9 @@ sub print {
 sub to_hash {
    my $self = shift;
    my ($h) = @_;
+
+   $self->brik_help_run_undef_arg('to_hash', $h) or return;
+   $self->brik_help_run_invalid_arg('to_hash', $h, 'HASH') or return;
 
    my $cve = $h->{'vuln:cve-id'};
 
@@ -276,9 +278,7 @@ sub search_all {
    my $self = shift;
 
    my $xml = $self->loaded_xml;
-   if (! defined($xml)) {
-      return $self->log->error($self->brik_help_run('load'));
-   }
+   $self->brik_help_run_undef_arg('load', $xml) or return;
 
    my $entries = $xml->{entry};
    if (! defined($entries)) {
@@ -299,13 +299,8 @@ sub cve_search {
    my ($pattern) = @_;
 
    my $xml = $self->loaded_xml;
-   if (! defined($xml)) {
-      return $self->log->error($self->brik_help_run('load'));
-   }
-
-   if (! defined($pattern)) {
-      return $self->log->error($self->brik_help_run('cve_search'));
-   }
+   $self->brik_help_run_undef_arg('load', $xml) or return;
+   $self->brik_help_run_undef_arg('cve_search', $pattern) or return;
 
    my $entries = $xml->{entry};
    if (! defined($entries)) {
@@ -330,13 +325,8 @@ sub cpe_search {
    my ($cpe) = @_;
 
    my $xml = $self->loaded_xml;
-   if (! defined($xml)) {
-      return $self->log->error($self->brik_help_run('load'));
-   }
-
-   if (! defined($cpe)) {
-      return $self->log->error($self->brik_help_run('cpe_search'));
-   }
+   $self->brik_help_run_undef_arg('load', $xml) or return;
+   $self->brik_help_run_undef_arg('cpe_search', $cpe) or return;
 
    my $entries = $xml->{entry};
    if (! defined($entries)) {
@@ -364,9 +354,7 @@ sub get_cve_xml {
    my ($cve_id) = @_;
 
    my $xml = $self->loaded_xml;
-   if (! defined($xml)) {
-      return $self->log->error($self->brik_help_run('load'));
-   }
+   $self->brik_help_run_undef_arg('load', $xml) or return;
 
    if (defined($xml->{entry})) {
       return $xml->{entry}->{$cve_id};

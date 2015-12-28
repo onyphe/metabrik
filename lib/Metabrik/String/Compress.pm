@@ -36,9 +36,7 @@ sub gunzip {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('gunzip'));
-   }
+   $self->brik_help_run_undef_arg('gunzip', $data) or return;
 
    $self->debug && $self->log->debug("gunzip: length[".length($data)."]");
 
@@ -58,9 +56,7 @@ sub gzip {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('gzip'));
-   }
+   $self->brik_help_run_undef_arg('gzip', $data) or return;
 
    my $gzipped = Gzip::Faster::gzip($data)
       or return $self->log->error("gzip: error");

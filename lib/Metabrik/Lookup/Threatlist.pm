@@ -110,9 +110,7 @@ sub from_ipv4 {
    my $self = shift;
    my ($ipv4) = @_;
 
-   if (! defined($ipv4)) {
-      return $self->log->error($self->brik_help_run('from_ipv4'));
-   }
+   $self->brik_help_run_undef_arg('from_ipv4', $ipv4) or return;
 
    my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
    if (! $na->is_ipv4($ipv4)) {

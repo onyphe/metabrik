@@ -63,9 +63,12 @@ sub connect {
    $port ||= $self->port;
    $username ||= $self->username;
    $password ||= $self->password;
+   $self->brik_help_run_undef_arg('connect', $hostname) or return;
+   $self->brik_help_run_undef_arg('connect', $port) or return;
+   $self->brik_help_run_undef_arg('connect', $username) or return;
+
    my $publickey = $self->publickey;
    my $privatekey = $self->privatekey;
-
    if ($self->use_publickey && ! $publickey) {
       return $self->log->error($self->brik_help_set('publickey'));
    }
@@ -132,12 +135,8 @@ sub exec {
    my ($cmd) = @_;
 
    my $ssh2 = $self->ssh2;
-   if (! defined($ssh2)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-   if (! defined($cmd)) {
-      return $self->log->error($self->brik_help_run('exec'));
-   }
+   $self->brik_help_run_undef_arg('connect', $ssh2) or return;
+   $self->brik_help_run_undef_arg('exec', $cmd) or return;
 
    $self->debug && $self->log->debug("exec: cmd [$cmd]");
 
@@ -156,9 +155,7 @@ sub read_line {
    my $self = shift;
 
    my $ssh2 = $self->ssh2;
-   if (! defined($ssh2)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
+   $self->brik_help_run_undef_arg('connect', $ssh2) or return;
 
    my $channel = $self->_channel;
    if (! defined($channel)) {
@@ -192,9 +189,7 @@ sub read_line_all {
    my $self = shift;
 
    my $ssh2 = $self->ssh2;
-   if (! defined($ssh2)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
+   $self->brik_help_run_undef_arg('connect', $ssh2) or return;
 
    my $channel = $self->_channel;
    if (! defined($channel)) {
@@ -215,9 +210,7 @@ sub read {
    my $self = shift;
 
    my $ssh2 = $self->ssh2;
-   if (! defined($ssh2)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
+   $self->brik_help_run_undef_arg('connect', $ssh2) or return;
 
    my $channel = $self->_channel;
    if (! defined($channel)) {
@@ -270,13 +263,9 @@ sub cat {
    my $self = shift;
    my ($file) = @_;
 
-   if (! defined($self->ssh2)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
-   if (! defined($file)) {
-      return $self->log->error($self->brik_help_run('cat'));
-   }
+   my $ssh2 = $self->ssh2;
+   $self->brik_help_run_undef_arg('connect', $ssh2) or return;
+   $self->brik_help_run_undef_arg('cat', $file) or return;
 
    my $channel = $self->exec('cat '.$file);
    if (! defined($channel)) {
@@ -290,15 +279,9 @@ sub load {
    my $self = shift;
    my ($file) = @_;
 
-   if (! defined($self->ssh2)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
-   if (! defined($file)) {
-      return $self->log->error($self->brik_help_run('load'));
-   }
-
    my $ssh2 = $self->ssh2;
+   $self->brik_help_run_undef_arg('connect', $ssh2) or return;
+   $self->brik_help_run_undef_arg('load', $file) or return;
 
    my $io = IO::Scalar->new;
 

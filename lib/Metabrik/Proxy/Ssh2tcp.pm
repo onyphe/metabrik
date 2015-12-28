@@ -93,19 +93,17 @@ sub start {
    $ssh_hostname_port ||= $self->ssh_hostname_port;
    $remote_hostname_port ||= $self->remote_hostname_port;
    $username ||= $self->username;
-   if (! defined($ssh_hostname_port)) {
-      return $self->log->error($self->brik_help_run('start'));
-   }
-   if (! defined($remote_hostname_port)) {
-      return $self->log->error($self->brik_help_run('start'));
-   }
+   $self->brik_help_run_undef_arg('start', $ssh_hostname_port) or return;
+   my $ref = $self->brik_help_run_invalid_arg('start', $ssh_hostname_port, 'ARRAY', 'SCALAR')
+      or return;
+   $self->brik_help_run_undef_arg('start', $remote_hostname_port) or return;
    if ($remote_hostname_port !~ /^[^:]+:\d+$/) {
       return $self->log->error("start: invalid format for remote_hostname_port [$remote_hostname_port], must be hostname:port");
    }
 
    my $so;
    # Only one hop
-   if (! ref($ssh_hostname_port)) {
+   if ($ref eq 'SCALAR') {
       if ($ssh_hostname_port !~ /^[^:]+:\d+$/) {
          return $self->log->error("start: invalid format for ssh_hostname_port [$ssh_hostname_port], must be hostname:port");
       }
@@ -119,7 +117,7 @@ sub start {
       $self->log->verbose("start: connected to SSH [$ssh_hostname]:$ssh_port");
    }
    # Multiple hops :)
-   elsif (ref($ssh_hostname_port) eq 'ARRAY') {
+   elsif ($ref eq 'ARRAY') {
       my @ok = ();
       for my $this (@$ssh_hostname_port) {
          if ($this !~ /^[^:]+:\d+$/) {
@@ -216,9 +214,8 @@ sub tunnel_loop {
    if (! $self->is_started) {
       return $self->log->error($self->brik_help_run('start'));
    }
-   if (! defined($remote_hostname_port)) {
-      return $self->log->error($self->brik_help_run('tunnel_loop'));
-   }
+
+   $self->brik_help_run_undef_arg('tunnel_loop', $remote_hostname_port) or return;
    if ($remote_hostname_port !~ /^[^:]+:\d+$/) {
       return $self->log->error("start: invalid format for remote_hostname_port [$remote_hostname_port], must be hostname:port");
    }

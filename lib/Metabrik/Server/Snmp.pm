@@ -34,11 +34,11 @@ sub brik_properties {
          stop => [ ],
       },
       require_modules => {
+         'NetSNMP::agent' => [ ],
+         'NetSNMP::ASN' => [ ],
          'Metabrik::File::Text' => [ ],
          'Metabrik::Shell::Command' => [ ],
          'Metabrik::Worker::Fork' => [ ],
-         'NetSNMP::agent' => [ ],
-         'NetSNMP::ASN' => [ ],
       },
       require_binaries => {
          'snmpd' => [ ],

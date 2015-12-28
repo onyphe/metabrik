@@ -78,9 +78,7 @@ sub is_running {
    my $self = shift;
    my ($process) = @_;
 
-   if (! defined($process)) {
-      return $self->log->error($self->brik_help_run('is_running'));
-   }
+   $self->brik_help_run_undef_arg('is_running', $process) or return;
 
    my $list = $self->list or return;
    for my $this (@$list) {
@@ -99,9 +97,7 @@ sub get_process_info {
    my $self = shift;
    my ($process) = @_;
 
-   if (! defined($process)) {
-      return $self->log->error($self->brik_help_run('is_running'));
-   }
+   $self->brik_help_run_undef_arg('get_process_info', $process) or return;
 
    my @results = ();
    my $list = $self->list or return;
@@ -121,9 +117,7 @@ sub kill {
    my $self = shift;
    my ($process) = @_;
 
-   if (! defined($process)) {
-      return $self->log->error($self->brik_help_run('kill'));
-   }
+   $self->brik_help_run_undef_arg('kill', $process) or return;
 
    my $signal = $self->force_kill ? 'KILL' : 'TERM';
 
@@ -235,9 +229,7 @@ sub kill_from_pidfile {
    my $self = shift;
    my ($pidfile) = @_;
 
-   if (! defined($pidfile)) {
-      return $self->log->error($self->brik_help_run('kill_from_pidfile'));
-   }
+   $self->brik_help_run_undef_arg('kill_from_pidfile', $pidfile) or return;
 
    if (my $pid = Daemon::Daemonize->check_pidfile($pidfile)) {
       $self->log->verbose("kill_from_pidfile: file[$pidfile] and pid[$pid]");
@@ -252,9 +244,7 @@ sub is_running_from_pidfile {
    my $self = shift;
    my ($pidfile) = @_;
 
-   if (! defined($pidfile)) {
-      return $self->log->error($self->brik_help_run('is_running_from_pidfile'));
-   }
+   $self->brik_help_run_undef_arg('is_running_from_pidfile', $pidfile) or return;
 
    if (my $pid = Daemon::Daemonize->check_pidfile($pidfile)) {
       return 1;
@@ -266,6 +256,8 @@ sub is_running_from_pidfile {
 sub grep_by_name {
    my $self = shift;
    my ($process_name) = @_;
+
+   $self->brik_help_run_undef_arg('grep_by_name', $process_name) or return;
 
    my $list = $self->list or return;
    for my $p (@$list) {

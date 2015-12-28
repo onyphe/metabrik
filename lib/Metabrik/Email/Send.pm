@@ -26,7 +26,7 @@ sub brik_properties {
          subject => 'My subject',
       },
       commands => {
-         send => [ qw(email) ],
+         send => [ qw(email from|OPTIONAL to|OPTIONAL subject|OPTIONAL) ],
       },
       require_modules => {
          'DateTime' => [ ],
@@ -37,28 +37,16 @@ sub brik_properties {
 
 sub send {
    my $self = shift;
-   my ($email) = @_;
+   my ($email, $from, $to, $subject) = @_;
 
-   my $smtp = $self->open or return $self->log->error("send: open failed");
-
-   my $from = $self->from;
-   if (! defined($from)) {
-      return $self->log->error($self->brik_help_set('from'));
-   }
-
-   my $to = $self->to;
-   if (! defined($to)) {
-      return $self->log->error($self->brik_help_set('to'));
-   }
-
-   my $subject = $self->subject;
-   if (! defined($subject)) {
-      return $self->log->error($self->brik_help_set('subject'));
-   }
-
-   if (ref($email) ne 'Email::Simple') {
-      return $self->log->error("send: can only send Email::Simple objects");
-   }
+   $from ||= $self->from;
+   $to ||= $self->to;
+   $subject ||= $self->subject;
+   $self->brik_help_run_undef_arg('send', $email) or return;
+   $self->brik_help_run_invalid_arg('send', $email, 'Email::Simple') or return;
+   $self->brik_help_run_undef_arg('send', $from) or return;
+   $self->brik_help_run_undef_arg('send', $to) or return;
+   $self->brik_help_run_undef_arg('send', $subject) or return;
 
    my $ct = $email->header('Content-Type');
    my $cl = $email->header('Content-Length');
@@ -74,6 +62,8 @@ sub send {
    $self->log->verbose("send: Subject [$subject]");
    #print "Content-Type [$ct]\n\n";
    #print $email->body,"\n";
+
+   my $smtp = $self->open or return;
 
    $smtp->mail($from);
    $smtp->to($to);

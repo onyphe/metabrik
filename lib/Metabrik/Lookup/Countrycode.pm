@@ -40,9 +40,7 @@ sub country_code_types {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('country_code_types'));
-   }
+   $self->brik_help_run_undef_arg('country_code_types', $data) or return;
 
    my %list = ();
    for my $this (@$data) {
@@ -54,16 +52,17 @@ sub country_code_types {
    return \@types;
 }
 
+#
 # Port numbers:
 # http://www.iana.org/protocols
 # http://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml
-
+#
 sub update {
    my $self = shift;
 
    my $uri = 'http://www.iana.org/domains/root/db';
 
-   my $get = $self->get($uri) or return $self->log->error("update: get failed");
+   my $get = $self->get($uri) or return;
    my $html = $get->{content};
 
    # <tr class="iana-group-1 iana-type-2">
@@ -103,11 +102,9 @@ sub save {
    my $self = shift;
    my ($data, $output) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('save'));
-   }
-
    $output ||= $self->output;
+   $self->brik_help_run_undef_arg('save', $data) or return;
+   $self->brik_help_run_undef_arg('save', $output) or return;
 
    my $datadir = $self->datadir;
 
@@ -116,8 +113,7 @@ sub save {
    $fc->encoding('utf8');
 
    my $output_file = $datadir.'/'.$output;
-   $fc->write($data, $output_file)
-      or return $self->log->error("save: write failed");
+   $fc->write($data, $output_file) or return;
 
    return $output_file;
 }
@@ -127,16 +123,15 @@ sub load {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! -f $input) {
-      return $self->log->error("load: file [$input] not found");
-   }
+   $self->brik_help_run_undef_arg('load', $input) or return;
+   $self->brik_help_run_file_not_found('load', $input) or return;
 
    my $datadir = $self->datadir;
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->first_line_is_header(1);
 
-   my $csv = $fc->read($datadir.'/'.$input);
+   my $csv = $fc->read($datadir.'/'.$input) or return;
 
    return $csv;
 }

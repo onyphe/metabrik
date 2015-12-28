@@ -36,9 +36,7 @@ sub shorten {
    my $self = shift;
    my ($uri) = @_;
 
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('shorten'));
-   }
+   $self->brik_help_run_undef_arg('shorten', $uri) or return;
 
    my $service = 'http://url.pm';
 
@@ -58,9 +56,7 @@ sub unshorten {
    my $self = shift;
    my ($uri) = @_;
 
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('unshorten'));
-   }
+   $self->brik_help_run_undef_arg('unshorten', $uri) or return;
 
    my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
    my $trace = $cw->trace_redirect($uri) or return;

@@ -42,12 +42,12 @@ sub version {
    my ($nameserver) = @_;
 
    $nameserver ||= $self->nameserver;
-   if (! defined($nameserver)) {
-      return $self->log->error($self->brik_help_run('version'));
-   }
+   $self->brik_help_run_undef_arg('version', $nameserver) or return;
+   my $ref = $self->brik_help_run_invalid_arg('version', $nameserver, 'ARRAY', 'SCALAR')
+      or return;
 
    my $result = {};
-   if (ref($nameserver) eq 'ARRAY') {
+   if ($ref eq 'ARRAY') {
       for (@$nameserver) {
          my $r = $self->version($_);
          for (keys %$r) { $result->{$_} = $r->{$_} }
@@ -83,12 +83,12 @@ sub recursion {
    my ($nameserver) = @_;
 
    $nameserver ||= $self->nameserver;
-   if (! defined($nameserver)) {
-      return $self->log->error($self->brik_help_run('recursion'));
-   }
+   $self->brik_help_run_undef_arg('recursion', $nameserver) or return;
+   my $ref = $self->brik_help_run_invalid_arg('recursion', $nameserver, 'ARRAY', 'SCALAR')
+      or return;
 
    my $result = {};
-   if (ref($nameserver)) {
+   if ($ref eq 'ARRAY') {
       for (@$nameserver) {
          my $r = $self->recursion($_);
          for (keys %$r) { $result->{$_} = $r->{$_} }
@@ -123,10 +123,12 @@ sub axfr {
    $nameserver ||= $self->nameserver;
    $domainname ||= $self->domainname;
    $self->brik_help_run_undef_arg('axfr', $nameserver) or return;
+   my $ref = $self->brik_help_run_invalid_arg('axfr', $nameserver, 'ARRAY', 'SCALAR')
+      or return;
    $self->brik_help_run_undef_arg('axfr', $domainname) or return;
 
    my $result = {};
-   if (ref($nameserver) eq 'ARRAY') {
+   if ($ref eq 'ARRAY') {
       for (@$nameserver) {
          my $r = $self->axfr($_);
          for (keys %$r) { $result->{$_} = $r->{$_} }

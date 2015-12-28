@@ -36,9 +36,7 @@ sub open {
    my ($input) = @_;
 
    $input ||= $self->input;
-   if (! defined($input)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $input) or return;
 
    my $folder = Email::Folder->new($input);
    if (! defined($folder)) {
@@ -52,9 +50,7 @@ sub read {
    my $self = shift;
 
    my $folder = $self->_folder;
-   if (! defined($folder)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $folder) or return;
 
    my @messages = ();
    for my $message ($folder->messages) {
@@ -71,9 +67,7 @@ sub read_next {
    my $self = shift;
 
    my $folder = $self->_folder;
-   if (! defined($folder)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $folder) or return;
 
    my $message = $folder->next_message;
 

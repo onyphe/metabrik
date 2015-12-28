@@ -16,13 +16,13 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
-         db => [ qw(keystore_db) ],
+         db => [ qw(db) ],
       },
       commands => {
-         search => [ qw(pattern) ],
-         decrypt => [ qw(keystore_db|OPTIONAL) ],
+         search => [ qw(pattern db|OPTIONAL) ],
+         decrypt => [ qw(db|OPTIONAL) ],
          encrypt => [ qw($data) ],
-         save => [ qw($data keystore_db|OPTIONAL) ],
+         save => [ qw($data db|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::Crypto::Aes' => [ ],
@@ -32,15 +32,11 @@ sub brik_properties {
 
 sub search {
    my $self = shift;
-   my ($pattern) = @_;
+   my ($pattern, $db) = @_;
 
-   if (! defined($self->db)) {
-      return $self->log->error($self->brik_help_set('db'));
-   }
-
-   if (! defined($pattern)) {
-      return $self->log->error($self->brik_help_run('search'));
-   }
+   $db ||= $self->db;
+   $self->brik_help_run_undef_arg('search', $pattern) or return;
+   $self->brik_help_run_undef_arg('search', $db) or return;
 
    my $decrypted = $self->decrypt;
 
@@ -58,17 +54,13 @@ sub decrypt {
    my ($db) = @_;
 
    $db ||= $self->db;
-   if (! defined($db)) {
-      return $self->log->error($self->brik_help_set('db'));
-   }
+   $self->brik_help_run_undef_arg('decrypt', $db) or return;
 
-   my $read = $self->read($db)
-      or return $self->log->error("decrypt: read failed");
+   my $read = $self->read($db) or return;
 
    my $ca = Metabrik::Crypto::Aes->new_from_brik_init($self) or return;
 
-   my $decrypted = $ca->decrypt($read)
-      or return $self->log->error("decrypt: decrypt failed");
+   my $decrypted = $ca->decrypt($read) or return;
 
    return $decrypted;
 }
@@ -77,14 +69,11 @@ sub encrypt {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('encrypt'));
-   }
+   $self->brik_help_run_undef_arg('encrypt', $data) or return;
 
    my $ca = Metabrik::Crypto::Aes->new_from_brik_init($self) or return;
 
-   my $encrypted = $ca->encrypt($data)
-      or return $self->log->error("encrypt: encrypt failed");
+   my $encrypted = $ca->encrypt($data) or return;
 
    return $encrypted;
 }
@@ -93,14 +82,11 @@ sub save {
    my $self = shift;
    my ($data, $db) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('save'));
-   }
-
    $db ||= $self->db;
+   $self->brik_help_run_undef_arg('save', $data) or return;
+   $self->brik_help_run_undef_arg('save', $db) or return;
 
-   $self->write($data, $db)
-      or return $self->log->error("save: write failed");
+   $self->write($data, $db) or return;
 
    return $db;
 }

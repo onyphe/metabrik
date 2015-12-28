@@ -19,19 +19,17 @@ sub brik_properties {
          banner => [ qw(string) ],
       },
       commands => {
-         parsebanner => [ ],
+         parsebanner => [ qw(banner|OPTIONAL) ],
       },
    };
 }
 
 sub parsebanner {
    my $self = shift;
+   my ($banner) = @_;
 
-   if (! defined($self->banner)) {
-      return $self->log->error($self->brik_help_set('banner'));
-   }
-
-   my $banner = $self->banner;
+   $banner ||= $self->banner;
+   $self->brik_help_run_undef_arg('parsebanner', $banner) or return;
 
    # From most specific to less specific
    my $data = [

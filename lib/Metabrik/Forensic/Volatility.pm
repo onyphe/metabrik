@@ -55,8 +55,8 @@ sub imageinfo {
 
    $file ||= $self->input;
    my $datadir = $self->datadir;
-   $self->brik_help_run_undef_arg("imageinfo", $file) or return;
-   $self->brik_help_run_file_not_found("imageinfo", $file) or return;
+   $self->brik_help_run_undef_arg('imageinfo', $file) or return;
+   $self->brik_help_run_file_not_found('imageinfo', $file) or return;
 
    my $cmd = "volatility imageinfo -f $file";
 
@@ -84,9 +84,9 @@ sub command {
 
    $file ||= $self->input;
    $profile ||= $self->profile;
-   $self->brik_help_run_undef_arg("command", $command) or return;
-   $self->brik_help_run_undef_arg("command", $file) or return;
-   $self->brik_help_run_undef_arg("command", $profile) or return;
+   $self->brik_help_run_undef_arg('command', $command) or return;
+   $self->brik_help_run_undef_arg('command', $file) or return;
+   $self->brik_help_run_undef_arg('command', $profile) or return;
 
    my $cmd = "volatility --profile $profile $command -f $file";
 
@@ -99,8 +99,8 @@ sub envars {
 
    $file ||= $self->input;
    $profile ||= $self->profile;
-   $self->brik_help_run_undef_arg("envars", $file) or return;
-   $self->brik_help_run_undef_arg("envars", $profile) or return;
+   $self->brik_help_run_undef_arg('envars', $file) or return;
+   $self->brik_help_run_undef_arg('envars', $profile) or return;
 
    my $cmd = "volatility --profile $profile envars -f $file";
 
@@ -113,8 +113,8 @@ sub pstree {
 
    $file ||= $self->input;
    $profile ||= $self->profile;
-   $self->brik_help_run_undef_arg("pstree", $file) or return;
-   $self->brik_help_run_undef_arg("pstree", $profile) or return;
+   $self->brik_help_run_undef_arg('pstree', $file) or return;
+   $self->brik_help_run_undef_arg('pstree', $profile) or return;
 
    my $cmd = "volatility --profile $profile pstree -v -f $file";
 
@@ -127,8 +127,8 @@ sub netscan {
 
    $file ||= $self->input;
    $profile ||= $self->profile;
-   $self->brik_help_run_undef_arg("netscan", $file) or return;
-   $self->brik_help_run_undef_arg("netscan", $profile) or return;
+   $self->brik_help_run_undef_arg('netscan', $file) or return;
+   $self->brik_help_run_undef_arg('netscan', $profile) or return;
 
    my $cmd = "volatility --profile $profile netscan -v -f $file";
 
@@ -141,9 +141,9 @@ sub memdump {
 
    $file ||= $self->input;
    $profile ||= $self->profile;
-   $self->brik_help_run_undef_arg("memdump", $pid) or return;
-   $self->brik_help_run_undef_arg("memdump", $file) or return;
-   $self->brik_help_run_undef_arg("memdump", $profile) or return;
+   $self->brik_help_run_undef_arg('memdump', $pid) or return;
+   $self->brik_help_run_undef_arg('memdump', $file) or return;
+   $self->brik_help_run_undef_arg('memdump', $profile) or return;
 
    my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
    $sf->mkdir($pid) or return;
@@ -160,8 +160,8 @@ sub hashdump {
 
    $file ||= $self->input;
    $profile ||= $self->profile;
-   $self->brik_help_run_undef_arg("hashdump", $file) or return;
-   $self->brik_help_run_undef_arg("hashdump", $profile) or return;
+   $self->brik_help_run_undef_arg('hashdump', $file) or return;
+   $self->brik_help_run_undef_arg('hashdump', $profile) or return;
 
    my $cmd = "volatility --profile $profile hashdump -f $file";
 
@@ -174,8 +174,8 @@ sub psxview {
 
    $file ||= $self->input;
    $profile ||= $self->profile;
-   $self->brik_help_run_undef_arg("psxview", $file) or return;
-   $self->brik_help_run_undef_arg("psxview", $profile) or return;
+   $self->brik_help_run_undef_arg('psxview', $file) or return;
+   $self->brik_help_run_undef_arg('psxview', $profile) or return;
 
    my $cmd = "volatility --profile $profile psxview -f $file";
 
@@ -188,8 +188,8 @@ sub hivelist {
 
    $file ||= $self->input;
    $profile ||= $self->profile;
-   $self->brik_help_run_undef_arg("hivelist", $file) or return;
-   $self->brik_help_run_undef_arg("hivelist", $profile) or return;
+   $self->brik_help_run_undef_arg('hivelist', $file) or return;
+   $self->brik_help_run_undef_arg('hivelist', $profile) or return;
 
    my $cmd = "volatility --profile $profile hivelist -f $file";
 
@@ -202,9 +202,9 @@ sub hivedump {
 
    $file ||= $self->input;
    $profile ||= $self->profile;
-   $self->brik_help_run_undef_arg("hivedump", $offset) or return;
-   $self->brik_help_run_undef_arg("hivedump", $file) or return;
-   $self->brik_help_run_undef_arg("hivedump", $profile) or return;
+   $self->brik_help_run_undef_arg('hivedump', $offset) or return;
+   $self->brik_help_run_undef_arg('hivedump', $file) or return;
+   $self->brik_help_run_undef_arg('hivedump', $profile) or return;
 
    my $cmd = "volatility --profile $profile hivedump --hive-offset $offset -f $file";
 
@@ -217,9 +217,9 @@ sub filescan {
 
    $file ||= $self->input;
    $profile ||= $self->profile;
-   $self->brik_help_run_undef_arg("filescan", $offset) or return;
-   $self->brik_help_run_undef_arg("filescan", $file) or return;
-   $self->brik_help_run_undef_arg("filescan", $profile) or return;
+   $self->brik_help_run_undef_arg('filescan', $offset) or return;
+   $self->brik_help_run_undef_arg('filescan', $file) or return;
+   $self->brik_help_run_undef_arg('filescan', $profile) or return;
 
    my $cmd = "volatility --profile $profile filescan -f $file";
 
@@ -232,8 +232,8 @@ sub consoles {
 
    $file ||= $self->input;
    $profile ||= $self->profile;
-   $self->brik_help_run_undef_arg("consoles", $file) or return;
-   $self->brik_help_run_undef_arg("consoles", $profile) or return;
+   $self->brik_help_run_undef_arg('consoles', $file) or return;
+   $self->brik_help_run_undef_arg('consoles', $profile) or return;
 
    my $cmd = "volatility --profile $profile consoles -f $file";
 

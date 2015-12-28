@@ -93,9 +93,7 @@ sub next_record {
    my ($input) = @_;
 
    $input ||= $self->datadir.'/'.$self->input;
-   if (! -f $input) {
-      return $self->log->error("next_record: file [$input] does not exist");
-   }
+   $self->brik_help_run_file_not_found('next_record', $input) or return;
 
    my $fr = $self->_read;
    if (! defined($fr)) {

@@ -74,15 +74,14 @@ sub _get_redis {
    my $self = shift;
 
    my $redis = $self->_redis;
-   if (! defined($redis)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
+   $self->brik_help_run_undef_arg('connect', $redis) or return;
 
    return $redis;
 }
 
+#
 # Command list: http://redis.io/commands
-
+#
 sub command {
    my $self = shift;
    my ($cmd, @args) = @_;

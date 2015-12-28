@@ -28,13 +28,8 @@ sub to_array {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('to_array'));
-   }
-
-   if (ref($data)) {
-      return $self->log->error("to_array: data must be a SCALAR");
-   }
+   $self->brik_help_run_undef_arg('to_array', $data) or return;
+   $self->brik_help_run_invalid_arg('to_array', $data, 'SCALAR') or return;
 
    my @array = split(/\n/, $data);
 
@@ -45,9 +40,7 @@ sub to_matrix {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('to_matrix'));
-   }
+   $self->brik_help_run_undef_arg('to_matrix', $data) or return;
 
    my $array = $self->to_array($data) or return;
 
@@ -63,9 +56,7 @@ sub identify {
    my $self = shift;
    my ($string) = @_;
 
-   if (! defined($string)) {
-      return $self->log->error($self->brik_help_run('identify'));
-   }
+   $self->brik_help_run_undef_arg('identify', $string) or return;
 
    my $length = length($string);
    # Truncate to 128 Bytes
@@ -102,13 +93,8 @@ sub split_by_blank_line {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('split_by_blank_line'));
-   }
-
-   if (ref($data) ne 'ARRAY') {
-      return $self->log->error("split_by_blank_line: data must be an ARRAYREF");
-   }
+   $self->brik_help_run_undef_arg('split_by_blank_line', $data) or return;
+   $self->brik_help_run_invalid_arg('split_by_blank_line', $data, 'ARRAY') or return;
 
    my $new = [];
    my @chunks = ();

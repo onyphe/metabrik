@@ -7,7 +7,7 @@ package Metabrik::Image::Jpg;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -16,10 +16,14 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
+         install => [ ], # Inherited
          info => [ qw(image.jpg) ],
       },
       require_binaries => {
-         'jhead' => [ ],  # apt-get install jhead
+         'jhead' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(jhead) ],
       },
    };
 }
@@ -28,12 +32,11 @@ sub info {
    my $self = shift;
    my ($image) = @_;
 
-   if (! defined($image)) {
-      return $self->log->error($self->brik_help_run('info'));
-   }
+   $self->brik_help_run_undef_arg('info', $image) or return;
+   $self->brik_help_run_file_not_found('info', $image) or return;
 
    my $cmd = "jhead \"$image\"";
-   my $out = $self->capture($cmd);
+   my $out = $self->capture($cmd) or return;
 
    my $info = {};
    for my $this (@$out) {

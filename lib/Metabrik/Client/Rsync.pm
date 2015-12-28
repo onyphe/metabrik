@@ -43,12 +43,8 @@ sub sync {
    my $self = shift;
    my ($source, $destination) = @_;
 
-   if (! defined($source)) {
-      return $self->log->error($self->brik_help_run('sync'));
-   }
-   if (! defined($destination)) {
-      return $self->log->error($self->brik_help_run('destination'));
-   }
+   $self->brik_help_run_undef_arg('sync', $source) or return;
+   $self->brik_help_run_undef_arg('sync', $destination) or return;
 
    my $source_root = $self->source_root;
    my $destination_root = $self->destination_root;

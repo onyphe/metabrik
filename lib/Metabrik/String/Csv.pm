@@ -42,18 +42,10 @@ sub encode {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('encode'));
-   }
-
+   $self->brik_help_run_undef_arg('encode', $data) or return;
    # We only handle array of hashes format (aoh) for writing
-   if (ref($data) ne 'ARRAY') {
-      return $self->log->error("encode: csv structure is not ARRAY");
-   }
-
-   if (! scalar(@$data)) {
-      return $self->log->error("encode: csv structure is empty, nothing to write");
-   }
+   $self->brik_help_run_invalid_arg('encode', $data, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('encode', $data, 'ARRAY') or return;
 
    if (ref($data->[0]) ne 'HASH') {
       return $self->log->error("encode: csv structure does not contain HASHes");
@@ -101,9 +93,7 @@ sub decode {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('decode'));
-   }
+   $self->brik_help_run_undef_arg('decode', $data) or return;
 
    my $csv = Text::CSV_XS->new({
       binary => 1,

@@ -54,9 +54,7 @@ sub set_ca_attributes {
    my ($name) = @_;
 
    $name ||= $self->ca_name;
-   if (! defined($name)) {
-      return $self->log->error($self->brik_help_run('set_ca_attributes'));
-   }
+   $self->brik_help_run_undef_arg('set_ca_attributes', $name) or return;
 
    my $ca_lc_name = lc($name);
    my $ca_directory = $self->datadir.'/'.$ca_lc_name;
@@ -82,9 +80,7 @@ sub ca_init {
    my ($name, $directory) = @_;
 
    $name ||= $self->ca_name;
-   if (! defined($name)) {
-      return $self->log->error($self->brik_help_run('ca_init'));
-   }
+   $self->brik_help_run_undef_arg('ca_init', $name) or return;
 
    $self->set_ca_attributes($name)
       or return $self->log->error("ca_init: set_ca_attributes failed");
@@ -186,9 +182,7 @@ sub ca_show {
    my ($name) = @_;
 
    $name ||= $self->ca_name;
-   if (! defined($name)) {
-      return $self->log->error($self->brik_help_run('ca_show'));
-   }
+   $self->brik_help_run_undef_arg('ca_show', $name) or return;
 
    $self->set_ca_attributes($name) or return;
 
@@ -201,11 +195,8 @@ sub csr_new {
    my $self = shift;
    my ($base_file, $use_passphrase) = @_;
 
-   if (! defined($base_file)) {
-      return $self->log->error($self->brik_help_run('csr_new'));
-   }
-
    $use_passphrase ||= $self->use_passphrase;
+   $self->brik_help_run_undef_arg('csr_new', $base_file) or return;
 
    my $datadir = $self->datadir;
    my $csr_cert = $datadir.'/'.$base_file.'.pem';
@@ -235,17 +226,10 @@ sub ca_sign_csr {
    my $self = shift;
    my ($csr_cert, $name) = @_;
 
-   if (! defined($csr_cert)) {
-      return $self->log->error($self->brik_help_run('ca_sign_csr'));
-   }
-   if (! -f $csr_cert) {
-      return $self->log->error("ca_sign_csr: file [$csr_cert] does not exists");
-   }
-
    $name ||= $self->ca_name;
-   if (! defined($name)) {
-      return $self->log->error($self->brik_help_run('ca_sign_csr'));
-   }
+   $self->brik_help_run_undef_arg('ca_sign_csr', $csr_cert) or return;
+   $self->brik_help_run_file_not_found('ca_sign_csr', $csr_cert) or return;
+   $self->brik_help_run_undef_arg('ca_sign_csr', $name) or return;
 
    $self->set_ca_attributes($name) or return;
 
@@ -271,13 +255,8 @@ sub cert_hash {
    my $self = shift;
    my ($cert_file) = @_;
 
-   if (! defined($cert_file)) {
-      return $self->log->error($self->brik_help_run('cert_hash'));
-   }
-
-   if (! -f $cert_file) {
-      return $self->log->error("cert_hash: file [$cert_file] not found");
-   }
+   $self->brik_help_run_undef_arg('cert_hash', $cert_file) or return;
+   $self->brik_help_run_file_not_found('cert_hash', $cert_file) or return;
 
    my $cmd = "openssl x509 -noout -hash -in $cert_file";
 
@@ -288,17 +267,10 @@ sub cert_verify {
    my $self = shift;
    my ($cert_file, $name) = @_;
 
-   if (! defined($cert_file)) {
-      return $self->log->error($self->brik_help_run('cert_verify'));
-   }
-   if (! -f $cert_file) {
-      return $self->log->error("cert_verify: file [$cert_file] not found");
-   }
-
    $name ||= $self->ca_name;
-   if (! defined($name)) {
-      return $self->log->error($self->brik_help_run('cert_verify'));
-   }
+   $self->brik_help_run_undef_arg('cert_verify', $cert_file) or return;
+   $self->brik_help_run_file_not_found('cert_verify', $cert_file) or return;
+   $self->brik_help_run_undef_arg('cert_verify', $name) or return;
 
    $self->set_ca_attributes($name) or return;
 

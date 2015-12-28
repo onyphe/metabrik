@@ -47,9 +47,7 @@ sub capture {
    $device ||= $self->device;
    $filter ||= $self->filter;
    $count ||= $self->count;
-   if (! defined($output)) {
-      return $self->log->error($self->brik_help_run('capture'));
-   }
+   $self->brik_help_run_undef_arg('capture', $output) or return;
 
    my $fp = Metabrik::File::Pcap->new_from_brik_init($self) or return;
    $fp->open($output, 'write') or return;

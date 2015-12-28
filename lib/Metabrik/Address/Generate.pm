@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable ipv4 ipv6 routable reserved) ],
+      tags => [ qw(unstable ipv4 ipv6 public routable reserved) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
@@ -27,7 +27,7 @@ sub brik_properties {
       commands => {
          ipv4_reserved_ranges => [ ],
          ipv4_private_ranges => [ ],
-         ipv4_routable_ranges => [ ],
+         ipv4_public_ranges => [ ],
          ipv4_generate_space => [ qw(count|OPTIONAL file_count|OPTIONAL) ],
          random_ipv4_addresses => [ qw(count|OPTIONAL) ],
       },
@@ -85,11 +85,10 @@ sub ipv4_private_ranges {
    return \@private;
 }
 
-sub ipv4_routable_ranges {
+sub ipv4_public_ranges {
    my $self = shift;
 
    my $reserved = $self->ipv4_reserved_ranges;
-   # XXX: to compute, check script at work
 
    return 1;
 }
@@ -100,6 +99,13 @@ sub ipv4_generate_space {
 
    $count ||= $self->count;
    $file_count ||= $self->file_count;
+   if ($count <= 0) {
+      return $self->log->error("ipv4_generate_space: cannot generate [$count] address");
+   }
+   if ($file_count <= 0) {
+      return $self->log->error("ipv4_generate_space: cannot generate [$file_count] file");
+   }
+
    my $datadir = $self->datadir;
    my $n = $file_count - 1;
 

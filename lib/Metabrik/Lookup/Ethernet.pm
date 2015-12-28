@@ -64,9 +64,7 @@ sub from_hex {
    my $self = shift;
    my ($hex) = @_;
 
-   if (! defined($hex)) {
-      return $self->log->error($self->brik_help_run('from_hex'));
-   }
+   $self->brik_help_run_undef_arg('from_hex', $hex) or return;
 
    $hex =~ s/^0x//;
    if ($hex !~ /^[0-9a-f]+$/i) {
@@ -81,9 +79,7 @@ sub from_dec {
    my $self = shift;
    my ($dec) = @_;
 
-   if (! defined($dec)) {
-      return $self->log->error($self->brik_help_run('from_dec'));
-   }
+   $self->brik_help_run_undef_arg('from_dec', $dec) or return;
 
    if ($dec !~ /^[0-9]+$/) {
       return $self->log->error("from_dec: invalid format for dec [$dec]");
@@ -97,9 +93,7 @@ sub from_string {
    my $self = shift;
    my ($string) = @_;
 
-   if (! defined($string)) {
-      return $self->log->error($self->brik_help_run('from_string'));
-   }
+   $self->brik_help_run_undef_arg('from_string', $string) or return;
 
    my $lookup = $self->_lookup;
 

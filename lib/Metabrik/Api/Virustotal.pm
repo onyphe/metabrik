@@ -24,10 +24,10 @@ sub brik_properties {
          output_mode => 'json',
       },
       commands => {
-         check_resource => [ qw(hash) ],
-         file_report => [ qw(hash) ],
-         ipv4_address_report => [ qw(ipv4_address) ],
-         domain_report => [ qw(domain) ],
+         check_resource => [ qw(hash apikey|OPTIONAL) ],
+         file_report => [ qw(hash apikey|OPTIONAL) ],
+         ipv4_address_report => [ qw(ipv4_address apikey|OPTIONAL) ],
+         domain_report => [ qw(domain apikey|OPTIONAL) ],
          subdomain_list => [ qw(domain) ],
          hosted_domains => [ qw(ipv4_address) ],
       },
@@ -40,15 +40,11 @@ sub brik_properties {
 
 sub check_resource {
    my $self = shift;
-   my ($resource) = @_;
+   my ($resource, $apikey) = @_;
 
-   my $apikey = $self->apikey;
-   if (! defined($apikey)) {
-      return $self->log->error($self->brik_help_set('apikey'));
-   }
-   if (! defined($resource)) {
-      return $self->log->error($self->brik_help_run('check_resource'));
-   }
+   $apikey ||= $self->apikey;
+   $self->brik_help_run_undef_arg('check_resource', $resource) or return;
+   $self->brik_help_run_undef_arg('check_resource', $apikey) or return;
 
    my $r = $self->post({ apikey => $apikey, resource => $resource },
       'https://www.virustotal.com/vtapi/v2/file/rescan')
@@ -67,15 +63,11 @@ sub check_resource {
 
 sub file_report {
    my $self = shift;
-   my ($resource) = @_;
+   my ($resource, $apikey) = @_;
 
-   my $apikey = $self->apikey;
-   if (! defined($apikey)) {
-      return $self->log->error($self->brik_help_set('apikey'));
-   }
-   if (! defined($resource)) {
-      return $self->log->error($self->brik_help_run('file_report'));
-   }
+   $apikey ||= $self->apikey;
+   $self->brik_help_run_undef_arg('file_report', $resource) or return;
+   $self->brik_help_run_undef_arg('file_report', $apikey) or return;
 
    my $r = $self->post({ apikey => $apikey, resource => $resource },
       'https://www.virustotal.com/vtapi/v2/file/report')
@@ -94,15 +86,11 @@ sub file_report {
 
 sub ipv4_address_report {
    my $self = shift;
-   my ($ipv4_address) = @_;
+   my ($ipv4_address, $apikey) = @_;
 
-   my $apikey = $self->apikey;
-   if (! defined($apikey)) {
-      return $self->log->error($self->brik_help_set('apikey'));
-   }
-   if (! defined($ipv4_address)) {
-      return $self->log->error($self->brik_help_run('ipv4_address_report'));
-   }
+   $apikey ||= $self->apikey;
+   $self->brik_help_run_undef_arg('ipv4_address_report', $ipv4_address) or return;
+   $self->brik_help_run_undef_arg('ipv4_address_report', $apikey) or return;
 
    my $r = $self->get('https://www.virustotal.com/vtapi/v2/ip-address/report?apikey='
       .$apikey.'&ip='.$ipv4_address)
@@ -121,15 +109,11 @@ sub ipv4_address_report {
 
 sub domain_report {
    my $self = shift;
-   my ($domain) = @_;
+   my ($domain, $apikey) = @_;
 
-   my $apikey = $self->apikey;
-   if (! defined($apikey)) {
-      return $self->log->error($self->brik_help_set('apikey'));
-   }
-   if (! defined($domain)) {
-      return $self->log->error($self->brik_help_run('domain_report'));
-   }
+   $apikey ||= $self->apikey;
+   $self->brik_help_run_undef_arg('domain_report', $domain) or return;
+   $self->brik_help_run_undef_arg('domain_report', $apikey) or return;
 
    my $r = $self->get('https://www.virustotal.com/vtapi/v2/domain/report?apikey='
       .$apikey.'&domain='.$domain)
@@ -150,9 +134,7 @@ sub subdomain_list {
    my $self = shift;
    my ($domain) = @_;
 
-   if (! defined($domain)) {
-      return $self->log->error($self->brik_help_run('subdomain_list'));
-   }
+   $self->brik_help_run_undef_arg('subdomain_list', $domain) or return;
 
    my $r = $self->domain_report($domain) or return;
 
@@ -167,9 +149,7 @@ sub hosted_domains {
    my $self = shift;
    my ($ipv4_address) = @_;
 
-   if (! defined($ipv4_address)) {
-      return $self->log->error($self->brik_help_run('hosted_domains'));
-   }
+   $self->brik_help_run_undef_arg('hosted_domains', $ipv4_address) or return;
 
    my $r = $self->ipv4_address_report($ipv4_address) or return;
 

@@ -43,7 +43,10 @@ sub update {
    my $uri = 'http://cwe.mitre.org/data/xml/views/2000.xml.zip';
    my $file = "2000.xml.zip";
 
-   $self->mirror($uri, $file, $datadir) or return;
+   my $files = $self->mirror($uri, $file, $datadir) or return;
+   if (@$files == 0) {  # Nothing new
+      return $datadir;
+   }
 
    my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
    $fc->unzip($datadir.'/'.$file, $datadir) or return;
@@ -56,9 +59,8 @@ sub load {
    my ($file) = @_;
 
    $file ||= $self->file;
-   if (! -f $file) {
-      return $self->log->error("load: file [$file] not found");
-   }
+   $self->brik_help_run_undef_arg('load', $file) or return;
+   $self->brik_help_run_file_not_found('load', $file) or return;
 
    my $datadir = $self->datadir;
 
@@ -72,6 +74,9 @@ sub load {
 sub show {
    my $self = shift;
    my ($h) = @_;
+
+   $self->brik_help_run_undef_arg('show', $h) or return;
+   $self->brik_help_run_invalid_arg('show', $h, 'HASH') or return;
 
    my $buf = "ID: ".$h->{id}."\n";
    $buf .= "Type: ".$h->{type}."\n";
@@ -146,15 +151,9 @@ sub search {
    my $self = shift;
    my ($pattern) = @_;
 
-   if (! defined($self->xml)) {
-      return $self->log->error($self->brik_help_run('load'));
-   }
-
-   if (! defined($pattern)) {
-      return $self->log->error($self->brik_help_run('search'));
-   }
-
    my $xml = $self->xml;
+   $self->brik_help_run_undef_arg('load', $xml) or return;
+   $self->brik_help_run_undef_arg('search', $pattern) or return;
 
    my @list = ();
    if (exists $xml->{Weaknesses} && exists $xml->{Weaknesses}->{Weakness}) {

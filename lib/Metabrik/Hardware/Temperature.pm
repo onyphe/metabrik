@@ -25,12 +25,9 @@ sub cpu {
    my $self = shift;
 
    my $file = "/sys/class/thermal/thermal_zone0/temp";
-   if (! -f $file) {
-      return $self->log->error("cpu: can't find file [$file]");
-   }
+   $self->brik_help_run_file_not_found('cpu', $file) or return;
 
-   my $text = $self->read($file)
-      or return $self->log->error("cpu: can't read file [$file]");
+   my $text = $self->read($file) or return;
 
    if (length($text)) {
       chomp($text);

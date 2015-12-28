@@ -58,9 +58,7 @@ sub cve {
    my $self = shift;
    my ($id) = @_;
 
-   if (! defined($id)) {
-      return $self->log->error($self->brik_help_run('cve'));
-   }
+   $self->brik_help_run_undef_arg('cve', $id) or return;
 
    my $db = $self->db;
    my $datadir = $self->datadir;

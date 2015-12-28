@@ -265,9 +265,7 @@ sub client_disconnected {
       return $self->log->error($self->brik_help_run('start'));
    }
 
-   if (! defined($id)) {
-      return $self->log->error($self->log->brik_help_run('client_disconnected'));
-   }
+   $self->brik_help_run_undef_arg('client_disconnected', $id) or return;
 
    my $clients = $self->clients;
    my $select = $self->select;

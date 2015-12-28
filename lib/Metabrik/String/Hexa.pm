@@ -36,9 +36,7 @@ sub encode {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('encode'));
-   }
+   $self->brik_help_run_undef_arg('encode', $data) or return;
 
    my $encoded = unpack('H*', $data);
 
@@ -53,9 +51,7 @@ sub decode {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('decode'));
-   }
+   $self->brik_help_run_undef_arg('decode', $data) or return;
 
    # Keep only hex-compliant characters
    $data =~ s/[^a-fA-F0-9]//g;

@@ -88,9 +88,7 @@ sub search {
    my $self = shift;
    my ($jail_name) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('search'));
-   }
+   $self->brik_help_run_undef_arg('search', $jail_name) or return;
 
    my $cmd = "docker search $jail_name";
 
@@ -101,12 +99,8 @@ sub exec {
    my $self = shift;
    my ($jail_name, $exec) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('exec'));
-   }
-   if (! defined($exec)) {
-      return $self->log->error($self->brik_help_run('exec'));
-   }
+   $self->brik_help_run_undef_arg('exec', $jail_name) or return;
+   $self->brik_help_run_undef_arg('exec', $exec) or return;
 
    return $self->console($jail_name, $exec);
 }
@@ -151,11 +145,9 @@ sub start {
    my $self = shift;
    my ($jail_name) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('start'));
-   }
+   $self->brik_help_run_undef_arg('start', $jail_name) or return;
 
-   my $cmd = "";
+   my $cmd = "TODO";
 
    return $self->execute($cmd);
 }
@@ -164,11 +156,9 @@ sub restart {
    my $self = shift;
    my ($jail_name) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('restart'));
-   }
+   $self->brik_help_run_undef_arg('restart', $jail_name) or return;
 
-   my $cmd = "";
+   my $cmd = "TODO";
 
    return $self->execute($cmd);
 }
@@ -177,9 +167,7 @@ sub create {
    my $self = shift;
    my ($jail_name) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('create'));
-   }
+   $self->brik_help_run_undef_arg('create', $jail_name) or return;
 
    my $cmd = "docker pull $jail_name";
 
@@ -190,11 +178,9 @@ sub backup {
    my $self = shift;
    my ($jail_name) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('backup'));
-   }
+   $self->brik_help_run_undef_arg('backup', $jail_name) or return;
 
-   my $cmd = "";
+   my $cmd = "TODO";
 
    return $self->execute($cmd);
 }
@@ -203,14 +189,10 @@ sub restore {
    my $self = shift;
    my ($jail_name, $archive_tar_gz) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('restore'));
-   }
-   if (! defined($archive_tar_gz)) {
-      return $self->log->error($self->brik_help_run('restore'));
-   }
-      
-   my $cmd = "";
+   $self->brik_help_run_undef_arg('restore', $jail_name) or return;
+   $self->brik_help_run_undef_arg('restore', $archive_tar_gz) or return;
+
+   my $cmd = "TODO";
 
    return $self->execute($cmd);
 }

@@ -47,9 +47,7 @@ sub apps_local {
    my ($uri) = @_;
 
    $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('apps_local'));
-   }
+   $self->brik_help_run_undef_arg('apps_local', $uri) or return;
 
    my $resp = $self->get($uri.'/services/apps/local') or return;
 
@@ -67,12 +65,8 @@ sub search_jobs {
    my ($search, $uri) = @_;
 
    $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('search_jobs'));
-   }
-   if (! defined($search)) {
-      return $self->log->error($self->brik_help_run('search_jobs'));
-   }
+   $self->brik_help_run_undef_arg('search_jobs', $search) or return;
+   $self->brik_help_run_undef_arg('search_jobs', $uri) or return;
 
    my $resp = $self->post({ search => $search }, $uri.'/services/search/jobs') or return;
 
@@ -92,12 +86,8 @@ sub check_search_jobs_status {
    my ($sid, $uri) = @_;
 
    $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('check_search_jobs_status'));
-   }
-   if (! defined($sid)) {
-      return $self->log->error($self->brik_help_run('check_search_jobs_status'));
-   }
+   $self->brik_help_run_undef_arg('check_search_jobs_status', $sid) or return;
+   $self->brik_help_run_undef_arg('check_search_jobs_status', $uri) or return;
 
    my $resp = $self->get($uri.'/services/search/jobs/'.$sid) or return;
 
@@ -117,12 +107,8 @@ sub get_search_jobs_content {
    my ($sid, $uri) = @_;
 
    $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('get_search_jobs_content'));
-   }
-   if (! defined($sid)) {
-      return $self->log->error($self->brik_help_run('get_search_jobs_content'));
-   }
+   $self->brik_help_run_undef_arg('get_search_jobs_content', $sid) or return;
+   $self->brik_help_run_undef_arg('get_search_jobs_content', $uri) or return;
 
    my $resp = $self->get($uri.'/services/search/jobs/'.$sid.'/results/?output_mode=csv')
       or return;
@@ -141,9 +127,7 @@ sub licenser_groups {
    my ($uri) = @_;
 
    $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('licenser_groups'));
-   }
+   $self->brik_help_run_undef_arg('licenser_groups', $uri) or return;
 
    my $resp = $self->get($uri.'/services/licenser/groups') or return;
 

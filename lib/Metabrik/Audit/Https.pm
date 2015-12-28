@@ -49,9 +49,7 @@ sub check_ssl3_support {
    my ($uri) = @_;
 
    $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('check_ssl3_support'));
-   }
+   $self->brik_help_run_undef_arg('check_ssl3_support', $uri) or return;
 
    if ($uri !~ /^https:\/\//) {
       return $self->log->error("check_ssl3_support: uri [$uri] invalid format");
@@ -59,8 +57,7 @@ sub check_ssl3_support {
 
    my $su = Metabrik::String::Uri->new_from_brik_init($self) or return;
 
-   my $hash = $su->parse($uri)
-      or return $self->log->error("check_ssl3_support: parse failed");
+   my $hash = $su->parse($uri) or return;
 
    my $host = $hash->{host};
    my $port = $hash->{port};
@@ -70,8 +67,7 @@ sub check_ssl3_support {
    $self->as_array(1);
    $self->as_matrix(0);
    $self->capture_stderr(1);
-   my $buf = $self->capture($cmd)
-      or return $self->log->error("check_ssl3_support: capture failed");
+   my $buf = $self->capture($cmd) or return;
 
    my $check = {
       ssl_version3_support => 1,

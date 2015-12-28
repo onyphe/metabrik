@@ -46,19 +46,10 @@ sub connect {
    $consumer_secret ||= $self->consumer_secret;
    $access_token ||= $self->access_token;
    $access_token_secret ||= $self->access_token_secret;
-
-   if (! defined($consumer_key)) {
-      return $self->log->error($self->brik_help_run('tweet'));
-   }
-   if (! defined($consumer_secret)) {
-      return $self->log->error($self->brik_help_run('tweet'));
-   }
-   if (! defined($access_token)) {
-      return $self->log->error($self->brik_help_run('tweet'));
-   }
-   if (! defined($access_token_secret)) {
-      return $self->log->error($self->brik_help_run('tweet'));
-   }
+   $self->brik_help_run_undef_arg('connect', $consumer_key) or return;
+   $self->brik_help_run_undef_arg('connect', $consumer_secret) or return;
+   $self->brik_help_run_undef_arg('connect', $access_token) or return;
+   $self->brik_help_run_undef_arg('connect', $access_token_secret) or return;
 
    # Without that, we got:
    # "500 Can't connect to api.twitter.com:443 (Crypt-SSLeay can't verify hostnames)"
@@ -89,9 +80,7 @@ sub tweet {
    my $self = shift;
    my ($message) = @_;
 
-   if (! defined($message)) {
-      return $self->log->error($self->brik_help_run('tweet'));
-   }
+   $self->brik_help_run_undef_arg('tweet', $message) or return;
 
    my $nt = $self->net_twitter;
    if (! defined($nt)) {

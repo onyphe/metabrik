@@ -28,13 +28,9 @@ sub info {
    my $self = shift;
 
    my $base_file = '/proc/acpi/ibm/fan';
+   $self->brik_help_run_file_not_found('info', $base_file) or return;
 
-   if (! -f $base_file) {
-      return $self->log->error("info: cannot find file [$base_file]");
-   }
-
-   my $data = $self->read($base_file)
-      or return $self->log->error("info: read failed");
+   my $data = $self->read($base_file) or return;
    chomp($data);
 
    my $info_hash = {};

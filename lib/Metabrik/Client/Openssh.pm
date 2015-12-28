@@ -125,12 +125,8 @@ sub open_tunnel {
    if (! $self->is_connected) {
       return $self->log->verbose("open_tunnel: not connected");
    }
-   if (! defined($hostname)) {
-      return $self->log->error($self->brik_help_run('open_tunnel'));
-   }
-   if (! defined($port)) {
-      return $self->log->error($self->brik_help_run('open_tunnel'));
-   }
+   $self->brik_help_run_undef_arg('open_tunnel', $hostname) or return;
+   $self->brik_help_run_undef_arg('open_tunnel', $port) or return;
 
    my $ssh = $self->ssh;
    my $slave_pids = $self->slave_pids;
@@ -153,14 +149,10 @@ sub close_tunnel {
    my ($hostname, $port) = @_;
 
    if (! $self->is_connected) {
-      return $self->log->verbose("open_tunnel: not connected");
+      return $self->log->verbose("close_tunnel: not connected");
    }
-   if (! defined($hostname)) {
-      return $self->log->error($self->brik_help_run('open_tunnel'));
-   } 
-   if (! defined($port)) {
-      return $self->log->error($self->brik_help_run('open_tunnel'));
-   }
+   $self->brik_help_run_undef_arg('close_tunnel', $hostname) or return;
+   $self->brik_help_run_undef_arg('close_tunnel', $port) or return;
 
    my $ssh = $self->ssh;
    my $slave_pids = $self->slave_pids;

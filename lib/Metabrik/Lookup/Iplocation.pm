@@ -71,9 +71,7 @@ sub from_ipv4 {
    my $self = shift;
    my ($ipv4) = @_;
 
-   if (! defined($ipv4)) {
-      return $self->log->error($self->brik_help_run('from_ipv4'));
-   }
+   $self->brik_help_run_undef_arg('from_ipv4', $ipv4) or return;
 
    my $gi = Geo::IP->open($self->datadir.'/GeoIPCity.dat', Geo::IP::GEOIP_STANDARD())
       or return $self->log->error("from_ipv4: unable to open GeoIPCity.dat");
@@ -88,9 +86,7 @@ sub from_ipv6 {
    my $self = shift;
    my ($ipv6) = @_;
 
-   if (! defined($ipv6)) {
-      return $self->log->error($self->brik_help_run('from_ipv6'));
-   }
+   $self->brik_help_run_undef_arg('from_ipv6', $ipv6) or return;
 
    my $gi = Geo::IP->open($self->datadir.'/GeoIPv6.dat')
       or return $self->log->error("from_ipv6: unable to open GeoIPv6.dat");
@@ -105,9 +101,7 @@ sub from_ip {
    my $self = shift;
    my ($ip) = @_;
 
-   if (! defined($ip)) {
-      return $self->log->error($self->brik_help_run('from_ip'));
-   }
+   $self->brik_help_run_undef_arg('from_ip', $ip) or return;
 
    my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
    if ($na->is_ipv4($ip)) {
@@ -126,9 +120,7 @@ sub subnet4 {
    my $self = shift;
    my ($ipv4_address) = @_;
 
-   if (! defined($ipv4_address)) {
-      return $self->log->error($self->brik_help_run('subnet4'));
-   }
+   $self->brik_help_run_undef_arg('subnet4', $ipv4_address) or return;
 
    my $gi = Geo::IP->open($self->datadir.'/GeoIPCity.dat', Geo::IP::GEOIP_STANDARD())
       or return $self->log->error("subnet4: unable to open GeoIPCity.dat");
@@ -142,9 +134,7 @@ sub organization_name {
    my $self = shift;
    my ($ip_address) = @_;
 
-   if (! defined($ip_address)) {
-      return $self->log->error($self->brik_help_run('organization_name'));
-   }
+   $self->brik_help_run_undef_arg('organization_name', $ip_address) or return;
   
    my $gi = Geo::IP->open($self->datadir.'/GeoIPCity.dat', Geo::IP::GEOIP_STANDARD())
       or return $self->log->error("organization_name: unable to open GeoIPCity.dat");

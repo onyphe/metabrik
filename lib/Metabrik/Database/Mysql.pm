@@ -79,6 +79,10 @@ sub open {
    $port ||= $self->port;
    $username ||= $self->username;
    $password ||= $self->password || $self->password_prompt("Enter $username password: ") or return;
+   $self->brik_help_run_undef_arg('open', $db) or return;
+   $self->brik_help_run_undef_arg('open', $host) or return;
+   $self->brik_help_run_undef_arg('open', $port) or return;
+   $self->brik_help_run_undef_arg('open', $username) or return;
 
    my $dbh = DBI->connect("DBI:mysql:database=$db;host=$host;port=$port", $username, $password, {
       AutoCommit => $self->autocommit,
@@ -103,9 +107,7 @@ sub show_tables {
    my $self = shift;
 
    my $dbh = $self->dbh;
-   if (! defined($dbh)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $dbh) or return;
 
    my @tables = map { s/.*\.//; s/`//g; $_ } $dbh->tables;
 
@@ -116,9 +118,7 @@ sub createdb {
    my $self = shift;
    my ($db) = @_;
 
-   if (! defined($db)) {
-      return $self->log->error($self->brik_help_run('createdb'));
-   }
+   $self->brik_help_run_undef_arg('createdb', $db) or return;
 
    my $host = $self->host;
    my $port = $self->port;
@@ -135,9 +135,7 @@ sub dropdb {
    my $self = shift;
    my ($db) = @_;
 
-   if (! defined($db)) {
-      return $self->log->error($self->brik_help_run('dropdb'));
-   }
+   $self->brik_help_run_undef_arg('dropdb', $db) or return;
 
    my $host = $self->host;
    my $port = $self->port;
@@ -154,12 +152,8 @@ sub save {
    my $self = shift;
    my ($db, $filename) = @_;
 
-   if (! defined($db)) {
-      return $self->log->error($self->brik_help_run('save'));
-   }
-   if (! defined($filename)) {
-      return $self->log->error($self->brik_help_run('save'));
-   }
+   $self->brik_help_run_undef_arg('save', $db) or return;
+   $self->brik_help_run_undef_arg('save', $filename) or return;
 
    my $host = $self->host;
    my $port = $self->port;
@@ -176,15 +170,9 @@ sub load {
    my $self = shift;
    my ($filename, $db) = @_;
 
-   if (! defined($filename)) {
-      return $self->log->error($self->brik_help_run('load'));
-   }
-   if (! -f $filename) {
-      return $self->log->error("load: file [$filename] not found");
-   }
-   if (! defined($db)) {
-      return $self->log->error($self->brik_help_run('load'));
-   }
+   $self->brik_help_run_undef_arg('load', $filename) or return;
+   $self->brik_help_run_file_not_found('load', $filename) or return;
+   $self->brik_help_run_undef_arg('load', $db) or return;
 
    my $host = $self->host;
    my $port = $self->port;
@@ -202,9 +190,7 @@ sub create_user {
    my ($username, $password, $ip) = @_;
 
    $ip ||= '%';
-   if (! defined($username)) {
-      return $self->log->error($self->brik_help_run('create_user'));
-   }
+   $self->brik_help_run_undef_arg('create_user', $username) or return;
 
    my $mysql_host = $self->host;
    my $mysql_port = $self->port;
@@ -227,12 +213,8 @@ sub grant_all_privileges {
    my ($db, $username, $password, $ip) = @_;
 
    $ip ||= '%';
-   if (! defined($db)) {
-      return $self->log->error($self->brik_help_run('grant_all_privileges'));
-   }
-   if (! defined($username)) {
-      return $self->log->error($self->brik_help_run('grant_all_privileges'));
-   }
+   $self->brik_help_run_undef_arg('grant_all_privileges', $db) or return;
+   $self->brik_help_run_undef_arg('grant_all_privileges', $username) or return;
 
    my $mysql_host = $self->host;
    my $mysql_port = $self->port;

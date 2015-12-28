@@ -48,7 +48,7 @@ sub scan {
    my $self = shift;
    my ($target) = @_;
 
-   $self->brik_help_run_undef_arg("scan", $target) or return;
+   $self->brik_help_run_undef_arg('scan', $target) or return;
 
    my $datadir = $self->datadir;
    if (! -f $target && ! -d $target) {

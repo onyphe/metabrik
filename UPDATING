@@ -1,3 +1,8 @@
+20151228
+   AFFECT: network::address
+
+   - network::address renamed ipv4_routable_ranges Command to ipv4_public_ranges
+
 20151226
    AFFECT: convert::video
 
@@ -19,7 +24,7 @@
 20151203
    AFFECT: brik::tool
 
-   - brik::tool renamed install_perl_modules to install_modules
+   - brik::tool renamed install_perl_modules Command to install_modules
 
 20151129
    AFFECT: file::create, file::fetch, server::agent

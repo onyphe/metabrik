@@ -29,9 +29,7 @@ sub parse {
    my ($hostname) = @_;
 
    $hostname ||= $self->hostname;
-   if (! defined($hostname)) {
-      return $self->log->error($self->brik_help_run('parse'));
-   }
+   $self->brik_help_run_undef_arg('parse', $hostname) or return;
 
    my $tld = '';
    my $domain = '';

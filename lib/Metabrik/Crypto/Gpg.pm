@@ -79,14 +79,10 @@ sub generate_key {
    my $self = shift;
    my ($email, $description, $comment) = @_;
 
-   if (! defined($email)) {
-      return $self->log->error($self->brik_help_run('generate_key'));
-   }
+   $self->brik_help_run_undef_arg('generate_key', $email) or return;
 
    my $passphrase = $self->passphrase;
-   if (! defined($passphrase)) {
-      return $self->log->error($self->brik_help_set('passphrase'));
-   }
+   $self->brik_help_set_undef_arg('passphrase', $passphrase) or return;
 
    $description ||= $email;
    $comment ||= $email;
@@ -165,9 +161,7 @@ sub delete_key {
    my $self = shift;
    my ($id) = @_;
 
-   if (! defined($id)) {
-      return $self->log->error($self->brik_help_run('delete_key'));
-   }
+   $self->brik_help_run_undef_arg('delete_key', $id) or return;
 
    my $gnupg = $self->_gnupg;
 
@@ -201,9 +195,7 @@ sub import_keys {
    my $self = shift;
    my ($file) = @_;
 
-   if (! defined($file)) {
-      return $self->log->error($self->brik_help_run('import_keys'));
-   }
+   $self->brik_help_run_undef_arg('import_keys', $file) or return;
 
    my $gnupg = $self->_gnupg;
 
@@ -274,13 +266,8 @@ sub get_public_keys {
    my $self = shift;
    my ($keys) = @_;
 
-   if (! defined($keys)) {
-      return $self->log->error($self->brik_help_run('get_public_keys'));
-   }
-
-   if (ref($keys) ne 'ARRAY') {
-      return $self->log->error("get_public_keys: argument 1 must be ARRAYREF");
-   }
+   $self->brik_help_run_undef_arg('get_public_keys', $keys) or return;
+   $self->brik_help_run_invalid_arg('get_public_keys', $keys, 'ARRAY') or return;
 
    my $gnupg = $self->_gnupg;
 
@@ -323,13 +310,8 @@ sub get_secret_keys {
    my $self = shift;
    my ($keys) = @_;
 
-   if (! defined($keys)) {
-      return $self->log->error($self->brik_help_run('get_secret_keys'));
-   }
-
-   if (ref($keys) ne 'ARRAY') {
-      return $self->log->error("get_secret_keys: argument 1 must be ARRAYREF");
-   }
+   $self->brik_help_run_undef_arg('get_secret_keys', $keys) or return;
+   $self->brik_help_run_invalid_arg('get_secret_keys', $keys, 'ARRAY') or return;
 
    my $gnupg = $self->_gnupg;
 
@@ -347,17 +329,9 @@ sub encrypt {
    my $self = shift;
    my ($data, $recipient_list) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('encrypt'));
-   }
-
-   if (! defined($recipient_list)) {
-      return $self->log->error($self->brik_help_run('encrypt'));
-   }
-
-   if (ref($recipient_list) ne 'ARRAY') {
-      return $self->log->error("encrypt: argument 2 must be ARRAYREF");
-   }
+   $self->brik_help_run_undef_arg('encrypt', $data) or return;
+   $self->brik_help_run_undef_arg('encrypt', $recipient_list) or return;
+   $self->brik_help_run_invalid_arg('encrypt', $recipient_list, 'ARRAY') or return;
 
    my @data = ();
    if (ref($data) eq 'ARRAY') {
@@ -408,9 +382,7 @@ sub decrypt {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('decrypt'));
-   }
+   $self->brik_help_run_undef_arg('decrypt', $data) or return;
 
    my $sp = Metabrik::String::Password->new_from_brik_init($self) or return;
 
@@ -472,9 +444,7 @@ sub export_keys {
    my $self = shift;
    my ($key_id) = @_;
 
-   if (! defined($key_id)) {
-      return $self->log->error($self->brik_help_run('export_keys'));
-   }
+   $self->brik_help_run_undef_arg('export_keys', $key_id) or return;
 
    my $gnupg = $self->_gnupg;
 

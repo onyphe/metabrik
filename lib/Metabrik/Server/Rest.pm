@@ -45,9 +45,10 @@ sub start {
    my $root = $self->datadir;
    $post_handlers ||= [];
    my $output_mode = $self->output_mode;
-   if (! defined($hostname) || ! defined($port) || ! defined($root) || ! defined($get_handlers)) {
-      return $self->log->error($self->brik_help_run('start'));
-   }
+   $self->brik_help_run_undef_arg('start', $hostname) or return;
+   $self->brik_help_run_undef_arg('start', $port) or return;
+   $self->brik_help_run_undef_arg('start', $root) or return;
+   $self->brik_help_run_undef_arg('start', $get_handlers) or return;
 
    my $http = HTTP::Server::Brick->new(
       port => $port,

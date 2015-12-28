@@ -37,15 +37,6 @@ sub brik_properties {
    };
 }
 
-sub _brik_use_properties {
-   my $self = shift;
-
-   return {
-      attributes_default => {
-      },
-   };
-}
-
 #
 # sinfp3.pl -input-null -db-sinfp3 -db-file FILE -mode-null -search-null -output Export
 #
@@ -54,13 +45,8 @@ sub active_signature_export {
    my ($file) = @_;
 
    $file ||= $self->db;
-   if (! defined($file)) {
-      return $self->log->error($self->brik_help_set('db'));
-   }
-
-   if (! -f $file) {
-      return $self->log->error("active_signature_export: file [$file] not found");
-   }
+   $self->brik_help_run_undef_arg('active_signature_export', $file) or return;
+   $self->brik_help_run_file_not_found('active_signature_export', $file) or return;
 
    my $log = Net::SinFP3::Log::Console->new(
       level => 0,
@@ -107,13 +93,8 @@ sub passive_signature_export {
    my ($file) = @_;
 
    $file ||= $self->db;
-   if (! defined($file)) {
-      return $self->log->error($self->brik_help_set('db'));
-   }
-
-   if (! -f $file) {
-      return $self->log->error("passive_signature_export: file [$file] not found");
-   }
+   $self->brik_help_run_undef_arg('passive_signature_export', $file) or return;
+   $self->brik_help_run_file_not_found('passive_signature_export', $file) or return;
 
    my $log = Net::SinFP3::Log::Console->new(
       level => 0,

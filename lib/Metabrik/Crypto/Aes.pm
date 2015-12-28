@@ -33,9 +33,7 @@ sub encrypt {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('encrypt'));
-   }
+   $self->brik_help_run_undef_arg('encrypt', $data) or return;
 
    #my $key = 'key';
 
@@ -56,9 +54,7 @@ sub decrypt {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('decrypt'));
-   }
+   $self->brik_help_run_undef_arg('decrypt', $data) or return;
 
    #my $key = 'key';
 

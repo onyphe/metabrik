@@ -48,9 +48,9 @@ sub generate_conf {
    my $datadir = $self->datadir;
    $extensions ||= $self->extensions;
    $file ||= $datadir.'/'.$self->conf;
-   $self->brik_help_run_undef_arg("generate_conf", $extensions) or return;
-   $self->brik_help_run_invalid_arg("generate_conf", $extensions, 'ARRAY') or return;
-   $self->brik_help_run_undef_arg("generate_conf", $file) or return;
+   $self->brik_help_run_undef_arg('generate_conf', $extensions) or return;
+   $self->brik_help_run_invalid_arg('generate_conf', $extensions, 'ARRAY') or return;
+   $self->brik_help_run_undef_arg('generate_conf', $file) or return;
 
    my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
    $sf->remove($file) or return;
@@ -150,8 +150,8 @@ sub scan {
    $base ||= $file;
    $output ||= $datadir.'/'.$base.'.scalp';
    $conf ||= $datadir.'/'.$self->conf;
-   $self->brik_help_run_file_not_found("scan", $file) or return;
-   $self->brik_help_run_file_not_found("scan", $conf) or return;
+   $self->brik_help_run_file_not_found('scan', $file) or return;
+   $self->brik_help_run_file_not_found('scan', $conf) or return;
 
    if (! -d $output) {
       $self->log->info("scan: never launched scalpel on this file, starting...");

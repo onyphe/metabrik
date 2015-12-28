@@ -26,9 +26,7 @@ sub encode {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('encode'));
-   }
+   $self->brik_help_run_undef_arg('encode', $data) or return;
 
    (my $encoded = $data) =~ tr/n-za-m/a-z/;
 
@@ -39,9 +37,7 @@ sub decode {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('decode'));
-   }
+   $self->brik_help_run_undef_arg('decode', $data) or return;
 
    return $self->encode($data);
 }

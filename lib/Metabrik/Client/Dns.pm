@@ -61,7 +61,7 @@ sub brik_init {
 
 sub get_local_resolver {
    my $self = shift;
-   my($file) = @_;
+   my ($file) = @_;
 
    $file ||= "/etc/resolv.conf";
 
@@ -99,9 +99,7 @@ sub a_lookup {
 
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
-   if (! defined($host)) {
-      return $self->log->error($self->brik_help_run('a_lookup'));
-   }
+   $self->brik_help_run_undef_arg('a_lookup', $host) or return;
 
    my $list = $self->lookup($host, 'A', $nameserver, $port) or return;
 
@@ -121,9 +119,7 @@ sub aaaa_lookup {
 
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
-   if (! defined($host)) {
-      return $self->log->error($self->brik_help_run('aaaa_lookup'));
-   }
+   $self->brik_help_run_undef_arg('aaaa_lookup', $host) or return;
 
    my $list = $self->lookup($host, 'AAAA', $nameserver, $port) or return;
 
@@ -143,9 +139,7 @@ sub ptr_lookup {
 
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
-   if (! defined($host)) {
-      return $self->log->error($self->brik_help_run('ptr_lookup'));
-   }
+   $self->brik_help_run_undef_arg('ptr_lookup', $host) or return;
 
    my $list = $self->lookup($host, 'PTR', $nameserver, $port) or return;
 
@@ -165,9 +159,7 @@ sub mx_lookup {
 
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
-   if (! defined($host)) {
-      return $self->log->error($self->brik_help_run('mx_lookup'));
-   }
+   $self->brik_help_run_undef_arg('mx_lookup', $host) or return;
 
    my $list = $self->lookup($host, 'MX', $nameserver, $port) or return;
 
@@ -187,9 +179,7 @@ sub ns_lookup {
 
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
-   if (! defined($host)) {
-      return $self->log->error($self->brik_help_run('ns_lookup'));
-   }
+   $self->brik_help_run_undef_arg('ns_lookup', $host) or return;
 
    my $list = $self->lookup($host, 'NS', $nameserver, $port) or return;
 
@@ -209,9 +199,7 @@ sub soa_lookup {
 
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
-   if (! defined($host)) {
-      return $self->log->error($self->brik_help_run('soa_lookup'));
-   }
+   $self->brik_help_run_undef_arg('soa_lookup', $host) or return;
 
    my $list = $self->lookup($host, 'SOA', $nameserver, $port) or return;
 
@@ -231,9 +219,7 @@ sub txt_lookup {
 
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
-   if (! defined($host)) {
-      return $self->log->error($self->brik_help_run('txt_lookup'));
-   }
+   $self->brik_help_run_undef_arg('txt_lookup', $host) or return;
 
    my $list = $self->lookup($host, 'TXT', $nameserver, $port) or return;
 
@@ -253,9 +239,7 @@ sub srv_lookup {
 
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
-   if (! defined($host)) {
-      return $self->log->error($self->brik_help_run('srv_lookup'));
-   }
+   $self->brik_help_run_undef_arg('srv_lookup', $host) or return;
 
    my $list = $self->lookup($host, 'SRV', $nameserver, $port) or return;
 
@@ -275,9 +259,7 @@ sub cname_lookup {
 
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
-   if (! defined($host)) {
-      return $self->log->error($self->brik_help_run('cname_lookup'));
-   }
+   $self->brik_help_run_undef_arg('cname_lookup', $host) or return;
 
    my $list = $self->lookup($host, 'CNAME', $nameserver, $port) or return;
 

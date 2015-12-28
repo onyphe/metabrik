@@ -50,9 +50,7 @@ sub parse {
    my ($string) = @_;
 
    $string ||= $self->uri;
-   if (! defined($string)) {
-      return $self->log->error($self->brik_help_set('uri'));
-   }
+   $self->brik_help_run_undef_arg('parse', $string) or return;
 
    my $uri = URI->new($string);
 
@@ -80,9 +78,8 @@ sub is_https_scheme {
    my $self = shift;
    my ($parsed) = @_;
 
-   if (! defined($parsed)) {
-      return $self->log->error($self->brik_help_run('is_https_scheme'));
-   }
+   $self->brik_help_run_undef_arg('is_https_scheme', $parsed) or return;
+   $self->brik_help_run_invalid_arg('is_https_scheme', $parsed, 'HASH') or return;
 
    if (exists($parsed->{scheme}) && $parsed->{scheme} eq 'https') {
       return 1;
@@ -96,9 +93,7 @@ sub _this {
    my ($this) = @_;
 
    my $uri = $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('parse'));
-   }
+   $self->brik_help_run_undef_arg('parse', $uri) or return;
 
    return $uri->$this;
 }
@@ -119,9 +114,7 @@ sub encode {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('encode'));
-   }
+   $self->brik_help_run_undef_arg('encode', $data) or return;
 
    my $encoded = URI::Escape::uri_escape($data);
 
@@ -132,9 +125,7 @@ sub decode {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('decode'));
-   }
+   $self->brik_help_run_undef_arg('decode', $data) or return;
 
    my $decoded = URI::Escape::uri_unescape($data);
 

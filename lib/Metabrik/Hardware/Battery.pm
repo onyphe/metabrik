@@ -25,6 +25,7 @@ sub capacity {
    my $self = shift;
 
    my $base_file = '/sys/class/power_supply/BAT';
+   $self->brik_help_run_file_not_found('capacity', $base_file) or return;
 
    my $battery_hash = {};
    my $count = 0;

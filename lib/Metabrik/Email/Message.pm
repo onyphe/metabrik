@@ -40,9 +40,7 @@ sub create {
    my $self = shift;
    my ($content) = @_;
 
-   if (! defined($content)) {
-      return $self->log->error($self->brik_help_run('create'));
-   }
+   $self->brik_help_run_undef_arg('create', $content) or return;
 
    my $from = $self->from;
    my $to = $self->to;

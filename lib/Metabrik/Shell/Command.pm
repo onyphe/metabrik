@@ -116,9 +116,7 @@ sub capture {
    my $self = shift;
    my ($cmd, @args) = @_;
 
-   if (! defined($cmd)) {
-      return $self->log->error($self->brik_help_run('capture'));
-   }
+   $self->brik_help_run_undef_arg('capture', $cmd) or return;
 
    # Remove undefined values from arguments
    my @new;
@@ -219,9 +217,7 @@ sub execute {
    my $self = shift;
    my ($cmd, @args) = @_;
    
-   if (! defined($cmd)) {
-      return $self->log->error($self->brik_help_run('execute'));
-   }
+   $self->brik_help_run_undef_arg('execute', $cmd) or return;
 
    if ($self->capture_mode) {
       return $self->capture($cmd, @args);

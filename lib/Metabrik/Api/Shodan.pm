@@ -28,9 +28,9 @@ sub brik_properties {
          uri => 'https://api.shodan.io',
       },
       commands => {
-         myip => [ ],
-         api_info => [ ],
-         host_ip => [ qw(ip_address) ],
+         myip => [ qw(apikey|OPTIONAL) ],
+         api_info => [ qw(apikey|OPTIONAL) ],
+         host_ip => [ qw(ip_address apikey|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::Network::Address' => [ ],
@@ -44,9 +44,7 @@ sub myip {
    my $self = shift;
 
    my $apikey = $self->apikey;
-   if (! defined($apikey)) {
-      return $self->log->error($self->brik_help_set('api_key'));
-   }
+   $self->brik_help_run_undef_arg('myip', $apikey) or return;
 
    my $uri = $self->uri;
 
@@ -60,11 +58,10 @@ sub myip {
 
 sub api_info {
    my $self = shift;
+   my ($apikey) = @_;
 
-   my $apikey = $self->apikey;
-   if (! defined($apikey)) {
-      return $self->log->error($self->brik_help_set('api_key'));
-   }
+   $apikey ||= $self->apikey;
+   $self->brik_help_run_undef_arg('api_info', $apikey) or return;
 
    my $uri = $self->uri;
 
@@ -79,15 +76,11 @@ sub api_info {
 
 sub host_ip {
    my $self = shift;
-   my ($ip) = @_;
+   my ($ip, $apikey) = @_;
 
-   my $apikey = $self->apikey;
-   if (! defined($apikey)) {
-      return $self->log->error($self->brik_help_set('api_key'));
-   }
-   if (! defined($ip)) {
-      return $self->log->error($self->brik_help_run('host_ip'));
-   }
+   $apikey ||= $self->apikey;
+   $self->brik_help_run_undef_arg('host_ip', $ip) or return;
+   $self->brik_help_run_undef_arg('host_ip', $apikey) or return;
 
    my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
    if (! $na->is_ip($ip)) {

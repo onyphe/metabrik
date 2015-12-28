@@ -35,9 +35,7 @@ sub parse_raw_whois {
    my $self = shift;
    my ($lines) = @_;
 
-   if (! defined($lines)) {
-      return $self->log->error($self->brik_help_run('parse_raw_whois'));
-   }
+   $self->brik_help_run_undef_arg('parse_raw_whois', $lines) or return;
 
    my $sp = Metabrik::String::Parse->new_from_brik_init($self) or return;
    my $chunks = $sp->split_by_blank_line($lines) or return;
@@ -134,9 +132,8 @@ sub normalize_raw_ip_whois {
    my $self = shift;
    my ($chunks, $lines) = @_;
 
-   if (! defined($chunks) || ! defined($lines)) {
-      return $self->log->error($self->brik_help_run('normalize_raw_ip_whois'));
-   }
+   $self->brik_help_run_undef_arg('normalize_raw_ip_whois', $chunks) or return;
+   $self->brik_help_run_undef_arg('normalize_raw_ip_whois', $lines) or return;
 
    my $r = { raw => $lines };
    #my $r = {};
@@ -280,9 +277,7 @@ sub ip {
    my $self = shift;
    my ($ip) = @_;
 
-   if (! defined($ip)) {
-      return $self->log->error($self->brik_help_run('ip'));
-   }
+   $self->brik_help_run_undef_arg('ip', $ip) or return;
 
    my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
    if (! $na->is_ip($ip)) {
@@ -319,9 +314,7 @@ sub domain {
    my $self = shift;
    my ($domain) = @_;
 
-   if (! defined($domain)) {
-      return $self->log->error($self->brik_help_run('domain'));
-   }
+   $self->brik_help_run_undef_arg('domain', $domain) or return;
 
    my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
    if ($na->is_ip($domain)) {
@@ -432,9 +425,7 @@ sub is_available_domain {
    my $self = shift;
    my ($domain) = shift;
 
-   if (! defined($domain)) {
-      return $self->log->brik_help_run('is_available');
-   }
+   $self->brik_help_run_undef_arg('is_available_domain', $domain) or return;
 
    my $info = $self->domain($domain) or return;
 

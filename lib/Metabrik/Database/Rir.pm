@@ -81,16 +81,13 @@ sub next_record {
    my $fr = $self->_read;
    if (! defined($fr)) {
       $input ||= $self->datadir.'/'.$self->input;
-      if (! -f $input) {
-         return $self->log->error("next_record: file [$input] does not exist");
-      }
+      $self->brik_help_run_file_not_found('next_record', $input) or return;
 
       $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
       $fr->encoding('ascii');
       $fr->input($input);
       $fr->as_array(0);
-      $fr->open
-         or return $self->log->error("next_record: file::read open failed");
+      $fr->open or return;
       $self->_read($fr);
    }
 

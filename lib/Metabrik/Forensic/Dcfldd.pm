@@ -29,8 +29,8 @@ sub dump {
    my $self = shift;
    my ($source, $dest) = @_;
 
-   $self->brik_help_run_undef_arg("dump", $source) or return;
-   $self->brik_help_run_undef_arg("dump", $dest) or return;
+   $self->brik_help_run_undef_arg('dump', $source) or return;
+   $self->brik_help_run_undef_arg('dump', $dest) or return;
 
    my $cmd = "dcfldd if=$source of=$dest hash=hash512 hashlog=$dest.hs";
 

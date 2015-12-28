@@ -39,9 +39,7 @@ sub category {
    my ($uri) = @_;
 
    $uri ||= $self->uri;
-   if (! defined($uri)) {
-      return $self->log->error($self->brik_help_run('category'));
-   }
+   $self->brik_help_run_undef_arg('category', $uri) or return;
 
    if ($uri !~ /^(?:http|ftp):\/\//) {
       return $self->log->error("category: invalid URL format [$uri]");

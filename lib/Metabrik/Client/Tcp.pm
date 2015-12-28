@@ -70,12 +70,8 @@ sub connect {
 
    $host ||= $self->host;
    $port ||= $self->port;
-   if (! defined($host)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-   if (! defined($port)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
+   $self->brik_help_run_undef_arg('connect', $host) or return;
+   $self->brik_help_run_undef_arg('connect', $port) or return;
 
    my $context = $self->context;
 
@@ -144,9 +140,7 @@ sub write {
    if (! $self->is_connected) {
       return $self->log->error($self->brik_help_run('connect'));
    }
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('write'));
-   }
+   $self->brik_help_run_undef_arg('write', $data) or return;
 
    my $socket = $self->_socket;
    $stdout ||= $socket;

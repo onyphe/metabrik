@@ -21,8 +21,11 @@ sub brik_properties {
          domainname => [ qw(domainname) ],
          _smtp => [ qw(INTERNAL) ],
       },
+      attributes_default => {
+         port => 25,
+      },
       commands => {
-         connect => [ ],
+         connect => [ qw(hostname|OPTIONAL port|OPTIONAL) ],
          banner => [ ],
          quit => [ ],
          open_auth_login => [ ],
@@ -43,16 +46,19 @@ sub brik_use_properties {
       attributes_default => {
          hostname => $self->global->hostname,
          domainname => $self->global->domainname,
-         port => 25,
       },
    };
 }
 
 sub connect {
    my $self = shift;
+   my ($hostname, $port) = @_;
 
-   my $hostname = $self->hostname;
-   my $port = $self->port;
+   $hostname ||= $self->hostname;
+   $port ||= $self->port;
+   $self->brik_help_run_undef_arg('connect', $hostname) or return;
+   $self->brik_help_run_undef_arg('connect', $port) or return;
+
    my $domainname = $self->domainname;
    my $timeout = $self->global->ctimeout;
 
@@ -72,11 +78,9 @@ sub connect {
 sub quit {
    my $self = shift;
 
-   if (! defined($self->_smtp)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
    my $smtp = $self->_smtp;
+   $self->brik_help_run_undef_arg('connect', $smtp) or return;
+
    $self->_smtp(undef);
 
    return $smtp->quit;
@@ -85,11 +89,8 @@ sub quit {
 sub banner {
    my $self = shift;
 
-   if (! defined($self->_smtp)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
    my $smtp = $self->_smtp;
+   $self->brik_help_run_undef_arg('connect', $smtp) or return;
 
    chomp(my $banner = $smtp->banner);
 
@@ -109,11 +110,8 @@ sub banner {
 sub open_auth_login {
    my $self = shift;
 
-   if (! defined($self->_smtp)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
    my $smtp = $self->_smtp;
+   $self->brik_help_run_undef_arg('connect', $smtp) or return;
 
    my $smtp_feature_auth_login = 0;
    my $smtp_open_auth_login = 0;
@@ -146,11 +144,8 @@ sub open_auth_login {
 sub open_relay {
    my $self = shift;
 
-   if (! defined($self->_smtp)) {
-      return $self->log->error($self->brik_help_run('connect'));
-   }
-
    my $smtp = $self->_smtp;
+   $self->brik_help_run_undef_arg('connect', $smtp) or return;
 
    my $smtp_open_relay = 0;
    my $smtp_to_reject = 0;

@@ -56,7 +56,7 @@ sub start {
    my $self = shift;
 
    if ($self->_started) {
-      return $self->log->verbose("already started");
+      return $self->log->verbose("start: already started");
    }
 
    $self->connect or return;
@@ -122,7 +122,7 @@ sub next {
 
    my $channel = $self->_channel;
    if (! defined($channel)) {
-      return $self->log->error("channel not found");
+      return $self->log->error("next: channel not found");
    }
 
    my $out = $self->_out;
@@ -152,7 +152,7 @@ sub nextall {
 
    my $channel = $self->_channel;
    if (! defined($channel)) {
-      return $self->log->error("channel not found");
+      return $self->log->error("nextall: channel not found");
    }
 
    my $out = $self->_out;
@@ -163,7 +163,7 @@ sub nextall {
    # If reader not already open, we open it
    my $dump = $self->_dump;
    if (! $dump->isRunning) {
-      $dump->start or return $self->log->error("unable to start pcap reader");
+      $dump->start or return $self->log->error("nextall: unable to start pcap reader");
    }
 
    my @next = ();

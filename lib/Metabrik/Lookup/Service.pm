@@ -81,12 +81,9 @@ sub load {
    my ($input) = @_;
 
    $input ||= $self->datadir.'/'.$self->input;
-   if (! -f $input) {
-      return $self->log->error("load: file [$input] not found");
-   }
+   $self->brik_help_run_file_not_found('load', $input) or return;
 
-   my $data = $self->read($input)
-      or return $self->log->error("load: read failed");
+   my $data = $self->read($input) or return;
 
    return $self->_load($data);
 }
@@ -95,9 +92,7 @@ sub from_dec {
    my $self = shift;
    my ($dec) = @_;
 
-   if (! defined($dec)) {
-      return $self->log->error($self->brik_help_run('from_dec'));
-   }
+   $self->brik_help_run_undef_arg('from_dec', $dec) or return;
 
    my $data = $self->_load || $self->load;
    if (! defined($data)) {
@@ -118,9 +113,7 @@ sub from_hex {
    my $self = shift;
    my ($hex) = @_;
 
-   if (! defined($hex)) {
-      return $self->log->error($self->brik_help_run('from_hex'));
-   }
+   $self->brik_help_run_undef_arg('from_hex', $hex) or return;
 
    my $dec = hex($hex);
 
@@ -131,9 +124,7 @@ sub from_string {
    my $self = shift;
    my ($string) = @_;
 
-   if (! defined($string)) {
-      return $self->log->error($self->brik_help_run('from_string'));
-   }
+   $self->brik_help_run_undef_arg('from_string', $string) or return;
 
    my $data = $self->_load || $self->load;
    if (! defined($data)) {

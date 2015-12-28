@@ -29,13 +29,8 @@ sub encode {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('encode'));
-   }
-
-   if (ref($data) ne 'ARRAY' && ref($data) ne 'HASH') {
-      return $self->log->error("encode: you need to give data as an ARRAYREF or HASHREF");
-   }
+   $self->brik_help_run_undef_arg('encode', $data) or return;
+   $self->brik_help_run_invalid_arg('encode', $data, 'ARRAY', 'HASH') or return;
 
    my $encoded = '';
    eval {
@@ -53,9 +48,7 @@ sub decode {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('decode'));
-   }
+   $self->brik_help_run_undef_arg('decode', $data) or return;
 
    my $decoded = '';
    eval {

@@ -16,9 +16,7 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
-         from_dec => [ qw($data) ],
-      },
-      require_modules => {
+         from_dec => [ qw(data|$data_list) ],
       },
    };
 }
@@ -27,12 +25,12 @@ sub from_dec {
    my $self = shift;
    my ($data) = @_;
 
-   if (! defined($data)) {
-      return $self->log->error($self->brik_help_run('from_dec'));
-   }
+   $self->brik_help_run_undef_arg('from_dec', $data) or return;
+   my $ref = $self->brik_help_run_invalid_arg('from_dec', $data, 'ARRAY', 'SCALAR')
+      or return;
 
    my @data = ();
-   if (ref($data) eq 'ARRAY') {
+   if ($ref eq 'ARRAY') {
       for my $this (@$data) {
          if ($this =~ /^\d+$/) {
             push @data, $this;
@@ -42,7 +40,7 @@ sub from_dec {
          }
       }
    }
-   elsif (! ref($data)) {
+   else {
       if ($data =~ /^\d+$/) {
          push @data, $data;
       }

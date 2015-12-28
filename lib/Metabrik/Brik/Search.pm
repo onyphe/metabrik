@@ -60,9 +60,7 @@ sub string {
    my $self = shift;
    my ($string) = @_;
 
-   if (! defined($string)) {
-      return $self->log->error($self->brik_help_run('string'));
-   }
+   $self->brik_help_run_undef_arg('string', $string) or return;
 
    my $context = $self->context;
    my $status = $context->status;
@@ -91,9 +89,7 @@ sub tag {
    my $self = shift;
    my ($tag) = @_;
 
-   if (! defined($tag)) {
-      return $self->log->error($self->brik_help_run('tag'));
-   }
+   $self->brik_help_run_undef_arg('tag', $tag) or return;
 
    my $context = $self->context;
    my $status = $context->status;
@@ -131,9 +127,7 @@ sub not_tag {
    my $self = shift;
    my ($tag) = @_;
 
-   if (! defined($tag)) {
-      return $self->log->error($self->brik_help_run('not_tag'));
-   }
+   $self->brik_help_run_undef_arg('not_tag', $tag) or return;
 
    my $context = $self->context;
    my $status = $context->status;
@@ -184,7 +178,7 @@ sub show_require_modules {
    my $context = $self->context;
    my $available = $context->available;
 
-   # Don't show require for Metabrik::Core
+   # Don't show require for Core modules
    my $core = {
       'core::context',
       'core::log',
@@ -211,9 +205,7 @@ sub command {
    my $self = shift;
    my ($command) = @_;
 
-   if (! defined($command)) {
-      return $self->log->error($self->brik_help_run('command'));
-   }
+   $self->brik_help_run_undef_arg('command', $command) or return;
 
    my $context = $self->context;
    my $status = $context->status;

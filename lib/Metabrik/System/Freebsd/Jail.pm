@@ -42,9 +42,7 @@ sub name_to_id {
    my $self = shift;
    my ($jail_name) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('name_to_id'));
-   }
+   $self->brik_help_run_undef_arg('name_to_id', $jail_name) or return;
 
    my $out = $self->capture("ezjail-admin list") or return;
    # STA JID  IP              Hostname                       Root Directory
@@ -66,12 +64,8 @@ sub exec {
    my $self = shift;
    my ($jail_name, $exec) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('exec'));
-   }
-   if (! defined($exec)) {
-      return $self->log->error($self->brik_help_run('exec'));
-   }
+   $self->brik_help_run_undef_arg('exec', $jail_name) or return;
+   $self->brik_help_run_undef_arg('exec', $exec) or return;
 
    my $r;
    my @lines = ();
@@ -113,11 +107,11 @@ sub stop {
    my $self = shift;
    my ($jail_name) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('stop'));
-   }
+   $self->brik_help_run_undef_arg('stop', $jail_name) or return;
+   my $ref = $self->brik_help_run_invalid_arg('stop', $jail_name, 'ARRAY', 'SCALAR')
+      or return;
 
-   if (ref($jail_name) eq 'ARRAY') {
+   if ($ref eq 'ARRAY') {
       for my $jail (@$jail_name) {
          my $cmd = "sudo ezjail-admin stop $jail";
          $self->system($cmd);
@@ -134,11 +128,11 @@ sub start {
    my $self = shift;
    my ($jail_name) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('start'));
-   }
+   $self->brik_help_run_undef_arg('start', $jail_name) or return;
+   my $ref = $self->brik_help_run_invalid_arg('start', $jail_name, 'ARRAY', 'SCALAR')
+      or return;
 
-   if (ref($jail_name) eq 'ARRAY') {
+   if ($ref eq 'ARRAY') {
       for my $jail (@$jail_name) {
          my $cmd = "sudo ezjail-admin start $jail";
          $self->system($cmd);
@@ -155,9 +149,9 @@ sub restart {
    my $self = shift;
    my ($jail_name) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('restart'));
-   }
+   $self->brik_help_run_undef_arg('restart', $jail_name) or return;
+   my $ref = $self->brik_help_run_invalid_arg('restart', $jail_name, 'ARRAY', 'SCALAR')
+      or return;
 
    if (ref($jail_name) eq 'ARRAY') {
       for my $jail (@$jail_name) {
@@ -176,12 +170,8 @@ sub create {
    my $self = shift;
    my ($jail_name, $ip_address) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('create'));
-   }
-   if (! defined($ip_address)) {
-      return $self->log->error($self->brik_help_run('create'));
-   }
+   $self->brik_help_run_undef_arg('create', $jail_name) or return;
+   $self->brik_help_run_undef_arg('create', $ip_address) or return;
 
    my $cmd = "sudo ezjail-admin create $jail_name $ip_address";
 
@@ -192,11 +182,11 @@ sub backup {
    my $self = shift;
    my ($jail_name) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('backup'));
-   }
+   $self->brik_help_run_undef_arg('backup', $jail_name) or return;
+   my $ref = $self->brik_help_run_invalid_arg('backup', $jail_name, 'ARRAY', 'SCALAR')
+      or return;
 
-   if (ref($jail_name) eq 'ARRAY') {
+   if ($ref eq 'ARRAY') {
       for my $jail (@$jail_name) {
          my $cmd = "sudo ezjail-admin archive -f $jail";
          $self->system($cmd);
@@ -213,16 +203,10 @@ sub restore {
    my $self = shift;
    my ($jail_name, $ip_address, $archive_tar_gz) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('restore'));
-   }
-   if (! defined($ip_address)) {
-      return $self->log->error($self->brik_help_run('restore'));
-   }
-   if (! defined($archive_tar_gz)) {
-      return $self->log->error($self->brik_help_run('restore'));
-   }
-      
+   $self->brik_help_run_undef_arg('restore', $jail_name) or return;
+   $self->brik_help_run_undef_arg('restore', $ip_address) or return;
+   $self->brik_help_run_undef_arg('restore', $archive_tar_gz) or return;
+
    my $cmd = "sudo ezjail-admin create -a $archive_tar_gz $jail_name $ip_address";
 
    return $self->system($cmd);
@@ -232,9 +216,9 @@ sub delete {
    my $self = shift;
    my ($jail_name) = @_;
 
-   if (! defined($jail_name)) {
-      return $self->log->error($self->brik_help_run('delete'));
-   }
+   $self->brik_help_run_undef_arg('delete', $jail_name) or return;
+   my $ref = $self->brik_help_run_invalid_arg('delete', $jail_name, 'ARRAY', 'SCALAR')
+      or return;
 
    if (ref($jail_name) eq 'ARRAY') {
       for my $jail (@$jail_name) {

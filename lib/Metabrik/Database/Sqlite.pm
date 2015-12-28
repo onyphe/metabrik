@@ -47,9 +47,7 @@ sub open {
    my ($db) = @_;
 
    $db ||= $self->db;
-   if (! defined($db)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $db) or return;
 
    my $dbh = DBI->connect('dbi:SQLite:dbname='.$db,'','', {
       AutoCommit => $self->autocommit,
@@ -74,14 +72,9 @@ sub exec {
    my $self = shift;
    my ($sql) = @_;
 
-   if (! defined($sql)) {
-      return $self->log->error($self->brik_help_run('exec'));
-   }
-
    my $dbh = $self->dbh;
-   if (! defined($dbh)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $dbh) or return;
+   $self->brik_help_run_undef_arg('exec', $sql) or return;
 
    $self->debug && $self->log->debug("exec: sql[$sql]");
 
@@ -94,6 +87,7 @@ sub commit {
    my $self = shift;
 
    my $dbh = $self->dbh;
+   $self->brik_help_run_undef_arg('open', $dbh) or return;
 
    if ($self->autocommit) {
       $self->log->verbose("commit: skipping cause autocommit is on");
@@ -115,13 +109,9 @@ sub create {
    my $self = shift;
    my ($table, $fields, $key) = @_;
 
-   if (! defined($table) && ! defined($fields)) {
-      return $self->log->error($self->brik_help_run('create'));
-   }
-
-   if (ref($fields) ne 'ARRAY') {
-      return $self->log->error("create: Argument 'fields' must be ARRAYREF");
-   }
+   $self->brik_help_run_undef_arg('create', $table) or return;
+   $self->brik_help_run_undef_arg('create', $fields) or return;
+   $self->brik_help_run_invalid_arg('create', $fields, 'ARRAY') or return;
 
    # create table TABLE (stuffid INTEGER PRIMARY KEY, field1 VARCHAR(512), field2, date DATE);
    # insert into TABLE (field1) values ("value1");
@@ -148,14 +138,8 @@ sub insert {
    my $self = shift;
    my ($table, $data) = @_;
 
-   if (! defined($table) && ! defined($data)) {
-      return $self->log->error($self->brik_help_run('insert'));
-   }
-
-   my $dbh = $self->dbh;
-   if (! defined($dbh)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('insert', $table) or return;
+   $self->brik_help_run_undef_arg('insert', $data) or return;
 
    my @data = ();
    if (ref($data) eq 'ARRAY') {
@@ -199,24 +183,12 @@ sub select {
    my $self = shift;
    my ($table, $fields, $key) = @_;
 
-   $fields ||= [ '*' ];
-
-   if (! defined($table)) {
-      return $self->log->error($self->brik_help_run('select'));
-   }
-
-   if (ref($fields) ne 'ARRAY') {
-      return $self->log->error("select: Argument 'fields' must be ARRAYREF");
-   }
-
-   if (@$fields == 0) {
-      return $self->log->error("select: Argument 'fields' is empty");
-   }
-
    my $dbh = $self->dbh;
-   if (! defined($dbh)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $fields ||= [ '*' ];
+   $self->brik_help_run_undef_arg('open', $dbh) or return;
+   $self->brik_help_run_undef_arg('select', $table) or return;
+   $self->brik_help_run_invalid_arg('select', $fields, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('select', $fields) or return;
 
    my $sql = 'SELECT ';
    for (@$fields) {
@@ -241,9 +213,7 @@ sub show_tables {
    my $self = shift;
 
    my $dbh = $self->dbh;
-   if (! defined($dbh)) {
-      return $self->log->error($self->brik_help_run('open'));
-   }
+   $self->brik_help_run_undef_arg('open', $dbh) or return;
 
    # $dbh->table_info(undef, $schema, $table, $type, \%attr);
    # $type := 'TABLE', 'VIEW', 'LOCAL TEMPORARY' and 'SYSTEM TABLE'
