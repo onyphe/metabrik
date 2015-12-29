@@ -29,8 +29,8 @@ sub brik_properties {
          try => 2,
       },
       commands => {
-         tcp => [ qw(host port) ],
          install => [ ], # Inherited
+         tcp => [ qw(host port) ],
       },
       require_binaries => {
          'tcptraceroute', => [ ],

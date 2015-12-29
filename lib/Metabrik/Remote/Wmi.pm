@@ -22,7 +22,7 @@ sub brik_properties {
          password => [ qw(password) ],
       },
       commands => {
-         install => [ ],
+         install => [ ], # Inherited
          request => [ qw(query host|OPTIONAL user|OPTIONAL password|OPTIONAL) ],
          get_win32_operatingsystem => [ qw(host|OPTIONAL user|OPTIONAL password|OPTIONAL) ],
          get_win32_process => [ qw(host|OPTIONAL user|OPTIONAL password|OPTIONAL) ],

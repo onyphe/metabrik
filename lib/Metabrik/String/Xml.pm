@@ -7,7 +7,7 @@ package Metabrik::String::Xml;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -16,11 +16,15 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
+         install => [ ], # Inherited
          encode => [ qw($data_hash) ],
          decode => [ qw($data) ],
       },
       require_modules => {
          'XML::Simple' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(libexpat1-dev libxml2-dev) ],
       },
    };
 }

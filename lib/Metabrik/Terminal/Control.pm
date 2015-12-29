@@ -29,7 +29,7 @@ sub brik_properties {
          'scriptreplay' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(bsd-utils) ],
+         'ubuntu' => [ qw(bsdutils) ],
       },
    };
 }

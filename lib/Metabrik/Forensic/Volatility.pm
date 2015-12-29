@@ -7,7 +7,7 @@ package Metabrik::Forensic::Volatility;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 # Default attribute values put here will BE inherited by subclasses
 sub brik_properties {
@@ -27,6 +27,7 @@ sub brik_properties {
          capture_mode => 1,
       },
       commands => {
+         install => [ ], # Inherited
          imageinfo => [ qw(file|OPTIONAL) ],
          command => [ qw(command file|OPTIONAL profile|OPTIONAL) ],
          envars => [ qw(file|OPTIONAL profile|OPTIONAL) ],
@@ -45,6 +46,9 @@ sub brik_properties {
       },
       require_binaries => {
          'volatility' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(volatility) ],
       },
    };
 }

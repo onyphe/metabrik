@@ -7,7 +7,7 @@ package Metabrik::System::Docker;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -26,7 +26,7 @@ sub brik_properties {
          force => 1,
       },
       commands => {
-         install => [ ],
+         install => [ ], # Inherited
          build => [ qw(name directory) ],
          search => [ qw(name) ],
          get_image_id => [ qw(name) ],
@@ -51,6 +51,9 @@ sub brik_properties {
       },
       require_binaries => {
          'wget' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(wget) ],
       },
    };
 }

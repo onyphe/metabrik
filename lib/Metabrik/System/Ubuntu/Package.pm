@@ -33,6 +33,9 @@ sub brik_properties {
          'dpkg' => [ ],
          'sudo' => [ ],
       },
+      need_packages => {
+         'ubuntu' => [ qw(aptitude) ],
+      },
    };
 }
 

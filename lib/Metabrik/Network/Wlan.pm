@@ -28,13 +28,13 @@ sub brik_properties {
          monitor => 'mon0',
       },
       commands => {
+         install => [ ], # Inherited
          scan => [ qw(device|OPTIONAL) ],
          set_bitrate => [ qw(bitrate|OPTIONAL device|OPTIONAL) ],
          set_wepkey => [ qw(key|OPTIONAL device|OPTIONAL) ],
          connect => [ qw(device|OPTIONAL essid|OPTIONAL) ],
          start_monitor_mode => [ qw(device|OPTIONAL) ],
          stop_monitor_mode => [ qw(monitor|OPTIONAL) ],
-         install => [ ], # Inherited
       },
       require_binaries => {
          'sudo', => [ ],

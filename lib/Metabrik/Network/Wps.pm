@@ -16,8 +16,8 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
-         brute_force_wps => [ qw(essid bssid|OPTIONAL) ],
          install => [ ], # Inherited
+         brute_force_wps => [ qw(essid bssid|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::Shell::Command' => [ ],

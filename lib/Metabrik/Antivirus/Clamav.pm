@@ -7,7 +7,7 @@ package Metabrik::Antivirus::Clamav;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -22,12 +22,16 @@ sub brik_properties {
          use_sudo => 0,
       },
       commands => {
+         install => [ ], # Inherited
          update => [ ],
          scan => [ qw(target) ], # file or directory
       },
       require_binaries => {
          'freshclam' => [ ],
          'clamscan' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(clamav) ],
       },
    };
 }

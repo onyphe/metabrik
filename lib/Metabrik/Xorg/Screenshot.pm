@@ -45,7 +45,7 @@ sub brik_properties {
          'scrot' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(imagemagick) ],
+         'ubuntu' => [ qw(imagemagick scrot) ],
       },
    };
 }

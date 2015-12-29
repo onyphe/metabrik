@@ -7,7 +7,7 @@ package Metabrik::File::Type;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -16,6 +16,7 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
+         install => [ ], # Inherited
          get_mime_type => [ qw(file) ],
          get_magic_type => [ qw(file) ],
          is_mime_type => [ qw(file mime_type) ],
@@ -23,6 +24,9 @@ sub brik_properties {
       },
       require_modules => {
          'File::LibMagic' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(libmagic-dev) ],
       },
    };
 }

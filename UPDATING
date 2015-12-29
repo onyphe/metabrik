@@ -1,3 +1,9 @@
+20151229
+   AFFECT: brik::tool
+
+   - brik::tool renamed install_packages and install_modules Commands to 
+     install_all_need_packages and install_all_require_modules
+
 20151228
    AFFECT: network::address
 

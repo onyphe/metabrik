@@ -7,7 +7,7 @@ package Metabrik::Client::Ssh;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -33,6 +33,7 @@ sub brik_properties {
          use_publickey => 1,
       },
       commands => {
+         install => [ ], # Inherited
          connect => [ qw(hostname|OPTIONAL port|OPTIONAL username|OPTIONAL) ],
          cat => [ qw(file) ],
          exec => [ qw(command) ],
@@ -47,6 +48,9 @@ sub brik_properties {
          'IO::Scalar' => [ ],
          'Net::SSH2' => [ ],
          'Metabrik::String::Password' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(libssh2-1-dev) ],
       },
    };
 }

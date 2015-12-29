@@ -7,7 +7,7 @@ package Metabrik::Network::Sqlmap;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -29,7 +29,11 @@ sub brik_properties {
          args => '--ignore-proxy -v 3 --level=5 --risk=3 --user-agent "Mozilla"',
       },
       commands => {
+         install => [ ], # Inherited
          start => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(python python-pip) ],
       },
    };
 }
