@@ -7,7 +7,7 @@ package Metabrik::Server::Snmptrap;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 # Default attribute values put here will BE inherited by subclasses
 sub brik_properties {
@@ -27,12 +27,16 @@ sub brik_properties {
          port => 162,
       },
       commands => {
+         install => [ ], # Inherited
          start => [ qw(listen_hostname|OPTIONAL listen_port|OPTIONAL datadir|OPTIONAL) ],
          stop => [ ],
       },
       require_modules => {
-         'Metabrik::Worker::Fork' => [ ],
          'Net::SNMPTrapd' => [ ],
+         'Metabrik::Worker::Fork' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(libsnmp-dev) ],
       },
    };
 }

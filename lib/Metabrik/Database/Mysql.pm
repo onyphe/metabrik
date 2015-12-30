@@ -7,7 +7,7 @@ package Metabrik::Database::Mysql;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Database::Sqlite);
+use base qw(Metabrik::Database::Sqlite Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -32,6 +32,7 @@ sub brik_properties {
          username => 'root',
       },
       commands => {
+         install => [ ], # Inherited
          open => [ qw(db_name|OPTIONAL host|OPTIONAL port|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
          exec => [ qw(sql_query) ],
          create => [ qw(table_name fields_array key|OPTIONAL) ],
@@ -58,6 +59,9 @@ sub brik_properties {
       require_binaries => {
          'mysql' => [ ],
          'mysqladmin' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(libmysqlclient-dev mysql-client) ],
       },
    };
 }

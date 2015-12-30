@@ -7,7 +7,7 @@ package Metabrik::Client::Www;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -35,6 +35,7 @@ sub brik_properties {
          rtimeout => 10,
       },
       commands => {
+         install => [ ], # Inherited
          create_user_agent => [ ],
          reset_user_agent => [ ],
          get => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
@@ -73,6 +74,9 @@ sub brik_properties {
       },
       optional_binaries => {
          'phantomjs' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(libssl-dev phantomjs) ],
       },
    };
 }

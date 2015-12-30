@@ -24,8 +24,8 @@ sub brik_properties {
          olevba => '/usr/local/lib/python2.7/dist-packages/oletools/olevba.py',
       },
       commands => {
-         extract_vbs => [ qw(input|OPTIONAL output|OPTIONAL) ],
          install => [ ], # Inherited
+         extract_vbs => [ qw(input|OPTIONAL output|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::File::Text' => [ ],

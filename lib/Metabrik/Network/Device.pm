@@ -7,7 +7,7 @@ package Metabrik::Network::Device;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -22,6 +22,7 @@ sub brik_properties {
          'enable_warnings' => 0,
       },
       commands => {
+         install => [ ], # Inherited
          list => [ ],
          get => [ qw(device) ],
          default => [ qw(destination_ip|OPTIONAL) ],
@@ -34,6 +35,9 @@ sub brik_properties {
          'Net::Routing' => [ ],
          'Net::IPv4Addr' => [ ],
          'Metabrik::Client::Www' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(libpcap-dev libnet-libdnet-perl) ],
       },
    };
 }

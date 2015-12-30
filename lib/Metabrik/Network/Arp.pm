@@ -28,6 +28,7 @@ sub brik_properties {
          rtimeout => 2,
       },
       commands => {
+         install => [ ], # Inherited
          cache => [ ],
          half_poison => [ qw(gateway victim|OPTIONAL device|OPTIONAL) ],
          full_poison => [ qw(gateway victim|OPTIONAL device|OPTIONAL) ],
@@ -37,7 +38,6 @@ sub brik_properties {
          get_ipv6_neighbors => [ qw(subnet|OPTIONAL device|OPTIONAL) ],
          get_mac_neighbors => [ qw(subnet|OPTIONAL device|OPTIONAL) ],
          stop_poison => [ ],
-         install => [ ], # Inherited
       },
       require_modules => {
          'Net::Frame::Layer::ARP' => [ ],
@@ -53,7 +53,7 @@ sub brik_properties {
          'arpspoof' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(dsniff) ],
+         'ubuntu' => [ qw(dsniff libnet-libdnet-perl) ],
       },
    };
 }

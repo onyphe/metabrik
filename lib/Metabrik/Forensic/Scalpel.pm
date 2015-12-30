@@ -7,7 +7,7 @@ package Metabrik::Forensic::Scalpel;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 # Default attribute values put here will BE inherited by subclasses
 sub brik_properties {
@@ -26,6 +26,7 @@ sub brik_properties {
          conf => 'scalpel.conf',
       },
       commands => {
+         install => [ ], # Inherited
          generate_conf => [ qw($extensions_list|OPTIONAL file|OPTIONAL) ],
          scan => [ qw(file output|OPTIONAL conf|OPTIONAL) ],
       },
@@ -37,6 +38,9 @@ sub brik_properties {
       },
       require_binaries => {
          'scalpel' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(scalpel) ],
       },
    };
 }

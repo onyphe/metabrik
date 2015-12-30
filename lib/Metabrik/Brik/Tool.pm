@@ -23,9 +23,11 @@ sub brik_properties {
          use_pager => 1,
       },
       commands => {
-         install_packages => [ ],
+         get_require_modules => [ qw(Brik|OPTIONAL) ],
+         get_need_packages => [ qw(Brik|OPTIONAL) ],
+         install_all_require_modules => [ ],
+         install_all_need_packages => [ ],
          install_needed_packages => [ qw(Brik) ],
-         install_modules => [ ],
          create_tool => [ qw(filename.pl Repository|OPTIONAL) ],
          create_brik => [ qw(Brik Repository|OPTIONAL) ],
          update_core => [ ],
@@ -52,57 +54,80 @@ sub brik_use_properties {
    };
 }
 
-sub install_packages {
+sub get_require_modules {
    my $self = shift;
+   my ($brik) = @_;
+
+   my $con = $self->context;
+
+   my $available = $con->available;
+
+   # If we asked for one Brik, we rewrite available to only have this one.
+   if (defined($brik)) {
+      $available = { $brik => $available->{$brik} };
+   }
+
+   my %modules = ();
+   for my $this (keys %$available) {
+      next if $this =~ m{^core::};
+      if (exists($available->{$this}->brik_properties->{require_modules})) {
+         my $list = $available->{$this}->brik_properties->{require_modules};
+         for my $m (keys %$list) {
+            next if $m =~ m{^Metabrik::};
+            $modules{$m}++;
+         }
+      }
+   }
+
+   return [ sort { $a cmp $b } keys %modules ];
+}
+
+sub get_need_packages {
+   my $self = shift;
+   my ($brik) = @_;
+
+   my $con = $self->context;
+
+   my $available = $con->available;
+
+   # If we asked for one Brik, we rewrite available to only have this one.
+   if (defined($brik)) {
+      $available = { $brik => $available->{$brik} };
+   }
 
    my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
-   if ($sp->is_os_ubuntu) {
-      my @programs = qw(
-         aptitude
-         aircrack-ng
-         clamav
-         dcfldd
-         dsniff
-         elasticsearch
-         exif
-         ffmpeg
-         iw
-         libexpat-dev
-         libmagic-dev
-         libmysqlclient-dev
-         libpcap-dev
-         libssh2-1-dev
-         libssl-dev
-         libxml2-dev
-         mysql-client
-         nikto
-         nmap
-         phantomjs
-         python
-         python-pip
-         reaver
-         redis-server
-         rng-tools
-         scalpel
-         scrot
-         tcptraceroute
-         unzip
-         volatility
-         wget
-      );
+   my $os = $sp->my_os or return;
 
-      my @modules = qw(
-         libnet-libdnet-perl
-      );
-
-      $sp->install([ @programs, @modules ]);
-   }
-   else {
-      return $self->log->error("install_packages: sorry, don't know what to do for your OS.\n".
-                               "File a complaint to GomoR[at]metabrik.org");
+   my %packages = ();
+   for my $this (keys %$available) {
+      next if $this =~ m{^core::};
+      if (exists($available->{$this}->brik_properties->{need_packages})) {
+         my $list = $available->{$this}->brik_properties->{need_packages}{$os} or next;
+         for my $p (@$list) {
+            $packages{$p}++;
+         }
+      }
    }
 
-   return 1;
+   return [ sort { $a cmp $b } keys %packages ];
+}
+
+sub install_all_need_packages {
+   my $self = shift;
+
+   my $packages = $self->get_need_packages or return;
+
+   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
+   return $sp->install($packages);
+}
+
+sub install_all_require_modules {
+   my $self = shift;
+
+   my $modules = $self->get_require_modules or return;
+
+   my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;
+   return $pm->install($modules);
 }
 
 sub install_needed_packages {
@@ -120,89 +145,6 @@ sub install_needed_packages {
 
    my $b = $module->new_from_brik_init_no_checks($self) or return;
    return $b->install;
-}
-
-sub install_modules {
-   my $self = shift;
-
-   my @modules = qw(
-      Config::Tiny
-      Crypt::Digest
-      Crypt::SSLeay
-      Daemon::Daemonize
-      DateTime
-      DateTime::TimeZone
-      DBD::mysql
-      DBD::SQLite
-      DBI
-      File::Copy
-      File::MMagic
-      File::Path
-      File::Spec
-      Geo::IP
-      GnuPG::Interface
-      HTML::Entities
-      HTTP::Proxy
-      IO::Handle
-      IO::Scalar
-      IO::Socket::INET6
-      IO::Socket::Multicast
-      IO::Socket::SSL
-      List::Util
-      LWP::Protocol::connect
-      LWP::UserAgent
-      LWP::UserAgent::ProgressAny
-      MIME::Base64
-      NetAddr::IP
-      Net::CIDR
-      Net::Cmd
-      Net::DNS
-      Net::Frame
-      Net::Frame::Dump
-      Net::Frame::Layer::ICMPv4
-      Net::Frame::Layer::ICMPv6
-      Net::Frame::Layer::IPv6
-      Net::Frame::Simple
-      Net::FTP
-      Net::IPv4Addr
-      Net::IPv6Addr
-      Net::Libdnet6
-      Net::NBName
-      Net::Netmask
-      Net::Nslookup
-      Net::OpenSSH
-      Net::Pcap
-      Net::Routing
-      Net::Server
-      Net::SinFP3
-      Net::SMTP
-      Net::SSH2
-      Net::SSL
-      Net::SSLeay
-      Net::Twitter
-      Net::Whois::Raw
-      Net::Write
-      Net::Write::Fast
-      Parse::YARA
-      Progress::Any::Output
-      Progress::Any::Output::TermProgressBarColor
-      Redis
-      Search::Elasticsearch
-      String::Random
-      Term::ReadPassword
-      Text::CSV_XS
-      Time::HiRes
-      URI
-      URI::Escape
-      WWW::Mechanize
-      WWW::Mechanize::PhantomJS
-      WWW::Splunk
-      XML::LibXML
-      XML::Simple
-   );
-
-   my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;
-   return $pm->install(\@modules);
 }
 
 sub create_tool {

@@ -24,10 +24,10 @@ sub brik_properties {
          datadir => '.', # Uncompress in current directory by default
       },
       commands => {
+         install => [ ], # Inherited
          unzip => [ qw(input|OPTIONAL datadir|OPTIONAL) ],
          gunzip => [ qw(input|OPTIONAL output|OPTIONAL datadir|OPTIONAL) ],
          uncompress => [ qw(input|OPTIONAL output|OPTIONAL datadir|OPTIONAL) ],
-         install => [ ], # Inherited
       },
       require_modules => {
          'Compress::Zlib' => [ ],

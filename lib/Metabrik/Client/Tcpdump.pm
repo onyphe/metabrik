@@ -18,8 +18,6 @@ sub brik_properties {
       attributes => {
          output => [ qw(output) ],
       },
-      attributes_default => {
-      },
       commands => {
          capture => [ qw(output layer|OPTIONAL device|OPTIONAL filter|OPTIONAL count|OPTIONAL) ],
       },

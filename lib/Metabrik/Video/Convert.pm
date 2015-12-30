@@ -7,7 +7,7 @@ package Metabrik::Video::Convert;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -25,6 +25,7 @@ sub brik_properties {
          keep_only_first => 0,
       },
       commands => {
+         install => [ ], # Inherited
          to_jpg => [ qw(input) ],
       },
       require_modules => {
@@ -33,6 +34,9 @@ sub brik_properties {
       },
       require_binaries => {
          'ffmpeg' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(ffmpeg) ],
       },
    };
 }

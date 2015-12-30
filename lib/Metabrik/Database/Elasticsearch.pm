@@ -35,6 +35,7 @@ sub brik_properties {
          size => 10,
       },
       commands => {
+         install => [ ], # Inherited
          open => [ qw(index|OPTIONAL type|OPTIONAL) ],
          index => [ qw(document index|OPTIONAL type|OPTIONAL) ],
          index_bulk => [ qw(document) ],
@@ -46,7 +47,6 @@ sub brik_properties {
          start => [ ], # Inherited
          stop => [ ], # Inherited
          status => [ ], # Inherited
-         install => [ ], # Inherited
          # XXX: ./bin/plugin -install lmenezes/elasticsearch-kopf
          #install_plugin => [ qw(plugin) ],
       },

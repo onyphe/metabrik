@@ -27,8 +27,8 @@ sub brik_properties {
          output => 'last.html',
       },
       commands => {
-         start => [ qw(uri|OPTIONAL) ],
          install => [ ], # Inherited
+         start => [ qw(uri|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::String::Uri' => [ ],

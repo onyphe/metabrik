@@ -7,7 +7,7 @@ package Metabrik::Devel::Subversion;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -19,6 +19,7 @@ sub brik_properties {
          datadir => [ qw(datadir) ],
       },
       commands => {
+         install => [ ], # Inherited
          checkout => [ qw(repository directory|OPTIONAL) ],
          clone => [ qw(repository directory|OPTIONAL) ],
       },

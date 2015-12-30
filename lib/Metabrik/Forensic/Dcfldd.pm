@@ -7,7 +7,7 @@ package Metabrik::Forensic::Dcfldd;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 # Default attribute values put here will BE inherited by subclasses
 sub brik_properties {
@@ -17,10 +17,14 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
+         install => [ ], # Inherited
          dump => [ qw(source destination) ],
       },
       require_binaries => {
          'dcfldd' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(dcfldd) ],
       },
    };
 }

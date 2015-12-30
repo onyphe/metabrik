@@ -7,7 +7,7 @@ package Metabrik::Server::Snmp;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 # Default attribute values put here will BE inherited by subclasses
 sub brik_properties {
@@ -30,6 +30,7 @@ sub brik_properties {
          community => 'public',
       },
       commands => {
+         install => [ ], # Inherited
          start => [ qw(listen_hostname|OPTIONAL listen_port|OPTIONAL datadir|OPTIONAL) ],
          stop => [ ],
       },
@@ -42,6 +43,9 @@ sub brik_properties {
       },
       require_binaries => {
          'snmpd' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(libsnmp-dev snmpd) ],
       },
    };
 }

@@ -7,7 +7,7 @@ package Metabrik::Network::Nmap;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -35,6 +35,7 @@ sub brik_properties {
          save_output => 0,
       },
       commands => {
+         install => [ ], # Inherited
          tcp_syn => [ ],
          tcp_connect => [ ],
          udp => [ ],
@@ -42,6 +43,9 @@ sub brik_properties {
       require_binaries => {
          'sudo' => [ ],
          'nmap' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(nmap) ],
       },
    };
 }

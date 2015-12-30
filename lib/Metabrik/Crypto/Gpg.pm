@@ -7,7 +7,7 @@ package Metabrik::Crypto::Gpg;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -36,6 +36,7 @@ sub brik_properties {
          expire_key => '5y',
       },
       commands => {
+         install => [ ], # Inherited
          list_public_keys => [ ],
          list_secret_keys => [ ],
          get_public_keys => [ qw(keys_list) ],
@@ -56,7 +57,10 @@ sub brik_properties {
          'Metabrik::String::Password' => [ ],
       },
       require_binaries => {
-         'rngd' => [ ],  # apt-get install rng-tools
+         'rngd' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(rng-tools) ],
       },
    };
 }

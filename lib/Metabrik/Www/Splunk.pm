@@ -7,7 +7,7 @@ package Metabrik::Www::Splunk;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -29,13 +29,17 @@ sub brik_properties {
          ssl_verify => 0,
       },
       commands => {
-         'connect' => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
-         'search' => [ qw(search_string) ],
+         install => [ ], # Inherited
+         connect => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         search => [ qw(search_string) ],
       },
       require_modules => {
          'Net::SSL' => [ ],
          'WWW::Splunk' => [ ],
          'Metabrik::String::Uri' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(libssl-dev) ],
       },
    };
 }

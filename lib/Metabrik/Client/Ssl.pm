@@ -7,7 +7,7 @@ package Metabrik::Client::Ssl;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -19,6 +19,7 @@ sub brik_properties {
          uri => [ qw(uri) ],
       },
       commands => {
+         install => [ ], # Inherited
          verify_server => [ qw(uri|OPTIONAL) ],
          getcertificate => [ qw(uri|OPTIONAL) ],
          getcertificate2 => [ qw(host port) ],
@@ -31,6 +32,9 @@ sub brik_properties {
          'URI' => [ ],
          'Net::SSLeay' => [ ],
          'Metabrik::String::Uri' => [ ],
+      },
+      need_packages => {
+         'ubuntu' => [ qw(libssl-dev) ],
       },
    };
 }
