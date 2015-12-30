@@ -23,7 +23,7 @@ sub brik_properties {
          get_one => [ qw(integer) ],
          get_range => [ qw(integer_first..integer_last) ],
          show => [ ],
-         exec => [ qw(integer|integer_first..integer_last) ],
+         execute => [ qw(integer|integer_first..integer_last) ],
       },
    };
 }
@@ -161,13 +161,13 @@ sub show {
    return $count - 1;
 }
 
-sub exec {
+sub execute {
    my $self = shift;
    my ($numbers) = @_;
 
-   $self->brik_help_run_undef_arg('exec', $numbers) or return;
+   $self->brik_help_run_undef_arg('execute', $numbers) or return;
 
-   # We want to exec some history command(s)
+   # We want to execute some history command(s)
    my $lines = [];
    if ($numbers =~ /^\d+$/) {
       $lines = [ $self->get_one($numbers) ];

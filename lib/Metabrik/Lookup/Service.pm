@@ -106,7 +106,7 @@ sub from_dec {
    }
 
    # No match
-   return 'unknown';
+   return 'undef';
 }
 
 sub from_hex {

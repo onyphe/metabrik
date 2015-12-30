@@ -72,7 +72,7 @@ sub from_hex {
    }
    $hex = sprintf("0x%04s", $hex);
 
-   return $self->_lookup->{$hex} || 'unknown';
+   return $self->_lookup->{$hex} || 'undef';
 }
 
 sub from_dec {
@@ -102,7 +102,7 @@ sub from_string {
       $rev->{$val} = $key;
    }
 
-   return $rev->{$string} || 'unknown';
+   return $rev->{$string} || 'undef';
 }
 
 1;

@@ -1,3 +1,9 @@
+20151230
+   AFFECT: client::ssh, database::sqlite, shell::history, shell::rc, shell::script,
+           system::docker, system::freebsd::jail
+
+   - renamed exec and load_and_exec Commands to execute and load_and_execute
+
 20151228
    AFFECT: network::address
 

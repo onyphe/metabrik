@@ -39,7 +39,7 @@ sub brik_properties {
          restore => [ qw(name ip_address archive_tar_gz) ],
          delete => [ qw(name) ],
          update => [ ],
-         exec => [ qw(name command) ],
+         execute => [ qw(name command) ],
          console => [ qw(name) ],
          login => [ qw(email|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
          push => [ qw(name) ],
@@ -68,7 +68,7 @@ sub brik_init {
 sub install {
    my $self = shift;
 
-   return $self->execute("wget -qO- https://get.docker.com/ | sh");
+   return $self->SUPER::execute("wget -qO- https://get.docker.com/ | sh");
 }
 
 sub build {
@@ -81,7 +81,7 @@ sub build {
 
    my $cmd = "docker build -t $name $directory";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 sub search {
@@ -92,17 +92,17 @@ sub search {
 
    my $cmd = "docker search $jail_name";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
-sub exec {
+sub execute {
    my $self = shift;
-   my ($jail_name, $exec) = @_;
+   my ($jail_name, $command) = @_;
 
-   $self->brik_help_run_undef_arg('exec', $jail_name) or return;
-   $self->brik_help_run_undef_arg('exec', $exec) or return;
+   $self->brik_help_run_undef_arg('execute', $jail_name) or return;
+   $self->brik_help_run_undef_arg('execute', $command) or return;
 
-   return $self->console($jail_name, $exec);
+   return $self->console($jail_name, $command);
 }
 
 sub get_image_id {
@@ -138,7 +138,7 @@ sub stop {
 
    my $cmd = "docker stop $name";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 sub start {
@@ -149,7 +149,7 @@ sub start {
 
    my $cmd = "TODO";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 sub restart {
@@ -160,7 +160,7 @@ sub restart {
 
    my $cmd = "TODO";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 sub create {
@@ -171,7 +171,7 @@ sub create {
 
    my $cmd = "docker pull $jail_name";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 sub backup {
@@ -182,7 +182,7 @@ sub backup {
 
    my $cmd = "TODO";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 sub restore {
@@ -194,7 +194,7 @@ sub restore {
 
    my $cmd = "TODO";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 sub delete {
@@ -205,7 +205,7 @@ sub delete {
 
    my $cmd = "docker rmi -f $name";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 sub update {
@@ -225,7 +225,7 @@ sub console {
 
    my $cmd = "docker run -it $name '$shell'";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 sub login {
@@ -243,7 +243,7 @@ sub login {
       $cmd .= " --password=$password";
    }
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 sub push {
@@ -255,7 +255,7 @@ sub push {
 
    my $cmd = "docker push $name";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 sub tag {
@@ -267,7 +267,7 @@ sub tag {
 
    my $cmd = "docker tag $id $tag";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 1;

@@ -56,7 +56,7 @@ sub parsebanner {
       [
          '^SSH-(\d+\.\d+)(.*)$' => {
             ssh_protocol_version => '$1',
-            ssh_product => 'UNKNOWN',
+            ssh_product => 'undef',
             ssh_extra => '$2',
          },
       ],

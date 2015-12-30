@@ -25,7 +25,7 @@ sub brik_properties {
       },
       commands => {
          open => [ qw(sqlite_file|OPTIONAL) ],
-         exec => [ qw(sql_query) ],
+         execute => [ qw(sql_query) ],
          create => [ qw(table_name fields_array key|OPTIONAL) ],
          insert => [ qw(table_name data_hash) ],
          select => [ qw(table_name fields_array|OPTIONAL key|OPTIONAL) ],
@@ -68,15 +68,15 @@ sub open {
    return 1;
 }
 
-sub exec {
+sub execute {
    my $self = shift;
    my ($sql) = @_;
 
    my $dbh = $self->dbh;
    $self->brik_help_run_undef_arg('open', $dbh) or return;
-   $self->brik_help_run_undef_arg('exec', $sql) or return;
+   $self->brik_help_run_undef_arg('execute', $sql) or return;
 
-   $self->debug && $self->log->debug("exec: sql[$sql]");
+   $self->debug && $self->log->debug("execute: sql[$sql]");
 
    my $sth = $dbh->prepare($sql);
 
@@ -131,7 +131,7 @@ sub create {
 
    $self->log->verbose("create: $sql");
 
-   return $self->exec($sql);
+   return $self->execute($sql);
 }
 
 sub insert {
@@ -173,7 +173,7 @@ sub insert {
 
       $self->log->verbose("insert: $sql");
 
-      $self->exec($sql);
+      $self->execute($sql);
    }
 
    return 1;

@@ -75,7 +75,7 @@ sub start {
             my ($req, $res) = @_;
             my $hash = &{$get->{sub}}($req, $res) || {
                error => 1,
-               error_string => 'unknown'
+               error_string => 'undef'
             };
             $res->add_content($se->encode($hash));
             return 1;

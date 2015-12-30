@@ -35,7 +35,7 @@ sub brik_properties {
       commands => {
          connect => [ qw(hostname|OPTIONAL port|OPTIONAL username|OPTIONAL) ],
          cat => [ qw(file) ],
-         exec => [ qw(command) ],
+         execute => [ qw(command) ],
          read => [ ],
          read_line => [ ],
          read_line_all => [ ],
@@ -130,23 +130,23 @@ sub disconnect {
    return $r;
 }
 
-sub exec {
+sub execute {
    my $self = shift;
    my ($cmd) = @_;
 
    my $ssh2 = $self->ssh2;
    $self->brik_help_run_undef_arg('connect', $ssh2) or return;
-   $self->brik_help_run_undef_arg('exec', $cmd) or return;
+   $self->brik_help_run_undef_arg('execute', $cmd) or return;
 
-   $self->debug && $self->log->debug("exec: cmd [$cmd]");
+   $self->debug && $self->log->debug("execute: cmd [$cmd]");
 
    my $channel = $ssh2->channel;
    if (! defined($channel)) {
-      return $self->log->error("exec: channel creation error");
+      return $self->log->error("execute: channel creation error");
    }
 
    $channel->exec($cmd)
-      or return $self->log->error("exec: can't execute command [$cmd]: $!");
+      or return $self->log->error("execute: can't execute command [$cmd]: $!");
 
    return $self->_channel($channel);
 }
@@ -244,10 +244,7 @@ sub listfiles {
    my $self = shift;
    my ($glob) = @_;
 
-   my $channel = $self->exec("ls $glob 2> /dev/null");
-   if (! defined($channel)) {
-      return $self->log->error("listfiles: exec error");
-   }
+   my $channel = $self->execute("ls $glob 2> /dev/null") or return;
 
    my $read = $self->read;
    if (! defined($read)) {
@@ -267,10 +264,7 @@ sub cat {
    $self->brik_help_run_undef_arg('connect', $ssh2) or return;
    $self->brik_help_run_undef_arg('cat', $file) or return;
 
-   my $channel = $self->exec('cat '.$file);
-   if (! defined($channel)) {
-      return $self->log->error("cat: channel for file [$file]");
-   }
+   my $channel = $self->execute('cat '.$file) or return;
 
    return $self->_channel($channel);
 }

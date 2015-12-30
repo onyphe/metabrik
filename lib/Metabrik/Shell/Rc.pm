@@ -22,9 +22,9 @@ sub brik_properties {
       },
       commands => {
          load => [ qw(input|OPTIONAL) ],
-         exec => [ qw($line_list) ],
+         execute => [ qw($line_list) ],
          write_default => [ ],
-         load_and_exec => [ qw(input|OPTIONAL) ],
+         load_and_execute => [ qw(input|OPTIONAL) ],
       },
    };
 }
@@ -71,12 +71,12 @@ sub load {
    return \@lines;
 }
 
-sub exec {
+sub execute {
    my $self = shift;
    my ($lines) = @_;
 
-   $self->brik_help_run_undef_arg('exec', $lines) or return;
-   $self->brik_help_run_invalid_arg('exec', $lines, 'ARRAY') or return;
+   $self->brik_help_run_undef_arg('execute', $lines) or return;
+   $self->brik_help_run_invalid_arg('execute', $lines, 'ARRAY') or return;
 
    my $shell = $self->shell;
 
@@ -126,14 +126,14 @@ EOF
    return 1;
 }
 
-sub load_and_exec {
+sub load_and_execute {
    my $self = shift;
    my ($input) = @_;
 
    $input ||= $self->input;
 
    my $lines = $self->load($input) or return;
-   return $self->exec($lines);
+   return $self->execute($lines);
 }
 
 1;

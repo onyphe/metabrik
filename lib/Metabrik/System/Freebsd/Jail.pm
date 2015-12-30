@@ -26,7 +26,7 @@ sub brik_properties {
          delete => [ qw(jail_name) ],
          update => [ ],
          name_to_id => [ qw(jail_name) ],
-         exec => [ qw(jail_name command) ],
+         execute => [ qw(jail_name command) ],
          console => [ qw(jail_name) ],
       },
       require_binaries => {
@@ -60,20 +60,20 @@ sub name_to_id {
    return $self->log->error("name_to_id: jail name not found");
 }
 
-sub exec {
+sub execute {
    my $self = shift;
-   my ($jail_name, $exec) = @_;
+   my ($jail_name, $command) = @_;
 
-   $self->brik_help_run_undef_arg('exec', $jail_name) or return;
-   $self->brik_help_run_undef_arg('exec', $exec) or return;
+   $self->brik_help_run_undef_arg('execute', $jail_name) or return;
+   $self->brik_help_run_undef_arg('execute', $command) or return;
 
    my $r;
    my @lines = ();
    if (ref($jail_name) eq 'ARRAY') {
       for my $jail (@$jail_name) {
          my $id = $self->name_to_id($jail) or next;
-         my $cmd = "sudo jexec $id $exec";
-         $r = $self->execute($cmd);
+         my $cmd = "sudo jexec $id $command";
+         $r = $self->SUPER::execute($cmd);
          if ($self->capture_mode) {
             push @lines, $r;
          }
@@ -81,8 +81,8 @@ sub exec {
    }
    else {
       my $id = $self->name_to_id($jail_name) or return;
-      my $cmd = "sudo jexec $id $exec";
-      $r = $self->execute($cmd);
+      my $cmd = "sudo jexec $id $command";
+      $r = $self->SUPER::execute($cmd);
       if ($self->capture_mode) {
          push @lines, $r;
       }
@@ -100,7 +100,7 @@ sub list {
 
    my $cmd = "ezjail-admin list";
 
-   return $self->execute($cmd);
+   return $self->SUPER::execute($cmd);
 }
 
 sub stop {

@@ -41,9 +41,12 @@ sub category {
    $uri ||= $self->uri;
    $self->brik_help_run_undef_arg('category', $uri) or return;
 
-   if ($uri !~ /^(?:http|ftp):\/\//) {
-      return $self->log->error("category: invalid URL format [$uri]");
+   # If there is neither http:// nor ftp://, we add http://
+   if ($uri !~ m{^(?:http|ftp)://}) {
+      $uri =~ s{^}{http://};
    }
+
+   $self->log->verbose("category: checking URI [$uri]");
 
    my $r = $self->post({ url => $uri }, 'http://sitereview.bluecoat.com/rest/categorization')
       or return;
