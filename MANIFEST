@@ -133,7 +133,6 @@ lib/Metabrik/Shell/Command.pm
 lib/Metabrik/Shell/History.pm
 lib/Metabrik/Shell/Rc.pm
 lib/Metabrik/Shell/Script.pm
-lib/Metabrik/Ssl/Heartbleed.pm
 lib/Metabrik/String/Ascii.pm
 lib/Metabrik/String/Base64.pm
 lib/Metabrik/String/Compress.pm

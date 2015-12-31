@@ -25,7 +25,7 @@ sub brik_properties {
          port => 25,
       },
       commands => {
-         connect => [ qw(hostname|OPTIONAL port|OPTIONAL) ],
+         connect => [ qw(hostname|OPTIONAL port|OPTIONAL domainname|OPTIONAL) ],
          banner => [ ],
          quit => [ ],
          open_auth_login => [ ],
@@ -45,21 +45,21 @@ sub brik_use_properties {
    return {
       attributes_default => {
          hostname => $self->global->hostname,
-         domainname => $self->global->domainname,
       },
    };
 }
 
 sub connect {
    my $self = shift;
-   my ($hostname, $port) = @_;
+   my ($hostname, $port, $domainname) = @_;
 
    $hostname ||= $self->hostname;
    $port ||= $self->port;
+   $domainname ||= $self->domainname;
    $self->brik_help_run_undef_arg('connect', $hostname) or return;
    $self->brik_help_run_undef_arg('connect', $port) or return;
+   $self->brik_help_run_undef_arg('connect', $domainname) or return;
 
-   my $domainname = $self->domainname;
    my $timeout = $self->global->ctimeout;
 
    my $smtp = Net::SMTP->new(

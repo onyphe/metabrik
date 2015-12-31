@@ -17,7 +17,7 @@ sub brik_properties {
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          level => [ qw(0|1|2|3) ],
-         output_file => [ qw(file) ],
+         output => [ qw(file) ],
          time_prefix => [ qw(0|1) ],
          text_prefix => [ qw(0|1) ],
          _fd => [ qw(file_descriptor) ],
@@ -25,6 +25,7 @@ sub brik_properties {
       attributes_default => {
          time_prefix => 0,
          text_prefix => 0,
+         output => '/tmp/dual.log',
       },
       commands => {
          info => [ qw(string caller|OPTIONAL) ],
@@ -47,7 +48,6 @@ sub brik_use_properties {
       attributes_default => {
          debug => $self->log->debug,
          level => $self->log->level,
-         output_file => $self->global->output,
       },
    };
 }
@@ -73,9 +73,9 @@ sub brik_preinit {
 sub brik_init {
    my $self = shift;
 
-   my $output_file = $self->output_file;
-   open(my $fd, '>', $output_file)
-      or return $self->log->error("brik_init: can't open output file [$output_file]: $!");
+   my $output = $self->output;
+   open(my $fd, '>', $output)
+      or return $self->log->error("brik_init: can't open output file [$output]: $!");
 
    # Makes the file handle unbuffered
    my $current = select;

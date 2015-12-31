@@ -21,7 +21,7 @@ sub brik_properties {
          parameter => [ qw(parameter_name) ],
          request_file => [ qw(file) ],
          args => [ qw(sqlmap_arguments) ],
-         output_file => [ qw(file) ],
+         output => [ qw(file) ],
       },
       attributes_default => {
          request_file => 'sqlmap_request.txt',
@@ -47,13 +47,13 @@ sub start {
    my $cookie = $self->cookie;
    my $parameter = $self->parameter;
    my $request_file = $datadir.'/'.$self->request_file;
-   my $output_file = $datadir.'/'.$self->output_file;
+   my $output = $datadir.'/'.$self->output;
 
    $self->brik_help_run_file_not_found('start', $request_file) or return;
 
    my $cmd = "sqlmap -p $parameter $args -r $request_file";
-   if (defined($output_file)) {
-      $cmd .= ' 2>&1 | tee '.$output_file;
+   if (defined($output)) {
+      $cmd .= ' 2>&1 | tee '.$output;
    }
 
    system($cmd);

@@ -46,7 +46,6 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         input => $self->global->input,
          encoding => $self->global->encoding,
       },
    };

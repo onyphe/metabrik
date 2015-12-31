@@ -427,9 +427,6 @@
       "Metabrik::Shell::Script" : {
          "file" : "lib/Metabrik/Shell/Script.pm"
       },
-      "Metabrik::Ssl::Heartbleed" : {
-         "file" : "lib/Metabrik/Ssl/Heartbleed.pm"
-      },
       "Metabrik::String::Ascii" : {
          "file" : "lib/Metabrik/String/Ascii.pm"
       },

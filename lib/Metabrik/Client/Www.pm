@@ -56,12 +56,14 @@ sub brik_properties {
          eval_javascript => [ qw(js uri) ],
          info => [ qw(uri|OPTIONAL) ],
          mirror => [ qw(url|$url_list output datadir|OPTIONAL) ],
+         parse => [ qw(html) ],
       },
       require_modules => {
          'Progress::Any::Output' => [ ],
          'Progress::Any::Output::TermProgressBarColor' => [ ],
          'Net::SSL' => [ ],
          'Data::Dumper' => [ ],
+         'HTML::TreeBuilder' => [ ],
          'LWP::UserAgent' => [ ],
          'LWP::UserAgent::ProgressAny' => [ ],
          'HTTP::Request' => [ ],
@@ -603,6 +605,15 @@ sub mirror {
    }
 
    return \@files;
+}
+
+sub parse {
+   my $self = shift;
+   my ($html) = @_;
+
+   $self->brik_help_run_undef_arg('parse', $html) or return;
+
+   return HTML::TreeBuilder->new_from_content($html);
 }
 
 1;

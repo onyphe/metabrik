@@ -31,16 +31,6 @@ sub brik_properties {
    };
 }
 
-sub brik_use_properties {
-   my $self = shift;
-
-   return {
-      attributes_default => {
-         uri => $self->global->uri,
-      },
-   };
-}
-
 #
 # Poodle: http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-3566
 #
