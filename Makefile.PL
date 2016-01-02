@@ -12,7 +12,7 @@ WriteMakefile(
    ABSTRACT_FROM => 'lib/Metabrik/Repository.pm',
    AUTHOR => 'GomoR <gomor_at_metabrik.org>',
    PREREQ_PM => {
-      'Metabrik' => '1.20.0',
+      'Metabrik' => '1.20',
       'Cwd' => 0,
       'IPC::Run3' => 0,
       'File::Copy' => 0,

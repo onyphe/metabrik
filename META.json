@@ -26,7 +26,7 @@
             "File::Path" : "0",
             "File::Spec" : "0",
             "IPC::Run3" : "0",
-            "Metabrik" : "v1.20.0",
+            "Metabrik" : "1.20",
             "POSIX" : "0",
             "perl" : "v5.6.1"
          }
@@ -395,7 +395,7 @@
       },
       "Metabrik::Repository" : {
          "file" : "lib/Metabrik/Repository.pm",
-         "version" : "v1.20.0"
+         "version" : "1.20"
       },
       "Metabrik::Server::Dns" : {
          "file" : "lib/Metabrik/Server/Dns.pm"
@@ -536,5 +536,5 @@
          "http://opensource.org/licenses/BSD-3-Clause"
       ]
    },
-   "version" : "v1.20.0"
+   "version" : "1.20"
 }
