@@ -279,6 +279,7 @@ provides:
     version: '1.20'
   Metabrik::Shell::Script:
     file: lib/Metabrik/Shell/Script.pm
+    version: '1.20'
   Metabrik::String::Ascii:
     file: lib/Metabrik/String/Ascii.pm
   Metabrik::String::Base64:
