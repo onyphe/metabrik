@@ -5,9 +5,7 @@ package Metabrik::Repository;
 use strict;
 use warnings;
 
-# Breaking.Feature.Fix
 our $VERSION = '1.20';
-our $FIX = '0';
 
 1;
 

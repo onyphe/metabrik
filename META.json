@@ -416,13 +416,16 @@
          "file" : "lib/Metabrik/Server/Tcp.pm"
       },
       "Metabrik::Shell::Command" : {
-         "file" : "lib/Metabrik/Shell/Command.pm"
+         "file" : "lib/Metabrik/Shell/Command.pm",
+         "version" : "1.20"
       },
       "Metabrik::Shell::History" : {
-         "file" : "lib/Metabrik/Shell/History.pm"
+         "file" : "lib/Metabrik/Shell/History.pm",
+         "version" : "1.20"
       },
       "Metabrik::Shell::Rc" : {
-         "file" : "lib/Metabrik/Shell/Rc.pm"
+         "file" : "lib/Metabrik/Shell/Rc.pm",
+         "version" : "1.20"
       },
       "Metabrik::Shell::Script" : {
          "file" : "lib/Metabrik/Shell/Script.pm"
