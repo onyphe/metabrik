@@ -28,6 +28,7 @@ sub brik_properties {
          install_all_require_modules => [ ],
          install_all_need_packages => [ ],
          install_needed_packages => [ qw(Brik) ],
+         install_required_modules => [ qw(Brik) ],
          create_tool => [ qw(filename.pl Repository|OPTIONAL) ],
          create_brik => [ qw(Brik Repository|OPTIONAL) ],
          update_core => [ ],
@@ -115,10 +116,33 @@ sub get_need_packages {
 sub install_all_need_packages {
    my $self = shift;
 
-   my $packages = $self->get_need_packages or return;
+   # We don't want to fail on a missing package, so we install Brik by Brik
+   #my $packages = $self->get_need_packages or return;
+   #my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
+   #return $sp->install($packages);
 
-   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
-   return $sp->install($packages);
+   my $con = $self->context;
+
+   my @missing = ();
+   my $available = $con->available;
+   for my $brik (sort { $a cmp $b } keys %$available) {
+      # Skipping log modules to avoid messing stuff
+      next if ($brik =~ /^log::/);
+      # Skipping system packages modules too
+      next if ($brik =~ /^system::.*(?:::)?package$/);
+      $self->log->verbose("install_all_need_packages: installing packages for Brik [$brik]");
+      my $r = $self->install_needed_packages($brik);
+      if (! defined($r)) {
+         push @missing, $brik;
+      }
+   }
+
+   if (@missing > 0) {
+      return $self->log->error("install_all_need_packages: unable to install packages for ".
+         "Brik(s): [".join(', ', @missing)."]");
+   }
+
+   return 1;
 }
 
 sub install_all_require_modules {
@@ -143,8 +167,35 @@ sub install_needed_packages {
 
    my $module = $avail->{$brik};
 
-   my $b = $module->new_from_brik_init_no_checks($self) or return;
-   return $b->install;
+   my $b = $module->new_from_brik_no_checks($self) or return;
+   if (exists($b->brik_properties->{commands}{install})) {
+      return $b->install;
+   }
+
+   return 1;
+}
+
+sub install_required_modules {
+   my $self = shift;
+   my ($brik) = @_;
+
+   my $con = $self->context;
+
+   my $avail = $con->find_available;
+   if (! exists($avail->{$brik})) {
+      return $self->log->error("install_required_modules: Brik [$brik] not available");
+   }
+
+   my $module = $avail->{$brik};
+
+   my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;
+
+   my $m = $module->new_from_brik_no_checks($self) or return;
+   if (exists($m->brik_properties->{require_modules})) {
+      return $pm->install([ sort { $a cmp $b } keys %{$m->brik_properties->{require_modules}} ]);
+   }
+
+   return 1;
 }
 
 sub create_tool {

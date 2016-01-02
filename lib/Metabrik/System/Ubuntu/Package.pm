@@ -15,6 +15,9 @@ sub brik_properties {
       tags => [ qw(unstable) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
+      attributes_default => {
+         ignore_error => 0,
+      },
       commands => {
          search => [ qw(string) ],
          install => [ qw(package|$package_list) ],
@@ -64,7 +67,12 @@ sub install {
    my $cmd = "sudo apt-get install -y ";
    $ref eq 'ARRAY' ? ($cmd .= join(' ', @$package)) : ($cmd .= $package);
 
-   return $self->system($cmd);
+   my $r = $self->system($cmd);
+   if ($r != 1) {
+      return $self->log->error("install: unable to install: returned error code: [$r]");
+   }
+
+   return 1;
 }
 
 sub remove {

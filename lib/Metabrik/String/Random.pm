@@ -15,8 +15,10 @@ sub brik_properties {
       tags => [ qw(unstable) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
-      attributes_default => {
+      attributes => {
          datadir => [ qw(datadir) ],
+      },
+      attributes_default => {
          charset => [ 'A'..'K', 'M'..'Z', 'a'..'k', 'm'..'z', 2..9, '_', '-' ],
          length => 20,
          count => 1,

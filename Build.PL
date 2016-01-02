@@ -21,6 +21,9 @@ my $builder = Module::Build->new(
       'File::Spec' => 0,
       'POSIX' => 0,
    },
+   configure_requires => {
+      'Module::Build' => 0,
+   },
 );
 
 $builder->create_build_script;
