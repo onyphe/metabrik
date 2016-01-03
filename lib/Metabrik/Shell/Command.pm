@@ -37,8 +37,11 @@ sub brik_properties {
       },
       commands => {
          system => [ qw(command) ],
+         sudo_system => [ qw(command) ],
          capture => [ qw(command) ],
+         sudo_capture => [ qw(command) ],
          execute => [ qw(command) ],
+         sudo_execute => [ qw(command) ],
       },
       require_modules => {
          'IPC::Run3' => [ ],
@@ -112,6 +115,20 @@ sub system {
    }
 
    return 1;
+}
+
+sub sudo_system {
+   my $self = shift;
+   my ($cmd, @args) = @_;
+
+   $self->brik_help_run_undef_arg('sudo_system', $cmd) or return;
+
+   my $prev = $self->use_sudo;
+   $self->use_sudo(1);
+   my $r = $self->system($cmd, @args);
+   $self->use_sudo($prev);
+
+   return $r;
 }
 
 sub capture {
@@ -215,6 +232,20 @@ sub capture {
    return $out;
 }
 
+sub sudo_capture {
+   my $self = shift;
+   my ($cmd, @args) = @_;
+
+   $self->brik_help_run_undef_arg('sudo_capture', $cmd) or return;
+
+   my $prev = $self->use_sudo;
+   $self->use_sudo(1);
+   my $r = $self->capture($cmd, @args);
+   $self->use_sudo($prev);
+
+   return $r;
+}
+
 sub execute {
    my $self = shift;
    my ($cmd, @args) = @_;
@@ -226,6 +257,23 @@ sub execute {
    }
    else {  # non-capture mode
       return $self->system($cmd, @args);
+   }
+
+   # Unknown error
+   return;
+}
+
+sub sudo_execute {
+   my $self = shift;
+   my ($cmd, @args) = @_;
+
+   $self->brik_help_run_undef_arg('sudo_execute', $cmd) or return;
+
+   if ($self->capture_mode) {
+      return $self->sudo_capture($cmd, @args);
+   }
+   else {  # non-capture mode
+      return $self->sudo_system($cmd, @args);
    }
 
    # Unknown error

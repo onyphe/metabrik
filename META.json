@@ -497,6 +497,9 @@
       "Metabrik::System::Freebsd::Pf" : {
          "file" : "lib/Metabrik/System/Freebsd/Pf.pm"
       },
+      "Metabrik::System::Libvirt" : {
+         "file" : "lib/Metabrik/System/Libvirt.pm"
+      },
       "Metabrik::System::Os" : {
          "file" : "lib/Metabrik/System/Os.pm"
       },
@@ -511,6 +514,12 @@
       },
       "Metabrik::System::Ubuntu::Package" : {
          "file" : "lib/Metabrik/System/Ubuntu/Package.pm"
+      },
+      "Metabrik::System::Ubuntu::User" : {
+         "file" : "lib/Metabrik/System/Ubuntu/User.pm"
+      },
+      "Metabrik::System::Virtualbox" : {
+         "file" : "lib/Metabrik/System/Virtualbox.pm"
       },
       "Metabrik::Terminal::Control" : {
          "file" : "lib/Metabrik/Terminal/Control.pm"
