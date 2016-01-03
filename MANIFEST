@@ -155,11 +155,14 @@ lib/Metabrik/System/File.pm
 lib/Metabrik/System/Freebsd/Jail.pm
 lib/Metabrik/System/Freebsd/Package.pm
 lib/Metabrik/System/Freebsd/Pf.pm
+lib/Metabrik/System/Libvirt.pm
 lib/Metabrik/System/Os.pm
 lib/Metabrik/System/Package.pm
 lib/Metabrik/System/Process.pm
 lib/Metabrik/System/Service.pm
 lib/Metabrik/System/Ubuntu/Package.pm
+lib/Metabrik/System/Ubuntu/User.pm
+lib/Metabrik/System/Virtualbox.pm
 lib/Metabrik/Terminal/Control.pm
 lib/Metabrik/Time/Universal.pm
 lib/Metabrik/Video/Convert.pm
