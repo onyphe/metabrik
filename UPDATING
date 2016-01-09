@@ -1,3 +1,9 @@
+20160109
+   AFFECT: remote::wmi
+
+   - remote::wmi execute Command moved to its own Brik called remote::winexe
+   - remote::wmi: request Command now returns an ARRAY of HASHes with parsed output
+
 20151230
    AFFECT: client::ssh, database::sqlite, shell::history, shell::rc, shell::script,
            system::docker, system::freebsd::jail, log::dual, network::sqlmap
