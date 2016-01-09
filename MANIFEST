@@ -96,6 +96,7 @@ lib/Metabrik/Network/Ftp.pm
 lib/Metabrik/Network/Grep.pm
 lib/Metabrik/Network/Http.pm
 lib/Metabrik/Network/Icmp.pm
+lib/Metabrik/Network/Iptables.pm
 lib/Metabrik/Network/Modbus.pm
 lib/Metabrik/Network/Netbios.pm
 lib/Metabrik/Network/Netstat.pm
@@ -121,6 +122,7 @@ lib/Metabrik/Perl/Module.pm
 lib/Metabrik/Proxy/Http.pm
 lib/Metabrik/Proxy/Ssh2tcp.pm
 lib/Metabrik/Remote/Tcpdump.pm
+lib/Metabrik/Remote/Winexe.pm
 lib/Metabrik/Remote/Wmi.pm
 lib/Metabrik/Repository.pm
 lib/Metabrik/Server/Dns.pm
@@ -144,6 +146,7 @@ lib/Metabrik/String/Ini.pm
 lib/Metabrik/String/Json.pm
 lib/Metabrik/String/Parse.pm
 lib/Metabrik/String/Password.pm
+lib/Metabrik/String/Psv.pm
 lib/Metabrik/String/Random.pm
 lib/Metabrik/String/Regex.pm
 lib/Metabrik/String/Rot13.pm
