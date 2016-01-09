@@ -32,6 +32,7 @@ sub brik_properties {
          command => [ qw(command file|OPTIONAL profile|OPTIONAL) ],
          envars => [ qw(file|OPTIONAL profile|OPTIONAL) ],
          pstree => [ qw(file|OPTIONAL profile|OPTIONAL) ],
+         pslist => [ qw(file|OPTIONAL profile|OPTIONAL) ],
          netscan => [ qw(file|OPTIONAL profile|OPTIONAL) ],
          hashdump => [ qw(file|OPTIONAL profile|OPTIONAL) ],
          psxview => [ qw(file|OPTIONAL profile|OPTIONAL) ],
@@ -62,7 +63,7 @@ sub imageinfo {
    $self->brik_help_run_undef_arg('imageinfo', $file) or return;
    $self->brik_help_run_file_not_found('imageinfo', $file) or return;
 
-   my $cmd = "volatility imageinfo -f $file";
+   my $cmd = "volatility imageinfo -f \"$file\"";
 
    $self->log->info("imageinfo: running...");
    my $data = $self->capture($cmd);
@@ -92,7 +93,7 @@ sub command {
    $self->brik_help_run_undef_arg('command', $file) or return;
    $self->brik_help_run_undef_arg('command', $profile) or return;
 
-   my $cmd = "volatility --profile $profile $command -f $file";
+   my $cmd = "volatility --profile $profile $command -f \"$file\"";
 
    return $self->execute($cmd);
 }
@@ -121,6 +122,20 @@ sub pstree {
    $self->brik_help_run_undef_arg('pstree', $profile) or return;
 
    my $cmd = "volatility --profile $profile pstree -v -f $file";
+
+   return $self->execute($cmd);
+}
+
+sub pslist {
+   my $self = shift;
+   my ($file, $profile) = @_;
+
+   $file ||= $self->input;
+   $profile ||= $self->profile;
+   $self->brik_help_run_undef_arg('pslist', $file) or return;
+   $self->brik_help_run_undef_arg('pslist', $profile) or return;
+
+   my $cmd = "volatility --profile $profile pslist -v -f $file";
 
    return $self->execute($cmd);
 }

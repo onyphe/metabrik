@@ -207,6 +207,9 @@
       "Metabrik::File::Read" : {
          "file" : "lib/Metabrik/File/Read.pm"
       },
+      "Metabrik::File::Readelf" : {
+         "file" : "lib/Metabrik/File/Readelf.pm"
+      },
       "Metabrik::File::Text" : {
          "file" : "lib/Metabrik/File/Text.pm"
       },

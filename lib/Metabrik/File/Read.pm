@@ -33,6 +33,7 @@ sub brik_properties {
       commands => {
          open => [ qw(file|OPTIONAL) ],
          close => [ ],
+         seek => [ qw(offset) ],
          read => [ ],
          read_until_blank_line => [ ],
          read_line => [ qw(count|OPTIONAL) ],
@@ -83,6 +84,22 @@ sub close {
    }
 
    return 1;
+}
+
+sub seek {
+   my $self = shift;
+   my ($offset) = @_;
+
+   my $fd = $self->fd;
+   $self->brik_help_run_undef_arg('open', $fd) or return;
+   $self->brik_help_run_undef_arg('seek', $offset) or return;
+
+   my $r = CORE::seek($fd, $offset, 0);
+   if (! $r) {
+      return $self->log->error("seek: unable to seek to offset [$offset]: [$!]");
+   }
+
+   return $offset;
 }
 
 sub read {

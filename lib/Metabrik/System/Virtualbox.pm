@@ -36,6 +36,13 @@ sub brik_properties {
          snapshot_delete => [ qw(name snapshot_name) ],
          snapshot_restore => [ qw(name snapshot_name) ],
          screenshot => [ qw(name file.png) ],
+         dumpguestcore => [ qw(name file.elf) ],
+         extract_memdump_from_dumpguestcore => [ qw(input output) ],
+      },
+      require_modules => {
+         'Metabrik::File::Raw' => [ ],
+         'Metabrik::File::Read' => [ ],
+         'Metabrik::File::Readelf' => [ ],
       },
       require_binaries => {
          vboxmanage => [ ],
@@ -153,6 +160,79 @@ sub screenshot {
    $self->command("controlvm \"$name\" screenshotpng \"$file\"") or return;
 
    return $file;
+}
+
+sub dumpguestcore {
+   my $self = shift;
+   my ($name, $file) = @_;
+
+   $self->brik_help_run_undef_arg('dumpguestcore', $name) or return;
+   $self->brik_help_run_undef_arg('dumpguestcore', $file) or return;
+
+   $self->command("debugvm \"$name\" dumpguestcore --filename \"$file\"") or return;
+
+   return $file;
+}
+
+#
+# By taking information from:
+# http://wiki.yobi.be/wiki/RAM_analysis#RAM_dump_with_VirtualBox:_via_ELF64_coredump
+#
+sub extract_memdump_from_dumpguestcore {
+   my $self = shift;
+   my ($input, $output) = @_;
+
+   $self->brik_help_run_undef_arg('extract_memdump_from_dumpguestcore', $input) or return;
+   $self->brik_help_run_undef_arg('extract_memdump_from_dumpguestcore', $output) or return;
+
+   my $fraw = Metabrik::File::Raw->new_from_brik_init($self) or return;
+   my $fread = Metabrik::File::Read->new_from_brik_init($self) or return;
+   my $felf = Metabrik::File::Readelf->new_from_brik_init($self) or return;
+
+   my $headers = $felf->program_headers($input) or return;
+
+   my $offset = 0;
+   my $size = 0;
+   for my $section (@{$headers->{sections}}) {
+      if ($section->{type} eq 'LOAD') {
+         $offset = hex($section->{offset});
+         $size = hex($section->{filesiz});
+         last;
+      }
+   }
+   if (! $offset || ! $size) {
+      return $self->log->error("extract_memdump_from_dumpguestcore: unable to find memdump");
+   }
+
+   $self->log->verbose("extract_memdump_from_dumpguestcore: offset[$offset] size[$size]");
+
+   $fread->encoding('ascii');  # Raw mode
+   my $fdin = $fread->open($input) or return;
+   $fread->seek($offset) or return;
+
+   my $written = 0;
+   my $fdout = $fraw->open($output) or return;
+   while (<$fdin>) {
+      my $this = length($_);
+      if (($written + $this) <= $size) {
+         print $fdout $_;
+         $written += $this;
+      }
+      else {
+         my $rest = $size - $written;
+         if ($rest < 0) {
+            $self->log->warning("extract_memdump_from_dumpguestcore: error while reading input");
+            last;
+         }
+         my $tail = substr($_, 0, $rest);
+         print $fdout $tail;
+         last;
+      }
+   }
+   $fraw->close;
+   $fread->close;
+
+   return $output;
 }
 
 1;
