@@ -23,6 +23,7 @@ sub brik_properties {
          ignore_error => [ qw(0|1) ],
          use_sudo => [ qw(0|1) ],
          use_pager => [ qw(0|1) ],
+         use_globbing => [ qw(0|1) ],
          sudo_args => [ qw(args) ],
       },
       attributes_default => {
@@ -33,6 +34,7 @@ sub brik_properties {
          ignore_error => 1,
          use_sudo => 0,
          use_pager => 0,
+         use_globbing => 1,
          sudo_args => '-E',  # Keep environment
       },
       commands => {
@@ -165,11 +167,13 @@ sub capture {
    }
 
    # Perform file globbing, if any
-   my @globbed = ();
-   for (@toks) {
-      push @globbed, glob($_);
+   if ($self->use_globbing) {
+      my @globbed = ();
+      for (@toks) {
+         push @globbed, glob($_);
+      }
+      @toks = @globbed;
    }
-   @toks = @globbed;
 
    $command = join(' ', @toks);
 
@@ -187,7 +191,8 @@ sub capture {
    my $out;
    my $err;
    eval {
-      IPC::Run3::run3(\@toks, undef, \$out, \$err);
+      my $cmd = join(' ', @toks);
+      IPC::Run3::run3($cmd, undef, \$out, \$err);
    };
    # Error in executing run3()
    if ($@) {

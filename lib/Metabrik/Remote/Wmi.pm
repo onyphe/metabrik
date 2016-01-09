@@ -21,24 +21,28 @@ sub brik_properties {
          user => [ qw(username) ],
          password => [ qw(password) ],
       },
+      attributes_default => {
+         as_array => 1,
+         capture_mode => 1,
+         use_globbing => 0,
+      },
       commands => {
          install => [ ], # Inherited
          request => [ qw(query host|OPTIONAL user|OPTIONAL password|OPTIONAL) ],
          get_win32_operatingsystem => [ qw(host|OPTIONAL user|OPTIONAL password|OPTIONAL) ],
          get_win32_process => [ qw(host|OPTIONAL user|OPTIONAL password|OPTIONAL) ],
-         execute => [ qw(command host|OPTIONAL user|OPTIONAL password|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::Client::Www' => [ ],
          'Metabrik::System::File' => [ ],
+         'Metabrik::String::Psv' => [ ],
       },
       require_binaries => {
-         'tar' => [ ],
-         'wmic' => [ ],
-         'winexe' => [ ],
+         tar => [ ],
+         wmic => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(build-essential autoconf) ],
+         ubuntu => [ qw(build-essential autoconf) ],
       },
    };
 }
@@ -55,10 +59,10 @@ sub install {
    $self->SUPER::install() or return;
 
    my $datadir = $self->datadir;
+   my $shell = $self->shell;
 
    my $version = '1.3.14';
 
-   #my $url = 'http://dev.zenoss.org/svn/trunk/inst/externallibs/wmi-'.$version.'.tar.bz2';
    my $url = 'http://www.openvas.org/download/wmi/wmi-'.$version.'.tar.bz2';
    my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
    my $files = $cw->mirror($url, "wmi-$version.tar.bz2", $datadir) or return;
@@ -68,20 +72,27 @@ sub install {
       $self->SUPER::execute($cmd) or return;
    }
 
-   # svn co http://dev.zenoss.org/svn/tags/wmi-1.3.14
-
-   # cd wmi-1.3.14/Samba/source
+   # cd wmi-$version/Samba/source
    # ./autogen.sh
    # ./configure
    # make "CPP=gcc -E -ffreestanding"
+   # make proto bin/wmic
+   # make proto bin/winexe
 
-   # cd wmi-$version
-   # vi GNUmakefile
-   # ZENHOME=../..   # Add to beginning of file
-   # make "CPP=gcc -E -ffreestanding"
+   my $cwd = $shell->pwd;
+   $shell->run_cd("$datadir/wmi-$version/Samba/source") or return;
 
-   #my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
-   #$sf->copy("$datadir/wmi-$version/Samba/source/bin/wmic", "$datadir/") or return;
+   $self->system('./autogen.sh') or return;
+   $self->system('./configure') or return;
+   $self->system('make "CPP=gcc -E -ffreestanding"') or return;
+   $self->system('make proto bin/wmic') or return;
+   $self->system('make proto bin/winexe') or return;
+
+   $shell->run_cd($cwd);
+
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   $sf->sudo_copy("$datadir/wmi-$version/Samba/source/bin/wmic", '/usr/local/bin/') or return;
+   $sf->sudo_copy("$datadir/wmi-$version/Samba/source/bin/winexe", '/usr/local/bin/') or return;
 
    return 1;
 }
@@ -115,7 +126,16 @@ sub request {
 
    my $cmd = "wmic -U$user".'%'."$password //$host \"$query\"";
 
-   return $self->SUPER::execute($cmd);
+   my $r = $self->SUPER::execute($cmd) or return;
+   if (@$r > 1) {
+      # First line is useless for us. Example: "CLASS: Win32_OperatingSystem"
+      shift @$r;
+      my $sp = Metabrik::String::Psv->new_from_brik_init($self) or return;
+      $sp->first_line_is_header(1);
+      return $sp->decode(join("\n", @$r));
+   }
+
+   return $r;
 }
 
 #
@@ -132,44 +152,6 @@ sub get_win32_process {
    my $self = shift;
 
    return $self->request('SELECT * FROM Win32_Process', @_);
-}
-
-#
-# 1. Add LocalAccountTokenFilterPolicy registry key
-#
-# - Click start 
-# - Type: regedit 
-# - Press enter 
-# - In the left, browse to the following folder: 
-# HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\system\ 
-# - Right-click a blank area in the right pane 
-# - Click New 
-# - Click DWORD Value 
-# - Type: LocalAccountTokenFilterPolicy 
-# - Double-click the item you just created 
-# - Type 1 into the box 
-# - Click OK 
-#
-# 2. Add winexesvc service
-# runas administrator a cmd.exe
-# C:\> sc create winexesvc binPath= C:\WINDOWS\WINEXESVC.EXE start= auto DisplayName= winexesvc
-# C:\> sc description winexesvc "Remote command provider"
-#
-sub execute {
-   my $self = shift;
-   my ($command, $host, $user, $password) = @_;
-
-   $host ||= $self->host;
-   $user ||= $self->user;
-   $password ||= $self->password;
-   $self->brik_help_run_undef_arg('execute', $command) or return;
-   $self->brik_help_run_undef_arg('execute', $host) or return;
-   $self->brik_help_run_undef_arg('execute', $user) or return;
-   $self->brik_help_run_undef_arg('execute', $password) or return;
-
-   my $cmd = "winexe -U$user".'%'."$password //$host \"$command\"";
-
-   return $self->SUPER::execute($cmd);
 }
 
 1;

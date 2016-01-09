@@ -7,7 +7,7 @@ package Metabrik::System::File;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command);
 
 sub brik_properties {
    return {
@@ -27,6 +27,7 @@ sub brik_properties {
          chmod => [ qw(file) ],
          chgrp => [ qw(file) ],
          copy => [ qw(source destination) ],
+         sudo_copy => [ qw(source destination) ],
          move => [ qw(source destination) ],
          remove => [ qw(file|$file_list) ],
          rename => [ qw(source destination) ],
@@ -35,7 +36,7 @@ sub brik_properties {
          glob => [ qw(pattern) ],
       },
       require_modules => {
-         'File::Copy' => [ qw(mv) ],
+         'File::Copy' => [ qw(mv copy) ],
          'File::Path' => [ qw(make_path) ],
          'File::Spec' => [ ],
       },
@@ -66,6 +67,44 @@ sub mkdir {
    return $no_error;
 }
 
+sub rmdir {
+}
+
+sub chmod {
+}
+
+sub chgrp {
+}
+
+sub copy {
+   my $self = shift;
+   my ($source, $destination) = @_;
+
+   $self->brik_help_run_undef_arg('copy', $source) or return;
+   $self->brik_help_run_undef_arg('copy', $destination) or return;
+
+   my $r = File::Copy::copy($source, $destination);
+   if (! $r) {
+      return $self->log->error("copy: failed copying [$source] to [$destination]: error [$!]");
+   }
+
+   return $destination;
+}
+
+sub sudo_copy {
+   my $self = shift;
+   my ($source, $destination) = @_;
+
+   $self->brik_help_run_undef_arg('sudo_copy', $source) or return;
+   $self->brik_help_run_undef_arg('sudo_copy', $destination) or return;
+
+   return $self->sudo_execute("cp -rp $source $destination");
+}
+
+sub move {
+#eval('use File::Copy qw(mv);');
+}
+
 sub remove {
    my $self = shift;
    my ($file) = @_;
@@ -86,8 +125,7 @@ sub remove {
    return $file;
 }
 
-sub move {
-#eval('use File::Copy qw(mv);');
+sub rename {
 }
 
 sub cat {
