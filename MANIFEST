@@ -60,6 +60,7 @@ lib/Metabrik/File/Pcap.pm
 lib/Metabrik/File/Psv.pm
 lib/Metabrik/File/Raw.pm
 lib/Metabrik/File/Read.pm
+lib/Metabrik/File/Readelf.pm
 lib/Metabrik/File/Text.pm
 lib/Metabrik/File/Tsv.pm
 lib/Metabrik/File/Type.pm
