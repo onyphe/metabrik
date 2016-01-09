@@ -20,7 +20,6 @@ sub brik_properties {
          delay => [ qw(microseconds) ],
       },
       attributes_default => {
-         output => 'output.gif',
          delay => 50,
       },
       commands => {
@@ -47,7 +46,9 @@ sub to_animated_gif {
    $self->brik_help_run_empty_array_arg('to_animated_gif', $files) or return;
 
    my $file_list = join(' ', @$files);
-   return $self->execute("convert -delay $delay -loop 0 $file_list $output");
+   $self->execute("convert -delay $delay -loop 0 $file_list $output") or return;
+
+   return $output;
 }
 
 1;
