@@ -119,6 +119,7 @@ lib/Metabrik/Network/Whois.pm
 lib/Metabrik/Network/Wlan.pm
 lib/Metabrik/Network/Wps.pm
 lib/Metabrik/Network/Write.pm
+lib/Metabrik/Network/Zmap.pm
 lib/Metabrik/Perl/Module.pm
 lib/Metabrik/Proxy/Http.pm
 lib/Metabrik/Proxy/Ssh2tcp.pm

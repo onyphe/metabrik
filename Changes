@@ -5,9 +5,10 @@ Revision history for Perl extension Metabrik::Repository.
    - new: system::virtualbox Brik
    - new: system::ubuntu::user Brik
    - new: string::psv Brik
-   - new: network::iptables Brik
+   - new: network::linux::iptables Brik
    - new: remote::winexe Brik
    - new: file::readelf Brik
+   - new: network::zmap Brik
 
 1.20.0 Sat Jan  2 18:49:52 CET 2016
    - MERGE: brik::search, perl::module, shell::command, shell::history, shell::rc

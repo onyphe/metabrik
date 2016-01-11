@@ -247,6 +247,8 @@ provides:
     file: lib/Metabrik/Network/Wps.pm
   Metabrik::Network::Write:
     file: lib/Metabrik/Network/Write.pm
+  Metabrik::Network::Zmap:
+    file: lib/Metabrik/Network/Zmap.pm
   Metabrik::Perl::Module:
     file: lib/Metabrik/Perl/Module.pm
   Metabrik::Proxy::Http:
