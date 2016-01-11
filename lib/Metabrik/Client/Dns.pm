@@ -100,17 +100,32 @@ sub a_lookup {
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
    $self->brik_help_run_undef_arg('a_lookup', $host) or return;
+   my $ref = $self->brik_help_run_invalid_arg('a_lookup', $host, 'ARRAY', 'SCALAR')
+      or return;
 
-   my $list = $self->lookup($host, 'A', $nameserver, $port) or return;
-
-   my @res = ();
-   for (@$list) {
-      if (defined($_->{address})) {
-         push @res, $_->{address};
+   if ($ref eq 'ARRAY') {
+      my %res = ();
+      for my $this (@$host) {
+         my $r = $self->a_lookup($this, $nameserver, $port) or next;
+         $res{$this} = $r;
       }
+
+      return \%res;
+   }
+   else {
+      my $list = $self->lookup($host, 'A', $nameserver, $port) or return;
+
+      my @res = ();
+      for (@$list) {
+         if (defined($_->{address})) {
+            push @res, $_->{address};
+         }
+      }
+
+      return $self->return_list ? \@res : ($res[0] || 'undef');
    }
 
-   return $self->return_list ? \@res : ($res[0] || 'undef');
+   return; # Error
 }
 
 sub aaaa_lookup {
@@ -120,17 +135,32 @@ sub aaaa_lookup {
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
    $self->brik_help_run_undef_arg('aaaa_lookup', $host) or return;
+   my $ref = $self->brik_help_run_invalid_arg('aaaa_lookup', $host, 'ARRAY', 'SCALAR')
+      or return;
 
-   my $list = $self->lookup($host, 'AAAA', $nameserver, $port) or return;
-
-   my @res = ();
-   for (@$list) {
-      if (defined($_->{address})) {
-         push @res, $_->{address};
+   if ($ref eq 'ARRAY') {
+      my %res = ();
+      for my $this (@$host) {
+         my $r = $self->aaaa_lookup($this, $nameserver, $port) or next;
+         $res{$this} = $r;
       }
+
+      return \%res;
+   }
+   else {
+      my $list = $self->lookup($host, 'AAAA', $nameserver, $port) or return;
+
+      my @res = ();
+      for (@$list) {
+         if (defined($_->{address})) {
+            push @res, $_->{address};
+         }
+      }
+
+      return $self->return_list ? \@res : ($res[0] || 'undef');
    }
 
-   return $self->return_list ? \@res : ($res[0] || 'undef');
+   return; # Error
 }
 
 sub ptr_lookup {
@@ -140,17 +170,32 @@ sub ptr_lookup {
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
    $self->brik_help_run_undef_arg('ptr_lookup', $host) or return;
+   my $ref = $self->brik_help_run_invalid_arg('ptr_lookup', $host, 'ARRAY', 'SCALAR')
+      or return;
 
-   my $list = $self->lookup($host, 'PTR', $nameserver, $port) or return;
-
-   my @res = ();
-   for (@$list) {
-      if (defined($_->{ptrdname})) {
-         push @res, $_->{ptrdname};
+   if ($ref eq 'ARRAY') {
+      my %res = ();
+      for my $this (@$host) {
+         my $r = $self->ptr_lookup($this, $nameserver, $port) or next;
+         $res{$this} = $r;
       }
+
+      return \%res;
+   }
+   else {
+      my $list = $self->lookup($host, 'PTR', $nameserver, $port) or return;
+
+      my @res = ();
+      for (@$list) {
+         if (defined($_->{ptrdname})) {
+            push @res, $_->{ptrdname};
+         }
+      }
+
+      return $self->return_list ? \@res : ($res[0] || 'undef');
    }
 
-   return $self->return_list ? \@res : ($res[0] || 'undef');
+   return; # Error
 }
 
 sub mx_lookup {
@@ -160,17 +205,32 @@ sub mx_lookup {
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
    $self->brik_help_run_undef_arg('mx_lookup', $host) or return;
+   my $ref = $self->brik_help_run_invalid_arg('mx_lookup', $host, 'ARRAY', 'SCALAR')
+      or return;
 
-   my $list = $self->lookup($host, 'MX', $nameserver, $port) or return;
-
-   my @res = ();
-   for (@$list) {
-      if (defined($_->{exchange})) {
-         push @res, $_->{exchange};
+   if ($ref eq 'ARRAY') {
+      my %res = ();
+      for my $this (@$host) {
+         my $r = $self->mx_lookup($this, $nameserver, $port) or next;
+         $res{$this} = $r;
       }
+
+      return \%res;
+   }
+   else {
+      my $list = $self->lookup($host, 'MX', $nameserver, $port) or return;
+
+      my @res = ();
+      for (@$list) {
+         if (defined($_->{exchange})) {
+            push @res, $_->{exchange};
+         }
+      }
+
+      return $self->return_list ? \@res : ($res[0] || 'undef');
    }
 
-   return $self->return_list ? \@res : ($res[0] || 'undef');
+   return; # Error
 }
 
 sub ns_lookup {
@@ -180,17 +240,32 @@ sub ns_lookup {
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
    $self->brik_help_run_undef_arg('ns_lookup', $host) or return;
+   my $ref = $self->brik_help_run_invalid_arg('ns_lookup', $host, 'ARRAY', 'SCALAR')
+      or return;
 
-   my $list = $self->lookup($host, 'NS', $nameserver, $port) or return;
-
-   my @res = ();
-   for (@$list) {
-      if (defined($_->{nsdname})) {
-         push @res, $_->{nsdname};
+   if ($ref eq 'ARRAY') {
+      my %res = ();
+      for my $this (@$host) {
+         my $r = $self->ns_lookup($this, $nameserver, $port) or next;
+         $res{$this} = $r;
       }
+
+      return \%res;
+   }
+   else {
+      my $list = $self->lookup($host, 'NS', $nameserver, $port) or return;
+
+      my @res = ();
+      for (@$list) {
+         if (defined($_->{nsdname})) {
+            push @res, $_->{nsdname};
+         }
+      }
+
+      return $self->return_list ? \@res : ($res[0] || 'undef');
    }
 
-   return $self->return_list ? \@res : ($res[0] || 'undef');
+   return; # Error
 }
 
 sub soa_lookup {
@@ -200,17 +275,32 @@ sub soa_lookup {
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
    $self->brik_help_run_undef_arg('soa_lookup', $host) or return;
+   my $ref = $self->brik_help_run_invalid_arg('soa_lookup', $host, 'ARRAY', 'SCALAR')
+      or return;
 
-   my $list = $self->lookup($host, 'SOA', $nameserver, $port) or return;
-
-   my @res = ();
-   for (@$list) {
-      if (defined($_->{rdatastr})) {
-         push @res, $_->{rdatastr};
+   if ($ref eq 'ARRAY') {
+      my %res = ();
+      for my $this (@$host) {
+         my $r = $self->soa_lookup($this, $nameserver, $port) or next;
+         $res{$this} = $r;
       }
+
+      return \%res;
+   }
+   else {
+      my $list = $self->lookup($host, 'SOA', $nameserver, $port) or return;
+
+      my @res = ();
+      for (@$list) {
+         if (defined($_->{rdatastr})) {
+            push @res, $_->{rdatastr};
+         }
+      }
+
+      return $self->return_list ? \@res : ($res[0] || 'undef');
    }
 
-   return $self->return_list ? \@res : ($res[0] || 'undef');
+   return; # Error
 }
 
 sub txt_lookup {
@@ -220,17 +310,32 @@ sub txt_lookup {
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
    $self->brik_help_run_undef_arg('txt_lookup', $host) or return;
+   my $ref = $self->brik_help_run_invalid_arg('txt_lookup', $host, 'ARRAY', 'SCALAR')
+      or return;
 
-   my $list = $self->lookup($host, 'TXT', $nameserver, $port) or return;
-
-   my @res = ();
-   for (@$list) {
-      if (defined($_->{rdatastr})) {
-         push @res, $_->{rdatastr};
+   if ($ref eq 'ARRAY') {
+      my %res = ();
+      for my $this (@$host) {
+         my $r = $self->txt_lookup($this, $nameserver, $port) or next;
+         $res{$this} = $r;
       }
+
+      return \%res;
+   }
+   else {
+      my $list = $self->lookup($host, 'TXT', $nameserver, $port) or return;
+
+      my @res = ();
+      for (@$list) {
+         if (defined($_->{rdatastr})) {
+            push @res, $_->{rdatastr};
+         }
+      }
+
+      return $self->return_list ? \@res : ($res[0] || 'undef');
    }
 
-   return $self->return_list ? \@res : ($res[0] || 'undef');
+   return; # Error
 }
 
 sub srv_lookup {
@@ -240,17 +345,32 @@ sub srv_lookup {
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
    $self->brik_help_run_undef_arg('srv_lookup', $host) or return;
+   my $ref = $self->brik_help_run_invalid_arg('srv_lookup', $host, 'ARRAY', 'SCALAR')
+      or return;
 
-   my $list = $self->lookup($host, 'SRV', $nameserver, $port) or return;
-
-   my @res = ();
-   for (@$list) {
-      if (defined($_->{target})) {
-         push @res, $_->{target};
+   if ($ref eq 'ARRAY') {
+      my %res = ();
+      for my $this (@$host) {
+         my $r = $self->srv_lookup($this, $nameserver, $port) or next;
+         $res{$this} = $r;
       }
+
+      return \%res;
+   }
+   else {
+      my $list = $self->lookup($host, 'SRV', $nameserver, $port) or return;
+
+      my @res = ();
+      for (@$list) {
+         if (defined($_->{target})) {
+            push @res, $_->{target};
+         }
+      }
+
+      return $self->return_list ? \@res : ($res[0] || 'undef');
    }
 
-   return $self->return_list ? \@res : ($res[0] || 'undef');
+   return; # Error
 }
 
 sub cname_lookup {
@@ -260,17 +380,32 @@ sub cname_lookup {
    $nameserver ||= $self->nameserver;
    $port ||= $self->port || 53;
    $self->brik_help_run_undef_arg('cname_lookup', $host) or return;
+   my $ref = $self->brik_help_run_invalid_arg('cname_lookup', $host, 'ARRAY', 'SCALAR')
+      or return;
 
-   my $list = $self->lookup($host, 'CNAME', $nameserver, $port) or return;
-
-   my @res = ();
-   for (@$list) {
-      if (defined($_->{cname})) {
-         push @res, $_->{cname};
+   if ($ref eq 'ARRAY') {
+      my %res = ();
+      for my $this (@$host) {
+         my $r = $self->cname_lookup($this, $nameserver, $port) or next;
+         $res{$this} = $r;
       }
+
+      return \%res;
+   }
+   else {
+      my $list = $self->lookup($host, 'CNAME', $nameserver, $port) or return;
+
+      my @res = ();
+      for (@$list) {
+         if (defined($_->{cname})) {
+            push @res, $_->{cname};
+         }
+      }
+
+      return $self->return_list ? \@res : ($res[0] || 'undef');
    }
 
-   return $self->return_list ? \@res : ($res[0] || 'undef');
+   return; # Error
 }
 
 1;
