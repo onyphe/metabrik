@@ -10,7 +10,7 @@ ok(sub { eval("use Metabrik::Network::Ftp"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Grep"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Http"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Icmp"); $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Network::Iptables"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::Network::Linux::Iptables"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Modbus"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Netbios"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Netstat"); $@ ? 0 : 1 }, 1, $@);

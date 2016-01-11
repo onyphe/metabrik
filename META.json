@@ -318,8 +318,8 @@
       "Metabrik::Network::Icmp" : {
          "file" : "lib/Metabrik/Network/Icmp.pm"
       },
-      "Metabrik::Network::Iptables" : {
-         "file" : "lib/Metabrik/Network/Iptables.pm"
+      "Metabrik::Network::Linux::Iptables" : {
+         "file" : "lib/Metabrik/Network/Linux/Iptables.pm"
       },
       "Metabrik::Network::Modbus" : {
          "file" : "lib/Metabrik/Network/Modbus.pm"

@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# network::iptables Brik
+# network::linux::iptables Brik
 #
-package Metabrik::Network::Iptables;
+package Metabrik::Network::Linux::Iptables;
 use strict;
 use warnings;
 
@@ -509,7 +509,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Network::Iptables - network::iptables Brik
+Metabrik::Network::Linux::Iptables - network::linux::iptables Brik
 
 =head1 COPYRIGHT AND LICENSE
 
