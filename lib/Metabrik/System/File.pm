@@ -24,7 +24,7 @@ sub brik_properties {
       commands => {
          mkdir => [ qw(directory) ],
          rmdir => [ qw(directory) ],
-         chmod => [ qw(file) ],
+         chmod => [ qw(file perms) ],
          chgrp => [ qw(file) ],
          copy => [ qw(source destination) ],
          sudo_copy => [ qw(source destination) ],
@@ -71,6 +71,27 @@ sub rmdir {
 }
 
 sub chmod {
+   my $self = shift;
+   my ($file, $perms) = @_;
+
+   $self->brik_help_run_undef_arg('chmod', $file) or return;
+   my $ref = $self->brik_help_run_invalid_arg('chmod', $file, 'SCALAR', 'ARRAY')
+      or return;
+   $self->brik_help_run_undef_arg('chmod', $perms) or return;
+
+   my $r;
+   if ($ref eq 'ARRAY') {
+      $r = CORE::chmod(oct($perms), @$file);
+   }
+   else {
+      $r = CORE::chmod(oct($perms), $file);
+   }
+
+   if (! $r) {
+      return $self->log->error("chmod: failed to chmod file [$file]: $!");
+   }
+
+   return $file;
 }
 
 sub chgrp {

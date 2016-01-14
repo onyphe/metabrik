@@ -66,7 +66,7 @@ sub unshorten {
       $unshorten = $trace->[-1]->{uri};
    }
 
-   return $unshorten;
+   return $unshorten || 'undef';
 }
 
 1;

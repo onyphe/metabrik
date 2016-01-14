@@ -32,6 +32,7 @@ sub brik_properties {
          cooldown_time => 8,
       },
       commands => {
+         install => [ ], # Inherited
          scan => [ qw(port output|OPTIONAL device|OPTIONAL) ],
       },
       require_binaries => {
