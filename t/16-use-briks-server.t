@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 6) }
+BEGIN { plan(tests => 7) }
 
 ok(sub { eval("use Metabrik::Server::Dns"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Server::Http"); $@ ? 0 : 1 }, 1, $@);
@@ -7,3 +7,4 @@ ok(sub { eval("use Metabrik::Server::Rest"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Server::Snmp"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Server::Snmptrap"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Server::Tcp"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::Server::Tor"); $@ ? 0 : 1 }, 1, $@);

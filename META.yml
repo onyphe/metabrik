@@ -276,6 +276,8 @@ provides:
     file: lib/Metabrik/Server/Snmptrap.pm
   Metabrik::Server::Tcp:
     file: lib/Metabrik/Server/Tcp.pm
+  Metabrik::Server::Tor:
+    file: lib/Metabrik/Server/Tor.pm
   Metabrik::Shell::Command:
     file: lib/Metabrik/Shell/Command.pm
     version: '1.20'

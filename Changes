@@ -9,6 +9,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: remote::winexe Brik
    - new: file::readelf Brik
    - new: network::zmap Brik
+   - new: server::tor Brik
 
 1.20.0 Sat Jan  2 18:49:52 CET 2016
    - MERGE: brik::search, perl::module, shell::command, shell::history, shell::rc
