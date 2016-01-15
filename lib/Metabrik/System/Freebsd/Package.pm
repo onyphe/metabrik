@@ -23,10 +23,12 @@ sub brik_properties {
          list => [ ],
          is_installed => [ qw(package|$package_list) ],
          which => [ qw(file) ],
+         system_update => [ ],
+         system_upgrade => [ ],
       },
       require_binaries => {
-         'sudo' => [ ],
          'pkg' => [ ],
+         'freebsd-update' => [ ],
       },
    };
 }
@@ -50,34 +52,34 @@ sub install {
    my $ref = $self->brik_help_run_invalid_arg('install', $package, 'ARRAY', 'SCALAR')
       or return;
 
-   my $cmd = "sudo pkg install ";
+   my $cmd = 'pkg install ';
    $ref eq 'ARRAY' ? ($cmd .= join(' ', @$package)) : ($cmd .= $package);
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub update {
    my $self = shift;
 
-   my $cmd = "sudo pkg update";
+   my $cmd = 'pkg update';
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub upgrade {
    my $self = shift;
 
-   my $cmd = "sudo pkg upgrade";
+   my $cmd = 'pkg upgrade';
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub list {
    my $self = shift;
 
-   my $cmd = "pkg info";
+   my $cmd = 'pkg info';
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub is_installed {
@@ -103,6 +105,22 @@ sub which {
    }
 
    return 'undef';
+}
+
+sub system_update {
+   my $self = shift;
+
+   my $cmd = 'freebsd-update fetch';
+
+   return $self->sudo_system($cmd);
+}
+
+sub system_upgrade {
+   my $self = shift;
+
+   my $cmd = 'freebsd-update install';
+
+   return $self->sudo_system($cmd);
 }
 
 1;
