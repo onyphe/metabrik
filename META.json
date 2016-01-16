@@ -366,9 +366,6 @@
       "Metabrik::Network::Stream" : {
          "file" : "lib/Metabrik/Network/Stream.pm"
       },
-      "Metabrik::Network::Tor" : {
-         "file" : "lib/Metabrik/Network/Tor.pm"
-      },
       "Metabrik::Network::Traceroute" : {
          "file" : "lib/Metabrik/Network/Traceroute.pm"
       },

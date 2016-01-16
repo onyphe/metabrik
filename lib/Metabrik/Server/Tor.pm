@@ -41,6 +41,7 @@ sub brik_properties {
          start => [ qw(conf_file|OPTIONAL) ],
          stop => [ ],
          status => [ ],
+         list_exit_nodes => [ ],
       },
       require_modules => {
          'Metabrik::File::Text' => [ ],
@@ -175,6 +176,27 @@ sub status {
 
    my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
    return $sp->is_running_from_pidfile($pidfile);
+}
+
+#
+# Alternatives URLs:
+# https://www.dan.me.uk/torlist/
+# https://check.torproject.org/exit-addresses
+# https://www.dan.me.uk/torcheck?ip=2.100.184.78
+# https://globe.torproject.org/
+# https://atlas.torproject.org/
+#
+sub list_exit_nodes {
+   my $self = shift;
+
+   my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
+   my $get = $cw->get('http://torstatus.blutmagie.de/ip_list_exit.php/Tor_ip_list_EXIT.csv')
+      or return;
+
+   my $content = $get->{content};
+   my @ip_list = split(/\n/, $content);
+
+   return \@ip_list;
 }
 
 1;

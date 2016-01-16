@@ -72,7 +72,7 @@ sub open {
          return $self->log->error("open: open: write file [$output]: $!");
       }
    }
-   elsif (! $self->append && ! $self->overwrite && -f $self->output) {
+   elsif (! $self->append && ! $self->overwrite && -f $output) {
       $self->log->info("open: we will not overwrite an existing file. See:");
       return $self->log->error($self->brik_help_set('overwrite'));
    }

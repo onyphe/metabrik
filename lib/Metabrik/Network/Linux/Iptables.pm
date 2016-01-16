@@ -25,6 +25,8 @@ sub brik_properties {
          source => [ qw(source) ],
          destination => [ qw(destination) ],
          test_only => [ qw(0|1) ],
+         input => [ qw(file) ],
+         output => [ qw(file) ],
       },
       attributes_default => {
          table => 'filter',
@@ -34,6 +36,8 @@ sub brik_properties {
          source => '',
          destination => '',
          test_only => 0,
+         input => 'current.txt',
+         output => 'current.txt',
       },
       commands => {
          install => [ ], # Inherited
@@ -158,16 +162,13 @@ sub save {
    my $self = shift;
    my ($output, $table) = @_;
 
+   $output ||= $self->output;
    $self->brik_help_run_undef_arg('save', $output) or return;
 
    my $datadir = $self->datadir;
-
    # If it does not start with a /, we put it in datadir
-   if ($output !~ m{/}) {
+   if ($output !~ m{^/}) {
       $output = $datadir.'/'.$output;
-   }
-   if (-f $output) {
-      return $self->log->error("save: file [$output] already exists");
    }
 
    my $cmd = 'iptables-save -c';
@@ -195,6 +196,8 @@ sub save {
    $self->ignore_error($prevc);
 
    my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+   $ft->append(0);
+   $ft->overwrite(1);
    $ft->write($r, $output) or return;
 
    return $output;
@@ -204,6 +207,7 @@ sub save_nat {
    my $self = shift;
    my ($output) = @_;
 
+   $output ||= $self->output;
    $self->brik_help_run_undef_arg('save_nat', $output) or return;
 
    return $self->save($output, 'nat');
@@ -213,6 +217,7 @@ sub save_filter {
    my $self = shift;
    my ($output) = @_;
 
+   $output ||= $self->output;
    $self->brik_help_run_undef_arg('save_filter', $output) or return;
 
    return $self->save($output, 'filter');
@@ -222,7 +227,13 @@ sub restore {
    my $self = shift;
    my ($input, $table) = @_;
 
+   $input ||= $self->input;
    $self->brik_help_run_undef_arg('restore', $input) or return;
+
+   my $datadir = $self->datadir;
+   if ($input !~ m{^/}) {
+      $input = $datadir.'/'.$input;
+   }
    $self->brik_help_run_file_not_found('restore', $input) or return;
 
    my $cmd = "cat \"$input\" | iptables-restore -c";
@@ -256,7 +267,13 @@ sub restore_nat {
    my $self = shift;
    my ($input) = @_;
 
+   $input ||= $self->input;
    $self->brik_help_run_undef_arg('restore_nat', $input) or return;
+
+   my $datadir = $self->datadir;
+   if ($input !~ m{^/}) {
+      $input = $datadir.'/'.$input;
+   }
    $self->brik_help_run_file_not_found('restore_nat', $input) or return;
 
    return $self->restore($input, 'nat');
@@ -266,7 +283,13 @@ sub restore_filter {
    my $self = shift;
    my ($input) = @_;
 
+   $input ||= $self->input;
    $self->brik_help_run_undef_arg('restore_filter', $input) or return;
+
+   my $datadir = $self->datadir;
+   if ($input !~ m{^/}) {
+      $input = $datadir.'/'.$input;
+   }
    $self->brik_help_run_file_not_found('restore_filter', $input) or return;
 
    return $self->restore($input, 'filter');
