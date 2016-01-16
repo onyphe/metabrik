@@ -1,3 +1,8 @@
+20160116
+   AFFECT: network::tor
+
+   - network::tor obsolete, exit_nodes_list Command moved to server::tor list_exit_nodes Command
+
 20160111
    AFFECT: network::iptables
 
