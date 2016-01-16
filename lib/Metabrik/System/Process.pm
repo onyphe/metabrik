@@ -230,6 +230,7 @@ sub kill_from_pidfile {
    my ($pidfile) = @_;
 
    $self->brik_help_run_undef_arg('kill_from_pidfile', $pidfile) or return;
+   $self->brik_help_run_file_not_found('kill_from_pidfile', $pidfile) or return;
 
    if (my $pid = Daemon::Daemonize->check_pidfile($pidfile)) {
       $self->log->verbose("kill_from_pidfile: file[$pidfile] and pid[$pid]");
@@ -245,6 +246,11 @@ sub is_running_from_pidfile {
    my ($pidfile) = @_;
 
    $self->brik_help_run_undef_arg('is_running_from_pidfile', $pidfile) or return;
+
+   # Not file found, so probably not running
+   if (! -f $pidfile) {
+      return 0;
+   }
 
    if (my $pid = Daemon::Daemonize->check_pidfile($pidfile)) {
       return 1;

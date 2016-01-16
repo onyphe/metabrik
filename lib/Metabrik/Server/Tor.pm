@@ -24,7 +24,7 @@ sub brik_properties {
          virtual_network => [ qw(subnet) ],
          user => [ qw(user) ],
          conf => [ qw(file) ],
-         pid_file => [ qw(file) ],
+         pidfile => [ qw(file) ],
       },
       attributes_default => {
          tor_port => 9051,
@@ -33,13 +33,14 @@ sub brik_properties {
          dns_listen => '127.0.0.1',
          virtual_network => '10.20.0.0/255.255.0.0',
          conf => 'torrc',
-         pid_file => 'tor.pid',
+         pidfile => 'tor.pid',
       },
       commands => {
          install => [ ], # Inherited
          generate_conf => [ qw(file|OPTIONAL) ],
          start => [ qw(conf_file|OPTIONAL) ],
-         stop => [ qw(conf_file|OPTIONAL) ],
+         stop => [ ],
+         status => [ ],
       },
       require_modules => {
          'Metabrik::File::Text' => [ ],
@@ -73,17 +74,16 @@ sub generate_conf {
    my ($conf) = @_;
 
    $conf ||= $self->conf;
-   $self->brik_help_run_undef_arg('generate_conf', $conf) or return;
-
    my $datadir = $self->datadir;
-
    # If it does not start with a /, we put it in $datadir
    if ($conf !~ m{^/}) {
       $conf = $datadir.'/'.$conf;
    }
 
+   $self->brik_help_run_undef_arg('generate_conf', $conf) or return;
+
    my $user = $self->user;
-   my $pid_file = $self->pid_file;
+   my $pidfile = $self->pidfile;
    my $tor_port = $self->tor_port;
    my $tor_listen = $self->tor_listen;
    my $dns_port = $self->dns_port;
@@ -95,7 +95,7 @@ sub generate_conf {
 
    my $data =<<EOF
 DataDirectory $datadir
-PidFile $datadir/$pid_file
+PidFile $datadir/$pidfile
 RunAsDaemon 1
 User $user
 
@@ -149,17 +149,32 @@ sub start {
 
 sub stop {
    my $self = shift;
-   my ($conf) = @_;
 
-   $conf ||= $self->conf;
-   $self->brik_help_run_undef_arg('start', $conf) or return;
+   my $datadir = $self->datadir;
+   my $pidfile = $self->pidfile;
 
-   my $pid_file = $self->pid_file;
+   if ($pidfile !~ m{^/}) {
+      $pidfile = $datadir.'/'.$pidfile;
+   }
 
    my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
-   $sp->kill_from_pidfile($pid_file) or return;
+   $sp->kill_from_pidfile($pidfile) or return;
 
    return 1;
+}
+
+sub status {
+   my $self = shift;
+
+   my $datadir = $self->datadir;
+   my $pidfile = $self->pidfile;
+
+   if ($pidfile !~ m{^/}) {
+      $pidfile = $datadir.'/'.$pidfile;
+   }
+
+   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+   return $sp->is_running_from_pidfile($pidfile);
 }
 
 1;

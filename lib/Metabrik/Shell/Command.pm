@@ -107,8 +107,9 @@ sub system {
    $self->debug && $self->log->debug("system: return code [$r] with status [$?]");
 
    if (! $self->ignore_error && $? != 0) {
+      $self->log->verbose("system: exit code[$?]");
       # Failure, we return the program exit code
-      return $? >> 8;
+      return $?;
    }
 
    # Success

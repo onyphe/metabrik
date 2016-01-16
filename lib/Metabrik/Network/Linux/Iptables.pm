@@ -19,7 +19,7 @@ sub brik_properties {
          datadir => [ qw(datadir) ],
          device => [ qw(device) ],
          table => [ qw(nat|filter|mangle|$name) ],
-         chain => [ qw(INPUT|OUTPUT|FORWARD|PREROUTING|POSTROUTING|MASQUERADE|$name) ],
+         chain => [ qw(INPUT|OUTPUT|FORWARD|PREROUTING|POSTROUTING|MASQUERADE|DNAT|$name) ],
          target => [ qw(ACCEPT|REJECT|DROP|RETURN|REDIRECT|$name) ],
          protocol => [ qw(udp|tcp|all) ],
          source => [ qw(source) ],
@@ -30,9 +30,9 @@ sub brik_properties {
          table => 'filter',
          chain => 'INPUT',
          target => 'REJECT',
-         protocol => 'all',
-         source => '0.0.0.0/0',
-         destination => '0.0.0.0/0',
+         protocol => '',
+         source => '',
+         destination => '',
          test_only => 0,
       },
       commands => {
@@ -60,15 +60,37 @@ sub brik_properties {
          set_policy_input => [ qw(target) ],
          set_policy_output => [ qw(target) ],
          set_policy_forward => [ qw(target) ],
-         add => [ qw(table chain target source|OPTIONAL destination|OPTIONAL protocol|OPTIONAL custom|OPTIONAL) ],
-         add_nat => [ qw(chain target source|OPTIONAL destination|OPTIONAL protocol|OPTIONAL custom|OPTIONAL) ],
-         add_nat_output => [ qw(target source|OPTIONAL destination|OPTIONAL protocol|OPTIONAL custom|OPTIONAL) ],
-         add_nat_postrouting => [ qw(target source destination protocol|OPTIONAL custom|OPTIONAL) ],
-         add_nat_postrouting_masquerade => [ qw(source destination protocol|OPTIONAL custom|OPTIONAL) ],
-         add_filter => [ qw(chain target source destination protocol|OPTIONAL custom|OPTIONAL) ],
-         add_filter_output => [ qw(target source destination protocol|OPTIONAL custom|OPTIONAL) ],
-         add_filter_output_accept => [ qw(source destination protocol|OPTIONAL custom|OPTIONAL) ],
-         add_filter_output_reject => [ qw(source destination protocol|OPTIONAL custom|OPTIONAL) ],
+         add => [ qw(table chain target rule) ],
+         add_nat => [ qw(chain target rule) ],
+         add_nat_output => [ qw(target rule) ],
+         add_nat_output_return => [ qw(rule) ],
+         add_nat_output_redirect => [ qw(rule) ],
+         add_nat_output_dnat => [ qw(rule) ],
+         add_nat_postrouting => [ qw(target rule) ],
+         add_nat_postrouting_masquerade => [ qw(rule) ],
+         add_nat_postrouting_dnat => [ qw(rule) ],
+         add_filter => [ qw(chain target rule) ],
+         add_filter_output => [ qw(target rule) ],
+         add_filter_output_accept => [ qw(rule) ],
+         add_filter_output_reject => [ qw(rule) ],
+         del => [ qw(table chain target rule) ],
+         del_nat => [ qw(chain target rule) ],
+         del_nat_output => [ qw(target rule) ],
+         del_nat_output_return => [ qw(rule) ],
+         del_nat_output_redirect => [ qw(rule) ],
+         del_nat_output_dnat => [ qw(rule) ],
+         check => [ qw(table chain target rule) ],
+         check_nat => [ qw(chain target rule) ],
+         check_nat_output => [ qw(target rule) ],
+         check_nat_output_return => [ qw(rule) ],
+         check_nat_output_redirect => [ qw(rule) ],
+         check_nat_output_dnat => [ qw(rule) ],
+         start_redirect_target_to => [ qw(host_port dest_host_port protocol|OPTIONAL) ],
+         start_redirect_target_tcp_to => [ qw(host_port dest_host_port) ],
+         start_redirect_target_udp_to => [ qw(host_port dest_host_port) ],
+         stop_redirect_target_to => [ qw(host_port dest_host_port protocol|OPTIONAL) ],
+         stop_redirect_target_tcp_to => [ qw(host_port dest_host_port) ],
+         stop_redirect_target_udp_to => [ qw(host_port dest_host_port) ],
       },
       require_modules => {
          'Metabrik::File::Text' => [ ],
@@ -106,23 +128,30 @@ sub command {
       return 1;
    }
 
-   return $self->sudo_execute($command);
+   $self->ignore_error(0);
+
+   my $r = $self->sudo_execute($cmd) or return;
+   if ($r == 256) {
+      return 0;
+   }
+
+   return 1;
 }
 
 sub show_nat {
    my $self = shift;
 
-   my $cmd = 'iptables -S -t nat';
+   my $cmd = '-S -t nat';
 
-   return $self->sudo_execute($cmd);
+   return $self->command($cmd);
 }
 
 sub show_filter {
    my $self = shift;
 
-   my $cmd = 'iptables -S -t filter';
+   my $cmd = '-S -t filter';
 
-   return $self->sudo_execute($cmd);
+   return $self->command($cmd);
 }
 
 sub save {
@@ -130,6 +159,13 @@ sub save {
    my ($output, $table) = @_;
 
    $self->brik_help_run_undef_arg('save', $output) or return;
+
+   my $datadir = $self->datadir;
+
+   # If it does not start with a /, we put it in datadir
+   if ($output !~ m{/}) {
+      $output = $datadir.'/'.$output;
+   }
    if (-f $output) {
       return $self->log->error("save: file [$output] already exists");
    }
@@ -189,9 +225,9 @@ sub restore {
    $self->brik_help_run_undef_arg('restore', $input) or return;
    $self->brik_help_run_file_not_found('restore', $input) or return;
 
-   my $cmd = "cat $input | iptables-restore -c";
+   my $cmd = "cat \"$input\" | iptables-restore -c";
    if (defined($table)) {
-      $cmd = "\"iptables-restore -c -T $table < $input\"";
+      $cmd = "iptables-restore -c -T $table < \"$input\"";
    }
 
    $self->log->verbose("restore: cmd[$cmd]");
@@ -358,149 +394,475 @@ sub set_policy_forward {
    return $self->set_policy('forward', $target);
 }
 
+sub _action {
+   my $self = shift;
+   my ($action, $table, $chain, $target, $rule) = @_;
+
+   my $source = $rule->{source} || $self->source;
+   my $destination = $rule->{destination} || $self->destination;
+   my $protocol = $rule->{protocol} || $self->protocol;
+   my $dport = $rule->{dest_port} || '';
+   my $sport = $rule->{src_port} || '';
+   my $to_ports = $rule->{to_ports} || '';
+   my $state = $rule->{state} || '';
+   my $uid = $rule->{uid} || '';
+   my $to_destination = $rule->{to_destination} || '';
+   my $custom = $rule->{custom} || '';
+
+   my $cmd = "-t $table $action $chain -j $target";
+   if (length($source)) {
+      $cmd .= " -s $source";
+   }
+   if (length($destination)) {
+      $cmd .= " -d $destination";
+   }
+   if (length($protocol)) {
+      $cmd .= " -p $protocol";
+   }
+   if (length($dport)) {
+      $cmd .= " --dport $dport";
+   }
+   if (length($sport)) {
+      $cmd .= " --sport $dport";
+   }
+   if (length($to_ports)) {
+      $cmd .= " --to-ports $to_ports";
+   }
+   if (length($state)) {
+      $cmd .= " -m state --state $state";
+   }
+   if (length($uid)) {
+      $cmd .= " -m owner --uid $uid";
+   }
+   if (length($to_destination)) {
+      $cmd .= " --to-destination $to_destination";
+   }
+   if (length($custom)) {
+      $cmd .= " $custom";
+   }
+
+   return $cmd;
+}
+
 sub add {
    my $self = shift;
-   my ($table, $chain, $target, $source, $destination, $protocol, $custom) = @_;
+   my ($table, $chain, $target, $rule) = @_;
 
    $table ||= $self->table;
    $chain ||= $self->chain;
    $target ||= $self->target;
-   $protocol ||= $self->protocol;
-   $source ||= $self->source;
-   $destination ||= $self->destination;
    $self->brik_help_run_undef_arg('add', $table) or return;
    $self->brik_help_run_undef_arg('add', $chain) or return;
    $self->brik_help_run_undef_arg('add', $target) or return;
-   $self->brik_help_run_undef_arg('add', $source) or return;
-   $self->brik_help_run_undef_arg('add', $destination) or return;
+   $self->brik_help_run_undef_arg('add', $rule) or return;
+   $self->brik_help_run_invalid_arg('add', $rule, 'HASH') or return;
 
-   my $cmd = "-t $table -A $chain -j $target -s $source -d $destination -p $protocol";
-   if (length($custom)) {
-      $cmd .= " $custom";
-   }
+   my $cmd = $self->_action('-A', $table, $chain, $target, $rule);
 
    return $self->command($cmd);
 }
 
 sub add_nat {
    my $self = shift;
-   my ($chain, $target, $source, $destination, $protocol, $custom) = @_;
+   my ($chain, $target, $rule) = @_;
 
    $chain ||= $self->chain;
    $target ||= $self->target;
-   $protocol ||= $self->protocol;
-   $source ||= $self->source;
-   $destination ||= $self->destination;
    $self->brik_help_run_undef_arg('add_nat', $chain) or return;
    $self->brik_help_run_undef_arg('add_nat', $target) or return;
-   $self->brik_help_run_undef_arg('add_nat', $source) or return;
-   $self->brik_help_run_undef_arg('add_nat', $destination) or return;
+   $self->brik_help_run_undef_arg('add_nat', $rule) or return;
+   $self->brik_help_run_invalid_arg('add_nat', $rule, 'HASH') or return;
 
-   return $self->add('nat', $chain, $target, $source, $destination, $protocol, $custom);
+   return $self->add('nat', $chain, $target, $rule);
 }
 
 sub add_nat_output {
    my $self = shift;
-   my ($target, $source, $destination, $protocol, $custom) = @_;
+   my ($target, $rule) = @_;
 
    $target ||= $self->target;
-   $protocol ||= $self->protocol;
-   $source ||= $self->source;
-   $destination ||= $self->destination;
    $self->brik_help_run_undef_arg('add_nat_output', $target) or return;
-   $self->brik_help_run_undef_arg('add_nat_output', $source) or return;
-   $self->brik_help_run_undef_arg('add_nat_output', $destination) or return;
+   $self->brik_help_run_undef_arg('add_nat_output', $rule) or return;
+   $self->brik_help_run_invalid_arg('add_nat_output', $rule, 'HASH') or return;
 
-   return $self->add_nat('OUTPUT', $target, $source, $destination, $protocol, $custom);
+   return $self->add_nat('OUTPUT', $target, $rule);
+}
+
+sub add_nat_output_return {
+   my $self = shift;
+   my ($rule) = @_;
+
+   $self->brik_help_run_undef_arg('add_nat_output_return', $rule) or return;
+   $self->brik_help_run_invalid_arg('add_nat_output_return', $rule, 'HASH') or return;
+
+   return $self->add_nat_output('RETURN', $rule);
+}
+
+sub add_nat_output_redirect {
+   my $self = shift;
+   my ($rule) = @_;
+
+   $self->brik_help_run_undef_arg('add_nat_output_redirect', $rule) or return;
+   $self->brik_help_run_invalid_arg('add_nat_output_redirect', $rule, 'HASH') or return;
+
+   return $self->add_nat_output('REDIRECT', $rule);
+}
+
+sub add_nat_output_dnat {
+   my $self = shift;
+   my ($rule) = @_;
+
+   $self->brik_help_run_undef_arg('add_nat_output_dnat', $rule) or return;
+   $self->brik_help_run_invalid_arg('add_nat_output_dnat', $rule, 'HASH') or return;
+
+   return $self->add_nat_output('DNAT', $rule);
 }
 
 sub add_nat_postrouting {
    my $self = shift;
-   my ($target, $source, $destination, $protocol, $custom) = @_;
+   my ($target, $rule) = @_;
 
    $target ||= $self->target;
-   $protocol ||= $self->protocol;
-   $source ||= $self->source;
-   $destination ||= $self->destination;
    $self->brik_help_run_undef_arg('add_nat_postrouting', $target) or return;
-   $self->brik_help_run_undef_arg('add_nat_postrouting', $source) or return;
-   $self->brik_help_run_undef_arg('add_nat_postrouting', $destination) or return;
+   $self->brik_help_run_undef_arg('add_nat_postrouting', $rule) or return;
+   $self->brik_help_run_invalid_arg('add_nat_postrouting', $rule, 'HASH') or return;
 
-   return $self->add_nat('POSTROUTING', $target, $source, $destination, $protocol, $custom);
+   return $self->add_nat('POSTROUTING', $target, $rule);
 }
 
 sub add_nat_postrouting_masquerade {
    my $self = shift;
-   my ($source, $destination, $protocol, $custom) = @_;
+   my ($rule) = @_;
 
-   $source ||= $self->source;
-   $destination ||= $self->destination;
-   $protocol ||= $self->protocol;
-   $self->brik_help_run_undef_arg('add_nat_postrouting_masquerade', $source) or return;
-   $self->brik_help_run_undef_arg('add_nat_postrouting_masquerade', $destination) or return;
+   $self->brik_help_run_undef_arg('add_nat_postrouting_masquerade', $rule) or return;
+   $self->brik_help_run_invalid_arg('add_nat_postrouting_masquerade', $rule, 'HASH') or return;
 
-   return $self->add_nat_postrouting('MASQUERADE', $source, $destination, $protocol, $custom);
+   return $self->add_nat_postrouting('MASQUERADE', $rule);
+}
+
+sub add_nat_postrouting_dnat {
+   my $self = shift;
+   my ($rule) = @_;
+
+   $self->brik_help_run_undef_arg('add_nat_postrouting_dnat', $rule) or return;
+   $self->brik_help_run_invalid_arg('add_nat_postrouting_dnat', $rule, 'HASH') or return;
+
+   return $self->add_nat_postrouting('DNAT', $rule);
 }
 
 sub add_filter {
    my $self = shift;
-   my ($chain, $target, $source, $destination, $protocol, $custom) = @_;
+   my ($chain, $target, $rule) = @_;
 
    $chain ||= $self->chain;
    $target ||= $self->target;
-   $protocol ||= $self->protocol;
-   $source ||= $self->source;
-   $destination ||= $self->destination;
    $self->brik_help_run_undef_arg('add_filter', $chain) or return;
    $self->brik_help_run_undef_arg('add_filter', $target) or return;
-   $self->brik_help_run_undef_arg('add_filter', $source) or return;
-   $self->brik_help_run_undef_arg('add_filter', $destination) or return;
+   $self->brik_help_run_undef_arg('add_filter', $rule) or return;
+   $self->brik_help_run_invalid_arg('add_filter', $rule, 'HASH') or return;
 
-   return $self->add('filter', $chain, $target, $source, $destination, $protocol, $custom);
+   return $self->add('filter', $chain, $target, $rule);
 }
 
 sub add_filter_output {
    my $self = shift;
-   my ($target, $source, $destination, $protocol, $custom) = @_;
+   my ($target, $rule) = @_;
 
    $target ||= $self->target;
-   $protocol ||= $self->protocol;
-   $source ||= $self->source;
-   $destination ||= $self->destination;
    $self->brik_help_run_undef_arg('add_filter_output', $target) or return;
-   $self->brik_help_run_undef_arg('add_filter_output', $source) or return;
-   $self->brik_help_run_undef_arg('add_filter_output', $destination) or return;
-   $self->brik_help_run_undef_arg('add_filter_output', $protocol) or return;
+   $self->brik_help_run_undef_arg('add_filter_output', $rule) or return;
+   $self->brik_help_run_invalid_arg('add_filter_output', $rule, 'HASH') or return;
 
-   return $self->add_filter('OUTPUT', $target, $source, $destination, $protocol, $custom);
+   return $self->add_filter('OUTPUT', $target, $rule);
 }
 
 sub add_filter_output_accept {
    my $self = shift;
-   my ($source, $destination, $protocol, $custom) = @_;
+   my ($rule) = @_;
 
-   $source ||= $self->source;
-   $destination ||= $self->destination;
-   $protocol ||= $self->protocol;
-   $self->brik_help_run_undef_arg('add_filter_output_accept', $source) or return;
-   $self->brik_help_run_undef_arg('add_filter_output_accept', $destination) or return;
-   $self->brik_help_run_undef_arg('add_filter_output_accept', $protocol) or return;
+   $self->brik_help_run_undef_arg('add_filter_output_accept', $rule) or return;
+   $self->brik_help_run_invalid_arg('add_filter_output_accept', $rule, 'HASH') or return;
 
-   return $self->add_filter_output('ACCEPT', $source, $destination, $protocol, $custom);
+   return $self->add_filter_output('ACCEPT', $rule);
 }
 
 sub add_filter_output_reject {
    my $self = shift;
-   my ($source, $destination, $protocol, $custom) = @_;
+   my ($rule) = @_;
 
-   $source ||= $self->source;
-   $destination ||= $self->destination;
-   $protocol ||= $self->protocol;
-   $self->brik_help_run_undef_arg('add_filter_output_reject', $source) or return;
-   $self->brik_help_run_undef_arg('add_filter_output_reject', $destination) or return;
-   $self->brik_help_run_undef_arg('add_filter_output_reject', $protocol) or return;
+   $self->brik_help_run_undef_arg('add_filter_output_reject', $rule) or return;
+   $self->brik_help_run_invalid_arg('add_filter_output_reject', $rule, 'HASH') or return;
 
-   return $self->add_filter_output('REJECT', $source, $destination, $protocol, $custom);
+   return $self->add_filter_output('REJECT', $rule);
+}
+
+sub del {
+   my $self = shift;
+   my ($table, $chain, $target, $rule) = @_;
+
+   $table ||= $self->table;
+   $chain ||= $self->chain;
+   $target ||= $self->target;
+   $self->brik_help_run_undef_arg('del', $table) or return;
+   $self->brik_help_run_undef_arg('del', $chain) or return;
+   $self->brik_help_run_undef_arg('del', $target) or return;
+   $self->brik_help_run_undef_arg('del', $rule) or return;
+   $self->brik_help_run_invalid_arg('del', $rule, 'HASH') or return;
+
+   my $cmd = $self->_action('-D', $table, $chain, $target, $rule);
+
+   return $self->command($cmd);
+}
+
+sub del_nat {
+   my $self = shift;
+   my ($chain, $target, $rule) = @_;
+
+   $chain ||= $self->chain;
+   $target ||= $self->target;
+   $self->brik_help_run_undef_arg('del_nat', $chain) or return;
+   $self->brik_help_run_undef_arg('del_nat', $target) or return;
+   $self->brik_help_run_undef_arg('del_nat', $rule) or return;
+   $self->brik_help_run_invalid_arg('del_nat', $rule, 'HASH') or return;
+
+   return $self->del('nat', $chain, $target, $rule);
+}
+
+sub del_nat_output {
+   my $self = shift;
+   my ($target, $rule) = @_;
+
+   $target ||= $self->target;
+   $self->brik_help_run_undef_arg('del_nat_output', $target) or return;
+   $self->brik_help_run_undef_arg('del_nat_output', $rule) or return;
+   $self->brik_help_run_invalid_arg('del_nat_output', $rule, 'HASH') or return;
+
+   return $self->del_nat('OUTPUT', $target, $rule);
+}
+
+sub del_nat_output_return {
+   my $self = shift;
+   my ($rule) = @_;
+
+   $self->brik_help_run_undef_arg('del_nat_output_return', $rule) or return;
+   $self->brik_help_run_invalid_arg('del_nat_output_return', $rule, 'HASH') or return;
+
+   return $self->del_nat_output('RETURN', $rule);
+}
+
+sub del_nat_output_redirect {
+   my $self = shift;
+   my ($rule) = @_;
+
+   $self->brik_help_run_undef_arg('del_nat_output_return', $rule) or return;
+   $self->brik_help_run_invalid_arg('del_nat_output_return', $rule, 'HASH') or return;
+
+   return $self->del_nat_output('REDIRECT', $rule);
+}
+
+sub del_nat_output_dnat {
+   my $self = shift;
+   my ($rule) = @_;
+
+   $self->brik_help_run_undef_arg('del_nat_output_return', $rule) or return;
+   $self->brik_help_run_invalid_arg('del_nat_output_return', $rule, 'HASH') or return;
+
+   return $self->del_nat_output('DNAT', $rule);
+}
+
+sub check {
+   my $self = shift;
+   my ($table, $chain, $target, $rule) = @_;
+
+   $table ||= $self->table;
+   $chain ||= $self->chain;
+   $target ||= $self->target;
+   $self->brik_help_run_undef_arg('check', $table) or return;
+   $self->brik_help_run_undef_arg('check', $chain) or return;
+   $self->brik_help_run_undef_arg('check', $target) or return;
+   $self->brik_help_run_undef_arg('check', $rule) or return;
+   $self->brik_help_run_invalid_arg('check', $rule, 'HASH') or return;
+
+   my $cmd = $self->_action('-C', $table, $chain, $target, $rule);
+
+   return $self->command($cmd);
+}
+
+sub check_nat {
+   my $self = shift;
+   my ($chain, $target, $rule) = @_;
+
+   $chain ||= $self->chain;
+   $target ||= $self->target;
+   $self->brik_help_run_undef_arg('check_nat', $chain) or return;
+   $self->brik_help_run_undef_arg('check_nat', $target) or return;
+   $self->brik_help_run_undef_arg('check_nat', $rule) or return;
+   $self->brik_help_run_invalid_arg('check_nat', $rule, 'HASH') or return;
+
+   return $self->check('nat', $chain, $target, $rule);
+}
+
+sub check_nat_output {
+   my $self = shift;
+   my ($target, $rule) = @_;
+
+   $target ||= $self->target;
+   $self->brik_help_run_undef_arg('check_nat_output', $target) or return;
+   $self->brik_help_run_undef_arg('check_nat_output', $rule) or return;
+   $self->brik_help_run_invalid_arg('check_nat_output', $rule, 'HASH') or return;
+
+   return $self->check_nat('OUTPUT', $target, $rule);
+}
+
+sub check_nat_output_return {
+   my $self = shift;
+   my ($rule) = @_;
+
+   $self->brik_help_run_undef_arg('check_nat_output_return', $rule) or return;
+   $self->brik_help_run_invalid_arg('check_nat_output_return', $rule, 'HASH') or return;
+
+   return $self->check_nat_output('RETURN', $rule);
+}
+
+sub check_nat_output_redirect {
+   my $self = shift;
+   my ($rule) = @_;
+
+   $self->brik_help_run_undef_arg('check_nat_output_return', $rule) or return;
+   $self->brik_help_run_invalid_arg('check_nat_output_return', $rule, 'HASH') or return;
+
+   return $self->check_nat_output('REDIRECT', $rule);
+}
+
+sub check_nat_output_dnat {
+   my $self = shift;
+   my ($rule) = @_;
+
+   $self->brik_help_run_undef_arg('check_nat_output_return', $rule) or return;
+   $self->brik_help_run_invalid_arg('check_nat_output_return', $rule, 'HASH') or return;
+
+   return $self->check_nat_output('DNAT', $rule);
+}
+
+sub _redirect_target_to {
+   my $self = shift;
+   my ($action, $target_host_port, $dest_host_port, $protocol) = @_;
+
+   if ($target_host_port =~ m{^\d+$}) {
+      $target_host_port = ":$target_host_port";
+   }
+   if ($dest_host_port =~ m{^\d+$}) {
+      $dest_host_port = ":$dest_host_port";
+   }
+
+   my ($target_host, $target_port) = split(/:/, $target_host_port);
+   $target_host ||= '';
+   $target_port ||= '';
+
+   my ($dest_host, $dest_port) = split(/:/, $dest_host_port);
+   $dest_host ||= '';
+   $dest_port ||= '';
+
+   my $method_return = '';
+   my $method_dnat = '';
+   if ($action eq 'start') {
+      $method_return = 'add_nat_output_return';
+      $method_dnat = 'add_nat_output_dnat';
+   }
+   else {
+      $method_return = 'del_nat_output_return';
+      $method_dnat = 'del_nat_output_dnat';
+   }
+
+   # Add only if it does not exist yet
+   if ($action eq 'start' && ! $self->check_nat_output_return({ state => 'ESTABLISHED' })) {
+      $self->$method_return({ state => 'ESTABLISHED' }) or return;
+   }
+
+   # Use only specified protocol
+   if ($protocol) {
+      my $rule = {
+         destination => $target_host,
+         dest_port => $target_port,
+         to_destination => "$dest_host:$dest_port",
+         protocol => $protocol,
+      };
+      if ($action eq 'start' && ! $self->check_nat_output_dnat($rule)) {
+         $self->$method_dnat($rule) or return;
+      }
+      elsif ($action eq 'stop') {
+         $self->$method_dnat($rule) or return;
+      }
+   }
+   # Or use both tcp and udp
+   else {
+      my $rule_tcp = {
+         destination => $target_host,
+         dest_port => $target_port,
+         to_destination => "$dest_host:$dest_port",
+         protocol => 'tcp',
+      };
+      my $rule_udp = {
+         destination => $target_host,
+         dest_port => $target_port,
+         to_destination => "$dest_host:$dest_port",
+         protocol => 'udp',
+      };
+      if ($action eq 'start' && ! $self->check_nat_output_dnat($rule_tcp)) {
+         $self->$method_dnat($rule_tcp) or return;
+      }
+      elsif ($action eq 'stop') {
+         $self->$method_dnat($rule_tcp) or return;
+      }
+      if ($action eq 'start' && ! $self->check_nat_output_dnat($rule_udp)) {
+         $self->$method_dnat($rule_udp) or return;
+      }
+      elsif ($action eq 'stop') {
+         $self->$method_dnat($rule_udp) or return;
+      }
+   }
+
+   return 1;
+}
+
+sub start_redirect_target_to {
+   my $self = shift;
+   my ($target_host_port, $dest_host_port, $protocol) = @_;
+
+   $self->brik_help_run_undef_arg('start_redirect_target_to', $target_host_port) or return;
+   $self->brik_help_run_undef_arg('start_redirect_target_to', $dest_host_port) or return;
+
+   return $self->_redirect_target_to('start', $target_host_port, $dest_host_port, $protocol);
+}
+
+sub start_redirect_target_tcp_to {
+   my $self = shift;
+   my ($target_host_port, $dest_host_port) = @_;
+
+   $self->brik_help_run_undef_arg('start_redirect_target_tcp_to', $target_host_port) or return;
+   $self->brik_help_run_undef_arg('start_redirect_target_tcp_to', $dest_host_port) or return;
+
+   return $self->start_redirect_target_to($target_host_port, $dest_host_port, 'tcp');
+}
+
+sub start_redirect_target_udp_to {
+   my $self = shift;
+   my ($target_host_port, $dest_host_port) = @_;
+
+   $self->brik_help_run_undef_arg('start_redirect_target_udp_to', $target_host_port) or return;
+   $self->brik_help_run_undef_arg('start_redirect_target_udp_to', $dest_host_port) or return;
+
+   return $self->start_redirect_target_to($target_host_port, $dest_host_port, 'udp');
+}
+
+sub stop_redirect_target_to {
+   my $self = shift;
+   my ($target_host_port, $dest_host_port, $protocol) = @_;
+
+   $self->brik_help_run_undef_arg('stop_redirect_target_to', $target_host_port) or return;
+   $self->brik_help_run_undef_arg('stop_redirect_target_to', $dest_host_port) or return;
+
+   return $self->_redirect_target_to('stop', $target_host_port, $dest_host_port, $protocol);
 }
 
 1;
