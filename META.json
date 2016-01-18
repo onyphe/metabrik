@@ -120,6 +120,9 @@
       "Metabrik::Crypto::Gpg" : {
          "file" : "lib/Metabrik/Crypto/Gpg.pm"
       },
+      "Metabrik::Crypto::Letsencrypt" : {
+         "file" : "lib/Metabrik/Crypto/Letsencrypt.pm"
+      },
       "Metabrik::Crypto::X509" : {
          "file" : "lib/Metabrik/Crypto/X509.pm"
       },
@@ -155,6 +158,9 @@
       },
       "Metabrik::Database::Vfeed" : {
          "file" : "lib/Metabrik/Database/Vfeed.pm"
+      },
+      "Metabrik::Devel::Git" : {
+         "file" : "lib/Metabrik/Devel/Git.pm"
       },
       "Metabrik::Devel::Mercurial" : {
          "file" : "lib/Metabrik/Devel/Mercurial.pm"
