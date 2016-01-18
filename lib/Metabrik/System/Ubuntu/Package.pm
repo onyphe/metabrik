@@ -27,17 +27,18 @@ sub brik_properties {
          list => [ ],
          is_installed => [ qw(package|$package_list) ],
          which => [ qw(file) ],
+         system_update => [ ],
+         system_upgrade => [ ],
       },
       optional_binaries => {
          'aptitude' => [ ],
       },
       require_binaries => {
          'apt-get' => [ ],
-         'dpkg' => [ ],
-         'sudo' => [ ],
+         dpkg => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(aptitude) ],
+         ubuntu => [ qw(aptitude) ],
       },
    };
 }
@@ -64,10 +65,10 @@ sub install {
    my $ref = $self->brik_help_run_invalid_arg('install', $package, 'ARRAY', 'SCALAR')
       or return;
 
-   my $cmd = "sudo apt-get install -y ";
+   my $cmd = 'apt-get install -y ';
    $ref eq 'ARRAY' ? ($cmd .= join(' ', @$package)) : ($cmd .= $package);
 
-   my $r = $self->system($cmd);
+   my $r = $self->sudo_system($cmd);
    if ($r != 1) {
       return $self->log->error("install: unable to install: returned error code: [$r]");
    }
@@ -83,26 +84,26 @@ sub remove {
    my $ref = $self->brik_help_run_invalid_arg('remove', $package, 'ARRAY', 'SCALAR')
       or return;
 
-   my $cmd = "sudo apt-get remove -y ";
+   my $cmd = 'apt-get remove -y ';
    $ref eq 'ARRAY' ? ($cmd .= join(' ', @$package)) : ($cmd .= $package);
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub update {
    my $self = shift;
 
-   my $cmd = "sudo apt-get update";
+   my $cmd = 'apt-get update';
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub upgrade {
    my $self = shift;
 
-   my $cmd = "sudo apt-get dist-upgrade";
+   my $cmd = 'apt-get dist-upgrade';
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub list {
@@ -158,6 +159,20 @@ sub which {
    }
 
    return 'undef';
+}
+
+sub system_update {
+   my $self = shift;
+
+   return 1;
+}
+
+sub system_upgrade {
+   my $self = shift;
+
+   my $cmd = 'do-release-upgrade';
+
+   return $self->sudo_system($cmd);
 }
 
 1;

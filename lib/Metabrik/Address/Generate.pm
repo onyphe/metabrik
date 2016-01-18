@@ -51,20 +51,54 @@ sub brik_init {
    return $self->SUPER::brik_init(@_);
 }
 
+#
+# From zmap blacklist.conf:
+#
+# From IANA IPv4 Special-Purpose Address Registry
+# http://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xhtml
+# Updated 2013-05-22
+#
+# 0.0.0.0/8           # RFC1122: "This host on this network"
+# 10.0.0.0/8          # RFC1918: Private-Use
+# 100.64.0.0/10       # RFC6598: Shared Address Space
+# 127.0.0.0/8         # RFC1122: Loopback
+# 169.254.0.0/16      # RFC3927: Link Local
+# 172.16.0.0/12       # RFC1918: Private-Use
+# 192.0.0.0/24        # RFC6890: IETF Protocol Assignments
+# 192.0.2.0/24        # RFC5737: Documentation (TEST-NET-1)
+# 192.88.99.0/24      # RFC3068: 6to4 Relay Anycast
+# 192.168.0.0/16      # RFC1918: Private-Use
+# 198.18.0.0/15       # RFC2544: Benchmarking
+# 198.51.100.0/24     # RFC5737: Documentation (TEST-NET-2)
+# 203.0.113.0/24      # RFC5737: Documentation (TEST-NET-3)
+# 240.0.0.0/4         # RFC1112: Reserved
+# 255.255.255.255/32  # RFC0919: Limited Broadcast
+#
+# From IANA Multicast Address Space Registry
+# http://www.iana.org/assignments/multicast-addresses/multicast-addresses.xhtml
+# Updated 2013-06-25
+#
+# 224.0.0.0/4         # RFC5771: Multicast/Reserved
+#
 sub ipv4_reserved_ranges {
    my $self = shift;
 
-   # http://www.h-online.com/security/services/Reserved-IPv4-addresses-732899.html
    my @reserved = qw(
       0.0.0.0/8
       10.0.0.0/8
+      100.64.0.0/10
       127.0.0.0/8
       169.254.0.0/16
       172.16.0.0/12
       192.0.2.0/24
+      192.88.99.0/24
       192.168.0.0/16
+      198.18.0.0/15
+      198.51.100.0/24
+      203.0.113.0/24
       224.0.0.0/4
       240.0.0.0/4
+      255.255.255.255/32
    );
 
    return \@reserved;
@@ -88,6 +122,7 @@ sub ipv4_private_ranges {
 sub ipv4_public_ranges {
    my $self = shift;
 
+   # XXX: perform subnet diff from full address space and ipv4_reserved_ranges
    my $reserved = $self->ipv4_reserved_ranges;
 
    return 1;
@@ -99,9 +134,6 @@ sub ipv4_generate_space {
 
    $count ||= $self->count;
    $file_count ||= $self->file_count;
-   if ($count <= 0) {
-      return $self->log->error("ipv4_generate_space: cannot generate [$count] address");
-   }
    if ($file_count <= 0) {
       return $self->log->error("ipv4_generate_space: cannot generate [$file_count] file");
    }
@@ -127,16 +159,22 @@ sub ipv4_generate_space {
 
    my $current = 0;
    # Note: this algorithm is best suited to generate the full IPv4 address space
-   for my $b1 (List::Util::shuffle(1..9,11..126,128..223)) {  # Skip 0.0.0.0/8, 224.0.0.0/4,
-                                                              # 240.0.0.0/4, 10.0.0.0/8,
-                                                              # 127.0.0.0/8
-      for my $b2 (List::Util::shuffle(0..255)) {
-         next if ($b1 == 169 && $b2 == 254);               # Skip 169.254.0.0/16
-         next if ($b1 == 172 && ($b2 >= 16 && $b2 <= 31)); # Skip 172.16.0.0/12
-         next if ($b1 == 192 && $b2 == 168);               # Skip 192.168.0.0/16
-         for my $b3 (List::Util::shuffle(0..255)) {
-            next if ($b1 == 192 && $b2 == 0 && $b3 == 2);  # Skip 192.0.2.0/24
-            for my $b4 (List::Util::shuffle(0..255)) {
+   for my $b4 (List::Util::shuffle(0..255)) {
+      for my $b3 (List::Util::shuffle(0..255)) {
+         for my $b2 (List::Util::shuffle(0..255)) {
+            for my $b1 (List::Util::shuffle(1..9,11..126,128..223)) {
+               # Skip:
+               # 0.0.0.0/8
+               # 10.0.0.0/8
+               # 127.0.0.0/8
+               # 224.0.0.0/4
+               # 240.0.0.0/4
+
+               next if ($b1 == 169 && $b2 == 254);               # Skip 169.254.0.0/16
+               next if ($b1 == 172 && ($b2 >= 16 && $b2 <= 31)); # Skip 172.16.0.0/12
+               next if ($b1 == 192 && $b2 == 168);               # Skip 192.168.0.0/16
+               next if ($b1 == 192 && $b2 == 0 && $b3 == 2);     # Skip 192.0.2.0/24
+
                # Write randomly to one of the previously open files
                my $i;
                ($n > 0) ? ($i = int(rand($n + 1))) : ($i = 0);

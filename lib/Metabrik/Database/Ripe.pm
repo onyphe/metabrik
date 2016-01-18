@@ -42,15 +42,14 @@ sub brik_properties {
 sub update {
    my $self = shift;
 
-   # Other data than RIPE is not available anymore.
-   #ftp://ftp.afrinic.net/dbase/afrinic.db.gz
-   #ftp://ftp.apnic.net/apnic/whois-data/APNIC/split/apnic.db.inetnum.gz
-   #http://ftp.apnic.net/apnic/dbase/data/jpnic.db.gz
-   #http://ftp.apnic.net/apnic/dbase/data/krnic.db.gz
-   #http://ftp.apnic.net/apnic/dbase/data/twnic.in.gz
-   #http://ftp.apnic.net/apnic/dbase/data/twnic.pn.gz
    my @urls = qw(
+      ftp://ftp.apnic.net/apnic/whois/apnic.db.inetnum.gz
       ftp://ftp.ripe.net/ripe/dbase/ripe.db.gz
+      ftp://ftp.afrinic.net/dbase/afrinic.db.gz
+      http://ftp.apnic.net/apnic/dbase/data/jpnic.db.gz
+      http://ftp.apnic.net/apnic/dbase/data/krnic.db.gz
+      http://ftp.apnic.net/apnic/dbase/data/twnic.in.gz
+      http://ftp.apnic.net/apnic/dbase/data/twnic.pn.gz
    );
 
    my $datadir = $self->datadir;
@@ -110,7 +109,14 @@ sub next_record {
    if (@$lines == 0) {
       # If nothing has been read and eof reached, we return undef.
       # Otherwise, we return an empty object.
-      return $fr->eof ? undef : {};
+      if ($fr->eof) {
+         $fr->close;
+         $self->_read(undef);
+         return;
+      }
+      else {
+         return {};
+      }
    }
 
    my %record = ();

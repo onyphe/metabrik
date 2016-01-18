@@ -135,6 +135,31 @@ sub distribution {
             description => $info{DISTRIB_DESCRIPTION}, # Ubuntu 14.10
          };
       }
+      elsif (-f '/etc/redhat-release') {
+         return {
+            name => 'RedHat',  # RedHat
+         };
+      }
+      elsif (-f '/etc/os-release') {
+         return {
+            name => 'OpenSUSE',  # OpenSUSE
+         };
+      }
+      elsif (-f '/etc/arch-release') {
+         return {
+            name => 'ArchLinux',  # ArchLinux
+         };
+      }
+      elsif (-f '/etc/manjaro-release') {
+         return {
+            name => 'Manjaro Linux',  # Manjaro Linux
+         };
+      }
+      elsif (-f '/etc/gentoo-release') {
+         return {
+            name => 'Gentoo',  # Gentoo
+         };
+      }
    }
 
    # Default

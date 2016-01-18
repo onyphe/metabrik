@@ -158,6 +158,8 @@ sub install_needed_packages {
    my $self = shift;
    my ($brik) = @_;
 
+   $self->brik_help_run_undef_arg('install_needed_packages', $brik) or return;
+
    my $con = $self->context;
 
    my $avail = $con->find_available;
@@ -178,6 +180,8 @@ sub install_needed_packages {
 sub install_required_modules {
    my $self = shift;
    my ($brik) = @_;
+
+   $self->brik_help_run_undef_arg('install_required_modules', $brik) or return;
 
    my $con = $self->context;
 

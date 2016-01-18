@@ -7,7 +7,7 @@ package Metabrik::Devel::Mercurial;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -26,6 +26,7 @@ sub brik_properties {
          use_pager => 1,
       },
       commands => {
+         install => [ ], # Inherited
          clone => [ qw(repository directory|OPTIONAL) ],
          push => [ qw(directory|OPTIONAL) ],
          incoming => [ qw(directory|OPTIONAL) ],
@@ -38,7 +39,10 @@ sub brik_properties {
          modified => [ qw(directory|OPTIONAL) ],
       },
       require_binaries => {
-         'hg' => [ ],
+         hg => [ ],
+      },
+      need_packages => {
+         ubuntu => [ qw(mercurial) ],
       },
    };
 }

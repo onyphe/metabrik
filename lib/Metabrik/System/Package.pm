@@ -28,6 +28,8 @@ sub brik_properties {
          is_installed => [ qw(package|$package_list) ],
          my_os => [ ],
          which => [ qw(file) ],
+         system_update => [ ],
+         system_upgrade => [ ],
       },
       require_modules => {
          'Metabrik::System::Os' => [ ],
@@ -120,6 +122,22 @@ sub upgrade {
    my $sp = $self->get_system_package or return;
 
    return $sp->upgrade;
+}
+
+sub system_update {
+   my $self = shift;
+
+   my $sp = $self->get_system_package or return;
+
+   return $sp->system_update;
+}
+
+sub system_upgrade {
+   my $self = shift;
+
+   my $sp = $self->get_system_package or return;
+
+   return $sp->system_upgrade;
 }
 
 sub list {

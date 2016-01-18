@@ -122,10 +122,14 @@ sub range_to_cidr {
    $self->brik_help_run_undef_arg('range_to_cidr', $first) or return;
    $self->brik_help_run_undef_arg('range_to_cidr', $last) or return;
 
-   # IPv4 and IPv6 compliant
-   my @list = Net::CIDR::range2cidr("$first-$last");
+   if ($self->is_ip($first) && $self->is_ip($last)) {
+      # IPv4 and IPv6 compliant
+      my @list = Net::CIDR::range2cidr("$first-$last");
 
-   return \@list;
+      return \@list;
+   }
+
+   return $self->log->error("range_to_cidr: first [$first] or last [$last] not a valid IP address");
 }
 
 sub is_ip {

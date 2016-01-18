@@ -93,7 +93,7 @@ sub today {
    my $m = $a[4] + 1;
    my $d = $a[3];
 
-   return "$y-$m-$d";
+   return sprintf("%04d-%02d-%02d", $y, $m, $d);
 }
 
 sub date {
