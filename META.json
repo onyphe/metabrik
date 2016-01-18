@@ -264,6 +264,9 @@
       "Metabrik::Log::Dual" : {
          "file" : "lib/Metabrik/Log/Dual.pm"
       },
+      "Metabrik::Log::File" : {
+         "file" : "lib/Metabrik/Log/File.pm"
+      },
       "Metabrik::Log::Null" : {
          "file" : "lib/Metabrik/Log/Null.pm"
       },

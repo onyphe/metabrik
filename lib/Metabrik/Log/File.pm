@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# log::dual Brik
+# log::file Brik
 #
-package Metabrik::Log::Dual;
+package Metabrik::Log::File;
 use strict;
 use warnings;
 
@@ -23,9 +23,9 @@ sub brik_properties {
          _fd => [ qw(file_descriptor) ],
       },
       attributes_default => {
-         time_prefix => 0,
-         text_prefix => 0,
-         output => '/tmp/dual.log',
+         time_prefix => 1,
+         text_prefix => 1,
+         output => '/tmp/file.log',
       },
       commands => {
          info => [ qw(string caller|OPTIONAL) ],
@@ -110,7 +110,6 @@ sub warning {
    my $fd = $self->_fd;
 
    print $fd $buffer;
-   print $buffer;
 
    return 1;
 }
@@ -126,7 +125,6 @@ sub error {
    my $fd = $self->_fd;
 
    print $fd $buffer;
-   print $buffer;
 
    # Returning undef is my official way of stating an error occured:
    # Number 0 is for stating a false condition occured, not not error.
@@ -143,7 +141,6 @@ sub fatal {
 
    my $fd = $self->_fd;
 
-   print $fd $buffer;
    die($buffer);
 }
 
@@ -162,7 +159,6 @@ sub info {
    my $fd = $self->_fd;
 
    print $fd $buffer;
-   print $buffer;
 
    return 1;
 }
@@ -180,7 +176,6 @@ sub verbose {
    my $fd = $self->_fd;
 
    print $fd $buffer;
-   print $buffer;
 
    return 1;
 }
@@ -211,7 +206,6 @@ sub debug {
          my $fd = $self->_fd;
 
          print $fd $buffer;
-         print $buffer;
       }
    }
 
@@ -236,7 +230,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Log::Dual - log::dual Brik
+Metabrik::Log::File - log::file Brik
 
 =head1 COPYRIGHT AND LICENSE
 
