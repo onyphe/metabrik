@@ -289,7 +289,7 @@ package $package;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -303,6 +303,7 @@ sub brik_properties {
       attributes_default => {
       },
       commands => {
+         install => [ ],  # Inherited
       },
       require_modules => {
       },
