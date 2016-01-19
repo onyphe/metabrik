@@ -23,6 +23,8 @@ sub brik_properties {
          header => [ qw($column_header_list) ],
          encoding => [ qw(utf8|ascii) ],
          overwrite => [ qw(0|1) ],
+         append => [ qw(0|1) ],
+         write_header => [ qw(0|1) ],
       },
       attributes_default => {
          first_line_is_header => 1,
@@ -30,6 +32,8 @@ sub brik_properties {
          separator => ';',
          encoding => 'utf8',
          overwrite => 1,
+         append => 0,
+         write_header => 1,
       },
       commands => {
          read => [ qw(input_file|OPTIONAL) ],
@@ -99,22 +103,18 @@ sub read {
    return \@rows;
 }
 
+#
+# We only handle array of hashes format (aoh) for writing
+#
 sub write {
    my $self = shift;
    my ($csv_struct, $output) = @_;
 
    $output ||= $self->output;
-   $self->brik_help_run_undef_arg("write", $csv_struct) or return;
-   $self->brik_help_run_undef_arg("write", $output) or return;
-
-   # We handle handle array of hashes format (aoh) for writing
-   if (ref($csv_struct) ne 'ARRAY') {
-      return $self->log->error("write: csv structure is not ARRAY");
-   }
-
-   if (! scalar(@$csv_struct)) {
-      return $self->log->error("write: csv structure is empty, nothing to write");
-   }
+   $self->brik_help_run_undef_arg('write', $csv_struct) or return;
+   $self->brik_help_run_invalid_arg('write', $csv_struct, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('write', $csv_struct, 'ARRAY') or return;
+   $self->brik_help_run_undef_arg('write', $output) or return;
 
    if (ref($csv_struct->[0]) ne 'HASH') {
       return $self->log->error("write: csv structure does not contain HASHes");
@@ -125,14 +125,16 @@ sub write {
    my $fw = Metabrik::File::Write->new_from_brik_init($self) or return;
    $fw->output($output);
    $fw->encoding($self->encoding);
+   $fw->overwrite($self->overwrite);
+   $fw->append($self->append);
    my $fd = $fw->open or return;
 
    my $written = '';
 
-   my $header_written = 0;
+   my $header_set = 0;
    my %order = ();
    for my $this (@$csv_struct) {
-      if (! $header_written) {
+      if (! $header_set) {
          my $idx = 0;
          for my $k (sort { $a cmp $b } keys %$this) {
             $order{$k} = $idx;
@@ -140,9 +142,11 @@ sub write {
          }
          my @header = sort { $a cmp $b } keys %$this;
          my $data = join($self->separator, @header)."\n";
-         print $fd $data;
-         $written .= $data;
-         $header_written++;
+         if ($self->write_header) {
+            print $fd $data;
+            $written .= $data;
+         }
+         $header_set++;
       }
 
       my @fields = ();
@@ -173,9 +177,9 @@ sub get_column_values {
    my $self = shift;
    my ($data, $column) = @_;
 
-   $self->brik_help_run_undef_arg("get_column_values", $data) or return;
-   $self->brik_help_run_undef_arg("get_column_values", $column) or return;
-   $self->brik_help_run_invalid_arg("get_column_values", $data, 'ARRAY') or return;
+   $self->brik_help_run_undef_arg('get_column_values', $data) or return;
+   $self->brik_help_run_invalid_arg('get_column_values', $data, 'ARRAY') or return;
+   $self->brik_help_run_undef_arg('get_column_values', $column) or return;
 
    my @results = ();
    # CSV structure is an ARRAYREF of HASHREFs

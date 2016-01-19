@@ -26,7 +26,6 @@ sub brik_properties {
       },
       commands => {
          update => [ ],
-         save => [ qw($csv_struct output|OPTIONAL) ],
          load => [ qw(input|OPTIONAL) ],
          country_code_types => [ qw($csv_struct) ],
       },
@@ -59,6 +58,12 @@ sub country_code_types {
 #
 sub update {
    my $self = shift;
+   my ($output) = @_;
+
+   $output ||= $self->output;
+   $self->brik_help_run_undef_arg('update', $output) or return;
+
+   my $datadir = $self->datadir;
 
    my $uri = 'http://www.iana.org/domains/root/db';
 
@@ -73,19 +78,14 @@ sub update {
    # </tr>
 
    my @cc = ();
-   while ($html =~ m{<tr class="iana-group-\d+\s+iana-type-\d+">(.*?)</tr>}gcs) {
+   while ($html =~ m{<span class="domain tld">(.*?)</tr>}gcs) {
       my $this = $1;
 
       $this =~ s/\n//g;
 
       $self->debug && $self->log->debug("update: this[$this]");
 
-      #my ($tld, $type, $country, $sponsor) = ($this =~ m{^.*?<a href.*?>(.*?)<.*?<td>(.*?)<.*?<td>(.*?)<.*>(.*?)</span>.*$});
-      my ($tld, $type, $country, $sponsor) = ($this =~ m{^.*?<a href.*?>(.*?)<.*?<td>(.*?)<.*?<td>(.*?)<.*<span.*?>(.*?)</span>.*$});
-
-      #print "tld[$tld]\n";
-      #print "type[$type]\n";
-      #print "sponsor[$sponsor]\n";
+      my ($tld, $type, $country, $sponsor) = ($this =~ m{^.*?<a href.*?>(.*?)<.*?<td>(.*?)<.*?<td>(.*?)<.*$});
 
       push @cc, {
          tld => $tld,
@@ -95,25 +95,13 @@ sub update {
       };
    }
 
-   return \@cc;
-}
-
-sub save {
-   my $self = shift;
-   my ($data, $output) = @_;
-
-   $output ||= $self->output;
-   $self->brik_help_run_undef_arg('save', $data) or return;
-   $self->brik_help_run_undef_arg('save', $output) or return;
-
-   my $datadir = $self->datadir;
-
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
+   $fc->append(0);
    $fc->overwrite(1);
    $fc->encoding('utf8');
 
    my $output_file = $datadir.'/'.$output;
-   $fc->write($data, $output_file) or return;
+   $fc->write(\@cc, $output_file) or return;
 
    return $output_file;
 }

@@ -156,7 +156,7 @@ sub read_until_timeout {
       }
 
       if (my $next = $dump->next) {
-         $self->log->verbose("read_until_timeout: read ".++$read_count." packet(s)");
+         $self->debug && $self->log->debug("read_until_timeout: read ".++$read_count." packet(s)");
          push @next, $next;
          $count++;
       }

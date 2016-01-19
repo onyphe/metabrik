@@ -23,6 +23,7 @@ sub brik_properties {
          top1000 => [ qw(top1000_port_array) ],
          pps => [ qw(pps) ],
          try => [ qw(try) ],
+         bandwidth => [ qw(bandwidth) ],
       },
       attributes_default => { 
          top10 => [ qw(
@@ -122,13 +123,14 @@ sub brik_properties {
          try => 2,
       },
       commands => {
-         tcp_syn => [ qw(ip_list port_list|OPTIONAL) ],
+         estimate_runtime => [ qw($ip_list $port_list|OPTIONAL pps|OPTIONAL try|OPTIONAL) ],
+         estimate_bandwidth => [ qw(pps|OPTIONAL size|OPTIONAL) ],
+         estimate_pps => [ qw(bandwidth|OPTIONAL size|OPTIONAL) ],
+         tcp_syn => [ qw($ip_list $port_list|OPTIONAL pps|OPTIONAL try|OPTIONAL) ],
       },
       require_modules => {
          'Net::Write::Fast' => [ ],
          'Net::Frame::Simple' => [ ],
-         'Net::Frame::Dump' => [ ],
-         'List::Util' => [ ],
          'POSIX' => [ qw(ceil) ],
          'Metabrik::Network::Device' => [ ],
          'Metabrik::Network::Read' => [ ],
@@ -148,57 +150,93 @@ sub brik_use_properties {
    };
 }
 
-sub tcp_syn {
+sub estimate_runtime {
    my $self = shift;
-   my ($ip_list, $port_list, $pps) = @_;
-
-   $pps ||= $self->pps;
-   my $try = $self->try;
-   $self->brik_help_run_undef_arg('tcp_syn', $ip_list) or return;
-   my $refip = $self->brik_help_run_invalid_arg('tcp_syn', $ip_list, 'ARRAY', 'SCALAR')
-      or return;
-
-   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
-
-   if ($refip eq 'ARRAY') {
-      if (@$ip_list == 0) {
-         return $self->log->error("tcp_syn: ARRAY Argument is empty");
-      }
-
-      # We take the ARRAY of elements (IP addresses or subnets)
-      # And convert it to an IP address list
-      my $new_list = [];
-      for my $this (@$ip_list) {
-         if ($na->is_ipv4_subnet($this)) {
-            my $list = $na->ipv4_list($this) or next;
-            push @$new_list, @$list;
-         }
-         #elsif ($na->is_ipv6_subnet($this)) { # XXX: not impl
-            #my $list = $na->ipv6_list($this) or next;
-            #push @$new_list, @$list;
-         #}
-         elsif ($na->is_ip($this)) {
-            push @$new_list, $this;
-         }
-      }
-      $ip_list = $new_list;
-   }
-   else {  # We gave a simple SCALAR
-      if ($na->is_ipv4_subnet($ip_list)) {
-         $ip_list = $na->ipv4_list($ip_list) or return;
-      }
-      #elsif ($na->is_ipv6_subnet($ip_list)) { # XXX: not impl
-         #$ip_list = $na->ipv6_list($ip_list) or return;
-      #}
-      elsif ($na->is_ip($ip_list)) {
-         $ip_list = [ $ip_list ];
-      }
-      else {
-         return $self->log->error("tcp_syn: invalid IP [$ip_list] given");
-      }
-   }
+   my ($ip_list, $port_list, $pps, $try) = @_;
 
    $port_list ||= $self->ports || $self->top100;
+   $pps ||= $self->pps;
+   $try ||= $self->try;
+   $self->brik_help_run_undef_arg('estimate_runtime', $ip_list) or return;
+   $self->brik_help_run_undef_arg('estimate_runtime', $port_list) or return;
+
+   my $runtime = Net::Write::Fast::estimate_runtime({
+      targets => $ip_list,
+      ports => $port_list,
+      pps => $pps,
+      try => $try,
+   }) or return $self->log->error('estimate_runtime: failed');
+
+   return $runtime;
+}
+
+
+sub estimate_bandwidth {
+   my $self = shift;
+   my ($pps, $size) = @_;
+
+   $pps ||= $self->pps;
+   #$size ||= 74; # Ethernet (14) + IP (20), + TCP (20) + TCP options (20)
+   $size ||= 60; # IP (20), + TCP (20) + TCP options (20)
+
+   my $count = $pps * $size;
+
+   if (length($pps) > 8) {
+      $count /= 1_000_000_000;
+      return "${count}G";
+   }
+   elsif (length($pps) > 5) {
+      $count /= 1_000_000;
+      return "${count}M";
+   }
+   elsif (length($pps) > 2) {
+      $count /= 1_000;
+      return "${count}K";
+   }
+
+   return "${count}B";
+}
+
+sub estimate_pps {
+   my $self = shift;
+   my ($bandwidth, $size) = @_;
+
+   $bandwidth ||= $self->bandwidth;
+   #$size ||= 74; # Ethernet (14) + IP (20), + TCP (20) + TCP options (20)
+   $size ||= 60; # IP (20), + TCP (20) + TCP options (20)
+
+   my $count = 0;
+   if ($bandwidth =~ m{B$}) {
+      $bandwidth =~ s/.$//;
+      $count = $bandwidth;
+   }
+   elsif ($bandwidth =~ m{K$}) {
+      $bandwidth =~ s/.$//;
+      $count = $bandwidth * 1_000;
+   }
+   elsif ($bandwidth =~ m{M$}) {
+      $bandwidth =~ s/.$//;
+      $count = $bandwidth * 1_000_000;
+   }
+   elsif ($bandwidth =~ m{G$}) {
+      $bandwidth =~ s/.$//;
+      $count = $bandwidth * 1_000_000_000;
+   }
+
+   return $count / $size;
+}
+
+sub tcp_syn {
+   my $self = shift;
+   my ($ip_list, $port_list, $pps, $try) = @_;
+
+   $port_list ||= $self->ports || $self->top100;
+   $pps ||= $self->pps;
+   $try ||= $self->try;
+   $self->brik_help_run_undef_arg('tcp_syn', $ip_list) or return;
+   $self->brik_help_run_invalid_arg('tcp_syn', $ip_list, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('tcp_syn', $ip_list) or return;
+   $self->brik_help_run_undef_arg('tcp_syn', $port_list, 'ARRAY') or return;
    $self->brik_help_run_invalid_arg('tcp_syn', $port_list, 'ARRAY') or return;
    $self->brik_help_run_empty_array_arg('tcp_syn', $port_list) or return;
 
@@ -211,14 +249,23 @@ sub tcp_syn {
    my $nr = Metabrik::Network::Read->new_from_brik_init($self) or return;
    $nr->rtimeout(1);
 
+   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
+
    my $filter;
    my $use_ipv6 = 0;
    if ($na->is_ipv6($ip_list->[0])) {
+      if (! defined($ip6)) {
+         return $self->log->error("tcp_syn: IPv6 not found for device [".$self->device."]");
+      }
       $self->log->verbose("tcp_syn: using source IPv6 [$ip6]");
       $filter = 'ip6 and dst host '.$ip6;
       $use_ipv6 = 1;
    }
    elsif ($na->is_ipv4($ip_list->[0])) {
+      if (! defined($ip)) {
+         return $self->log->error("tcp_syn: IPv4 not found for device [".$self->device."]");
+      }
+
       $self->log->verbose("tcp_syn: using source IPv4 [$ip]");
       $filter =
          '((tcp[13] & 2 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.')'.
@@ -232,18 +279,18 @@ sub tcp_syn {
 
    $nr->open or return;
 
-   my $n_ports = scalar(@$port_list);
-   my $n_targets = scalar(@$ip_list);
-
-   my $runtime = Net::Write::Fast::estimate_runtime({
-      targets => $ip_list,
-      ports => $port_list,
-      pps => $pps,
-      try => $try,
-   }) or return $self->log->error("tcp_syn: estimate_runtime failed");
-
-   my $string = Net::Write::Fast::runtime_as_string($runtime);
-   $self->log->verbose("tcp_syn: $string");
+   my $estimate = $self->estimate_runtime($ip_list, $port_list, $pps, $try);
+   if (defined($estimate)) {
+      my $string = sprintf(
+         "Estimated runtime: %d day(s) %d hour(s) %d minute(s) %d second(s) for %d host(s)",
+         $estimate->{days},
+         $estimate->{hours},
+         $estimate->{minutes},
+         $estimate->{seconds},
+         $estimate->{nhosts},
+      );
+      $self->log->verbose("tcp_syn: $string");
+   }
 
    my $start = time();
 
@@ -255,6 +302,7 @@ sub tcp_syn {
       $self->debug && $self->log->debug("tcp_syn: son starts its task...");
       # We have to split by chunks of 500_000 elements, to avoid taking to
       # much memory in one row. And there is a SIGSEGV if we don't do so ;)
+      my $n_targets = scalar(@$ip_list);
       my $n_chunks = POSIX::ceil($n_targets / 500_000);
       for my $n (0..$n_chunks-1) {
          my $first = 500_000 * $n;
@@ -289,27 +337,40 @@ sub tcp_syn {
    my %open;
    my %closed;
    while (! $nr->has_timeout) {
-      if (my $next = $nr->read_until_timeout) {
+      if (my $next = $nr->read_until_timeout) {  # Blocking until a timeout occurs
          $self->debug && $self->log->debug("tcp_syn: read_until_timeout has some stuff");
          for my $f (@$next) {
             my $s = Net::Frame::Simple->newFromDump($f);
-            #printf STDERR "flags: 0x%02x\n", $s->ref->{TCP}->flags;
             if ($s->ref->{TCP}) {
                my $ip  = $use_ipv6 ? $s->ref->{IPv6} : $s->ref->{IPv4};
                my $tcp = $s->ref->{TCP};
                if ($tcp->flags == 0x12) { # SYN+ACK
-                  #print STDERR "open: [".$ip->src."]:".$tcp->src."/tcp\n";
-                  $self->log->verbose("tcp_syn: open port [".$ip->src."]:".$tcp->src."/tcp");
+                  $self->debug && $self->log->debug("tcp_syn: open port [".$ip->src."]:".$tcp->src."/tcp");
                   $open{$ip->src}{$tcp->src} = {
+                     ip => $ip->src,
+                     port => $tcp->src,
                      id => $use_ipv6 ? $ip->flowLabel : $ip->id,
                      ttl => $use_ipv6 ? $ip->hopLimit  : $ip->ttl,
                      win => $tcp->win,
                      opt => unpack('H*', $tcp->options),
                      flags => 'SA',
                   };
+                  $self->log->verbose("tcp_syn: ".sprintf(
+                     "tcp  %s  [%-15s]:%-5d   %-5d  %-3d  %-5d  %s",
+                        $open{$ip->src}{$tcp->src}->{flags},
+                        $ip->src,
+                        $tcp->src,
+                        $open{$ip->src}{$tcp->src}->{id},
+                        $open{$ip->src}{$tcp->src}->{ttl},
+                        $open{$ip->src}{$tcp->src}->{win},
+                        $open{$ip->src}{$tcp->src}->{opt},
+                     ),
+                  );
                }
                elsif ($tcp->flags == 0x14) { # RST+ACK
                   $closed{$ip->src}{$tcp->src} = {
+                     ip => $ip->src,
+                     port => $tcp->src,
                      id => $use_ipv6 ? $ip->flowLabel : $ip->id,
                      ttl => $use_ipv6 ? $ip->hopLimit  : $ip->ttl,
                      win => $tcp->win,
@@ -331,37 +392,6 @@ sub tcp_syn {
       }
    }
    
-   for my $ip (keys %open) {
-      my @list = sort { $a <=> $b } keys %{$open{$ip}};
-      for my $port (@list) {
-         printf("tcp  %s  [%-15s]:%-5d   %-5d  %-3d  %-5d  %s\n",
-            $open{$ip}{$port}->{flags},
-            $ip,
-            $port,
-            $open{$ip}{$port}->{id},
-            $open{$ip}{$port}->{ttl},
-            $open{$ip}{$port}->{win},
-            $open{$ip}{$port}->{opt},
-         );
-      }
-   }
-   for my $ip (keys %closed) {
-      my @list = sort { $a <=> $b } keys %{$closed{$ip}};
-      if (@list < 20) {
-         for my $port (@list) {
-            printf("tcp  %s  [%-15s]:%-5d   %-5d  %-3d  %-5d  %s\n",
-               $closed{$ip}{$port}->{flags},
-               $ip,
-               $port,
-               $closed{$ip}{$port}->{id},
-               $closed{$ip}{$port}->{ttl},
-               $closed{$ip}{$port}->{win},
-               $closed{$ip}{$port}->{opt},
-            );
-         }
-      }
-   }
-
    $nr->close;
 
    $self->log->verbose("tcp_syn: completed in ".(time() - $start)." second(s)");

@@ -82,7 +82,11 @@ sub gunzip {
    $fw->encoding('ascii');
    $fw->overwrite(1);
 
-   my $fd = $fw->open($datadir.'/'.$output) or return;
+   if ($output !~ m{^/}) {  # Concatenare with $datadir only when not full path
+      $output = $datadir.'/'.$output;
+   }
+
+   my $fd = $fw->open($output) or return;
 
    my $no_error = 1;
    my $buffer = '';
@@ -113,6 +117,7 @@ sub uncompress {
    $input ||= $self->input;
    $datadir ||= $self->datadir;
    $self->brik_help_run_undef_arg('uncompress', $input) or return;
+   $self->brik_help_run_file_not_found('uncompress', $input) or return;
 
    my $ft = Metabrik::File::Type->new_from_brik_init($self) or return;
    my $type = $ft->get_mime_type($input) or return;

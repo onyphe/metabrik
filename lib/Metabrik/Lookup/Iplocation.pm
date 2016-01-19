@@ -60,7 +60,7 @@ sub update {
       for my $file (@$files) {
          (my $outfile = $file) =~ s/\.gz$//;
          $self->log->verbose("update: uncompressing to [$outfile]");
-         $fc->uncompress($datadir.'/'.$file, $outfile) or next;
+         $fc->uncompress($file, $outfile);
       }
    }
 

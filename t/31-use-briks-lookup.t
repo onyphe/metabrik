@@ -1,6 +1,7 @@
 use Test;
-BEGIN { plan(tests => 9) }
+BEGIN { plan(tests => 10) }
 
+ok(sub { eval("use Metabrik::Lookup::Countrycode"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Lookup::Ethernet"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Lookup::Ip"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Lookup::Iplocation"); $@ ? 0 : 1 }, 1, $@);

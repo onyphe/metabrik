@@ -335,12 +335,12 @@ sub is_ipv4_subnet {
 
    my ($address, $cidr) = $subnet =~ m{^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/(\d+)$};
    if (! defined($address) || ! defined($cidr)) {
-      $self->log->verbose("is_ipv4_subnet: not a subnet [$subnet]");
+      $self->debug && $self->log->debug("is_ipv4_subnet: not a subnet [$subnet]");
       return 0;
    }
 
    if ($cidr < 0 || $cidr > 32) {
-      $self->log->verbose("is_ipv4_subnet: not a valid CIDR mask [$cidr]");
+      $self->debug && $self->log->debug("is_ipv4_subnet: not a valid CIDR mask [$cidr]");
       return 0;
    }
 

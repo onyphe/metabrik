@@ -32,20 +32,19 @@ sub brik_properties {
          random_ipv4_addresses => [ qw(count|OPTIONAL) ],
       },
       require_modules => {
+         'BSD::Resource' => [ qw(getrlimit setrlimit) ],
          'List::Util' => [ qw(shuffle) ],
       },
-      #require_binaries => {
-         #'ulimit' => [ ],   # It is built-in
-      #},
    };
 }
 
 sub brik_init {
    my $self = shift;
 
-   # Increase the max open files limit under Linux
-   if ($^O eq 'Linux') {
-      `ulimit -n 2048`;
+   my $limit = 16_384;
+   my $r = BSD::Resource::setrlimit(BSD::Resource::RLIMIT_OPEN_MAX(), $limit, $limit);
+   if (! defined($r)) {
+      return $self->log->error("brik_init: failed to set open file limit to [$limit]");
    }
 
    return $self->SUPER::brik_init(@_);
@@ -143,8 +142,9 @@ sub ipv4_generate_space {
 
    my @chunks = ();
    if ($n > 0) {
+      my $size = length($n);
       for (0..$n) {
-         my $file = sprintf("ip4-space-%03d.txt", $_);
+         my $file = sprintf("ip4-space-%0${size}d.txt", $_);
          open(my $fd, '>', "$datadir/$file")
             or return $self->log->error("ipv4_generate_space: open: file [$datadir/$file]: $!");
          push @chunks, $fd;

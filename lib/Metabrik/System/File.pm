@@ -123,7 +123,18 @@ sub sudo_copy {
 }
 
 sub move {
-#eval('use File::Copy qw(mv);');
+   my $self = shift;
+   my ($source, $destination) = @_;
+
+   $self->brik_help_run_undef_arg('move', $source) or return;
+   $self->brik_help_run_undef_arg('move', $destination) or return;
+
+   my $r = File::Copy::mv($source, $destination);
+   if (! $r) {
+      return $self->log->error("move: failed moving [$source] to [$destination]: error [$!]");
+   }
+
+   return $destination;
 }
 
 sub remove {

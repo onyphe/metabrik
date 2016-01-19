@@ -20,6 +20,7 @@ sub brik_properties {
          output => [ qw(file) ],
          as_array => [ qw(0|1) ],
          strip_crlf => [ qw(0|1) ],
+         _fr => [ qw(INTERNAL) ],
       },
       # encoding: see `perldoc Encode::Supported' for other types
       attributes_default => {
@@ -29,6 +30,7 @@ sub brik_properties {
       },
       commands => {
          read => [ qw(input) ],
+         read_line => [ qw(input count|OPTIONAL) ],
          read_split_by_blank_line => [ qw(input) ],
          write => [ qw($data|$data_ref|$data_list output) ],
       },
@@ -38,6 +40,24 @@ sub brik_properties {
    };
 }
 
+sub _open {
+   my $self = shift;
+   my ($input) = @_;
+
+   my $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
+   $fr->input($input);
+   $fr->encoding($self->encoding);
+   $fr->as_array($self->as_array);
+   $fr->strip_crlf($self->strip_crlf);
+
+   $fr->open or return;
+
+   return $fr;
+}
+
+#
+# Read everything available
+#
 sub read {
    my $self = shift;
    my ($input) = @_;
@@ -45,19 +65,57 @@ sub read {
    $input ||= $self->input;
    $self->brik_help_run_undef_arg('read', $input) or return;
 
-   my $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
-   $fr->input($input);
-   $fr->encoding($self->encoding);
-   $fr->as_array($self->as_array);
-   $fr->strip_crlf($self->strip_crlf);
-
-   $fr->open or return;
+   my $fr = $self->_open($input) or return;
    my $data = $fr->read or return;
    $fr->close;
 
    return $data;
 }
 
+#
+# Just return next available line
+#
+sub read_line {
+   my $self = shift;
+   my ($input, $count) = @_;
+
+   $input ||= $self->input;
+   $count ||= 1;
+   $self->brik_help_run_undef_arg('read_line', $input) or return;
+   $self->brik_help_run_file_not_found('read_line', $input) or return;
+
+   my $fr = $self->_fr;
+   if (! $fr) {
+      $fr = $self->_open($input) or return;
+      $self->_fr($fr);
+   }
+
+   my $data;
+   my @lines = ();
+   if ($count > 1) {
+      for (1..$count) {
+         $data = $fr->read_line;
+         if ($fr->eof) {
+            $fr->close;
+            $self->_fr(undef);
+         }
+         push @lines, $data;
+      }
+   }
+   else {
+      $data = $fr->read_line;
+      if ($fr->eof) {
+         $fr->close;
+         $self->_fr(undef);
+      }
+   }
+
+   return $count > 1 ? \@lines : $data;
+}
+
+#
+# Will read everything until eof
+#
 sub read_split_by_blank_line {
    my $self = shift;
    my ($input) = @_;
@@ -65,13 +123,7 @@ sub read_split_by_blank_line {
    $input ||= $self->input;
    $self->brik_help_run_undef_arg('read_split_by_blank_line', $input) or return;
 
-   my $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
-   $fr->input($input);
-   $fr->encoding($self->encoding);
-   $fr->as_array($self->as_array);
-   $fr->strip_crlf($self->strip_crlf);
-
-   $fr->open or return;
+   my $fr = $self->_open($input) or return;
 
    my @chunks = ();
    while (my $this = $fr->read_until_blank_line) {
@@ -91,8 +143,6 @@ sub write {
    $output ||= $self->output;
    $self->brik_help_run_undef_arg('write', $data) or return;
    $self->brik_help_run_undef_arg('write', $output) or return;
-
-   $self->debug && $self->log->debug("write: data[$data]");
 
    $self->open($output) or return;
    $self->SUPER::write($data) or return;

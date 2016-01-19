@@ -576,6 +576,10 @@ sub mirror {
          return $self->log->error("mirror: invalid URL [$url]");
       }
 
+      if ($output !~ m{^/}) {  # We want default datadir for output file
+         $output = $datadir.'/'.$output;
+      }
+
       $self->debug && $self->log->debug("mirror: url[$url] output[$output]");
 
       my $mech = $self->create_user_agent or return;
@@ -584,7 +588,7 @@ sub mirror {
 
       my $rc;
       eval {
-         $rc = $mech->mirror($url, $datadir.'/'.$output);
+         $rc = $mech->mirror($url, $output);
       };
       if ($@) {
          chomp($@);
@@ -592,9 +596,8 @@ sub mirror {
       }
       my $code = $rc->code;
       if ($code == 200) {
-         my $file = $datadir.'/'.$output;
-         push @files, $file;
-         $self->log->info("mirror: downloading URL [$url] to local file [$file] done");
+         push @files, $output;
+         $self->log->info("mirror: downloading URL [$url] to local file [$output] done");
       }
       elsif ($code == 304) { # Not modified
          $self->log->info("mirror: file [$output] not modified since last check");

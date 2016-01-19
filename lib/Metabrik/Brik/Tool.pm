@@ -213,14 +213,15 @@ sub create_tool {
    my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
 
    my $data =<<EOF
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 # \$Id\$
 #
 use strict;
 use warnings;
 
-use lib qw($repository/lib);
+# Uncomment to use a custom repository
+#use lib qw($repository/lib);
 
 use Data::Dumper;
 use Metabrik::Core::Context;
