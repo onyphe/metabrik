@@ -151,14 +151,17 @@ sub read_until_timeout {
    my $read_count = 0;
    my @next = ();
    while (! $dump->timeout) {
-      if ($count && $read_count == $count) {
-         last;
-      }
-
       if (my $next = $dump->next) {
-         $self->debug && $self->log->debug("read_until_timeout: read ".++$read_count." packet(s)");
+         $read_count++;
+
+         $self->debug && $self->log->debug("read_until_timeout: read $read_count packet(s)");
+
          push @next, $next;
-         $count++;
+
+         if ($count && ($read_count >= $count)) {
+            $self->debug && $self->log->debug("read_until_timeout: we read $read_count packet(s), we return");
+            last;
+         }
       }
    }
 

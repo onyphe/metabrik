@@ -35,10 +35,10 @@ sub brik_properties {
          'Metabrik::File::Write' => [ ],
       },
       require_binaries => {
-         'unzip' => [ ],
+         unzip => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(unzip) ],
+         ubuntu => [ qw(unzip) ],
       },
    };
 }

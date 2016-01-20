@@ -7,7 +7,7 @@ package Metabrik::String::Compress;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -23,11 +23,15 @@ sub brik_properties {
          memory_limit => '1_000_000_000', # XXX: to implement
       },
       commands => {
+         install => [ ],  # Inherited
          gunzip => [ qw($data) ],
          gzip => [ qw($data) ],
       },
       require_modules => {
          'Gzip::Faster' => [ ],
+      },
+      need_packages => {
+         ubuntu => [ qw(libz-dev) ],
       },
    };
 }

@@ -34,6 +34,11 @@ sub brik_properties {
          cat => [ qw(source destination) ],
          create => [ qw(file size) ],
          glob => [ qw(pattern) ],
+         is_relative => [ qw(path) ],
+         is_absolute => [ qw(path) ],
+         to_absolute_path => [ qw(path basepath|OPTIONAL) ],
+         basefile => [ qw(path) ],
+         basedir => [ qw(path) ],
       },
       require_modules => {
          'File::Copy' => [ qw(mv copy) ],
@@ -196,6 +201,74 @@ sub glob {
    my @list = CORE::glob("$pattern");
 
    return \@list;
+}
+
+sub is_relative {
+   my $self = shift;
+   my ($path) = @_;
+
+   $self->brik_help_run_undef_arg('is_relative', $path) or return;
+
+   my $r = File::Spec->file_name_is_absolute($path);
+
+   # We negate it, cause we want the opposite of this function
+   return $r ? 0 : 1;
+}
+
+sub is_absolute {
+   my $self = shift;
+   my ($path) = @_;
+
+   $self->brik_help_run_undef_arg('is_absolute', $path) or return;
+
+   # We negate it, cause we want the opposite of this function
+   return $self->is_relative($path) ? 0 : 1;
+}
+
+sub to_absolute_path {
+   my $self = shift;
+   my ($path, $base) = @_;
+
+   $self->brik_help_run_undef_arg('to_absolute_path', $path) or return;
+
+   return File::Spec->rel2abs($path, $base);
+}
+
+#
+# Returns the file part of a path (maybe be a directory)
+#
+sub basefile {
+   my $self = shift;
+   my ($path) = @_;
+
+   $self->brik_help_run_undef_arg('basename', $path) or return;
+
+   # Remove any trailing /
+   $path =~ s{/*$}{};
+
+   my ($volume, $directories, $file) = File::Spec->splitpath($path);
+
+   return $file;
+}
+
+#
+# Returns the directory part of a path
+#
+sub basedir {
+   my $self = shift;
+   my ($path) = @_;
+
+   $self->brik_help_run_undef_arg('basename', $path) or return;
+
+   # Remove any trailing /
+   $path =~ s{/*$}{};
+
+   my ($volume, $directories, $file) = File::Spec->splitpath($path);
+
+   # Remove any trailing /
+   $directories =~ s{/*$}{};
+
+   return $directories;
 }
 
 1;

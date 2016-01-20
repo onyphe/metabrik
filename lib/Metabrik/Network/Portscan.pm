@@ -247,6 +247,7 @@ sub tcp_syn {
    my $ip6 = $get->{ipv6};
 
    my $nr = Metabrik::Network::Read->new_from_brik_init($self) or return;
+   #$nr->debug($self->debug); # Apply debug to this Brik also.
    $nr->rtimeout(1);
 
    my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
@@ -311,14 +312,19 @@ sub tcp_syn {
             $last = $n_targets - 1;
          }
 
+         # By default, we think we scan less than 500_000 hosts
+         my $target_list = $ip_list;
+
+         # But if we don't, we cut in chunks and $target_list gets a slice
          if ($n_chunks > 1) {
+            my @this = @$ip_list[$first..$last];
+            $target_list = \@this;
             $self->log->verbose("tcp_syn: scanning chunk @{[$n+1]}/@{[($n_chunks)]} ($first-$last)");
          }
 
-         my @this = @$ip_list[$first..$last];
          my $r = Net::Write::Fast::l4_send_tcp_syn_multi(
             $use_ipv6 ? $ip6 : $ip,
-            \@this,
+            $target_list,
             $port_list,
             $pps,
             $try,
@@ -337,7 +343,9 @@ sub tcp_syn {
    my %open;
    my %closed;
    while (! $nr->has_timeout) {
-      if (my $next = $nr->read_until_timeout) {  # Blocking until a timeout occurs
+      # We blocking until X frames are read or a 1 second timeout has occured
+      # X is calcluted as a tenth of the pps rate.
+      if (my $next = $nr->read_until_timeout($pps / 10, 1)) {  
          $self->debug && $self->log->debug("tcp_syn: read_until_timeout has some stuff");
          for my $f (@$next) {
             my $s = Net::Frame::Simple->newFromDump($f);
@@ -345,7 +353,6 @@ sub tcp_syn {
                my $ip  = $use_ipv6 ? $s->ref->{IPv6} : $s->ref->{IPv4};
                my $tcp = $s->ref->{TCP};
                if ($tcp->flags == 0x12) { # SYN+ACK
-                  $self->debug && $self->log->debug("tcp_syn: open port [".$ip->src."]:".$tcp->src."/tcp");
                   $open{$ip->src}{$tcp->src} = {
                      ip => $ip->src,
                      port => $tcp->src,
