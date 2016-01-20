@@ -139,6 +139,10 @@ sub restart {
    return 1;
 }
 
+sub remove {
+# XXX: ubuntu: update-rc.d <service> remove
+}
+
 sub my_os {
    my $self = shift;
 

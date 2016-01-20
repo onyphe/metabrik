@@ -24,6 +24,7 @@ sub brik_properties {
          pps => [ qw(pps) ],
          try => [ qw(try) ],
          bandwidth => [ qw(bandwidth) ],
+         wait => [ qw(seconds) ],
       },
       attributes_default => { 
          top10 => [ qw(
@@ -121,6 +122,7 @@ sub brik_properties {
          ) ],
          pps => 10_000,
          try => 2,
+         wait => 5, # Wait 5 seconds for last packet
       },
       commands => {
          estimate_runtime => [ qw($ip_list $port_list|OPTIONAL pps|OPTIONAL try|OPTIONAL) ],
@@ -240,6 +242,8 @@ sub tcp_syn {
    $self->brik_help_run_invalid_arg('tcp_syn', $port_list, 'ARRAY') or return;
    $self->brik_help_run_empty_array_arg('tcp_syn', $port_list) or return;
 
+   my $wait = $self->wait;
+
    my $nd = Metabrik::Network::Device->new_from_brik_init($self) or return;
    my $get = $nd->get($self->device) or return;
 
@@ -248,19 +252,30 @@ sub tcp_syn {
 
    my $nr = Metabrik::Network::Read->new_from_brik_init($self) or return;
    #$nr->debug($self->debug); # Apply debug to this Brik also.
-   $nr->rtimeout(1);
 
    my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
 
    my $filter;
    my $use_ipv6 = 0;
    if ($na->is_ipv6($ip_list->[0])) {
+      $use_ipv6 = 1;
       if (! defined($ip6)) {
          return $self->log->error("tcp_syn: IPv6 not found for device [".$self->device."]");
       }
+
       $self->log->verbose("tcp_syn: using source IPv6 [$ip6]");
-      $filter = 'ip6 and dst host '.$ip6;
-      $use_ipv6 = 1;
+
+      $filter = 'tcp and (ip6 and dst host '.$ip6.')';
+      # If only a few ports specified, we use that in the filter
+      if (@$port_list <= 10) {
+         $filter .= " and (";
+         for (@$port_list) {
+            $filter .= "src port $_ or ";
+         }
+         $filter =~ s/ or $/)/;
+      }
+
+      $self->log->verbose("tcp_syn: using filter [$filter]");
    }
    elsif ($na->is_ipv4($ip_list->[0])) {
       if (! defined($ip)) {
@@ -268,10 +283,22 @@ sub tcp_syn {
       }
 
       $self->log->verbose("tcp_syn: using source IPv4 [$ip]");
+
       $filter =
-         '((tcp[13] & 2 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.')'.
+         'tcp and (((tcp[13] & 2 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.')'.
          ' or '.
-         '((tcp[13] & 4 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.')';
+         '((tcp[13] & 4 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.'))';
+
+      # If only a few ports specified, we use that in the filter
+      if (@$port_list <= 10) {
+         $filter .= " and (";
+         for (@$port_list) {
+            $filter .= "src port $_ or ";
+         }
+         $filter =~ s/ or $/)/;
+      }
+
+      $self->log->verbose("tcp_syn: using filter [$filter]");
    }
    else {
       return $self->log->error("tcp_syn: invalid IP address in ip_list");
@@ -339,13 +366,16 @@ sub tcp_syn {
       exit(0);
    }
 
+   $self->log->verbose("tcp_syn: father starts");
+
    # Father: analyse received frames
    my %open;
    my %closed;
    while (! $nr->has_timeout) {
-      # We blocking until X frames are read or a 1 second timeout has occured
-      # X is calcluted as a tenth of the pps rate.
-      if (my $next = $nr->read_until_timeout($pps / 10, 1)) {  
+      # We blocking until X frames are read or a Y second timeout has occured
+      # X is calcluted as a ratio of the pps rate.
+      $self->debug && $self->log->debug("tcp_syn: waiting stuff");
+      if (my $next = $nr->read_until_timeout($pps / 30, $wait)) {  
          $self->debug && $self->log->debug("tcp_syn: read_until_timeout has some stuff");
          for my $f (@$next) {
             my $s = Net::Frame::Simple->newFromDump($f);
