@@ -328,18 +328,19 @@ sub tcp_syn {
 
    if (! $pid) { # Son
       $self->debug && $self->log->debug("tcp_syn: son starts its task...");
-      # We have to split by chunks of 500_000 elements, to avoid taking to
+      # We have to split by chunks of $chunk_size elements, to avoid taking to
       # much memory in one row. And there is a SIGSEGV if we don't do so ;)
+      my $chunk_size = 1_000_000; # We can load that much into a ARRAYREF before a SIGSEGV
       my $n_targets = scalar(@$ip_list);
-      my $n_chunks = POSIX::ceil($n_targets / 500_000);
+      my $n_chunks = POSIX::ceil($n_targets / $chunk_size);
       for my $n (0..$n_chunks-1) {
-         my $first = 500_000 * $n;
-         my $last = 499_999 + (500_000 * $n);
+         my $first = $chunk_size * $n;
+         my $last = ($chunk_size - 1) + ($chunk_size * $n);
          if ($last > ($n_targets - 1)) {
             $last = $n_targets - 1;
          }
 
-         # By default, we think we scan less than 500_000 hosts
+         # By default, we think we scan less than $chunk_size hosts
          my $target_list = $ip_list;
 
          # But if we don't, we cut in chunks and $target_list gets a slice
