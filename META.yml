@@ -171,6 +171,8 @@ provides:
     file: lib/Metabrik/Log/File.pm
   Metabrik::Log::Null:
     file: lib/Metabrik/Log/Null.pm
+  Metabrik::Lookup::Alexa:
+    file: lib/Metabrik/Lookup/Alexa.pm
   Metabrik::Lookup::Countrycode:
     file: lib/Metabrik/Lookup/Countrycode.pm
   Metabrik::Lookup::Ethernet:

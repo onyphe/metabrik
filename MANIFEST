@@ -81,6 +81,7 @@ lib/Metabrik/Image/Jpg.pm
 lib/Metabrik/Log/Dual.pm
 lib/Metabrik/Log/File.pm
 lib/Metabrik/Log/Null.pm
+lib/Metabrik/Lookup/Alexa.pm
 lib/Metabrik/Lookup/Countrycode.pm
 lib/Metabrik/Lookup/Ethernet.pm
 lib/Metabrik/Lookup/Iplocation.pm
