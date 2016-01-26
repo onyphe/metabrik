@@ -1,21 +1,27 @@
+20160126
+   AFFECTS: file::compress
+
+   - file::compress uncompress Command always returns an ARRAY of uncompressed files
+   - file::compress unzip Command always returns an ARRAY of uncompressed files
+
 20160116
-   AFFECT: network::tor
+   AFFECTS: network::tor
 
    - network::tor obsolete, exit_nodes_list Command moved to server::tor list_exit_nodes Command
 
 20160111
-   AFFECT: network::iptables
+   AFFECTS: network::iptables
 
    - network::iptables Brik renamed to network::linux::iptables
 
 20160109
-   AFFECT: remote::wmi
+   AFFECTS: remote::wmi
 
    - remote::wmi execute Command moved to its own Brik called remote::winexe
    - remote::wmi request Command now returns an ARRAY of HASHes with parsed output
 
 20151230
-   AFFECT: client::ssh, database::sqlite, shell::history, shell::rc, shell::script,
+   AFFECTS: client::ssh, database::sqlite, shell::history, shell::rc, shell::script,
            system::docker, system::freebsd::jail, log::dual, network::sqlmap
 
    - all renamed exec and load_and_exec Commands to execute and load_and_execute
@@ -23,42 +29,42 @@
    - network::sqlmap renamed output_file Attribute to output
 
 20151228
-   AFFECT: network::address
+   AFFECTS: network::address
 
    - network::address renamed ipv4_routable_ranges Command to ipv4_public_ranges
 
 20151226
-   AFFECT: convert::video
+   AFFECTS: convert::video
 
    - convert::video renamed to video::convert
 
 20151220
-   AFFECT: shell::rc, shell::script
+   AFFECTS: shell::rc, shell::script
 
    - shell::rc renamed file Attribute to input
    - shell::script renamed file Attribute to input
 
 20151215
-   AFFECT: brik::tool, system::file
+   AFFECTS: brik::tool, system::file
 
    - brik::tool renamed install_ubuntu_packages to install_packages
    - system::file get_mime_type, get_magic_type, is_mime_type and is_magic_type Commands
      moved to new file::type Brik
 
 20151203
-   AFFECT: brik::tool
+   AFFECTS: brik::tool
 
    - brik::tool renamed install_perl_modules Command to install_modules
 
 20151129
-   AFFECT: file::create, file::fetch, server::agent
+   AFFECTS: file::create, file::fetch, server::agent
 
    - file::create merged with system::file
    - file::fetch merged with client::www (get Command is now mirror Command)
    - server::agent is obsolete
 
 20151128
-   AFFECT: network::arp, network::grep, network::read, file::pcap
+   AFFECTS: network::arp, network::grep, network::read, file::pcap
 
    - network::arp renamed max_read Attribute to count
    - network::grep renamed from_string Command to from_network
@@ -68,34 +74,34 @@
    - file::pcap read_next Command now always returns an ARRAY
 
 20151126
-   AFFECT: network::dns
+   AFFECTS: network::dns
 
    - network::dns renamed check_version Command to version_bind
    - network::dns version_bind now returns only a SCALAR with $version and not a HASHREF
 
 20151122
-   AFFECT: network::read
+   AFFECTS: network::read
 
    - network::read renamed next Command to read_next
    - network::read renamed next_until_timeout Command to read_until_timeout
 
 20151121
-   AFFECT: database::vfeed
+   AFFECTS: database::vfeed
 
    - database::vfeed vfeed_version renamed to db_version
 
 20151118
-   AFFECT: network::arp
+   AFFECTS: network::arp
 
    - network::arp: timeout Attribute renamed to rtimeout for normalization purposes
 
 20151115
-   AFFECT: address::generate
+   AFFECTS: address::generate
 
    - address::generate ip_count Attribute renamed to count
 
 20151112
-   AFFECT: client::dns, client::ssh, client::udp, client::tcp, client::whois, email::mbox, file::read
+   AFFECTS: client::dns, client::ssh, client::udp, client::tcp, client::whois, email::mbox, file::read
 
    - client::dns timeout Attribute renamed to rtimeout (timeout Attribute is used to tag 
      a specific error condition  like eof Attribute)
@@ -109,7 +115,7 @@
    - file::read renamed readall Command to read
 
 20151110
-   AFFECT: audit::dns, client::rest
+   AFFECTS: audit::dns, client::rest
 
    - audit::dns Commands (all Commands) now return different content for results. Example:
      version Command: return { $nameserver => 'undef' }; # If the server does not support
@@ -117,7 +123,7 @@
    - client::rest: default output mode switched from XML to JSON
 
 20151031
-   AFFECT: remote::ssh2
+   AFFECTS: remote::ssh2
 
    - remote::ssh2 renamed to client::ssh
 
@@ -125,23 +131,23 @@
    Metabrik 1.10 released
 
 20151011
-   AFFECT: network::arp
+   AFFECTS: network::arp
 
    - network::arp scan Command now returns a hashref with results sorted 
      with keys named by_mac, by_ipv4 and by_ipv6
 
 20151003
-   AFFECT: network::rsync
+   AFFECTS: network::rsync
 
    - network::rsync renamed to client::rsync
 
 20150418
-   AFFECT: crypto::x509
+   AFFECTS: crypto::x509
 
    - Argument order changed for ca_sign_csr and cert_verify Commands
 
 20150322
-   AFFECT: file::csv
+   AFFECTS: file::csv
 
    - removed get_col_by_name and get_col_by_number obsolete Commands
 
@@ -149,24 +155,24 @@
    Metabrik 1.08 released
 
 20150316
-   AFFECT: http::proxy, iana::countrycode, network::arpdiscover
+   AFFECTS: http::proxy, iana::countrycode, network::arpdiscover
 
    - http::proxy Brik renamed to proxy::http
    - iana::countrycode Brik renamed lookup::countrycode
    - network::arpdiscover removed: merged with network::arp
 
 20150311
-   AFFECT: client::www
+   AFFECTS: client::www
 
    - post Command returns an HASHREF i/o of WWW::Mechanize object
 
 20150309
-   AFFECT: network::portscan
+   AFFECTS: network::portscan
 
    - synscan Command renamed to tcp_syn
 
 20150226
-   AFFECT: lookup::ethernet, lookup::ip, lookup::*
+   AFFECTS: lookup::ethernet, lookup::ip, lookup::*
 
    - string Command renamed to from_string
    - int Command renamed to from_dec
@@ -174,30 +180,30 @@
    - from_* Commands return 'unknown' in case no match is found instead of undef
 
 20150220
-   AFFECT: network::whois
+   AFFECTS: network::whois
 
    - rename domain Command to target
 
 20150217
-   AFFECT: network::frame
+   AFFECTS: network::frame
 
    - interface Attribute renamed to device_info
    - update_interface Command renamed to update_device_info
 
 20150216
-   AFFECT: network::device
+   AFFECTS: network::device
 
    - list Command returns an ARRAY of available devices
    - get Command returns a HASH of attributes for a given device
    - default Command returns default device name or a list of possible default names
 
 20150210
-   AFFECT: file::compress
+   AFFECTS: file::compress
 
    - unzip/gunzip Commands return $datadir instead of System Command result
 
 20150124
-   AFFECT: database::elasticsearch, system::os
+   AFFECTS: database::elasticsearch, system::os
 
    - database::elasticsearch search Command renamed to query
    - database::elasticsearch new Command: search using query string
@@ -205,18 +211,18 @@
    - system::os arch Command now returns an ARRAYREF with arch name and number of bits
 
 20150122
-   AFFECT: database::elasticsearch, file::csv
+   AFFECTS: database::elasticsearch, file::csv
 
    - database::elasticsearch open Command now returns connected nodes as an ARRAYREF
    - file::csv read Command now returns partial data in case of incomplete read
 
 20150116
-   AFFECT: network::dns
+   AFFECTS: network::dns
 
    - network::dns lookup Command now takes host, query type and nameserver as Arguments
 
 20150107
-   AFFECT: address:generate, convert::video, file::compress, server::http
+   AFFECTS: address:generate, convert::video, file::compress, server::http
 
    - address::generate output_directory Attribute renamed to datadir
    - conver::video output_directory Attribute renamed to datadir
@@ -224,7 +230,7 @@
    - server::http root_directory Attribute renamed to datadir
 
 20150104
-   AFFECT: database::cwe, database::keystore, file::json, iana::countrycode, log::dual
+   AFFECTS: database::cwe, database::keystore, file::json, iana::countrycode, log::dual
 
    NOTE: require_used property is now deprecated
 
@@ -237,7 +243,7 @@
    - log::dual error Command returns undef to state an error condition
 
 20141231
-   AFFECT: file::csv
+   AFFECTS: file::csv
 
    - switching from using Text::CSV::Hashify to Text::CSV
    - renamed has_header Attribute to first_line_is_header
@@ -247,12 +253,12 @@
    - read Command can now returns an ARRAY of HASHes or an ARRAY of ARRAYs
 
 20141229
-   AFFECT: string::uri
+   AFFECTS: string::uri
 
    - parse Command returns an HASHREF instead of a URI object
 
 20141227
-   AFFECT: time::universal
+   AFFECTS: time::universal
 
    - renamed timezone_list Command to list_timezones
    - renamed timezone_search Command to search_timezone
@@ -261,7 +267,7 @@
    - removed timezone_show Command
 
 20141220
-   AFFECT: database::nvd
+   AFFECTS: database::nvd
 
    - removed Attributes uri_* and xml_*
    - renamed xml Attribute to loaded_xml
@@ -270,7 +276,7 @@
    - search_by_cpe Command renamed to cpe_search
 
 20141216
-   AFFECT: network::address
+   AFFECTS: network::address
 
    - removed default value for subnet Attribute
    - block Command removed
@@ -279,7 +285,7 @@
    - last Command renamed to broadcast_address
 
 20141129
-   AFFECT: address::netmask, network::netbios
+   AFFECTS: address::netmask, network::netbios
 
    - address::netmask renamed to network::address
    - network::netbios nodestatus Command renamed to probe Command
