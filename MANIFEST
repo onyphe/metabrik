@@ -22,8 +22,8 @@ lib/Metabrik/Client/Rest.pm
 lib/Metabrik/Client/Rsync.pm
 lib/Metabrik/Client/Ssh.pm
 lib/Metabrik/Client/Ssl.pm
-lib/Metabrik/Client/Tcp.pm
 lib/Metabrik/Client/Tcpdump.pm
+lib/Metabrik/Client/Tcp.pm
 lib/Metabrik/Client/Twitter.pm
 lib/Metabrik/Client/Udp.pm
 lib/Metabrik/Client/Whois.pm
@@ -61,8 +61,8 @@ lib/Metabrik/File/Ole.pm
 lib/Metabrik/File/Pcap.pm
 lib/Metabrik/File/Psv.pm
 lib/Metabrik/File/Raw.pm
-lib/Metabrik/File/Read.pm
 lib/Metabrik/File/Readelf.pm
+lib/Metabrik/File/Read.pm
 lib/Metabrik/File/Text.pm
 lib/Metabrik/File/Tsv.pm
 lib/Metabrik/File/Type.pm
@@ -71,6 +71,7 @@ lib/Metabrik/File/Xml.pm
 lib/Metabrik/Forensic/Dcfldd.pm
 lib/Metabrik/Forensic/Scalpel.pm
 lib/Metabrik/Forensic/Volatility.pm
+lib/Metabrik/Format/Lncs.pm
 lib/Metabrik/Hardware/Battery.pm
 lib/Metabrik/Hardware/Fan.pm
 lib/Metabrik/Hardware/Temperature.pm
@@ -81,6 +82,7 @@ lib/Metabrik/Image/Jpg.pm
 lib/Metabrik/Log/Dual.pm
 lib/Metabrik/Log/File.pm
 lib/Metabrik/Log/Null.pm
+lib/Metabrik/Log/Syslog.pm
 lib/Metabrik/Lookup/Alexa.pm
 lib/Metabrik/Lookup/Countrycode.pm
 lib/Metabrik/Lookup/Ethernet.pm
@@ -222,4 +224,5 @@ t/34-use-briks-antivirus.t
 t/35-use-briks-devel.t
 t/36-use-briks-terminal.t
 t/37-use-briks-video.t
+t/38-use-briks-format.t
 UPDATING

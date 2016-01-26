@@ -151,6 +151,8 @@ provides:
     file: lib/Metabrik/Forensic/Scalpel.pm
   Metabrik::Forensic::Volatility:
     file: lib/Metabrik/Forensic/Volatility.pm
+  Metabrik::Format::Lncs:
+    file: lib/Metabrik/Format/Lncs.pm
   Metabrik::Hardware::Battery:
     file: lib/Metabrik/Hardware/Battery.pm
   Metabrik::Hardware::Fan:
@@ -171,6 +173,8 @@ provides:
     file: lib/Metabrik/Log/File.pm
   Metabrik::Log::Null:
     file: lib/Metabrik/Log/Null.pm
+  Metabrik::Log::Syslog:
+    file: lib/Metabrik/Log/Syslog.pm
   Metabrik::Lookup::Alexa:
     file: lib/Metabrik/Lookup/Alexa.pm
   Metabrik::Lookup::Countrycode:
