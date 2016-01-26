@@ -34,6 +34,7 @@ sub brik_properties {
          update_core => [ ],
          update_repository => [ ],
          test_repository => [ ],
+         view_brik_source => [ qw(Brik) ],
       },
       require_modules => {
          'Metabrik::Devel::Mercurial' => [ ],
@@ -477,6 +478,41 @@ sub test_repository {
    $pm->test($repository) or return;
 
    return 1;
+}
+
+sub view_brik_source {
+   my $self = shift;
+   my ($brik) = @_;
+
+   $self->brik_help_run_undef_arg('view_brik_source', $brik) or return;
+
+   my @toks = split(/::/, $brik);
+   if (@toks < 2) {
+      return $self->log->error("view_brik_source: invalid Brik format for [$brik]");
+   }
+
+   my $pager = $ENV{PAGER} || 'less';
+
+   my $pm = 'Metabrik';
+   for (@toks) {
+      $_ = ucfirst($_);
+      $pm .= "/$_";
+   }
+   $pm .= '.pm';
+
+   my $cmd = '';
+   for (@INC) {
+      if (-f "$_/$pm") {
+         $cmd = "$pager $_/$pm";
+         last;
+      }
+   }
+
+   if (length($cmd) == 0) {
+      return $self->log->error("view_brik_source: unable to find Brik [$brik] in \@INC");
+   }
+
+   return $self->system($cmd);
 }
 
 1;
