@@ -53,9 +53,16 @@ sub unzip {
 
    my $cmd = "unzip -o $input -d $datadir/";
 
-   $self->system($cmd) or return;
+   my $lines = $self->capture($cmd) or return;
 
-   return $datadir;
+   my @files = ();
+   for (@$lines) {
+      if (m{^\s*inflating:\s*([^\s]+)\s*$}) {
+         push @files, $1;
+      }
+   }
+
+   return \@files;
 }
 
 sub gunzip {
@@ -107,7 +114,7 @@ sub gunzip {
 
    $fw->close;
 
-   return $output;
+   return [ $output ];
 }
 
 sub uncompress {

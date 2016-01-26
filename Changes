@@ -1,5 +1,9 @@
 Revision history for Perl extension Metabrik::Repository.
 
+1.20.4
+   - new: log::syslog Brik
+   - new: format::lncs Brik
+
 1.20.1
    - new: system::libvirt Brik
    - new: system::virtualbox Brik

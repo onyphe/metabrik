@@ -78,8 +78,8 @@ sub update {
       (my $xml = $resource->{xml}) =~ s/NAME/Recent/;
       my $output = "$datadir/$gz";
       $self->mirror($uri, $gz, $datadir) or return;
-      $fc->gunzip($output, $xml, $datadir) or return;
-      return $datadir.'/'.$xml;
+      my $files = $fc->uncompress($output, $xml, $datadir) or return;
+      return $files->[0];
    }
    elsif ($type eq 'modified') {
       (my $uri = $resource->{uri}) =~ s/NAME/Modified/;
@@ -87,8 +87,8 @@ sub update {
       (my $xml = $resource->{xml}) =~ s/NAME/Modified/;
       my $output = "$datadir/$gz";
       $self->mirror($uri, $gz, $datadir) or return;
-      $fc->gunzip($output, $xml, $datadir) or return;
-      return $datadir.'/'.$xml;
+      my $files = $fc->uncompress($output, $xml, $datadir) or return;
+      return $files->[0];
    }
    elsif ($type eq 'others') {
       my @output = ();
@@ -98,8 +98,8 @@ sub update {
          (my $xml = $resource->{xml}) =~ s/NAME/$year/;
          my $output = "$datadir/$gz";
          $self->mirror($uri, $gz, $datadir) or return;
-         $fc->gunzip($output, $xml, $datadir) or return;
-         push @output, $datadir.'/'.$xml;
+         my $files = $fc->uncompress($output, $xml, $datadir) or next;
+         push @output, @$files;
       }
       return \@output;
    }

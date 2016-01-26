@@ -53,7 +53,6 @@ sub update {
       'abusech-spyeyetracker.txt.gz' => 'https://spyeyetracker.abuse.ch/blocklist.php?download=ipblocklist',
       'abusech-zeustracker-badips.txt.gz' => 'https://zeustracker.abuse.ch/blocklist.php?download=badips',
       'abusech-zeustracker.txt.gz' => 'https://zeustracker.abuse.ch/blocklist.php?download=ipblocklist',
-      'amazonaws-top-1m.csv.zip' => 'http://s3.amazonaws.com/alexa-static/top-1m.csv.zip',
       'iana-tlds-alpha-by-domain.txt' => 'http://data.iana.org/TLD/tlds-alpha-by-domain.txt',
       'publicsuffix-effective_tld_names.dat.gz' => 'https://publicsuffix.org/list/effective_tld_names.dat',
    );
@@ -89,21 +88,24 @@ sub update {
    my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
    $fc->datadir($datadir);
 
+   my @updated = ();
    for my $f (keys %mirror) {
       my $files = $cw->mirror($mirror{$f}, $f) or next;
       for my $file (@$files) {
+         my $outfile = $file;
          if ($file =~ /\.gz$/) {
-            (my $outfile = $file) =~ s/\.gz$//;
-            $fc->uncompress($datadir.'/'.$file, $outfile);
+            ($outfile = $file) =~ s/\.gz$//;
+            $fc->uncompress($file, $outfile) or next;
          }
          elsif ($file =~ /\.zip$/) {
-            (my $outfile = $file) =~ s/\.zip$//;
-            $fc->uncompress($datadir.'/'.$file, $outfile);
+            ($outfile = $file) =~ s/\.zip$//;
+            $fc->uncompress($file, $outfile) or next;
          }
+         push @updated, $outfile;
       }
    }
 
-   return 1;
+   return \@updated;
 }
 
 sub from_ipv4 {

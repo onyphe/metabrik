@@ -553,6 +553,7 @@ sub add_nat_postrouting {
    return $self->add_nat('POSTROUTING', $target, $rule);
 }
 
+# Example: iptables -A POSTROUTING -t nat -j MASQUERADE -s 192.168.1.0/24
 sub add_nat_postrouting_masquerade {
    my $self = shift;
    my ($rule) = @_;

@@ -41,17 +41,20 @@ sub update {
    my $datadir = $self->datadir;
 
    my $uri = 'http://cwe.mitre.org/data/xml/views/2000.xml.zip';
-   my $file = "2000.xml.zip";
+   my $file_zip = "2000.xml.zip";
 
-   my $files = $self->mirror($uri, $file, $datadir) or return;
-   if (@$files == 0) {  # Nothing new
-      return $datadir;
+   my @updated = ();
+   my $files = $self->mirror($uri, $file_zip) or return;
+   if (@$files > 0) {  # Some new stuff
+      my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
+      for my $file (@$files) {
+         (my $outfile = $file) =~ s/\.zip$//;
+         my $new_files = $fc->uncompress($file, $outfile, $datadir) or next;
+         push @updated, @$new_files;
+      }
    }
 
-   my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
-   $fc->unzip($datadir.'/'.$file, $datadir) or return;
-
-   return $datadir;
+   return \@updated;
 }
 
 sub load {

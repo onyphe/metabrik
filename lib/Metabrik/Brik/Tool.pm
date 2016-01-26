@@ -225,15 +225,15 @@ use warnings;
 
 use Data::Dumper;
 use Metabrik::Core::Context;
-
-# Put your Briks here
+# Put other Briks to use here
+# use Metabrik::File::Text;
 
 my \$con = Metabrik::Core::Context->new or die("core::context");
 
-# Init your Briks here
+# Init other Briks here
 # my \$ft = Metabrik::File::Text->new_from_brik_init(\$con) or die("file::text");
 
-# Put your Tool code here
+# Put Metatool code here
 # \$ft->write("test", "/tmp/test.txt");
 
 exit(0);

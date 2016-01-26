@@ -22,6 +22,7 @@ sub brik_properties {
          not_used => [ ],
          show_require_modules => [ ],
          command => [ qw(Command) ],
+         category => [ qw(Category) ],
       },
    };
 }
@@ -237,6 +238,39 @@ sub command {
             }
          }
       }
+   }
+
+   return $total;
+}
+
+sub category {
+   my $self = shift;
+   my ($category) = @_;
+
+   $self->brik_help_run_undef_arg('category', $category) or return;
+
+   my $context = $self->context;
+   my $status = $context->status;
+
+   my $total = 0;
+   $self->log->info("Used:");
+   for my $brik (@{$status->{used}}) {
+      my $brik_category = $context->used->{$brik}->brik_category;
+      next unless $brik_category eq $category;
+      my $tags = $context->used->{$brik}->brik_tags;
+      push @$tags, 'used';
+      $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
+      $total++;
+   }
+
+   $self->log->info("Not used:");
+   for my $brik (@{$status->{not_used}}) {
+      my $brik_category = $context->not_used->{$brik}->brik_category;
+      next unless $brik_category eq $category;
+      my $tags = $context->not_used->{$brik}->brik_tags;
+      push @$tags, 'not_used';
+      $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
+      $total++;
    }
 
    return $total;

@@ -70,10 +70,10 @@ sub update {
          s/\n/ /g;
       }
 
-      $ft->write(\@new, $output);
+      $ft->write(\@new, $datadir.'/'.$output);
    }
 
-   return $output;
+   return $datadir.'/'.$output;
 }
 
 sub load {

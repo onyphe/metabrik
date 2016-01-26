@@ -73,15 +73,15 @@ sub update {
          next;
       }
 
-      $self->log->verbose("update: gunzipping file to [$unzipped]");
+      $self->log->verbose("update: uncompressing file to [$unzipped]");
 
       my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
-      my $gunzip = $fc->gunzip($output, $unzipped, $datadir);
-      if (! defined($gunzip)) {
-         $self->log->warning("update: can't gunzip file [$output]");
+      my $files = $fc->uncompress($output, $unzipped, $datadir);
+      if (! defined($files)) {
+         $self->log->warning("update: can't uncompress file [$output]");
          next;
       }
-      push @fetched, $unzipped;
+      push @fetched, @$files;
    }
 
    return \@fetched;

@@ -55,16 +55,18 @@ sub update {
    my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
    $fc->datadir($datadir);
 
+   my @updated = ();
    for my $f (keys %mirror) {
       my $files = $cw->mirror($dl_path.$mirror{$f}, $f) or next;
       for my $file (@$files) {
          (my $outfile = $file) =~ s/\.gz$//;
          $self->log->verbose("update: uncompressing to [$outfile]");
-         $fc->uncompress($file, $outfile);
+         $fc->uncompress($file, $outfile) or next;
+         push @updated, $outfile;
       }
    }
 
-   return 1;
+   return \@updated;
 }
 
 sub from_ipv4 {
