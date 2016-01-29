@@ -1,3 +1,11 @@
+20160129
+   AFFECTS: system::process, network::portscan
+
+   - system::process daemonize Command renamed to start
+   - system::process close_output_on_daemonize Attribute renamed to close_output_on_start
+   - network::portscan tcp_syn Command renamed to tcp_syn_scan
+   - network::portscan no IPv4/IPv6 detection anymore, creation of use_ipv6 Attribute for that
+
 20160126
    AFFECTS: file::compress
 

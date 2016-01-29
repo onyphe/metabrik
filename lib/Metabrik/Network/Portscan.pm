@@ -7,7 +7,7 @@ package Metabrik::Network::Portscan;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Network::Address Metabrik::Network::Device);
 
 sub brik_properties {
    return {
@@ -25,6 +25,8 @@ sub brik_properties {
          try => [ qw(try) ],
          bandwidth => [ qw(bandwidth) ],
          wait => [ qw(seconds) ],
+         use_ipv6 => [ qw(0|1) ],
+         _nr => [ qw(INTERNAL) ],
       },
       attributes_default => { 
          top10 => [ qw(
@@ -123,20 +125,24 @@ sub brik_properties {
          pps => 10_000,
          try => 2,
          wait => 5, # Wait 5 seconds for last packet
+         use_ipv6 => 0,
       },
       commands => {
          estimate_runtime => [ qw($ip_list $port_list|OPTIONAL pps|OPTIONAL try|OPTIONAL) ],
          estimate_bandwidth => [ qw(pps|OPTIONAL size|OPTIONAL) ],
          estimate_pps => [ qw(bandwidth|OPTIONAL size|OPTIONAL) ],
-         tcp_syn => [ qw($ip_list $port_list|OPTIONAL pps|OPTIONAL try|OPTIONAL) ],
+         tcp_syn_sender => [ qw($ip_list $port_list|OPTIONAL pps|OPTIONAL try|OPTIONAL) ],
+         tcp_syn_start_receiver => [ qw($port_list|OPTIONAL) ],
+         tcp_syn_stop_receiver => [ ],
+         tcp_syn_scan => [ qw($ip_list $port_list|OPTIONAL pps|OPTIONAL try|OPTIONAL) ],
+         tcp_syn_receive_until_sender_exit => [ qw(pid pps|OPTIONAL wait|OPTIONAL use_ipv6|OPTIONAL) ],
       },
       require_modules => {
          'Net::Write::Fast' => [ ],
          'Net::Frame::Simple' => [ ],
          'POSIX' => [ qw(ceil) ],
-         'Metabrik::Network::Device' => [ ],
          'Metabrik::Network::Read' => [ ],
-         'Metabrik::Network::Address' => [ ],
+         'Metabrik::System::Process' => [ ],
          'Metabrik::Worker::Fork' => [ ],
       },
    };
@@ -228,156 +234,172 @@ sub estimate_pps {
    return $count / $size;
 }
 
-sub tcp_syn {
+sub tcp_syn_sender {
    my $self = shift;
    my ($ip_list, $port_list, $pps, $try) = @_;
 
    $port_list ||= $self->ports || $self->top100;
    $pps ||= $self->pps;
    $try ||= $self->try;
-   $self->brik_help_run_undef_arg('tcp_syn', $ip_list) or return;
-   $self->brik_help_run_invalid_arg('tcp_syn', $ip_list, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('tcp_syn', $ip_list) or return;
-   $self->brik_help_run_undef_arg('tcp_syn', $port_list, 'ARRAY') or return;
-   $self->brik_help_run_invalid_arg('tcp_syn', $port_list, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('tcp_syn', $port_list) or return;
+   $self->brik_help_run_undef_arg('tcp_syn_sender', $ip_list) or return;
+   $self->brik_help_run_invalid_arg('tcp_syn_sender', $ip_list, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('tcp_syn_sender', $ip_list, 'ARRAY') or return;
+   $self->brik_help_run_undef_arg('tcp_syn_sender', $port_list) or return;
+   $self->brik_help_run_invalid_arg('tcp_syn_sender', $port_list, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('tcp_syn_sender', $port_list, 'ARRAY') or return;
 
-   my $wait = $self->wait;
+   my $device = $self->device;
+   my $ip4 = $self->my_ipv4 or return;
+   my $ip6 = $self->my_ipv6 or return;
 
-   my $nd = Metabrik::Network::Device->new_from_brik_init($self) or return;
-   my $get = $nd->get($self->device) or return;
+   my $ip = $ip_list->[0];
+   my $use_ipv6 = 0;
+   if ($self->is_ipv6($ip)) {
+      $use_ipv6 = 1;
+      if (! defined($ip6)) {
+         return $self->log->error("tcp_syn_sender: IPv6 not found for device [$device]");
+      }
+      $self->log->verbose("tcp_syn_sender: using source IPv6 [$ip6]");
+   }
+   elsif ($self->is_ipv4($ip)) {
+      if (! defined($ip4)) {
+         return $self->log->error("tcp_syn_sender: IPv4 not found for device [$device]");
+      }
+      $self->log->verbose("tcp_syn_sender: using source IPv4 [$ip4]");
+   }
+   else {
+      return $self->log->error("tcp_syn_sender: unable to identify IP address family for [$ip]");
+   }
 
-   my $ip = $get->{ipv4};
-   my $ip6 = $get->{ipv6};
+   $self->log->verbose("tcp_syn_sender: sender started");
+
+   # We have to split by chunks of $chunk_size elements, to avoid taking to
+   # much memory in one row. And there is a SIGSEGV if we don't do so ;)
+   my $chunk_size = 1_000_000; # We can load that much into a ARRAYREF before a SIGSEGV
+   my $n_targets = scalar(@$ip_list);
+   my $n_ports = scalar(@$port_list);
+   my $n_chunks = POSIX::ceil($n_targets / $chunk_size);
+   for my $n (0..$n_chunks-1) {
+      my $first = $chunk_size * $n;
+      my $last = ($chunk_size - 1) + ($chunk_size * $n);
+      if ($last > ($n_targets - 1)) {
+         $last = $n_targets - 1;
+      }
+
+      # By default, we think we scan less than $chunk_size hosts
+      my $target_list = $ip_list;
+
+      # But if we don't, we cut in chunks and $target_list gets a slice
+      if ($n_chunks > 1) {
+         my @this = @$ip_list[$first..$last];
+         $target_list = \@this;
+         $self->log->verbose("tcp_syn_sender: scanning chunk @{[$n+1]}/@{[($n_chunks)]} ".
+            "($first-$last)");
+      }
+
+      my $r = Net::Write::Fast::l4_send_tcp_syn_multi(
+         $use_ipv6 ? $ip6 : $ip4,
+         $target_list,
+         $port_list,
+         $pps,
+         $try,
+         $use_ipv6,
+         1,  # display warnings or not
+      );
+      if ($r == 0) {
+         $self->log->error("tcp_syn_sender: l4_send_tcp_syn_multi: ".
+            Net::Write::Fast::nwf_geterror());
+      }
+   }
+
+   $self->log->verbose("tcp_syn_sender: sender finished");
+
+   # We return the number of packets sent
+   return $n_targets * $n_ports;
+}
+
+sub tcp_syn_start_receiver {
+   my $self = shift;
+   my ($port_list) = @_;
+
+   if (defined($port_list)) {
+      $self->brik_help_run_invalid_arg('tcp_syn_start_receiver', $port_list, 'ARRAY') or return;
+      $self->brik_help_run_empty_array_arg('tcp_syn_start_receiver', $port_list) or return;
+   }
 
    my $nr = Metabrik::Network::Read->new_from_brik_init($self) or return;
    #$nr->debug($self->debug); # Apply debug to this Brik also.
 
-   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
-
-   my $filter;
-   my $use_ipv6 = 0;
-   if ($na->is_ipv6($ip_list->[0])) {
-      $use_ipv6 = 1;
-      if (! defined($ip6)) {
-         return $self->log->error("tcp_syn: IPv6 not found for device [".$self->device."]");
-      }
-
-      $self->log->verbose("tcp_syn: using source IPv6 [$ip6]");
-
-      $filter = 'tcp and (ip6 and dst host '.$ip6.')';
-      # If only a few ports specified, we use that in the filter
-      if (@$port_list <= 10) {
-         $filter .= " and (";
-         for (@$port_list) {
-            $filter .= "src port $_ or ";
-         }
-         $filter =~ s/ or $/)/;
-      }
-
-      $self->log->verbose("tcp_syn: using filter [$filter]");
-   }
-   elsif ($na->is_ipv4($ip_list->[0])) {
-      if (! defined($ip)) {
-         return $self->log->error("tcp_syn: IPv4 not found for device [".$self->device."]");
-      }
-
-      $self->log->verbose("tcp_syn: using source IPv4 [$ip]");
-
-      $filter =
-         'tcp and (((tcp[13] & 2 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.')'.
-         ' or '.
-         '((tcp[13] & 4 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.'))';
-
-      # If only a few ports specified, we use that in the filter
-      if (@$port_list <= 10) {
-         $filter .= " and (";
-         for (@$port_list) {
-            $filter .= "src port $_ or ";
-         }
-         $filter =~ s/ or $/)/;
-      }
-
-      $self->log->verbose("tcp_syn: using filter [$filter]");
+   my $ip = '';
+   if ($self->use_ipv6) {
+      $ip = $self->my_ipv6 or return;
    }
    else {
-      return $self->log->error("tcp_syn: invalid IP address in ip_list");
+      $ip = $self->my_ipv4 or return;
    }
+    
+   # Create a filter if not provided by user
+   my $filter = $self->use_ipv6
+      ? 'tcp and (ip6 and dst host '.$ip.')'
+      : 'tcp and (((tcp[13] & 2 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.')'.
+        ' or '.
+        '((tcp[13] & 4 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.'))';
+
+   # If only a few ports specified, we use that in the filter
+   if (defined($port_list) && @$port_list <= 10) {
+      $filter .= " and (";
+      for (@$port_list) {
+         $filter .= "src port $_ or ";
+      }
+      $filter =~ s/ or $/)/;
+   }
+
+   $self->log->verbose("tcp_syn_start_receiver: using filter [$filter]");
+
    $nr->filter($filter);
 
    $nr->open or return;
+ 
+   return $self->_nr($nr);
+}
 
-   my $estimate = $self->estimate_runtime($ip_list, $port_list, $pps, $try);
-   if (defined($estimate)) {
-      my $string = sprintf(
-         "Estimated runtime: %d day(s) %d hour(s) %d minute(s) %d second(s) for %d host(s)",
-         $estimate->{days},
-         $estimate->{hours},
-         $estimate->{minutes},
-         $estimate->{seconds},
-         $estimate->{nhosts},
-      );
-      $self->log->verbose("tcp_syn: $string");
+sub tcp_syn_stop_receiver {
+   my $self = shift;
+
+   my $nr = $self->_nr;
+   if (! defined($nr)) {
+      return 1;
    }
 
-   my $start = time();
+   $nr->close;
+   $self->_nr(undef);
 
-   # Fork sender process
-   my $wf = Metabrik::Worker::Fork->new_from_brik_init($self) or return;
-   defined(my $pid = $wf->start) or return $self->log->error("tcp_syn: start failed");
+   return 1;
+}
 
-   if (! $pid) { # Son
-      $self->debug && $self->log->debug("tcp_syn: son starts its task...");
-      # We have to split by chunks of $chunk_size elements, to avoid taking to
-      # much memory in one row. And there is a SIGSEGV if we don't do so ;)
-      my $chunk_size = 1_000_000; # We can load that much into a ARRAYREF before a SIGSEGV
-      my $n_targets = scalar(@$ip_list);
-      my $n_chunks = POSIX::ceil($n_targets / $chunk_size);
-      for my $n (0..$n_chunks-1) {
-         my $first = $chunk_size * $n;
-         my $last = ($chunk_size - 1) + ($chunk_size * $n);
-         if ($last > ($n_targets - 1)) {
-            $last = $n_targets - 1;
-         }
+sub tcp_syn_receive_until_sender_exit {
+   my $self = shift;
+   my ($pid, $pps, $wait, $use_ipv6) = @_;
 
-         # By default, we think we scan less than $chunk_size hosts
-         my $target_list = $ip_list;
+   $pps ||= $self->pps;
+   $wait ||= $self->wait;
+   my $nr = $self->_nr;
+   $use_ipv6 = 0;
+   $self->brik_help_run_undef_arg('tcp_syn_receive_until_sender_exit', $pid) or return;
+   $self->brik_help_run_undef_arg('tcp_syn_receive_until_sender_exit', $pps) or return;
+   $self->brik_help_run_undef_arg('tcp_syn_receive_until_sender_exit', $wait) or return;
+   $self->brik_help_run_undef_arg('tcp_syn_start_receiver', $nr) or return;
 
-         # But if we don't, we cut in chunks and $target_list gets a slice
-         if ($n_chunks > 1) {
-            my @this = @$ip_list[$first..$last];
-            $target_list = \@this;
-            $self->log->verbose("tcp_syn: scanning chunk @{[$n+1]}/@{[($n_chunks)]} ($first-$last)");
-         }
+   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
 
-         my $r = Net::Write::Fast::l4_send_tcp_syn_multi(
-            $use_ipv6 ? $ip6 : $ip,
-            $target_list,
-            $port_list,
-            $pps,
-            $try,
-            $use_ipv6,
-            1,  # display warnings or not
-         );
-         if ($r == 0) {
-            $self->log->error("tcp_syn: l4_send_tcp_syn_multi: ".Net::Write::Fast::nwf_geterror());
-         }
-      }
-      $self->debug && $self->log->debug("tcp_syn: son finished its task, exiting");
-      exit(0);
-   }
-
-   $self->log->verbose("tcp_syn: father starts");
-
-   # Father: analyse received frames
    my %open;
    my %closed;
    while (! $nr->has_timeout) {
       # We blocking until X frames are read or a Y second timeout has occured
       # X is calcluted as a ratio of the pps rate.
-      $self->debug && $self->log->debug("tcp_syn: waiting stuff");
+      $self->debug && $self->log->debug("tcp_syn_receive_until_sender_exit: waiting stuff");
       if (my $next = $nr->read_until_timeout($pps / 30, $wait)) {  
-         $self->debug && $self->log->debug("tcp_syn: read_until_timeout has some stuff");
+         $self->debug && $self->log->debug("tcp_syn_receive_until_sender_exit: read_until_timeout has stuff");
          for my $f (@$next) {
             my $s = Net::Frame::Simple->newFromDump($f);
             if ($s->ref->{TCP}) {
@@ -388,12 +410,12 @@ sub tcp_syn {
                      ip => $ip->src,
                      port => $tcp->src,
                      id => $use_ipv6 ? $ip->flowLabel : $ip->id,
-                     ttl => $use_ipv6 ? $ip->hopLimit  : $ip->ttl,
+                     ttl => $use_ipv6 ? $ip->hopLimit : $ip->ttl,
                      win => $tcp->win,
                      opt => unpack('H*', $tcp->options),
                      flags => 'SA',
                   };
-                  $self->log->verbose("tcp_syn: ".sprintf(
+                  $self->log->debug("tcp_syn_receive_until_sender_exit: ".sprintf(
                      "tcp  %s  [%-15s]:%-5d   %-5d  %-3d  %-5d  %s",
                         $open{$ip->src}{$tcp->src}->{flags},
                         $ip->src,
@@ -419,22 +441,75 @@ sub tcp_syn {
             }
          }
          if ($nr->has_timeout) {
-            $self->debug && $self->log->debug("tcp_syn: has_timeout");
-            if (! $wf->is_son_alive) {
-               $self->log->verbose("tcp_syn: no more son, stopping loop");
+            $self->debug && $self->log->debug("tcp_syn_receive_until_sender_exit: has_timeout");
+            if (! $sp->is_running($pid)) {
+               $self->log->verbose("tcp_syn_receive_until_sender_exit: no more sender, stopping loop");
                last;
             }
-            $self->debug && $self->log->debug("tcp_syn: reset_timeout");
+            $self->debug && $self->log->debug("tcp_syn_receive_until_sender_exit: reset_timeout");
             $nr->reset_timeout;
          }
       }
    }
-   
-   $nr->close;
-
-   $self->log->verbose("tcp_syn: completed in ".(time() - $start)." second(s)");
 
    return { open => \%open, closed => \%closed };
+}
+sub tcp_syn_scan {
+   my $self = shift;
+   my ($ip_list, $port_list, $pps, $try) = @_;
+
+   $port_list ||= $self->ports || $self->top100;
+   $pps ||= $self->pps;
+   $try ||= $self->try;
+   $self->brik_help_run_undef_arg('tcp_syn_scan', $ip_list) or return;
+   $self->brik_help_run_invalid_arg('tcp_syn_scan', $ip_list, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('tcp_syn_scan', $ip_list) or return;
+   $self->brik_help_run_undef_arg('tcp_syn_scan', $port_list, 'ARRAY') or return;
+   $self->brik_help_run_invalid_arg('tcp_syn_scan', $port_list, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('tcp_syn_scan', $port_list) or return;
+
+   my $wait = $self->wait;
+
+   my $nr = $self->tcp_syn_start_receiver($ip_list, $port_list) or return;
+
+   my $estimate = $self->estimate_runtime($ip_list, $port_list, $pps, $try);
+   if (defined($estimate)) {
+      my $string = sprintf(
+         "Estimated runtime: %d day(s) %d hour(s) %d minute(s) %d second(s) for %d host(s)",
+         $estimate->{days},
+         $estimate->{hours},
+         $estimate->{minutes},
+         $estimate->{seconds},
+         $estimate->{nhosts},
+      );
+      $self->log->verbose("tcp_syn_scan: $string");
+   }
+
+   my $start = time();
+
+   # Fork sender process
+   my $wf = Metabrik::Worker::Fork->new_from_brik_init($self) or return;
+   defined(my $pid = $wf->start) or return $self->log->error("tcp_syn_scan: start failed");
+
+   if (! $pid) { # Son
+      $self->debug && $self->log->debug("tcp_syn_scan: son starts its task...");
+      $self->tcp_syn_sender($ip_list, $port_list, $pps, $try);
+      $self->debug && $self->log->debug("tcp_syn_scan: son finished its task, exiting");
+      exit(0);
+   }
+
+   my $use_ipv6 = $self->is_ipv6($ip_list->[0]) ? 1 : 0;
+
+   # Father: analyse received frames
+   $self->debug && $self->log->debug("tcp_syn_scan: father starts");
+   my $r = $self->tcp_syn_receive_until_sender_exit($pid, $pps, $wait, $use_ipv6);
+   $self->debug && $self->log->debug("tcp_syn_scan: father finished");
+   
+   $self->tcp_syn_stop_receiver($nr);
+
+   $self->log->verbose("tcp_syn_scan: completed in ".(time() - $start)." second(s)");
+
+   return $r;
 }
 
 1;

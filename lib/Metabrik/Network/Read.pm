@@ -7,7 +7,7 @@ package Metabrik::Network::Read;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Network::Frame);
 
 sub brik_properties {
    return {
@@ -42,6 +42,7 @@ sub brik_properties {
          has_timeout => [ ],
          reset_timeout => [ ],
          reply => [ qw(frame) ],
+         to_simple => [ qw(frame|$frame_list) ],
       },
       require_modules => {
          'Net::Frame::Dump' => [ ],
@@ -232,6 +233,20 @@ sub close {
    $self->_dump(undef);
 
    return 1;
+}
+
+sub to_simple {
+   my $self = shift;
+   my ($frames) = @_;
+
+   $self->brik_help_run_undef_arg('to_simple', $frames) or return;
+   my $ref = $self->brik_help_run_invalid_arg('to_simple', $frames, 'ARRAY', 'SCALAR')
+      or return;
+   if ($ref eq 'ARRAY') {
+      $self->brik_help_run_empty_array_arg('to_simple', $frames) or return;
+   }
+
+   return $self->from_read($frames);
 }
 
 1;

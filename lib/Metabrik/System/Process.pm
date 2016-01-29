@@ -18,27 +18,33 @@ sub brik_properties {
       attributes => {
          datadir => [ qw(datadir) ],
          force_kill => [ qw(0|1) ],
-         close_output_on_daemonize => [ qw(0|1) ],
+         close_output_on_start => [ qw(0|1) ],
       },
       attributes_default => {
          force_kill => 0,
-         close_output_on_daemonize => 1,
+         close_output_on_start => 1,
       },
       commands => {
          list => [ ],
          is_running => [ qw(process) ],
          get_process_info => [ qw(process) ],
          kill => [ qw(process|pid) ],
-         daemonize => [ qw($sub) ],
+         start => [ qw($sub) ],
          list_daemons => [ ],
          get_latest_daemon_id => [ ],
          kill_from_pidfile => [ qw(pidfile) ],
          is_running_from_pidfile => [ qw(pidfile) ],
          grep_by_name => [ qw(process_name) ],
+         get_new_pidfile => [ ],
+         get_latest_pidfile => [ ],
+         write_pidfile => [ ],
+         delete_pidfile => [ qw(pidfile) ],
+         wait_for_pidfile => [ qw(pidfile) ],
       },
       require_modules => {
          'Daemon::Daemonize' => [ ],
          'POSIX' => [ qw(:sys_wait_h) ],
+         'Time::HiRes' => [ qw(usleep) ],
          'Metabrik::File::Find' => [ ],
       },
       require_binaries => {
@@ -102,7 +108,7 @@ sub get_process_info {
    my @results = ();
    my $list = $self->list or return;
    for my $this (@$list) {
-      my $command = $this->{COMMAND};
+      my $command = $this->{COMMAND} or next;
       my @toks = split(/\s+/, $command);
       $toks[0] =~ s/^.*\/(.*?)$/$1/;
       if ($toks[0] eq $process) {
@@ -136,60 +142,42 @@ sub kill {
    return 1;
 }
 
-sub daemonize {
+#
+# start process sub from user program has to call write_pidfile Command to create the pidfile.
+# Then parent process can use wait_for_pidfile Command with the $pidfile returned from 
+# start Command to wait for the process to really start.
+#
+sub start {
    my $self = shift;
    my ($sub) = @_;
 
    my %opts = (
-      close => $self->close_output_on_daemonize,
+      close => $self->close_output_on_start,
    );
 
-   my $new_pid;
-   my $pidfile;
+   my $r;
    # Daemonize the given subroutine
    if (defined($sub)) {
-      my $id = $self->get_latest_daemon_id;
-      defined($id) ? $id++ : ($id = 1);
-      $pidfile = $self->datadir."/daemonpid.$id";
-
-      my $r = Daemon::Daemonize->daemonize(
+      $r = Daemon::Daemonize->daemonize(
          %opts,
          run => $sub,
       );
-
-      # Waiting for new pidfile to be created, but no more than 100_000 loops.
-      #my $count = 100_000;
-      #while (! ($new_pid = Daemon::Daemonize->read_pidfile($pidfile))) {
-         #last if ++$count == 100_00;
+      #if (! defined($r)) {
+         #return $self->log->error("start: failed from sub");
       #}
-      my $written = 0;
-      my $count = 100_000;
-      my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
-      while (1) {
-         my $list = $sp->get_process_info("arpspoof") or return;
-         for (@$list) {
-            # First process if the good one
-            if (exists($_->{PID})) {
-               $new_pid = $_->{PID};
-               Daemon::Daemonize->write_pidfile($pidfile, $new_pid);
-               $written++;
-               last;
-            }
-         }
-         last if $written;
-         last if ++$count == 100_000;
-      }
    }
-   # Or myself. But no handling of pidfile there.
+   # Or myself.
    else {
-      Daemon::Daemonize->daemonize(
+      $r = Daemon::Daemonize->daemonize(
          %opts,
       );
    }
 
-   $self->log->verbose("daemonize: new daemon with pid [$new_pid] started");
+   my $pidfile = $self->get_new_pidfile or return;
 
-   return defined($new_pid) ? $pidfile : 1;
+   $self->log->verbose("start: new daemon started with pidfile [$pidfile]");
+
+   return $pidfile;
 }
 
 sub list_daemons {
@@ -253,8 +241,11 @@ sub is_running_from_pidfile {
    }
 
    if (my $pid = Daemon::Daemonize->check_pidfile($pidfile)) {
+      $self->log->verbose("is_running_from_pidfile: yes");
       return 1;
    }
+
+   $self->log->verbose("is_running_from_pidfile: no");
 
    return 0;
 }
@@ -273,6 +264,95 @@ sub grep_by_name {
    }
 
    return 0;
+}
+
+sub get_new_pidfile {
+   my $self = shift;
+
+   my $id = $self->get_latest_daemon_id;
+   defined($id) ? $id++ : ($id = 1);
+   my $pidfile = $self->datadir."/daemonpid.$id";
+
+   return $pidfile;
+}
+
+sub get_latest_pidfile {
+   my $self = shift;
+
+   my $pidfile;
+   my $id = $self->get_latest_daemon_id;
+   if (defined($id)) {
+      $pidfile = $self->datadir."/daemonpid.$id";
+   }
+   else {
+      return $self->log->error("get_latest_pidfile: no pidfile found");
+   }
+
+   return $pidfile;
+}
+
+#
+# To be called by a sub used by start Command
+#
+sub write_pidfile {
+   my $self = shift;
+
+   my $pidfile = $self->get_new_pidfile or return;
+
+   my $pid = $$;
+
+   my $r = Daemon::Daemonize->write_pidfile($pidfile, $pid);
+   if (! defined($r)) {
+      return $self->log->erro("write_pidfile: failed to write pidfile [$pidfile]: $!");
+   }
+
+   return $pid;
+}
+
+#
+# To be used by parent process
+#
+sub delete_pidfile {
+   my $self = shift;
+   my ($pidfile) = @_;
+
+   $self->brik_help_run_undef_arg('delete_pidfile', $pidfile) or return;
+
+   if (! -f $pidfile) {
+      # Nothing to delete
+      return 0;
+   }
+
+   my $r = Daemon::Daemonize->delete_pidfile($pidfile);
+   if (! defined($r)) {
+      return $self->log->erro("delete_pidfile: failed to delete pidfile [$pidfile]: $!");
+   }
+
+   return 1;
+}
+
+# XXX: Move to system::file and use a helper here
+#
+# To be used by parent process
+#
+sub wait_for_pidfile {
+   my $self = shift;
+   my ($pidfile) = @_;
+
+   $self->brik_help_run_undef_arg('wait_pidfile', $pidfile) or return;
+
+   my $found = 0;
+   # 50 * 100 ms = 5s
+   for (0..49) {
+      if (-e $pidfile) {
+         $found++;
+         last;
+      }
+      Time::HiRes::usleep(100_000); # 100_000us => 100ms => 0.1s
+      # 0.1s * 50 = 5s
+   }
+
+   return $found;
 }
 
 1;

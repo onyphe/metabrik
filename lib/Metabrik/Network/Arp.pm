@@ -106,7 +106,7 @@ sub half_poison {
 
    my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
    my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
-   my $pidfile = $sp->daemonize(sub { $sc->system($cmd) });
+   my $pidfile = $sp->start(sub { $sc->system($cmd) });
    $self->_pidfile($pidfile);
 
    $self->log->info("half_poison: daemonized to pidfile[$pidfile]");
@@ -132,7 +132,7 @@ sub full_poison {
 
    my $sc = Metabrik::Shell::Command->new_from_brik_init($self) or return;
    my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
-   my $pidfile = $sp->daemonize(sub { $sc->system($cmd) });
+   my $pidfile = $sp->start(sub { $sc->system($cmd) });
    $self->_pidfile($pidfile);
 
    $self->log->info("full_poison: daemonized to pidfile[$pidfile]");

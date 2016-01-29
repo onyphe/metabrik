@@ -39,7 +39,6 @@ sub brik_properties {
       require_modules => {
          'Metabrik::Client::Openssh' => [ ],
          'Metabrik::Server::Tcp' => [ ],
-         'Metabrik::System::Process' => [ ],
       },
    };
 }
@@ -81,7 +80,7 @@ sub background_tunnel_loop {
    my $self = shift;
    my $args = \@_;
 
-   return $self->daemonize(sub { $self->start(@$args) && $self->tunnel_loop(@$args) });
+   return $self->start(sub { $self->start(@$args) && $self->tunnel_loop(@$args) });
 }
 
 sub start {
