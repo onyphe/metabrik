@@ -103,8 +103,8 @@ sub warning {
    my $self = shift;
    my ($msg, $caller) = @_;
 
-   my $prefix = $self->text_prefix ? "WARN " : "[!]";
-   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $prefix = $self->text_prefix ? 'WARN ' : '[!]';
+   my $time = $self->time_prefix ? localtime().' ' : '';
    my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
    my $fd = $self->_fd;
@@ -119,8 +119,8 @@ sub error {
    my $self = shift;
    my ($msg, $caller) = @_;
 
-   my $prefix = $self->text_prefix ? "ERROR" : "[-]";
-   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $prefix = $self->text_prefix ? 'ERROR' : '[-]';
+   my $time = $self->time_prefix ? localtime().' ' : '';
    my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
    my $fd = $self->_fd;
@@ -137,8 +137,8 @@ sub fatal {
    my $self = shift;
    my ($msg, $caller) = @_;
 
-   my $prefix = $self->text_prefix ? "FATAL" : "[F]";
-   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $prefix = $self->text_prefix ? 'FATAL' : '[F]';
+   my $time = $self->time_prefix ? localtime().' ' : '';
    my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
    my $fd = $self->_fd;
@@ -155,8 +155,8 @@ sub info {
 
    $msg ||= 'undef';
 
-   my $prefix = $self->text_prefix ? "INFO " : "[+]";
-   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $prefix = $self->text_prefix ? 'INFO ' : '[+]';
+   my $time = $self->time_prefix ? localtime().' ' : '';
    my $buffer = $time."$prefix $msg\n";
 
    my $fd = $self->_fd;
@@ -173,8 +173,8 @@ sub verbose {
 
    return 1 unless $self->level > 1;
 
-   my $prefix = $self->text_prefix ? "VERB " : "[*]";
-   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $prefix = $self->text_prefix ? 'VERB ' : '[*]';
+   my $time = $self->time_prefix ? localtime().' ' : '';
    my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
    my $fd = $self->_fd;
@@ -204,8 +204,8 @@ sub debug {
       else {
          return 1 unless $self->level > 2;
 
-         my $prefix = $self->text_prefix ? "DEBUG" : "[D]";
-         my $time = $self->time_prefix ? localtime()." " : " ";
+         my $prefix = $self->text_prefix ? 'DEBUG' : '[D]';
+         my $time = $self->time_prefix ? localtime().' ' : '';
          my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
          my $fd = $self->_fd;
