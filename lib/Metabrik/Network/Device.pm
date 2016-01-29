@@ -16,18 +16,21 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
-         'enable_warnings' => [ qw(0|1) ],
+         device => [ qw(device) ],
+         enable_warnings => [ qw(0|1) ],
       },
       attributes_default => {
-         'enable_warnings' => 0,
+         enable_warnings => 0,
       },
       commands => {
          install => [ ], # Inherited
          list => [ ],
-         get => [ qw(device) ],
+         get => [ qw(device|OPTIONAL) ],
          default => [ qw(destination_ip|OPTIONAL) ],
          show => [ qw(device_array|OPTIONAL) ],
          internet_address => [ ],
+         my_ipv4 => [ qw(device|OPTIONAL) ],
+         my_ipv6 => [ qw(device|OPTIONAL) ],
       },
       require_modules => {
          'Net::Libdnet::Intf' => [ ],
@@ -38,6 +41,16 @@ sub brik_properties {
       },
       need_packages => {
          'ubuntu' => [ qw(libpcap-dev libnet-libdnet-perl) ],
+      },
+   };
+}
+
+sub brik_use_properties {
+   my $self = shift;
+
+   return {
+      attributes_default => {
+         device => $self->global->device,
       },
    };
 }
@@ -62,6 +75,7 @@ sub get {
    my $self = shift;
    my ($device) = @_;
 
+   $device ||= $self->device;
    $self->brik_help_run_undef_arg('get', $device) or return;
 
    my $intf = Net::Libdnet::Intf->new;
@@ -193,7 +207,41 @@ sub internet_address {
 
    my ($ip) = $html =~ /(\d+\.\d+\.\d+\.\d+)/;
 
-   return $ip || undef;
+   return $ip || 'undef';
+}
+
+sub my_ipv4 {
+   my $self = shift;
+   my ($device) = @_;
+
+   $device ||= $self->device;
+   $self->brik_help_run_undef_arg('my_ipv4', $device) or return;
+
+   my $get = $self->get($device) or return;
+
+   my $ip = $get->{ipv4};
+   if (! defined($ip)) {
+      return $self->log->error("my_ipv4: IPv4 address not found for device [$device]");
+   }
+
+   return $ip;
+}
+
+sub my_ipv6 {
+   my $self = shift;
+   my ($device) = @_;
+
+   $device ||= $self->device;
+   $self->brik_help_run_undef_arg('my_ipv6', $device) or return;
+
+   my $get = $self->get($device) or return;
+
+   my $ip = $get->{ipv6};
+   if (! defined($ip)) {
+      return $self->log->error("my_ipv6: IPv6 address not found for device [$device]");
+   }
+
+   return $ip;
 }
 
 1;
