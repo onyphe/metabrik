@@ -147,7 +147,11 @@ sub read_until_timeout {
    my $dump = $self->_dump;
    $self->brik_help_run_undef_arg('open', $dump) or return;
 
-   $self->debug && $self->log->debug("next_until_timeout: will read until $rtimeout seconds timeout or $count packet(s) has been read");
+   my $prev = $dump->timeoutOnNext;
+   $dump->timeoutOnNext($rtimeout);
+
+   $self->debug && $self->log->debug("next_until_timeout: will read until [$rtimeout] ".
+      "seconds or [$count] packet(s) have been read");
 
    my $read_count = 0;
    my @next = ();
@@ -157,11 +161,21 @@ sub read_until_timeout {
       }
  
       if (my $next = $dump->next) {
-         $self->debug && $self->log->debug("read_until_timeout: read $read_count packet(s)");
          push @next, $next;
          $read_count++;
       }
    }
+
+   if ($self->debug) {
+      if ($dump->timeout) {
+         $self->log->debug("next_until_timeout: timeout reached after [$rtimeout]");
+      }
+      else {
+         $self->log->debug("next_until_timeout: packet count reached after [$read_count]");
+      }
+   }
+
+   $dump->timeoutOnNext($prev);
 
    return \@next;
 }
