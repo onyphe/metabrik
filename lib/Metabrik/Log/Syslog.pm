@@ -17,6 +17,8 @@ sub brik_properties {
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          level => [ qw(0|1|2|3) ],
+         host => [ qw(syslog_host) ],
+         port => [ qw(syslog_port) ],
          time_prefix => [ qw(0|1) ],
          text_prefix => [ qw(0|1) ],
          facility => [ qw(kernel|user|mail|system|security|internal|printer|news|uucp|clock|security2|FTP|NTP|audit|alert|clock2|local0|local1|local2|local3|local4|local5|local6|local7) ],
@@ -25,7 +27,7 @@ sub brik_properties {
       },
       attributes_default => {
          level => 2,
-         time_prefix => 1,
+         time_prefix => 0,
          text_prefix => 1,
          host => '127.0.0.1',
          port => 514,
@@ -135,8 +137,8 @@ sub warning {
    my $self = shift;
    my ($msg, $caller) = @_;
 
-   my $prefix = $self->text_prefix ? "WARN " : "[!]";
-   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $prefix = $self->text_prefix ? 'WARN ' : '[!]';
+   my $time = $self->time_prefix ? localtime().' ' : '';
    my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
    return $self->send($buffer, 'warning');
@@ -146,8 +148,8 @@ sub error {
    my $self = shift;
    my ($msg, $caller) = @_;
 
-   my $prefix = $self->text_prefix ? "ERROR" : "[-]";
-   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $prefix = $self->text_prefix ? 'ERROR' : '[-]';
+   my $time = $self->time_prefix ? localtime().' ' : '';
    my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
    return $self->send($buffer, 'error');
@@ -157,8 +159,8 @@ sub fatal {
    my $self = shift;
    my ($msg, $caller) = @_;
 
-   my $prefix = $self->text_prefix ? "FATAL" : "[F]";
-   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $prefix = $self->text_prefix ? 'FATAL' : '[F]';
+   my $time = $self->time_prefix ? localtime().' ' : '';
    my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
    $self->send($buffer, 'critical');
@@ -174,8 +176,8 @@ sub info {
 
    $msg ||= 'undef';
 
-   my $prefix = $self->text_prefix ? "INFO " : "[+]";
-   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $prefix = $self->text_prefix ? 'INFO ' : '[+]';
+   my $time = $self->time_prefix ? localtime().' ' : '';
    my $buffer = $time."$prefix $msg\n";
 
    return $self->send($buffer, 'informational');
@@ -187,8 +189,8 @@ sub verbose {
 
    return 1 unless $self->level > 1;
 
-   my $prefix = $self->text_prefix ? "VERB " : "[*]";
-   my $time = $self->time_prefix ? localtime()." " : " ";
+   my $prefix = $self->text_prefix ? 'VERB ' : '[*]';
+   my $time = $self->time_prefix ? localtime().' ' : '';
    my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
    return $self->send($buffer, 'notice');
@@ -213,8 +215,8 @@ sub debug {
       else {
          return 1 unless $self->level > 2;
 
-         my $prefix = $self->text_prefix ? "DEBUG" : "[D]";
-         my $time = $self->time_prefix ? localtime()." " : " ";
+         my $prefix = $self->text_prefix ? 'DEBUG' : '[D]';
+         my $time = $self->time_prefix ? localtime().' ' : '';
          my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
 
          $self->send($buffer, 'debug') or return;
