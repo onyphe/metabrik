@@ -145,7 +145,11 @@ sub write {
    $self->brik_help_run_undef_arg('write', $output) or return;
 
    $self->open($output) or return;
-   $self->SUPER::write($data) or return;
+   # We check definedness because if we write 0 byte write will return 0
+   my $r = $self->SUPER::write($data);
+   if (! defined($r)) {
+      return;
+   }
    $self->close;
 
    return 1;

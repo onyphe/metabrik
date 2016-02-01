@@ -25,6 +25,8 @@ sub brik_properties {
          overwrite => [ qw(0|1) ],
          append => [ qw(0|1) ],
          write_header => [ qw(0|1) ],
+         _csv => [ qw(INTERNAL) ],
+         _fd => [ qw(INTERNAL) ],
       },
       attributes_default => {
          first_line_is_header => 1,
@@ -39,6 +41,7 @@ sub brik_properties {
          read => [ qw(input_file|OPTIONAL) ],
          write => [ qw(csv_struct output_file|OPTIONAL) ],
          get_column_values => [ qw($data column_name|column_int) ],
+         read_next => [ qw(input_file|OPTIONAL) ],
       },
       require_modules => {
          'Text::CSV_XS' => [ ],
@@ -53,7 +56,8 @@ sub read {
    my ($input) = @_;
 
    $input ||= $self->input;
-   $self->brik_help_run_undef_arg("read", $input) or return;
+   $self->brik_help_run_undef_arg('read', $input) or return;
+   $self->brik_help_run_file_not_found('read', $input) or return;
 
    my $csv = Text::CSV_XS->new({
       binary => 1,
@@ -104,7 +108,7 @@ sub read {
 }
 
 #
-# We only handle array of hashes format (aoh) for writing
+# We only handle ARRAY of HASHes format (aoh) for writing
 #
 sub write {
    my $self = shift;
@@ -212,6 +216,53 @@ sub get_column_values {
    }
 
    return \@results;
+}
+
+sub read_next {
+   my $self = shift;
+   my ($input) = @_;
+
+   $input ||= $self->input;
+   $self->brik_help_run_undef_arg('read_next', $input) or return;
+   $self->brik_help_run_file_not_found('read_next', $input) or return;
+
+   my $csv = $self->_csv;
+   my $fd = $self->_fd;
+   if (! defined($csv)) {
+      $csv = Text::CSV_XS->new({
+         binary => 1,
+         sep_char => $self->separator,
+         allow_loose_quotes => 1,
+         allow_loose_escapes => 1,
+      }) or return $self->log->error('read_next: Text::CSV_XS new failed');
+      $self->_csv($csv);
+
+      my $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
+      $fr->encoding($self->encoding);
+      $fd = $fr->open($input) or return;
+      $self->_fd($fd);
+   }
+
+   my $row = $csv->getline($fd);
+
+   # If a header is given as an Attribute, we use it to return a HASH
+   my $header = $self->header;
+   if (defined($header)) {
+      my $h = {};
+      my $i = 0;
+      for (@$header) {
+         $h->{$_} = $row->[$i++];
+      }
+      $row = $h;
+   }
+
+   if ($csv->eof) {
+      $self->_fd(undef);
+      $self->_csv(undef);
+      return 0;
+   }
+
+   return $row;
 }
 
 1;

@@ -7,7 +7,7 @@ package Metabrik::Log::Null;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Core::Log);
 
 sub brik_properties {
    return {
@@ -27,24 +27,6 @@ sub brik_properties {
          debug => [ qw(string caller|OPTIONAL) ],
       },
    };
-}
-
-sub brik_preinit {
-   my $self = shift;
-
-   my $context = $self->context;
-
-   # We replace the current logging Brik by this one.
-   $context->{log} = $self;
-   for my $this (keys %{$context->used}) {
-      $context->{used}->{$this}->{log} = $self;
-   }
-
-   # We have to init this new log Brik, because previous one
-   # was already inited at this stage. We have to keep the same init context.
-   $self->brik_init or return $self->log->error("brik_preinit: init error");
-
-   return $self;
 }
 
 sub _msg {

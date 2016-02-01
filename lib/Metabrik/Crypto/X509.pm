@@ -33,15 +33,17 @@ sub brik_properties {
       },
       commands => {
          ca_init => [ qw(name|OPTIONAL directory|OPTIONAL) ],
-         set_ca_attributes => [ qw(name|OPTIONAL) ],
-         ca_show => [ qw(name|OPTIONAL) ],
-         ca_sign_csr => [ qw(csr_file|OPTIONAL name|OPTIONAL) ],
+         set_ca_attributes => [ qw(ca_name|OPTIONAL) ],
+         ca_show => [ qw(ca_name|OPTIONAL) ],
+         ca_sign_csr => [ qw(csr_file|OPTIONAL ca_name|OPTIONAL) ],
          csr_new => [ qw(base_file use_passphrase|OPTIONAL) ],
          cert_hash => [ qw(cert_file) ],
-         cert_verify => [ qw(cert_file name|OPTIONAL) ],
+         cert_verify => [ qw(cert_file ca_name|OPTIONAL) ],
+         cert_show => [ qw(cert_file) ],
       },
       require_modules => {
          'Metabrik::File::Text' => [ ],
+         'Metabrik::System::File' => [ ],
       },
       require_binaries => {
          'openssl', => [ ],
@@ -51,13 +53,13 @@ sub brik_properties {
 
 sub set_ca_attributes {
    my $self = shift;
-   my ($name) = @_;
+   my ($ca_name) = @_;
 
-   $name ||= $self->ca_name;
-   $self->brik_help_run_undef_arg('set_ca_attributes', $name) or return;
+   $ca_name ||= $self->ca_name;
+   $self->brik_help_run_undef_arg('set_ca_attributes', $ca_name) or return;
 
-   my $ca_lc_name = lc($name);
-   my $ca_directory = $self->datadir.'/'.$ca_lc_name;
+   my $ca_lc_name = lc($ca_name);
+   my $ca_directory = $self->ca_directory || $self->datadir.'/'.$ca_lc_name;
 
    my $ca_conf = $ca_directory.'/'.$ca_lc_name.'.conf';
    my $ca_cert = $ca_directory.'/'.$ca_lc_name.'.pem';
@@ -65,7 +67,7 @@ sub set_ca_attributes {
    my $email = 'dummy@example.com';
    my $organization = 'Dummy Org';
 
-   $self->ca_name($name);
+   $self->ca_name($ca_name);
    $self->ca_lc_name($ca_lc_name);
    $self->ca_conf($ca_conf);
    $self->ca_directory($ca_directory);
@@ -77,29 +79,30 @@ sub set_ca_attributes {
 
 sub ca_init {
    my $self = shift;
-   my ($name, $directory) = @_;
+   my ($ca_name, $ca_directory) = @_;
 
-   $name ||= $self->ca_name;
-   $self->brik_help_run_undef_arg('ca_init', $name) or return;
+   $ca_name ||= $self->ca_name;
+   $ca_directory ||= $self->ca_directory;
+   $self->brik_help_run_undef_arg('ca_init', $ca_name) or return;
+   $self->brik_help_run_undef_arg('ca_init', $ca_directory) or return;
 
-   $self->set_ca_attributes($name)
+   $self->set_ca_attributes($ca_name)
       or return $self->log->error("ca_init: set_ca_attributes failed");
 
-   my $ca_directory = $self->ca_directory;
    if (-d $ca_directory) {
-      return $self->log->error("ca_init: ca with name [$name] already exists");
+      return $self->log->error("ca_init: ca with name [$ca_name] already exists");
    }
    else {
       mkdir($ca_directory)
-         or return $self->log->error("ca_init: mkdir failed with error [$!]");
-      mkdir($ca_directory.'/certs');
+         or return $self->log->error("ca_init: mkdir1 failed with error [$!]");
+      mkdir($ca_directory.'/certs')
+         or return $self->log->error("ca_init: mkdir2 failed with error [$!]");
+      mkdir($ca_directory.'/csrs')
+         or return $self->log->error("ca_init: mkdir3 failed with error [$!]");
 
       my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
-      $ft->write('', $ca_directory.'/index.txt')
-         or return $self->log->error("ca_init: write index.txt failed");
-
-      $ft->write('01', $ca_directory.'/serial')
-         or return $self->log->error("ca_init: write serial failed");
+      $ft->write('', $ca_directory.'/index.txt') or return;
+      $ft->write('01', $ca_directory.'/serial') or return;
    }
 
    $self->log->verbose("ca_init: using directory [$ca_directory]");
@@ -154,7 +157,7 @@ sub ca_init {
       "x509_extensions    = root_ca_extensions",
       "",
       "[ root_ca_distinguished_name ]",
-      "commonName          = $name",
+      "commonName          = $ca_name",
       "stateOrProvinceName = Paris",
       "countryName         = FR",
       "emailAddress        = $email",
@@ -179,12 +182,12 @@ sub ca_init {
 
 sub ca_show {
    my $self = shift;
-   my ($name) = @_;
+   my ($ca_name) = @_;
 
-   $name ||= $self->ca_name;
-   $self->brik_help_run_undef_arg('ca_show', $name) or return;
+   $ca_name ||= $self->ca_name;
+   $self->brik_help_run_undef_arg('ca_show', $ca_name) or return;
 
-   $self->set_ca_attributes($name) or return;
+   $self->set_ca_attributes($ca_name) or return;
 
    my $ca_cert = $self->ca_cert;
    my $cmd = "openssl x509 -in $ca_cert -text -noout";
@@ -198,9 +201,9 @@ sub csr_new {
    $use_passphrase ||= $self->use_passphrase;
    $self->brik_help_run_undef_arg('csr_new', $base_file) or return;
 
-   my $datadir = $self->datadir;
-   my $csr_cert = $datadir.'/'.$base_file.'.pem';
-   my $csr_key = $datadir.'/'.$base_file.'.key';
+   my $ca_directory = $self->ca_directory;
+   my $csr_cert = $ca_directory.'/csrs/'.$base_file.'.pem';
+   my $csr_key = $ca_directory.'/csrs/'.$base_file.'.key';
    my $key_size = $self->key_size;
 
    if (-f $csr_cert) {
@@ -224,25 +227,25 @@ sub csr_new {
 
 sub ca_sign_csr {
    my $self = shift;
-   my ($csr_cert, $name) = @_;
+   my ($csr_cert, $ca_name) = @_;
 
-   $name ||= $self->ca_name;
+   $ca_name ||= $self->ca_name;
    $self->brik_help_run_undef_arg('ca_sign_csr', $csr_cert) or return;
    $self->brik_help_run_file_not_found('ca_sign_csr', $csr_cert) or return;
-   $self->brik_help_run_undef_arg('ca_sign_csr', $name) or return;
+   $self->brik_help_run_undef_arg('ca_sign_csr', $ca_name) or return;
 
-   $self->set_ca_attributes($name) or return;
+   $self->set_ca_attributes($ca_name) or return;
 
    my $ca_directory = $self->ca_directory;
    my $ca_conf = $self->ca_conf;
 
-   my ($base_file) = $csr_cert =~ /\/?(.*)\.pem$/;
-   if (! length($base_file)) {
-      return $self->log->error("ca_sign_csr: cannot parse file name [$csr_cert]");
-   }
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   my $base_file = $sf->basefile($csr_cert) or return;
+   $base_file =~ s/.pem$//;
 
-   my $signed_cert = $ca_directory.'/certs/'.$base_file.'.pem';
+   my $signed_cert = $ca_directory.'/certs/'.$base_file.'.signed.pem';
    my $cmd = "openssl ca -in $csr_cert -out $signed_cert -config $ca_conf";
+   $self->log->verbose("ca_sign_csr: cmd[$cmd]");
    $self->system($cmd);
    if ($?) {
       return $self->log->error("ca_sign_csr: system failed");
@@ -251,6 +254,9 @@ sub ca_sign_csr {
    return $signed_cert;
 }
 
+#
+# Returns hash ID of a certificate.
+#
 sub cert_hash {
    my $self = shift;
    my ($cert_file) = @_;
@@ -258,26 +264,43 @@ sub cert_hash {
    $self->brik_help_run_undef_arg('cert_hash', $cert_file) or return;
    $self->brik_help_run_file_not_found('cert_hash', $cert_file) or return;
 
-   my $cmd = "openssl x509 -noout -hash -in $cert_file";
+   my $cmd = "openssl x509 -noout -hash -in \"$cert_file\"";
+   my $lines = $self->capture($cmd) or return;
 
-   return $self->capture($cmd);
+   if (@$lines == 0) {
+      return $self->log->error('cert_hash: unable to get hash');
+   }
+
+   return $lines->[0];
 }
 
 sub cert_verify {
    my $self = shift;
-   my ($cert_file, $name) = @_;
+   my ($cert_file, $ca_name) = @_;
 
-   $name ||= $self->ca_name;
+   $ca_name ||= $self->ca_name;
    $self->brik_help_run_undef_arg('cert_verify', $cert_file) or return;
    $self->brik_help_run_file_not_found('cert_verify', $cert_file) or return;
-   $self->brik_help_run_undef_arg('cert_verify', $name) or return;
+   $self->brik_help_run_undef_arg('cert_verify', $ca_name) or return;
 
-   $self->set_ca_attributes($name) or return;
+   $self->set_ca_attributes($ca_name) or return;
 
    my $ca_directory = $self->ca_directory;
 
    my $cmd = "openssl verify -CApath $ca_directory $cert_file";
 
+   return $self->capture($cmd);
+}
+
+sub cert_show {
+   my $self = shift;
+   my ($cert_file) = @_;
+
+   $cert_file ||= $self->cert_file;
+   $self->brik_help_run_undef_arg('cert_show', $cert_file) or return;
+   $self->brik_help_run_file_not_found('cert_show', $cert_file) or return;
+
+   my $cmd = "openssl x509 -in $cert_file -text -noout";
    return $self->capture($cmd);
 }
 

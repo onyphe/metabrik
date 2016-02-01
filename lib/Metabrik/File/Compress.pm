@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-# file::zip brik
+# file::compress brik
 #
 package Metabrik::File::Compress;
 use strict;

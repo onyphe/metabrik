@@ -271,7 +271,7 @@ sub get_new_pidfile {
 
    my $id = $self->get_latest_daemon_id;
    defined($id) ? $id++ : ($id = 1);
-   my $pidfile = $self->datadir."/daemonpid.$id";
+   my $pidfile = sprintf("%s/daemonpid.%05d", $self->datadir, $id);
 
    return $pidfile;
 }
@@ -282,7 +282,7 @@ sub get_latest_pidfile {
    my $pidfile;
    my $id = $self->get_latest_daemon_id;
    if (defined($id)) {
-      $pidfile = $self->datadir."/daemonpid.$id";
+      $pidfile = sprintf("%s/daemonpid.%05d", $self->datadir, $id);
    }
    else {
       return $self->log->error("get_latest_pidfile: no pidfile found");
