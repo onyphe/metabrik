@@ -400,7 +400,7 @@ sub update_core {
 
    my $datadir = $self->datadir;
 
-   my $url = 'http://trac.metabrik.org/hg/core';
+   my $url = 'https://www.metabrik.org/hg/core';
 
    my $dm = Metabrik::Devel::Mercurial->new_from_brik_init($self) or return;
    $dm->use_pager(0);
@@ -431,7 +431,7 @@ sub update_repository {
    my $datadir = $self->datadir;
    my $repository = $self->global->repository || $datadir.'/repository';
 
-   my $url = 'http://trac.metabrik.org/hg/repository';
+   my $url = 'https://www.metabrik.org/hg/repository';
 
    my $dm = Metabrik::Devel::Mercurial->new_from_brik_init($self) or return;
    $dm->use_pager(0);

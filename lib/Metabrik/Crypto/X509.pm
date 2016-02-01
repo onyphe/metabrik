@@ -202,7 +202,7 @@ sub csr_new {
    $self->brik_help_run_undef_arg('csr_new', $base_file) or return;
 
    my $ca_directory = $self->ca_directory;
-   my $csr_cert = $ca_directory.'/csrs/'.$base_file.'.pem';
+   my $csr_cert = $ca_directory.'/csrs/'.$base_file.'.csr';
    my $csr_key = $ca_directory.'/csrs/'.$base_file.'.key';
    my $key_size = $self->key_size;
 
@@ -241,7 +241,7 @@ sub ca_sign_csr {
 
    my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
    my $base_file = $sf->basefile($csr_cert) or return;
-   $base_file =~ s/.pem$//;
+   $base_file =~ s/.[^\.]+$//;  # Remove extension
 
    my $signed_cert = $ca_directory.'/certs/'.$base_file.'.signed.pem';
    my $cmd = "openssl ca -in $csr_cert -out $signed_cert -config $ca_conf";
