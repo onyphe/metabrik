@@ -39,6 +39,7 @@ sub brik_properties {
          to_absolute_path => [ qw(path basepath|OPTIONAL) ],
          basefile => [ qw(path) ],
          basedir => [ qw(path) ],
+         link => [ qw(from to) ],
       },
       require_modules => {
          'File::Copy' => [ qw(mv copy) ],
@@ -269,6 +270,25 @@ sub basedir {
    $directories =~ s{/*$}{};
 
    return $directories;
+}
+
+#
+# Creates a link from a file to another name
+#
+sub link {
+   my $self = shift;
+   my ($from, $to) = @_;
+
+   $self->brik_help_run_undef_arg('link', $from) or return;
+   $self->brik_help_run_file_not_found('link', $from) or return;
+   $self->brik_help_run_undef_arg('link', $to) or return;
+
+   my $r = symlink($from, $to);
+   if (! defined($r)) {
+      return $self->log->error("link: failed with error: [$!]");
+   }
+
+   return $to;
 }
 
 1;

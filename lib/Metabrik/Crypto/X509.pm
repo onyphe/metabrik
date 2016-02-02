@@ -177,7 +177,14 @@ sub ca_init {
    my $cmd = "openssl req -x509 -newkey rsa:$key_size ".
              "-days 1800 -out $ca_cert -outform PEM -config $ca_conf";
 
-   return $self->capture($cmd);
+   $self->system($cmd) or return;
+
+   my $hash = $self->cert_hash($ca_cert) or return;
+
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   $sf->link($ca_cert, $ca_directory.'/'.$hash.'.0') or return;
+
+   return $ca_cert;
 }
 
 sub ca_show {

@@ -62,6 +62,7 @@ sub generate_conf {
 
    my $datadir = $self->datadir;
    my $user = $self->global->username;
+   my $hostname = $self->global->hostname;
    my $group = $user;
    my $listen = $self->listen;
    my $port = $self->port;
@@ -89,14 +90,15 @@ sub generate_conf {
 
    $conf .=<<EOF
 options {
-   chain_hostnames(off);
-   flush_lines(0);
-   use_dns(no);
-   use_fqdn(no);
+   use-dns(no);
+   use-fqdn(no);
+   keep-hostname(yes);
+   chain-hostnames(no);
+   flush-lines(0);
    owner("$user");
    group("$group");
    perm(0644);
-   stats_freq(0);
+   stats-freq(0);
 };
 
 source s_internal {
@@ -110,7 +112,7 @@ destination d_local_syslogng {
 log { source(s_internal); destination(d_local_syslogng); };
 
 source s_listen_udp {
-   udp(ip($listen) port($port));
+   udp(ip($listen) port($port) host_override("$hostname"));
 };
 
 destination d_local_file {
