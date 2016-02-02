@@ -439,6 +439,9 @@
       "Metabrik::Server::Snmptrap" : {
          "file" : "lib/Metabrik/Server/Snmptrap.pm"
       },
+      "Metabrik::Server::Syslogng" : {
+         "file" : "lib/Metabrik/Server/Syslogng.pm"
+      },
       "Metabrik::Server::Tcp" : {
          "file" : "lib/Metabrik/Server/Tcp.pm"
       },

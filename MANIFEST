@@ -137,6 +137,7 @@ lib/Metabrik/Server/Http.pm
 lib/Metabrik/Server/Rest.pm
 lib/Metabrik/Server/Snmp.pm
 lib/Metabrik/Server/Snmptrap.pm
+lib/Metabrik/Server/Syslogng.pm
 lib/Metabrik/Server/Tcp.pm
 lib/Metabrik/Server/Tor.pm
 lib/Metabrik/Shell/Command.pm
