@@ -324,6 +324,9 @@
       "Metabrik::Network::Frame" : {
          "file" : "lib/Metabrik/Network/Frame.pm"
       },
+      "Metabrik::Network::Freebsd::Ping" : {
+         "file" : "lib/Metabrik/Network/Freebsd/Ping.pm"
+      },
       "Metabrik::Network::Ftp" : {
          "file" : "lib/Metabrik/Network/Ftp.pm"
       },
@@ -338,6 +341,9 @@
       },
       "Metabrik::Network::Linux::Iptables" : {
          "file" : "lib/Metabrik/Network/Linux/Iptables.pm"
+      },
+      "Metabrik::Network::Linux::Ping" : {
+         "file" : "lib/Metabrik/Network/Linux/Ping.pm"
       },
       "Metabrik::Network::Modbus" : {
          "file" : "lib/Metabrik/Network/Modbus.pm"

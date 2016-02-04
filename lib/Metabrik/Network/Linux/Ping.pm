@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# network::ping Brik
+# network::linux::ping Brik
 #
-package Metabrik::Network::Ping;
+package Metabrik::Network::Linux::Ping;
 use strict;
 use warnings;
 
@@ -28,11 +28,6 @@ sub brik_properties {
          install => [ ],  # Inherited
          is_alive => [ qw(host try|OPTIONAL timeout|OPTIONAL) ],
       },
-      require_modules => {
-         'Metabrik::System::Os' => [ ],
-         'Metabrik::Network::Linux::Ping' => [ ],
-         'Metabrik::Network::Freebsd::Ping' => [ ],
-      },
       require_binaries => {
          ping => [ ],
       },
@@ -53,19 +48,14 @@ sub is_alive {
    $timeout ||= $self->timeout;
    $self->brik_help_run_undef_arg('is_alive', $host) or return;
 
-   my $np;
-   my $os = Metabrik::System::Os->new_from_brik_init($self) or return;
-   if ($os->is_linux) {
-      $np = Metabrik::Network::Linux::Ping->new_from_brik_init($self) or return;
-   }
-   elsif ($os->is_freebsd) {
-      $np = Metabrik::Network::Freebsd::Ping->new_from_brik_init($self) or return;
-   }
-   else {
-      return $self->log->error("is_alive: OS unsupported");
+   my $cmd = "ping -c $try -w $timeout $host > /dev/null 2>&1";
+
+   my $r = $self->system($cmd) or return;
+   if ($r == 1) {
+      return 1;  # Host is alive
    }
 
-   return $np->is_alive($host, $try, $timeout);
+   return 0;  # Host not alive
 }
 
 1;
@@ -74,7 +64,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Network::Ping - network::ping Brik
+Metabrik::Network::Linux::Ping - network::linux::ping Brik
 
 =head1 COPYRIGHT AND LICENSE
 
