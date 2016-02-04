@@ -104,18 +104,16 @@ sub system {
 
    my $r = CORE::system($command);
 
-   $self->debug && $self->log->debug("system: return code [$r] with status [$?]");
+   $self->debug && $self->log->debug("system: command returned code [$r] with status [$?]");
 
    if (! $self->ignore_error && $? != 0) {
       $self->log->verbose("system: exit code[$?]");
       # Failure, we return the program exit code
+      $self->debug && $self->log->debug("system: program exit code [$?]");
       return $?;
    }
 
-   # Success
-   if ($r == 0) {
-      return 1;
-   }
+   $self->debug && $self->log->debug("system: program exit with success");
 
    return 1;
 }

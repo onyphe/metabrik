@@ -27,6 +27,7 @@ sub brik_properties {
          ca_dir => [ qw(directory) ],
          key_file => [ qw(file) ],
          cert_file => [ qw(file) ],
+         version => [ qw(version) ],
       },
       attributes_default => {
          listen => '127.0.0.1',
@@ -34,6 +35,7 @@ sub brik_properties {
          conf_file => 'syslogng.conf',
          output => 'local.log',
          use_ssl => 0,
+         version => '3.5',
       },
       commands => {
          install => [ ],  # Inherited
@@ -73,6 +75,7 @@ sub generate_conf {
    my $ca_dir = $self->ca_dir;
    my $key_file = $self->key_file;
    my $cert_file = $self->cert_file;
+   my $version = $self->version;
 
    my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
    if ($sf->is_relative($conf_file)) {
@@ -82,7 +85,7 @@ sub generate_conf {
       $output = "$datadir/$output";
    }
 
-   my $conf = '@version:3.5'."\n";
+   my $conf = '@version:'."$version\n";
    if (-f '/etc/syslog-ng/scl.conf') {
       $conf .= '@include "scl.conf"'."\n";
    }
@@ -94,11 +97,15 @@ options {
    use-fqdn(no);
    keep-hostname(yes);
    chain-hostnames(no);
-   flush-lines(0);
    owner("$user");
    group("$group");
    perm(0644);
-   stats-freq(0);
+   stats-freq(120);
+
+   # Performance optimizations
+   # From: https://pzolee.blogs.balabit.com/2011/02/syslog-ng-performance-tuning/
+   flush-lines(100);
+   log-fifo-size(1000);
 };
 
 source s_internal {
@@ -112,7 +119,11 @@ destination d_local_syslogng {
 log { source(s_internal); destination(d_local_syslogng); };
 
 source s_listen_udp {
-   udp(ip($listen) port($port) host_override("$hostname"));
+   udp(ip($listen) port($port)
+      host-override("$hostname")
+      log-iw-size(100)
+      log-fetch-limit(100)
+   );
 };
 
 destination d_local_file {
@@ -125,9 +136,7 @@ EOF
    if (defined($remote_host) && $use_ssl) {
       $conf .=<<EOF
 destination d_remote_host {
-   tcp("$remote_host"
-      port($remote_port)
-      log-fifo-size(10000)
+   tcp("$remote_host" port($remote_port)
       tls(
          ca-dir("$ca_dir")
          key-file("$key_file")
@@ -136,20 +145,15 @@ destination d_remote_host {
    );
 };
 
-log { source(s_listen_udp); destination(d_remote_host); };
+log { source(s_listen_udp); destination(d_remote_host); flags(flow-control); };
 EOF
 ;
    }
    elsif (defined($remote_host)) {
       $conf .=<<EOF
-destination d_remote_host {
-   tcp("$remote_host" 
-      port($remote_port)
-      log-fifo-size(10000)
-   );
-};
+destination d_remote_host { tcp("$remote_host" port($remote_port) ); };
 
-log { source(s_listen_udp); destination(d_remote_host); };
+log { source(s_listen_udp); destination(d_remote_host); flags(flow-control); };
 EOF
 ;
    }
