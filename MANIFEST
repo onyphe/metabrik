@@ -109,6 +109,7 @@ lib/Metabrik/Network/Netbios.pm
 lib/Metabrik/Network/Netstat.pm
 lib/Metabrik/Network/Nikto.pm
 lib/Metabrik/Network/Nmap.pm
+lib/Metabrik/Network/Ping.pm
 lib/Metabrik/Network/Portscan.pm
 lib/Metabrik/Network/Read.pm
 lib/Metabrik/Network/Route.pm

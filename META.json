@@ -354,6 +354,9 @@
       "Metabrik::Network::Nmap" : {
          "file" : "lib/Metabrik/Network/Nmap.pm"
       },
+      "Metabrik::Network::Ping" : {
+         "file" : "lib/Metabrik/Network/Ping.pm"
+      },
       "Metabrik::Network::Portscan" : {
          "file" : "lib/Metabrik/Network/Portscan.pm"
       },
