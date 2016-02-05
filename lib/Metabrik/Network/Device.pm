@@ -40,7 +40,8 @@ sub brik_properties {
          'Metabrik::Client::Www' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(libpcap-dev libnet-libdnet-perl) ],
+         ubuntu => [ qw(libpcap-dev libnet-libdnet-perl) ],
+         freebsd => [ qw(p5-Net-Pcap libdnet) ],
       },
    };
 }

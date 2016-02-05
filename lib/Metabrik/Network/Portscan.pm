@@ -249,26 +249,35 @@ sub tcp_syn_sender {
    $self->brik_help_run_empty_array_arg('tcp_syn_sender', $port_list, 'ARRAY') or return;
 
    my $device = $self->device;
-   my $ip4 = $self->my_ipv4 or return;
-   my $ip6 = $self->my_ipv6 or return;
+   my $use_ipv6 = $self->use_ipv6;
 
-   my $ip = $ip_list->[0];
-   my $use_ipv6 = 0;
-   if ($self->is_ipv6($ip)) {
-      $use_ipv6 = 1;
+   my $ip4;
+   my $ip6;
+   if ($use_ipv6) {
+      $ip6 = $self->my_ipv6;
       if (! defined($ip6)) {
          return $self->log->error("tcp_syn_sender: IPv6 not found for device [$device]");
       }
-      $self->log->verbose("tcp_syn_sender: using source IPv6 [$ip6]");
    }
-   elsif ($self->is_ipv4($ip)) {
+   else {
+      $ip4 = $self->my_ipv4;
       if (! defined($ip4)) {
          return $self->log->error("tcp_syn_sender: IPv4 not found for device [$device]");
       }
-      $self->log->verbose("tcp_syn_sender: using source IPv4 [$ip4]");
+   }
+
+   my $ip = $ip_list->[0];
+   if ($self->use_ipv6) {
+      if (! $self->is_ipv6($ip)) {
+         return $self->log->error("tcp_syn_sender: address is not IPv6 in ip_list");
+      }
+      $self->log->verbose("tcp_syn_sender: using source IPv6 [$ip6]");
    }
    else {
-      return $self->log->error("tcp_syn_sender: unable to identify IP address family for [$ip]");
+      if (! $self->is_ipv4($ip)) {
+         return $self->log->error("tcp_syn_sender: address is not IPv4 in ip_list");
+      }
+      $self->log->verbose("tcp_syn_sender: using source IPv4 [$ip4]");
    }
 
    $self->log->verbose("tcp_syn_sender: sender started");
