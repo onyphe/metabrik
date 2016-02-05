@@ -1,6 +1,6 @@
 Revision history for Perl extension Metabrik::Repository.
 
-1.21.0 
+1.21.0 Fri Feb  5 07:53:28 CET 2016
    - new: server::syslogng Brik
    - new: network::ping Brik
    - new: network::freebsd::ping Brik
