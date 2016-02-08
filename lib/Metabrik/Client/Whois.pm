@@ -16,8 +16,8 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
-         ip => [ qw(ip_address) ],
-         domain => [ qw(domain) ],
+         from_ip => [ qw(ip_address) ],
+         from_domain => [ qw(domain) ],
          is_available_domain => [ qw(domain) ],
          parse_raw_whois => [ qw($lines_list) ],
          normalize_raw_ip_whois => [ qw($chunks $lines_list) ],
@@ -273,7 +273,7 @@ sub normalize_raw_ip_whois {
    return $r;
 }
 
-sub ip {
+sub from_ip {
    my $self = shift;
    my ($ip) = @_;
 
@@ -310,7 +310,7 @@ sub _domain_lookup {
    return $this;
 }
 
-sub domain {
+sub from_domain {
    my $self = shift;
    my ($domain) = @_;
 

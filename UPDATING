@@ -1,3 +1,9 @@
+20160208
+   AFFECTS: client::whois
+
+   - client::whois ip Command renamed to from_ip
+   - client::whois domain Command renamed to from_domain
+
 20160129
    AFFECTS: system::process, network::portscan
 
