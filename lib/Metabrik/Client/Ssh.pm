@@ -27,7 +27,6 @@ sub brik_properties {
          _channel => [ qw(INTERNAL) ],
       },
       attributes_default => {
-         hostname => 'localhost',
          username => 'root',
          port => 22,
          use_publickey => 1,
@@ -35,14 +34,16 @@ sub brik_properties {
       commands => {
          install => [ ], # Inherited
          connect => [ qw(hostname|OPTIONAL port|OPTIONAL username|OPTIONAL) ],
-         cat => [ qw(file) ],
          execute => [ qw(command) ],
          read => [ ],
          read_line => [ ],
-         read_line_all => [ ],
+         read_line_all => [ qw(channel|OPTIONAL) ],
          load => [ qw(file) ],
-         listfiles => [ qw(glob) ],
          disconnect => [ ],
+         create_channel => [ ],
+         close_channel => [ ],
+         execute_in_background => [ qw(command stdout_file|OPTIONAL stderr_file|OPTIONAL stdin_file|OPTIONAL) ],
+         capture => [ qw(command) ],
       },
       require_modules => {
          'IO::Scalar' => [ ],
@@ -50,10 +51,14 @@ sub brik_properties {
          'Metabrik::String::Password' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(libssh2-1-dev) ],
+         ubuntu => [ qw(libssh2-1-dev) ],
       },
    };
 }
+
+#
+# With help from http://www.perlmonks.org/?node_id=569657
+#
 
 sub connect {
    my $self = shift;
@@ -129,7 +134,7 @@ sub disconnect {
    my $r = $ssh2->disconnect;
 
    $self->ssh2(undef);
-   $self->_channel(undef);
+   $self->close_channel;
 
    return $r;
 }
@@ -144,27 +149,79 @@ sub execute {
 
    $self->debug && $self->log->debug("execute: cmd [$cmd]");
 
-   my $channel = $ssh2->channel;
-   if (! defined($channel)) {
-      return $self->log->error("execute: channel creation error");
-   }
+   my $channel = $self->create_channel or return;
 
-   $channel->exec($cmd)
+   $channel->process('exec', $cmd)
       or return $self->log->error("execute: can't execute command [$cmd]: $!");
 
    return $self->_channel($channel);
 }
 
-sub read_line {
+sub create_channel {
    my $self = shift;
 
    my $ssh2 = $self->ssh2;
    $self->brik_help_run_undef_arg('connect', $ssh2) or return;
 
-   my $channel = $self->_channel;
+   my $channel = $ssh2->channel;
    if (! defined($channel)) {
-      return $self->log->info("read_line: create a channel first");
+      return $self->log->error("create_channel: creation failed: [$!]");
    }
+
+   return $self->_channel($channel);
+}
+
+sub close_channel {
+   my $self = shift;
+
+   my $channel = $self->_channel;
+   if (defined($channel)) {
+      $channel->close;
+      $self->_channel(undef);
+   }
+
+   return 1;
+}
+
+sub execute_in_background {
+   my $self = shift;
+   my ($cmd, $stdout_file, $stderr_file, $stdin_file) = @_;
+
+   my $ssh2 = $self->ssh2;
+   $self->brik_help_run_undef_arg('connect', $ssh2) or return;
+   $self->brik_help_run_undef_arg('execute_in_background', $cmd) or return;
+
+   $stdout_file ||= '/dev/null';
+   $stderr_file ||= '/dev/null';
+
+   my $channel = $self->create_channel or return;
+
+   $cmd .= " > $stdout_file 2> $stderr_file";
+   if (defined($stdin_file)) {
+      $cmd .= " < $stdin_file";
+   }
+   $cmd .= " &";
+
+   $self->debug && $self->log->debug("execute_in_background: cmd [$cmd]");
+
+   $channel->process('exec', $cmd)
+      or return $self->log->error("execute_in_background: process failed: [$!]");
+   $channel->send_eof
+      or return $self->log->error("execute_in_background: send_eof failed: [$!]");
+
+   $self->close_channel or return;
+
+   return 1;
+}
+
+sub read_line {
+   my $self = shift;
+   my ($channel) = @_;
+
+   my $ssh2 = $self->ssh2;
+   $channel ||= $self->_channel;
+   $self->brik_help_run_undef_arg('connect', $ssh2) or return;
+   $self->brik_help_run_undef_arg('create_channel', $ssh2) or return;
 
    my $read = '';
    my $count = 1;
@@ -191,35 +248,30 @@ sub read_line {
 
 sub read_line_all {
    my $self = shift;
+   my ($channel) = @_;
 
    my $ssh2 = $self->ssh2;
+   $channel ||= $self->_channel;
    $self->brik_help_run_undef_arg('connect', $ssh2) or return;
+   $self->brik_help_run_undef_arg('create_channel', $ssh2) or return;
 
-   my $channel = $self->_channel;
-   if (! defined($channel)) {
-      return $self->log->info("read_line_all: create a channel first");
-   }
-
-   my $read = $self->read;
-   if (! defined($read)) {
-      return $self->log->error("read_line_all: read error");
-   }
+   my $read = $self->read or return;
 
    my @lines = split(/\n/, $read);
+
+   $self->close_channel;
 
    return \@lines;
 }
 
 sub read {
    my $self = shift;
+   my ($channel) = @_;
 
    my $ssh2 = $self->ssh2;
+   $channel ||= $self->_channel;
    $self->brik_help_run_undef_arg('connect', $ssh2) or return;
-
-   my $channel = $self->_channel;
-   if (! defined($channel)) {
-      return $self->log->info("read: create a channel first");
-   }
+   $self->brik_help_run_undef_arg('create_channel', $channel) or return;
 
    my $read = '';
    my $count = 1024;
@@ -241,36 +293,9 @@ sub read {
       }
    }
 
+   $self->close_channel;
+
    return $read;
-}
-
-sub listfiles {
-   my $self = shift;
-   my ($glob) = @_;
-
-   my $channel = $self->execute("ls $glob 2> /dev/null") or return;
-
-   my $read = $self->read;
-   if (! defined($read)) {
-      return $self->log->error("listfiles: read error");
-   }
-
-   my @files = split(/\n/, $read);
-
-   return \@files;
-}
-
-sub cat {
-   my $self = shift;
-   my ($file) = @_;
-
-   my $ssh2 = $self->ssh2;
-   $self->brik_help_run_undef_arg('connect', $ssh2) or return;
-   $self->brik_help_run_undef_arg('cat', $file) or return;
-
-   my $channel = $self->execute('cat '.$file) or return;
-
-   return $self->_channel($channel);
 }
 
 sub load {
@@ -294,6 +319,27 @@ sub load {
    }
 
    return $buf;
+}
+
+sub capture {
+   my $self = shift;
+   my ($cmd) = @_;
+
+   my $ssh2 = $self->ssh2;
+   $self->brik_help_run_undef_arg('connect', $ssh2) or return;
+   $self->brik_help_run_undef_arg('capture', $cmd) or return;
+
+   my $channel = $self->create_channel or return;
+
+   $self->debug && $self->log->debug("capture: cmd [$cmd]");
+
+   $channel->process('exec', $cmd)
+      or return $self->log->error("capture: process failed: [$!]");
+
+   my $lines = $self->read_line_all or return;
+   $self->close_channel;
+
+   return $lines;
 }
 
 sub brik_fini {

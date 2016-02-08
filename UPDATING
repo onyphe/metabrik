@@ -1,8 +1,9 @@
 20160208
-   AFFECTS: client::whois
+   AFFECTS: client::whois, client::ssh
 
    - client::whois ip Command renamed to from_ip
    - client::whois domain Command renamed to from_domain
+   - client::ssh removed cat and listfiles Commands
 
 20160129
    AFFECTS: system::process, network::portscan
