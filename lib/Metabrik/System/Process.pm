@@ -25,6 +25,7 @@ sub brik_properties {
          close_output_on_start => 1,
       },
       commands => {
+         parse_ps_output => [ qw(data) ],
          list => [ ],
          is_running => [ qw(process) ],
          get_process_info => [ qw(process) ],
@@ -53,16 +54,17 @@ sub brik_properties {
    };
 }
 
-sub list {
+sub parse_ps_output {
    my $self = shift;
+   my ($data) = @_;
 
-   my $res = $self->capture("ps awuxw") or return;
+   $self->brik_help_run_undef_arg('parse_ps_output', $data) or return;
 
    my @a = ();
-   my $first = shift @$res;
+   my $first = shift @$data;
    my $header = [ split(/\s+/, $first) ];
    my $count = scalar(@$header) - 1;
-   for my $this (@$res) {
+   for my $this (@$data) {
       my @toks = split(/\s+/, $this);
       my $h = {};
       for my $n (0..$count) {
@@ -78,6 +80,14 @@ sub list {
    }
 
    return \@a;
+}
+
+sub list {
+   my $self = shift;
+
+   my $res = $self->capture("ps awuxw") or return;
+
+   return $self->parse_ps_output($res);
 }
 
 sub is_running {
