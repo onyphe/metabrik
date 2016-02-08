@@ -131,6 +131,7 @@ lib/Metabrik/Network/Zmap.pm
 lib/Metabrik/Perl/Module.pm
 lib/Metabrik/Proxy/Http.pm
 lib/Metabrik/Proxy/Ssh2tcp.pm
+lib/Metabrik/Remote/Ssh.pm
 lib/Metabrik/Remote/Tcpdump.pm
 lib/Metabrik/Remote/Winexe.pm
 lib/Metabrik/Remote/Wmi.pm

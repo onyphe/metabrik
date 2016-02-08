@@ -420,6 +420,9 @@
       "Metabrik::Proxy::Ssh2tcp" : {
          "file" : "lib/Metabrik/Proxy/Ssh2tcp.pm"
       },
+      "Metabrik::Remote::Ssh" : {
+         "file" : "lib/Metabrik/Remote/Ssh.pm"
+      },
       "Metabrik::Remote::Tcpdump" : {
          "file" : "lib/Metabrik/Remote/Tcpdump.pm"
       },
