@@ -35,8 +35,8 @@ sub brik_properties {
          install => [ ], # Inherited
          connect => [ qw(hostname|OPTIONAL port|OPTIONAL username|OPTIONAL) ],
          execute => [ qw(command) ],
-         read => [ ],
-         read_line => [ ],
+         read => [ qw(channel|OPTIONAL) ],
+         read_line => [ qw(channel|OPTIONAL) ],
          read_line_all => [ qw(channel|OPTIONAL) ],
          load => [ qw(file) ],
          disconnect => [ ],
@@ -218,16 +218,17 @@ sub read_line {
    my $self = shift;
    my ($channel) = @_;
 
-   my $ssh2 = $self->ssh2;
    $channel ||= $self->_channel;
-   $self->brik_help_run_undef_arg('connect', $ssh2) or return;
-   $self->brik_help_run_undef_arg('create_channel', $ssh2) or return;
+   $self->brik_help_run_undef_arg('create_channel', $channel) or return;
 
    my $read = '';
    my $count = 1;
    while (1) {
       my $char = '';
       my $rc = $channel->read($char, $count);
+      if (! defined($rc)) {
+         return $self->log->error("read_line: read failed: [$!]");
+      }
       if ($rc > 0) {
          #print "read[$char]\n";
          #print "returned[$c]\n";
@@ -250,12 +251,10 @@ sub read_line_all {
    my $self = shift;
    my ($channel) = @_;
 
-   my $ssh2 = $self->ssh2;
    $channel ||= $self->_channel;
-   $self->brik_help_run_undef_arg('connect', $ssh2) or return;
-   $self->brik_help_run_undef_arg('create_channel', $ssh2) or return;
+   $self->brik_help_run_undef_arg('create_channel', $channel) or return;
 
-   my $read = $self->read or return;
+   my $read = $self->read($channel) or return;
 
    my @lines = split(/\n/, $read);
 
@@ -268,16 +267,19 @@ sub read {
    my $self = shift;
    my ($channel) = @_;
 
-   my $ssh2 = $self->ssh2;
    $channel ||= $self->_channel;
-   $self->brik_help_run_undef_arg('connect', $ssh2) or return;
    $self->brik_help_run_undef_arg('create_channel', $channel) or return;
+
+   $self->log->verbose("read: channel[$channel]");
 
    my $read = '';
    my $count = 1024;
    while (1) {
       my $buf = '';
       my $rc = $channel->read($buf, $count);
+      if (! defined($rc)) {
+         return $self->log->error("read: read failed: [$!]");
+      }
       if ($rc > 0) {
          #print "read[$buf]\n";
          #print "returned[$c]\n";

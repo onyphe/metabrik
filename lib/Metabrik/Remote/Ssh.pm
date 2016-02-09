@@ -33,6 +33,9 @@ sub brik_properties {
          my_os => [ qw(hostname|OPTIONAL port|OPTIONAL username|OPTIONAL) ],
          list_processes => [ qw(hostname|OPTIONAL port|OPTIONAL username|OPTIONAL) ],
          is_process_running => [ qw(process hostname|OPTIONAL port|OPTIONAL username|OPTIONAL) ],
+         execute => [ qw(command hostname|OPTIONAL port|OPTIONAL username|OPTIONAL) ],
+         execute_in_background => [ qw(command hostname|OPTIONAL port|OPTIONAL username|OPTIONAL) ],
+         capture => [ qw(command hostname|OPTIONAL port|OPTIONAL username|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::System::Process' => [ ],
@@ -73,9 +76,7 @@ sub list_processes {
    $self->brik_help_run_undef_arg('list_processes', $port) or return;
    $self->brik_help_run_undef_arg('list_processes', $username) or return;
 
-   my $cs = $self->connect($hostname, $port, $username) or return;
    my $lines = $self->capture('ps awuxw') or return;
-   $self->disconnect;
 
    my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
    return $sp->parse_ps_output($lines);
@@ -101,6 +102,63 @@ sub is_process_running {
    }
 
    return 0;
+}
+
+sub execute {
+   my $self = shift;
+   my ($cmd, $hostname, $port, $username) = @_;
+
+   $hostname ||= $self->hostname;
+   $port ||= $self->port;
+   $username ||= $self->username;
+   $self->brik_help_run_undef_arg('execute', $cmd) or return;
+   $self->brik_help_run_undef_arg('execute', $hostname) or return;
+   $self->brik_help_run_undef_arg('execute', $port) or return;
+   $self->brik_help_run_undef_arg('execute', $username) or return;
+
+   $self->connect($hostname, $port, $username) or return;
+   my $ssh = $self->SUPER::execute($cmd) or return;
+   $self->disconnect;
+
+   return $ssh;
+}
+
+sub execute_in_background {
+   my $self = shift;
+   my ($cmd, $hostname, $port, $username) = @_;
+
+   $hostname ||= $self->hostname;
+   $port ||= $self->port;
+   $username ||= $self->username;
+   $self->brik_help_run_undef_arg('execute_in_background', $cmd) or return;
+   $self->brik_help_run_undef_arg('execute_in_background', $hostname) or return;
+   $self->brik_help_run_undef_arg('execute_in_background', $port) or return;
+   $self->brik_help_run_undef_arg('execute_in_background', $username) or return;
+
+   $self->connect($hostname, $port, $username) or return;
+   my $r = $self->SUPER::execute_in_background($cmd) or return;
+   $self->disconnect;
+
+   return $r;
+}
+
+sub capture {
+   my $self = shift;
+   my ($cmd, $hostname, $port, $username) = @_;
+
+   $hostname ||= $self->hostname;
+   $port ||= $self->port;
+   $username ||= $self->username;
+   $self->brik_help_run_undef_arg('capture', $cmd) or return;
+   $self->brik_help_run_undef_arg('capture', $hostname) or return;
+   $self->brik_help_run_undef_arg('capture', $port) or return;
+   $self->brik_help_run_undef_arg('capture', $username) or return;
+
+   $self->connect($hostname, $port, $username) or return;
+   my $lines = $self->SUPER::capture($cmd) or return;
+   $self->disconnect;
+
+   return $lines;
 }
 
 1;
