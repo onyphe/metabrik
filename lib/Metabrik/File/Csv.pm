@@ -30,7 +30,6 @@ sub brik_properties {
       },
       attributes_default => {
          first_line_is_header => 1,
-         header => [ ],
          separator => ';',
          encoding => 'utf8',
          overwrite => 1,
@@ -229,6 +228,7 @@ sub read_next {
    my $csv = $self->_csv;
    my $fd = $self->_fd;
    if (! defined($csv)) {
+      $self->debug && $self->log->debug('read_next: first call, create _csv');
       $csv = Text::CSV_XS->new({
          binary => 1,
          sep_char => $self->separator,
@@ -241,6 +241,11 @@ sub read_next {
       $fr->encoding($self->encoding);
       $fd = $fr->open($input) or return;
       $self->_fd($fd);
+
+      if ($self->first_line_is_header) {
+         my $header = $csv->getline($fd);
+         $self->header($header);
+      }
    }
 
    my $row = $csv->getline($fd);
@@ -257,6 +262,7 @@ sub read_next {
    }
 
    if ($csv->eof) {
+      $self->debug && $self->log->debug('read_next: eof reached');
       $self->_fd(undef);
       $self->_csv(undef);
       return 0;

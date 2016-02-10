@@ -129,7 +129,8 @@ sub uncompress {
    my $ft = Metabrik::File::Type->new_from_brik_init($self) or return;
    my $type = $ft->get_mime_type($input) or return;
 
-   if ($type eq 'application/gzip') {
+   if ($type eq 'application/gzip'
+   ||  $type eq 'application/x-gzip') {
       return $self->gunzip($input, $output, $datadir);
    }
    elsif ($type eq 'application/zip'
