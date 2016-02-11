@@ -163,6 +163,7 @@ lib/Metabrik/String/Psv.pm
 lib/Metabrik/String/Random.pm
 lib/Metabrik/String/Regex.pm
 lib/Metabrik/String/Rot13.pm
+lib/Metabrik/String/Syslog.pm
 lib/Metabrik/String/Uri.pm
 lib/Metabrik/String/Xml.pm
 lib/Metabrik/String/Yara.pm

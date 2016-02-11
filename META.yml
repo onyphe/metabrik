@@ -340,6 +340,8 @@ provides:
     file: lib/Metabrik/String/Regex.pm
   Metabrik::String::Rot13:
     file: lib/Metabrik/String/Rot13.pm
+  Metabrik::String::Syslog:
+    file: lib/Metabrik/String/Syslog.pm
   Metabrik::String::Uri:
     file: lib/Metabrik/String/Uri.pm
   Metabrik::String::Xml:

@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 18) }
+BEGIN { plan(tests => 19) }
 
 ok(sub { eval("use Metabrik::String::Ascii"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::String::Base64"); $@ ? 0 : 1 }, 1, $@);
@@ -16,6 +16,7 @@ ok(sub { eval("use Metabrik::String::Psv"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::String::Random"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::String::Regex"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::String::Rot13"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::String::Syslog"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::String::Uri"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::String::Xml"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::String::Yara"); $@ ? 0 : 1 }, 1, $@);
