@@ -16,6 +16,10 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         uri => [ qw(uri) ],  # Inherited
+         username => [ qw(username) ],  # Inherited
+         password => [ qw(password) ],  # Inherited
+         ssl_verify => [ qw(0|1) ], # Inherited
          output_mode => [ qw(json|xml) ],
       },
       attributes_default => {

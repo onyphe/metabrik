@@ -3,7 +3,11 @@
 
    - format::lncs make_dvi and make_pdf Commands second Argument replaced by style file Argument
    - format::lncs Brik renamed to format::latex
-   - www::splunk is obsolete, use api::splunk instead
+   - www::splunk is obsolete, use client::splunk instead
+   - api::splunk max_count Attribute renamed to count
+   - api::splunk check_search_jobs_status Command renamed to search_jobs_sid
+   - api::splunk get_search_jobs_content Command renamed to search_jobs_sid_results
+   - api::splunk search_jobs_sid_results second Argument changed to count Attribute
 
 20160208
    AFFECTS: client::whois, client::ssh
