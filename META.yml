@@ -151,8 +151,8 @@ provides:
     file: lib/Metabrik/Forensic/Scalpel.pm
   Metabrik::Forensic::Volatility:
     file: lib/Metabrik/Forensic/Volatility.pm
-  Metabrik::Format::Lncs:
-    file: lib/Metabrik/Format/Lncs.pm
+  Metabrik::Format::Latex:
+    file: lib/Metabrik/Format/Latex.pm
   Metabrik::Hardware::Battery:
     file: lib/Metabrik/Hardware/Battery.pm
   Metabrik::Hardware::Fan:
