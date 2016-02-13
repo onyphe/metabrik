@@ -1,8 +1,9 @@
 20160213
-   AFFECTS: format::lncs
+   AFFECTS: format::lncs, www::splunk
 
    - format::lncs make_dvi and make_pdf Commands second Argument replaced by style file Argument
    - format::lncs Brik renamed to format::latex
+   - www::splunk is obsolete, use api::splunk instead
 
 20160208
    AFFECTS: client::whois, client::ssh

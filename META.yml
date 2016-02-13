@@ -384,8 +384,6 @@ provides:
     file: lib/Metabrik/Worker/Fork.pm
   Metabrik::Www::Shorten:
     file: lib/Metabrik/Www/Shorten.pm
-  Metabrik::Www::Splunk:
-    file: lib/Metabrik/Www/Splunk.pm
   Metabrik::Xorg::Screenshot:
     file: lib/Metabrik/Xorg/Screenshot.pm
 requires:
