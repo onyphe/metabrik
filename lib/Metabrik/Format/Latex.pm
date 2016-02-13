@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# format::lncs Brik
+# format::latex Brik
 #
-package Metabrik::Format::Lncs;
+package Metabrik::Format::Latex;
 use strict;
 use warnings;
 
@@ -115,7 +115,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Format::Lncs - format::lncs Brik
+Metabrik::Format::Latex - format::latex Brik
 
 =head1 COPYRIGHT AND LICENSE
 

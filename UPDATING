@@ -1,3 +1,9 @@
+20160213
+   AFFECTS: format::lncs
+
+   - format::lncs make_dvi and make_pdf Commands second Argument replaced by style file Argument
+   - format::lncs Brik renamed to format::latex
+
 20160208
    AFFECTS: client::whois, client::ssh
 
