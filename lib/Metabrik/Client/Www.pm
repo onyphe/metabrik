@@ -55,7 +55,7 @@ sub brik_properties {
          screenshot => [ qw(uri output) ],
          eval_javascript => [ qw(js uri) ],
          info => [ qw(uri|OPTIONAL) ],
-         mirror => [ qw(url|$url_list output datadir|OPTIONAL) ],
+         mirror => [ qw(url|$url_list output|OPTIONAL datadir|OPTIONAL) ],
          parse => [ qw(html) ],
       },
       require_modules => {
@@ -70,6 +70,7 @@ sub brik_properties {
          'WWW::Mechanize' => [ ],
          'Metabrik::File::Write' => [ ],
          'Metabrik::Client::Ssl' => [ ],
+         'Metabrik::System::File' => [ ],
       },
       optional_modules => {
          'WWW::Mechanize::PhantomJS' => [ ],
@@ -562,10 +563,12 @@ sub mirror {
 
    $datadir ||= $self->datadir;
    $self->brik_help_run_undef_arg('mirror', $url) or return;
-   $self->brik_help_run_undef_arg('mirror', $output) or return;
+   my $ref = $self->brik_help_run_invalid_arg('mirror', $url, 'SCALAR', 'ARRAY') or return;
 
    my @files = ();
-   if (ref($url) eq 'ARRAY') {
+   if ($ref eq 'ARRAY') {
+      $self->brik_help_run_empty_array_arg('mirror', $url) or return;
+
       for my $this (@$url) {
          my $file = $self->mirror($this, $output) or next;
          push @files, @$file;
@@ -576,8 +579,15 @@ sub mirror {
          return $self->log->error("mirror: invalid URL [$url]");
       }
 
-      if ($output !~ m{^/}) {  # We want default datadir for output file
-         $output = $datadir.'/'.$output;
+      my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+      if (! defined($output)) {
+         my $filename = $sf->basefile($url) or return;
+         $output = $datadir.'/'.$filename;
+      }
+      else { # $output is defined
+         if (! $sf->is_absolute($output)) {  # We want default datadir for output file
+            $output = $datadir.'/'.$output;
+         }
       }
 
       $self->debug && $self->log->debug("mirror: url[$url] output[$output]");

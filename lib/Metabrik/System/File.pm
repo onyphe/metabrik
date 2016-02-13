@@ -259,7 +259,7 @@ sub basedir {
    my $self = shift;
    my ($path) = @_;
 
-   $self->brik_help_run_undef_arg('basename', $path) or return;
+   $self->brik_help_run_undef_arg('basedir', $path) or return;
 
    # Remove any trailing /
    $path =~ s{/*$}{};

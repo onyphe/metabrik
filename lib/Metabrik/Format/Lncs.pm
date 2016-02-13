@@ -17,16 +17,19 @@ sub brik_properties {
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          datadir => [ qw(datadir) ],
+         style => [ qw(file) ],
       },
       attributes_default => {
+         style => 'llncs.cls',
       },
       commands => {
          install => [ ],  # Inherited
          update => [ ],
-         make_dvi => [ qw(input output|OPTIONAL) ],
-         make_pdf => [ qw(input output|OPTIONAL) ],
+         make_dvi => [ qw(input style|OPTIONAL) ],
+         make_pdf => [ qw(input style|OPTIONAL) ],
       },
       require_modules => {
+         'Metabrik::File::Compress' => [ ],
          'Metabrik::System::File' => [ ],
       },
       require_binaries => {
@@ -34,7 +37,7 @@ sub brik_properties {
          pdflatex => [ ],
       },
       need_packages => {
-         ubuntu => [ qw(texlive texlive-lang-french) ],  # Sorry, the author is French
+         ubuntu => [ qw(texlive texlive-latex-extra texlive-lang-french) ],  # Sorry, the author is French
       },
    };
 }
@@ -44,59 +47,64 @@ sub update {
 
    my $datadir = $self->datadir;
 
-   my $url = 'ftp://ftp.springer.de/pub/tex/latex/llncs/latex2e/llncs.cls';
+   my @urls = (
+      'ftp://ftp.springer.de/pub/tex/latex/llncs/latex2e/llncs.cls',
+      'https://www.usenix.org/sites/default/files/usenix.sty_.txt',
+      'https://www.usenix.org/sites/default/files/template.la_.txt',
+   );
 
-   return $self->mirror($url, 'llncs.cls');
+   my $r = $self->mirror(\@urls) or return;
+
+   my @final = ();
+   my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   for (@$r) {
+      if (/usenix.sty_.txt$/) {
+         my $files = $fc->uncompress($_) or next;
+         next if (@$files == 0);
+         $_ = $files->[0];
+         my $basedir = $sf->basedir($_) or next;
+         $sf->copy($_, $basedir.'/'.'usenix.sty') or next;
+         $_ = $basedir.'/'.'usenix.sty';
+      }
+      elsif (/template.la_.txt$/) {
+         my $files = $fc->uncompress($_) or next;
+         next if (@$files == 0);
+         $_ = $files->[0];
+         my $basedir = $sf->basedir($_) or next;
+         $sf->copy($_, $basedir.'/'.'usenix-template.tex') or next;
+         $_ = $basedir.'/'.'usenix-template.tex';
+      }
+      push @final, $_;
+   }
+
+   return \@final;
 }
 
 sub make_dvi {
    my $self = shift;
-   my ($input, $output) = @_;
+   my ($input, $style) = @_;
 
+   $style ||= $self->style;
    $self->brik_help_run_undef_arg('make_dvi', $input) or return;
+   $self->brik_help_run_file_not_found('make_dvi', $input) or return;
+   $self->brik_help_run_file_not_found('make_dvi', $style) or return;
 
-   my $datadir = $self->datadir;
-   my $llncs = $datadir.'/llncs.cls';
-
-   my $url = 'ftp://ftp.springer.de/pub/tex/latex/llncs/latex2e/llncs.cls';
-
-   my ($base) = $input =~ m{^(.*/).*$};
-   if (! defined($base)) {  # Current directory
-      my $file = $self->mirror($url, $llncs);
-      if (! -f $llncs) {
-         return $self->log->error("make_dvi: unable to get [$llncs] file");
-      }
-      my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
-      $sf->copy($llncs, '.') or return;
-   }
-
-   my $cmd = "latex $input";
+   my $cmd = "latex \"$input\"";
 
    return $self->execute($cmd);
 }
 
 sub make_pdf {
    my $self = shift;
-   my ($input, $output) = @_;
+   my ($input, $style) = @_;
 
+   $style ||= $self->style;
    $self->brik_help_run_undef_arg('make_pdf', $input) or return;
+   $self->brik_help_run_file_not_found('make_pdf', $input) or return;
+   $self->brik_help_run_file_not_found('make_pdf', $style) or return;
 
-   my $datadir = $self->datadir;
-   my $llncs = $datadir.'/llncs.cls';
-
-   my $url = 'ftp://ftp.springer.de/pub/tex/latex/llncs/latex2e/llncs.cls';
-
-   my ($base) = $input =~ m{^(.*/).*$};
-   if (! defined($base)) {  # Current directory
-      my $file = $self->mirror($url, 'llncs.cls');
-      if (! -f $llncs) {
-         return $self->log->error("make_pdf: unable to get [$llncs] file");
-      }
-      my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
-      $sf->copy($llncs, '.') or return;
-   }
-
-   my $cmd = "pdflatex $input";
+   my $cmd = "pdflatex \"$input\"";
 
    return $self->execute($cmd);
 }
