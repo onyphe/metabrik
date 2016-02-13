@@ -87,6 +87,9 @@
       "Metabrik::Client::Rsync" : {
          "file" : "lib/Metabrik/Client/Rsync.pm"
       },
+      "Metabrik::Client::Splunk" : {
+         "file" : "lib/Metabrik/Client/Splunk.pm"
+      },
       "Metabrik::Client::Ssh" : {
          "file" : "lib/Metabrik/Client/Ssh.pm"
       },
