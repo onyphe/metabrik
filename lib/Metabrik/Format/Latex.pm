@@ -18,9 +18,11 @@ sub brik_properties {
       attributes => {
          datadir => [ qw(datadir) ],
          style => [ qw(file) ],
+         capture_mode => [ qw(0|1) ],
       },
       attributes_default => {
          style => 'llncs.cls',
+         capture_mode => 0,
       },
       commands => {
          install => [ ],  # Inherited

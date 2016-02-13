@@ -38,6 +38,7 @@ sub brik_properties {
          screenshot => [ qw(name file.png) ],
          dumpguestcore => [ qw(name file.elf) ],
          extract_memdump_from_dumpguestcore => [ qw(input output) ],
+         restart => [ qw(name type|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::File::Raw' => [ ],
@@ -233,6 +234,17 @@ sub extract_memdump_from_dumpguestcore {
    $fread->close;
 
    return $output;
+}
+
+sub restart {
+   my $self = shift;
+   my ($name, $type) = @_;
+
+   $self->brik_help_run_undef_arg('restart', $name) or return;
+
+   $self->stop($name) or return;
+   sleep(2);
+   return $self->start($name, $type);
 }
 
 1;
