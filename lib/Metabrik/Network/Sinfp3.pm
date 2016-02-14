@@ -24,12 +24,14 @@ sub brik_properties {
          threshold => [ qw(percent) ],
          best_score_only => [ qw(0|1) ],
          _global => [ qw(INTERNAL) ],
+         _update_url => [ qw(INTERNAL) ],
       },
       attributes_default => {
          port => 80,
          db => 'sinfp3.db',
          threshold => 80,
          best_score_only => 0,
+         _update_url => 'https://www.metabrik.org/wp-content/files/sinfp/sinfp3-latest.db',
       },
       commands => {
          update => [ ],
@@ -87,6 +89,10 @@ sub brik_init {
    my $threshold = $self->threshold;
    my $best_score_only = $self->best_score_only;
 
+   if (! -f $file) {
+      $self->update or return;
+   }
+
    my $log = Net::SinFP3::Log::Null->new(
       level => $self->log->level,
    ) or return $self->log->error('brik_init: log::null failed');
@@ -118,8 +124,10 @@ sub update {
    my $db = $self->db;
    my $datadir = $self->datadir;
 
+   my $url = $self->_update_url;
+
    my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
-   my $files = $cw->mirror("http://www.metabrik.org/wp-content/files/sinfp/sinfp3-latest.db", $db, $datadir) or return;
+   my $files = $cw->mirror($url, $db, $datadir) or return;
    if (@$files > 0) {
       $self->log->info("update: $db updated");
    }
@@ -604,7 +612,7 @@ sub to_signature_from_tcp_window_and_options {
 
    return {
       B => '.....',  # We completly ignore IP header.
-      F => '0x12',
+      F => '0x12',   # We consider it is a SYN|ACK
       W => $window,
       O => $tcp_options,
       M => $tcp_mss,
@@ -632,8 +640,8 @@ sub to_signature_from_tcp_options {
 
    return {
       B => '.....',  # We completely ignore IP header.
-      F => '0x12',
-      W => '\\d+',     # We completely ignore TCP window size.
+      F => '0x12',   # We consider it is a SYN|ACK
+      W => '\\d+',   # We completely ignore TCP window size.
       O => $tcp_options,
       M => $tcp_mss,
       S => $tcp_scale,

@@ -86,7 +86,8 @@ sub system {
 
    $command = join(' ', @toks);
 
-   if ($self->use_sudo) {
+   # Use sudo only when not root
+   if ($self->use_sudo && $< != 0) {
       my @sudo = ( "sudo" );
       if (! ref($self->sudo_args) && length($self->sudo_args)) {
          my @args = split(/\s+/, $self->sudo_args);
@@ -176,7 +177,8 @@ sub capture {
 
    $command = join(' ', @toks);
 
-   if ($self->use_sudo) {
+   # Use sudo only when not root
+   if ($self->use_sudo && $< != 0) {
       my @sudo = ( "sudo" );
       if (! ref($self->sudo_args) && length($self->sudo_args)) {
          my @args = split(/\s+/, $self->sudo_args);

@@ -24,7 +24,8 @@ sub brik_properties {
          'XML::Simple' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(libexpat1-dev libxml2-dev) ],
+         ubuntu => [ qw(libexpat1-dev libxml2-dev) ],
+         freebsd => [ qw(libxml2) ],
       },
    };
 }

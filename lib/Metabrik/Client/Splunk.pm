@@ -102,7 +102,15 @@ sub get_results {
    $self->brik_help_set_undef_arg('uri', $uri) or return;
    $self->brik_help_run_undef_arg('get_results', $sid) or return;
 
-   my $r = $self->search_jobs_sid_results($sid, $count, $offset) or return;
+   my $r = $self->search_jobs_sid_results($sid, $count, $offset);
+   if (! defined($r)) {
+      return;
+   }
+
+   # No results from this search
+   if (! length($r)) {
+      return [];
+   }
 
    my $sc = Metabrik::String::Csv->new_from_brik_init($self) or return;
    $sc->encoding('ascii');

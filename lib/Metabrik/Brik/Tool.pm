@@ -24,7 +24,10 @@ sub brik_properties {
       },
       commands => {
          get_require_modules => [ qw(Brik|OPTIONAL) ],
+         get_require_modules_recursive => [ qw(Brik) ],
          get_need_packages => [ qw(Brik|OPTIONAL) ],
+         get_need_packages_recursive => [ qw(Brik) ],
+         get_brik_hierarchy => [ qw(Brik) ],
          install_all_require_modules => [ ],
          install_all_need_packages => [ ],
          install_needed_packages => [ qw(Brik) ],
@@ -84,6 +87,51 @@ sub get_require_modules {
    return [ sort { $a cmp $b } keys %modules ];
 }
 
+sub get_require_modules_recursive {
+   my $self = shift;
+   my ($brik) = @_;
+
+   # We force to use only one Brik, cause recursion on all Briks takes a too long time.
+   $self->brik_help_run_undef_arg('get_require_modules_recursive', $brik) or return;
+
+   my $con = $self->context;
+   my $available = $con->available;
+
+   my $list = $self->get_brik_hierarchy($brik) or return;
+   my $new = { $brik => $available->{$brik} };  # Don't forget myself
+   for my $this (@$list) {
+      $new->{$this} = $available->{$this};
+   }
+   $available = $new;
+
+   my %modules = ();
+   for my $this (keys %$available) {
+      next if $this =~ m{^core::};
+      #print "available [$this]\n";
+      if (exists($available->{$this}->brik_properties->{require_modules})) {
+         my $list = $available->{$this}->brik_properties->{require_modules};
+         for my $m (keys %$list) {
+            if ($m =~ m{^Metabrik::}) {
+               (my $name = $m) =~ s/^Metabrik:://;
+               $name = lc($name);
+               #print "BRIK [$name]\n";
+               my $new = $self->get_require_modules($name);
+               for (@$new) {
+                  #print "new [$_] for [$name]\n";
+                  $modules{$_}++;
+               }
+            }
+            else {
+               #print "module [$m]\n";
+               $modules{$m}++;
+            }
+         }
+      }
+   }
+
+   return [ sort { $a cmp $b } keys %modules ];
+}
+
 sub get_need_packages {
    my $self = shift;
    my ($brik) = @_;
@@ -112,6 +160,74 @@ sub get_need_packages {
    }
 
    return [ sort { $a cmp $b } keys %packages ];
+}
+
+sub get_need_packages_recursive {
+   my $self = shift;
+   my ($brik) = @_;
+
+   # We force to use only one Brik, cause recursion on all Briks takes a too long time.
+   $self->brik_help_run_undef_arg('get_need_packages_recursive', $brik) or return;
+
+   my $con = $self->context;
+   my $available = $con->available;
+
+   my $list = $self->get_brik_hierarchy($brik) or return;
+   my $new = { $brik => $available->{$brik} };  # Don't forget myself
+   for my $this (@$list) {
+      $new->{$this} = $available->{$this};
+   }
+   $available = $new;
+
+   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
+   my $os = $sp->my_os or return;
+
+   my %packages = ();
+   for my $this (keys %$available) {
+      next if $this =~ m{^core::};
+      if (exists($available->{$this}->brik_properties->{need_packages})) {
+         my $list = $available->{$this}->brik_properties->{need_packages}{$os} or next;
+         for my $p (@$list) {
+            $packages{$p}++;
+         }
+      }
+   }
+
+   return [ sort { $a cmp $b } keys %packages ];
+}
+
+sub get_brik_hierarchy {
+   my $self = shift;
+   my ($brik) = @_;
+
+   $self->brik_help_run_undef_arg('get_brik_hierarchy', $brik) or return;
+
+   my @toks = split(/::/, $brik);
+   if (@toks < 2) {
+      return $self->log->error("get_brik_hierarchy: invalid Brik format for [$brik]");
+   }
+
+   my @final = ();
+
+   my $m = 'Metabrik';
+   for (@toks) {
+      $_ = ucfirst($_);
+      $m .= "::$_";
+   }
+   {
+      no strict 'refs';
+      my @isa = @{$m.'::ISA'};
+      for (@isa) {
+         next unless /^Metabrik::/;
+         (my $name = $_) =~ s/^Metabrik:://;
+         $name = lc($name);
+         push @final, $name;
+         my $list = $self->get_brik_hierarchy($name) or next;
+         push @final, @$list;
+      }
+   }
+
+   return \@final;
 }
 
 sub install_all_need_packages {
@@ -161,21 +277,10 @@ sub install_needed_packages {
 
    $self->brik_help_run_undef_arg('install_needed_packages', $brik) or return;
 
-   my $con = $self->context;
+   my $packages = $self->get_need_packages_recursive($brik) or return;
 
-   my $avail = $con->find_available;
-   if (! exists($avail->{$brik})) {
-      return $self->log->error("install_needed_packages: Brik [$brik] not available");
-   }
-
-   my $module = $avail->{$brik};
-
-   my $b = $module->new_from_brik_no_checks($self) or return;
-   if (exists($b->brik_properties->{commands}{install})) {
-      return $b->install;
-   }
-
-   return 1;
+   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
+   return $sp->install($packages);
 }
 
 sub install_required_modules {
@@ -184,23 +289,10 @@ sub install_required_modules {
 
    $self->brik_help_run_undef_arg('install_required_modules', $brik) or return;
 
-   my $con = $self->context;
-
-   my $avail = $con->find_available;
-   if (! exists($avail->{$brik})) {
-      return $self->log->error("install_required_modules: Brik [$brik] not available");
-   }
-
-   my $module = $avail->{$brik};
+   my $modules = $self->get_require_modules_recursive($brik) or return;
 
    my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;
-
-   my $m = $module->new_from_brik_no_checks($self) or return;
-   if (exists($m->brik_properties->{require_modules})) {
-      return $pm->install([ sort { $a cmp $b } keys %{$m->brik_properties->{require_modules}} ]);
-   }
-
-   return 1;
+   return $pm->install($modules);
 }
 
 sub create_tool {

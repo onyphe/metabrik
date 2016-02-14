@@ -34,7 +34,7 @@ sub brik_properties {
          'Metabrik::String::Uri' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(libssl-dev) ],
+         ubuntu => [ qw(libssl-dev) ],
       },
    };
 }
