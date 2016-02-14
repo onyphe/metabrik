@@ -354,6 +354,8 @@ provides:
     file: lib/Metabrik/System/Docker.pm
   Metabrik::System::File:
     file: lib/Metabrik/System/File.pm
+  Metabrik::System::Freebsd::Iocage:
+    file: lib/Metabrik/System/Freebsd/Iocage.pm
   Metabrik::System::Freebsd::Jail:
     file: lib/Metabrik/System/Freebsd/Jail.pm
   Metabrik::System::Freebsd::Package:

@@ -4,6 +4,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: remote::ssh Brik
    - new: string::syslog Brik
    - new: client::splunk Brik
+   - new: system::freebsd::iocage Brik
    - obsolete: www::splunk Brik
 
 1.21.0 Fri Feb  5 07:53:28 CET 2016
