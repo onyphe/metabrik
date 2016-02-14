@@ -127,6 +127,9 @@ sub read {
          $out .= $_;
       }
       $self->eof(1);
+      if ($strip_crlf) {
+         $out =~ s/[\r\n]*$//;
+      }
       return $out;
    }
 
@@ -163,6 +166,9 @@ sub read_until_blank_line {
       }
       if (eof($fd)) {
          $self->eof(1);
+      }
+      if ($strip_crlf) {
+         $out =~ s/[\r\n]*$//;
       }
       return $out;
    }
@@ -202,15 +208,15 @@ sub read_line {
       my $this = 1;
       while (<$fd>) {
          last if /^\s*$/;
-         if ($strip_crlf) {
-            s/[\r\n]*$//;
-         }
          $out .= $_;
          last if $this == $count;
          $count++;
       }
       if (eof($fd)) {
          $self->eof(1);
+      }
+      if ($strip_crlf) {
+         $out =~ s/[\r\n]*$//;
       }
       return $out;
    }

@@ -278,6 +278,9 @@ sub install_needed_packages {
    $self->brik_help_run_undef_arg('install_needed_packages', $brik) or return;
 
    my $packages = $self->get_need_packages_recursive($brik) or return;
+   if (@$packages == 0) {
+      return 1;
+   }
 
    my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
    return $sp->install($packages);
@@ -290,6 +293,9 @@ sub install_required_modules {
    $self->brik_help_run_undef_arg('install_required_modules', $brik) or return;
 
    my $modules = $self->get_require_modules_recursive($brik) or return;
+   if (@$modules == 0) {
+      return 1;
+   }
 
    my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;
    return $pm->install($modules);

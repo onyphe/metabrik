@@ -16,6 +16,7 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         datadir => [ qw(datadir) ],
          level => [ qw(0|1|2|3) ],
          output => [ qw(file) ],
          time_prefix => [ qw(0|1) ],
@@ -25,7 +26,6 @@ sub brik_properties {
       attributes_default => {
          time_prefix => 1,
          text_prefix => 1,
-         output => '/tmp/file.log',
       },
       commands => {
          info => [ qw(string caller|OPTIONAL) ],
@@ -41,10 +41,13 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
+   my $datadir = $self->datadir;
+
    return {
       attributes_default => {
          debug => $self->log->debug,
          level => $self->log->level,
+         output => $datadir.'/output.log',
       },
    };
 }
