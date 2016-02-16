@@ -553,13 +553,21 @@ sub _analyze_options {
    # for each timestamp. Same with WScale value
    my $mss;
    my $wscale;
-   if ($opts =~ /080a(........)(........)/) {
-      if ($1 && $1 !~ /44454144|00000000/) {
-         $opts =~ s/(080a)........(........)/$1ffffffff$2/;
+   if ($opts =~ m/^(.*080a)(.{8})(.{8})(.*)/) {
+      my $head = $1;
+      my $a    = $2;
+      my $b    = $3;
+      my $tail = $4;
+      # Some systems put timestamp values to 00. We keep it for
+      # fingerprint matching. If there is no DEAD, it is not a 
+      # reply to a SinFP3 probe, we strip this value.
+      if ($a !~ /00000000/ && $a !~ /44454144/) {
+         $a = "........";
       }
-      if ($2 && $2 !~ /44454144|00000000/) {
-         $opts =~ s/(080a........)......../$1ffffffff/;
+      if ($b !~ /00000000/ && $b !~ /44454144/) {
+         $b = "........";
       }
+      $opts = $head.$a.$b.$tail;
    }
    # Move MSS value in its own field
    if ($opts =~ /0204(....)/) {
