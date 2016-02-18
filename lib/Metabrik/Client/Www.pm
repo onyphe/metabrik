@@ -76,10 +76,10 @@ sub brik_properties {
          'WWW::Mechanize::PhantomJS' => [ ],
       },
       optional_binaries => {
-         'phantomjs' => [ ],
+         phantomjs => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(libssl-dev phantomjs) ],
+         ubuntu => [ qw(libssl-dev phantomjs) ],
       },
    };
 }

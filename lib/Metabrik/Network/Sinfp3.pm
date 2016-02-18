@@ -535,6 +535,7 @@ sub _parse_result {
          os_version_family => $r->osVersionFamily,
          match_type => $r->matchType,
          match_score => $r->matchScore,
+         match_mask => $r->matchMask,
       };
       for ($r->osVersionChildrenList) {
          push @{$h->{os_version_children}}, $_;

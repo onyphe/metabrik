@@ -157,7 +157,8 @@ sub show {
 
    my $count = 0;
    for (@$history) {
-      print $count++.":\n   $_\n";
+      print "$_   # ! $count\n";
+      $count++;
    }
 
    return $count - 1;
