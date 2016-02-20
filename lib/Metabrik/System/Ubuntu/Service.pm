@@ -24,7 +24,7 @@ sub brik_properties {
          disable => [ qw(service_name) ],
       },
       require_binaries => {
-         'updata-rc.d' => [ ],
+         'update-rc.d' => [ ],
       },
       need_packages => {
          ubuntu => [ qw(sysv-rc) ],

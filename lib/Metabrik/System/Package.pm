@@ -44,8 +44,6 @@ sub get_system_package {
 
    my $os = $self->my_os;
 
-   my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
-
    my $sp;
    if ($os eq 'ubuntu') {
       $sp = Metabrik::System::Ubuntu::Package->new_from_brik_init($self) or return;

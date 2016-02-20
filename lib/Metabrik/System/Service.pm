@@ -16,19 +16,39 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
+         get_system_service => [ ],
          status => [ qw(service_name) ],
          start => [ qw(service_name) ],
          stop => [ qw(service_name) ],
          restart => [ qw(service_name) ],
          my_os => [ ],
+         enable => [ qw(service_name) ],
+         disable => [ qw(service_name) ],
       },
       require_modules => {
          'Metabrik::System::Os' => [ ],
+         'Metabrik::System::Ubuntu::Service' => [ ],
       },
       require_binaries => {
-         'service', => [ ],
+         service => [ ],
       },
    };
+}
+
+sub get_system_service {
+   my $self = shift;
+
+   my $os = $self->my_os;
+
+   my $ss;
+   if ($os eq 'ubuntu') {
+      $ss = Metabrik::System::Ubuntu::Service->new_from_brik_init($self) or return;
+   }
+   else {
+      $ss = $self;
+   }
+
+   return $ss;
 }
 
 sub status {
@@ -46,7 +66,7 @@ sub status {
       if (exists($self->brik_properties->{need_services}{$os})) {
          my $need_services = $self->brik_properties->{need_services}{$os};
          for my $service (@$need_services) {
-            $self->execute("service $service status");
+            $self->execute("service \"$service\" status");
          }
       }
       else {
@@ -62,7 +82,7 @@ sub start {
    my ($name) = @_;
 
    if (defined($name)) {
-      return $self->execute("sudo service $name start");
+      return $self->sudo_execute("service \"$name\" start");
    }
    elsif (! exists($self->brik_properties->{need_services})) {
       return $self->log->error($self->brik_help_run('start'));
@@ -72,7 +92,7 @@ sub start {
       if (exists($self->brik_properties->{need_services}{$os})) {
          my $need_services = $self->brik_properties->{need_services}{$os};
          for my $service (@$need_services) {
-            $self->execute("sudo service $service start");
+            $self->sudo_execute("service \"$service\" start");
          }
       }
       else {
@@ -88,7 +108,7 @@ sub stop {
    my ($name) = @_;
 
    if (defined($name)) {
-      return $self->execute("sudo service $name stop");
+      return $self->sudo_execute("service \"$name\" stop");
    }
    elsif (! exists($self->brik_properties->{need_services})) {
       return $self->log->error($self->brik_help_run('stop'));
@@ -98,7 +118,7 @@ sub stop {
       if (exists($self->brik_properties->{need_services}{$os})) {
          my $need_services = $self->brik_properties->{need_services}{$os};
          for my $service (@$need_services) {
-            $self->execute("sudo service $service stop");
+            $self->sudo_execute("service \"$service\" stop");
          }
       }
       else {
@@ -139,15 +159,31 @@ sub restart {
    return 1;
 }
 
-sub remove {
-# XXX: ubuntu: update-rc.d <service> remove
-}
-
 sub my_os {
    my $self = shift;
 
    my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
    return $so->my;
+}
+
+sub disable {
+   my $self = shift;
+   my ($service_name) = @_;
+
+   $self->brik_help_run_undef_arg('disable', $service_name) or return;
+
+   my $ss = $self->get_system_service or return;
+   return $ss->disable($service_name);
+}
+
+sub enable {
+   my $self = shift;
+   my ($service_name) = @_;
+
+   $self->brik_help_run_undef_arg('enable', $service_name) or return;
+
+   my $ss = $self->get_system_service or return;
+   return $ss->enable($service_name);
 }
 
 1;
