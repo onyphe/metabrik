@@ -90,24 +90,22 @@ sub read_line {
       $self->_fr($fr);
    }
 
+   if ($fr->eof) {
+      $fr->close;
+      $self->_fr(undef);
+      return 0;
+   }
+
    my $data;
    my @lines = ();
    if ($count > 1) {
       for (1..$count) {
          $data = $fr->read_line;
-         if ($fr->eof) {
-            $fr->close;
-            $self->_fr(undef);
-         }
          push @lines, $data;
       }
    }
    else {
       $data = $fr->read_line;
-      if ($fr->eof) {
-         $fr->close;
-         $self->_fr(undef);
-      }
    }
 
    return $count > 1 ? \@lines : $data;
