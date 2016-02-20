@@ -26,7 +26,7 @@ sub brik_properties {
          'File::LibMagic' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(libmagic-dev) ],
+         ubuntu => [ qw(libmagic-dev) ],
       },
    };
 }

@@ -56,10 +56,10 @@ sub brik_properties {
          'Metabrik::String::Json' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(elasticsearch) ],
+         ubuntu => [ qw(elasticsearch) ],
       },
       need_services => {
-         'ubuntu' => [ qw(elasticsearch) ],
+         ubuntu => [ qw(elasticsearch) ],
       },
    };
 }
@@ -127,7 +127,10 @@ sub index_bulk {
    my $self = shift;
    my ($doc) = @_;
 
-   # No check for speed improvements
+   my $bulk = $self->_bulk;
+   $self->brik_help_run_undef_arg('open', $bulk) or return;
+   $self->brik_help_run_undef_arg('index_bulk', $doc) or return;
+
    return $self->_bulk->index({ source => $doc });
 }
 

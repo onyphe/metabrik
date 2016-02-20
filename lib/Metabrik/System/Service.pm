@@ -56,7 +56,7 @@ sub status {
    my ($name) = @_;
 
    if (defined($name)) {
-      return $self->execute("service $name status");
+      return $self->execute("service \"$name\" status");
    }
    elsif (! exists($self->brik_properties->{need_services})) {
       return $self->log->error($self->brik_help_run('status'));
