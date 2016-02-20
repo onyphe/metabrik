@@ -572,6 +572,9 @@
       "Metabrik::System::Ubuntu::Package" : {
          "file" : "lib/Metabrik/System/Ubuntu/Package.pm"
       },
+      "Metabrik::System::Ubuntu::Service" : {
+         "file" : "lib/Metabrik/System/Ubuntu/Service.pm"
+      },
       "Metabrik::System::Ubuntu::User" : {
          "file" : "lib/Metabrik/System/Ubuntu/User.pm"
       },
