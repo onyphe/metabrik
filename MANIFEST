@@ -189,6 +189,7 @@ lib/Metabrik/Video/Convert.pm
 lib/Metabrik/Worker/Fork.pm
 lib/Metabrik/Www/Shorten.pm
 lib/Metabrik/Xorg/Screenshot.pm
+lib/Metabrik/Xorg/Xlsclients.pm
 LICENSE
 Makefile.PL
 MANIFEST

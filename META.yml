@@ -392,6 +392,8 @@ provides:
     file: lib/Metabrik/Www/Shorten.pm
   Metabrik::Xorg::Screenshot:
     file: lib/Metabrik/Xorg/Screenshot.pm
+  Metabrik::Xorg::Xlsclients:
+    file: lib/Metabrik/Xorg/Xlsclients.pm
 requires:
   Cwd: '0'
   File::Copy: '0'

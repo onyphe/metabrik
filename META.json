@@ -598,6 +598,9 @@
       },
       "Metabrik::Xorg::Screenshot" : {
          "file" : "lib/Metabrik/Xorg/Screenshot.pm"
+      },
+      "Metabrik::Xorg::Xlsclients" : {
+         "file" : "lib/Metabrik/Xorg/Xlsclients.pm"
       }
    },
    "release_status" : "stable",
