@@ -129,7 +129,11 @@ sub window_id {
    }
 
    my $cmd = "import -window $window_id $output";
-   $self->execute($cmd) or return;
+   my $r = $self->execute($cmd) or return;
+
+   if ($r == 256) {
+      return $self->log->error("window_id: import failed");
+   }
 
    return $output;
 }

@@ -43,7 +43,7 @@ sub list {
          ($id) = $_ =~ m{Window\s+(0x\S+):};
          $c++;
          $r[$c]->{id} = $id;
-         next;
+         $r[$c]->{nid} = int(hex($id));
       }
       else {
          my ($name, $value) = $_ =~ m{^\s+([^:]+):\s+(.*)$};
