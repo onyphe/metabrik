@@ -190,6 +190,7 @@ lib/Metabrik/Worker/Fork.pm
 lib/Metabrik/Www/Shorten.pm
 lib/Metabrik/Xorg/Screenshot.pm
 lib/Metabrik/Xorg/Xlsclients.pm
+lib/Metabrik/Xorg/Xwininfo.pm
 LICENSE
 Makefile.PL
 MANIFEST

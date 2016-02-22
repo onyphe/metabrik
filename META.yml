@@ -394,6 +394,8 @@ provides:
     file: lib/Metabrik/Xorg/Screenshot.pm
   Metabrik::Xorg::Xlsclients:
     file: lib/Metabrik/Xorg/Xlsclients.pm
+  Metabrik::Xorg::Xwininfo:
+    file: lib/Metabrik/Xorg/Xwininfo.pm
 requires:
   Cwd: '0'
   File::Copy: '0'

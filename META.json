@@ -601,6 +601,9 @@
       },
       "Metabrik::Xorg::Xlsclients" : {
          "file" : "lib/Metabrik/Xorg/Xlsclients.pm"
+      },
+      "Metabrik::Xorg::Xwininfo" : {
+         "file" : "lib/Metabrik/Xorg/Xwininfo.pm"
       }
    },
    "release_status" : "stable",
