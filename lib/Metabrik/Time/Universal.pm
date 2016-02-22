@@ -17,15 +17,17 @@ sub brik_properties {
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          timezone => [ qw(string) ],
+         separator => [ qw(character) ],
       },
       attributes_default => {
          timezone => [ 'Europe/Paris' ],
+         separator => '-',
       },
       commands => {
          list_timezones => [ ],
          search_timezone => [ qw(string) ],
          localtime => [ qw(timezone|OPTIONAL) ],
-         today => [ ],
+         today => [ qw(separator|OPTIONAL) ],
          date => [ ],
       },
       require_modules => {
@@ -87,13 +89,16 @@ sub localtime {
 
 sub today {
    my $self = shift;
+   my ($sep) = @_;
+
+   $sep ||= $self->separator;
 
    my @a = CORE::localtime();
    my $y = $a[5] + 1900;
    my $m = $a[4] + 1;
    my $d = $a[3];
 
-   return sprintf("%04d-%02d-%02d", $y, $m, $d);
+   return sprintf("%04d$sep%02d$sep%02d", $y, $m, $d);
 }
 
 sub date {

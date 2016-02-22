@@ -305,9 +305,8 @@ sub create_tool {
    my $self = shift;
    my ($filename, $repository) = @_;
 
-   $repository ||= $self->repository;
+   $repository ||= $self->repository || '';
    $self->brik_help_run_undef_arg('create_tool', $filename) or return;
-   $self->brik_help_run_undef_arg('create_tool', $repository) or return;
 
    my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
 

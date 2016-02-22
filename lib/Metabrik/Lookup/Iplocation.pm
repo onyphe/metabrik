@@ -30,6 +30,7 @@ sub brik_properties {
          'Geo::IP' => [ ],
          'Metabrik::Client::Www' => [ ],
          'Metabrik::File::Compress' => [ ],
+         'Metabrik::Network::Address' => [ ],
       },
    };
 }
