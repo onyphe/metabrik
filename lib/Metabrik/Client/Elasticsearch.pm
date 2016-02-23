@@ -47,7 +47,7 @@ sub brik_properties {
          start => [ ], # Inherited
          stop => [ ], # Inherited
          status => [ ], # Inherited
-         list_indices => [ ],
+         show_indices => [ ],
          get_index => [ qw(index) ],
          get_mappings => [ qw(index) ],
          create_index => [ qw(index) ],
@@ -257,21 +257,21 @@ sub delete {
    return $r;
 }
 
-sub list_indices {
+sub show_indices {
    my $self = shift;
  
    my $nodes = $self->nodes;
-   $self->brik_help_run_undef_arg('list_indices', $nodes) or return;
-   $self->brik_help_run_invalid_arg('list_indices', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('list_indices', $nodes) or return;
+   $self->brik_help_run_undef_arg('show_indices', $nodes) or return;
+   $self->brik_help_run_invalid_arg('show_indices', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('show_indices', $nodes) or return;
 
    my $uri = $nodes->[0];
 
-   $self->log->verbose("list_indices: uri[$uri]");
+   $self->log->verbose("show_indices: uri[$uri]");
 
    my $get = $self->SUPER::get("$uri/_cat/indices?pretty=true") or return;
    if ($self->code ne 200) {
-      return $self->log->error("list_indices: failed with content [".$get->{content}."]");
+      return $self->log->error("show_indices: failed with content [".$get->{content}."]");
    }
    my $content = $get->{content} or return;
 

@@ -131,6 +131,9 @@ sub next_record {
    for my $line (@$lines) {
       next if ($line =~ /^\s*#/);
 
+      $line =~ s/^\s*//;
+      $line =~ s/\s*$//;
+
       my ($key, $val);
       if ($line =~ /^(.*?)\s*:\s*(.*)$/) {
          $key = $1;

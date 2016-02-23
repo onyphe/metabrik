@@ -1,3 +1,8 @@
+20160223
+   AFFECTS: client::elasticsearch
+
+   - client::elasticsearch list_indices Command renamed to show_indices
+
 20160213
    AFFECTS: format::lncs, www::splunk
 
