@@ -43,6 +43,8 @@ provides:
     file: lib/Metabrik/Brik/Tool.pm
   Metabrik::Client::Dns:
     file: lib/Metabrik/Client/Dns.pm
+  Metabrik::Client::Elasticsearch:
+    file: lib/Metabrik/Client/Elasticsearch.pm
   Metabrik::Client::Openssh:
     file: lib/Metabrik/Client/Openssh.pm
   Metabrik::Client::Rest:

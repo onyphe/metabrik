@@ -1,7 +1,8 @@
 use Test;
-BEGIN { plan(tests => 13) }
+BEGIN { plan(tests => 14) }
 
 ok(sub { eval("use Metabrik::Client::Dns"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::Client::Elasticsearch"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Client::Openssh"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Client::Rest"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Client::Rsync"); $@ ? 0 : 1 }, 1, $@);
