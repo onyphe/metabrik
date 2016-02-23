@@ -50,6 +50,7 @@ sub update {
       http://ftp.apnic.net/apnic/dbase/data/krnic.db.gz
       http://ftp.apnic.net/apnic/dbase/data/twnic.in.gz
       http://ftp.apnic.net/apnic/dbase/data/twnic.pn.gz
+      ftp://ftp.arin.net/pub/rr/arin.db
    );
 
    my $datadir = $self->datadir;
@@ -73,14 +74,21 @@ sub update {
          next;
       }
 
-      $self->log->verbose("update: uncompressing file to [$unzipped]");
+      my $files = [];
+      if ($filename =~ m{.gz$}) {
+         $self->log->verbose("update: uncompressing file to [$unzipped]");
 
-      my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
-      my $files = $fc->uncompress($output, $unzipped, $datadir);
-      if (! defined($files)) {
-         $self->log->warning("update: can't uncompress file [$output]");
-         next;
+         my $fc = Metabrik::File::Compress->new_from_brik_init($self) or return;
+         $files = $fc->uncompress($output, $unzipped, $datadir);
+         if (! defined($files)) {
+            $self->log->warning("update: can't uncompress file [$output]");
+            next;
+         }
       }
+      else {
+         push @fetched, $output;
+      }
+
       push @fetched, @$files;
    }
 
