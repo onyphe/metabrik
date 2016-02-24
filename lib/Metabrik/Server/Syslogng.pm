@@ -32,7 +32,6 @@ sub brik_properties {
       attributes_default => {
          listen => '127.0.0.1',
          port => 6300,
-         conf_file => 'syslogng.conf',
          output => 'local.log',
          use_ssl => 0,
          version => '3.5',
@@ -52,6 +51,18 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(syslog-ng) ],
+      },
+   };
+}
+
+sub brik_use_properties {
+   my $self = shift;
+
+   my $datadir = $self->datadir;
+
+   return {
+      attributes_default => {
+         conf_file => "$datadir/syslogng.conf",
       },
    };
 }
@@ -78,9 +89,6 @@ sub generate_conf {
    my $version = $self->version;
 
    my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
-   if ($sf->is_relative($conf_file)) {
-      $conf_file = "$datadir/$conf_file";
-   }
    if ($sf->is_relative($output)) {
       $output = "$datadir/$output";
    }
@@ -180,10 +188,6 @@ sub start {
    $self->brik_help_run_undef_arg('start', $conf_file) or return;
 
    my $datadir = $self->datadir;
-   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
-   if ($sf->is_relative($conf_file)) {
-      $conf_file = "$datadir/$conf_file";
-   }
    $self->brik_help_run_file_not_found('start', $conf_file) or return;
 
    my $ctlfile = $datadir.'/syslogng.ctl';
