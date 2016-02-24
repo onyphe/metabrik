@@ -1,3 +1,18 @@
+20160224
+   AFFECTS: database::elasticsearch, client::elasticsearch
+
+   - database::elasticsearch obsolete
+   - database::elasticsearch replaced by server::elasticsearch and client::elasticsearch
+   - client::elasticsearch index_name Attribute renamed to index
+   - client::elasticsearch type_document Attribute renamed to type
+   - client::elasticsearch bulk_mode Attribute removed
+   - client::elasticsearch open Command Arguments changed, see help
+   - client::elasticsearch open Command Arguments changed, see help
+   - client::elasticsearch index Command renamed to index_document
+   - client::elasticsearch get Command renamed to get_from_id
+   - client::elasticsearch delete Command renamed to delete_index
+   - client::elasticsearch stop, start, status Commands removed (put in server::elasticsearch)
+   
 20160223
    AFFECTS: client::elasticsearch
 

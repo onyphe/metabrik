@@ -7,7 +7,7 @@ package Metabrik::Client::Elasticsearch;
 use strict;
 use warnings;
 
-use base qw(Metabrik::System::Service Metabrik::System::Package Metabrik::Client::Rest);
+use base qw(Metabrik::Client::Rest);
 
 sub brik_properties {
    return {
@@ -19,9 +19,8 @@ sub brik_properties {
          nodes => [ qw(node_list) ],
          cxn_pool => [ qw(Sniff|Static|Static::NoPing) ],
          date => [ qw(date) ],
-         index_name => [ qw(index_name) ],
-         type_document => [ qw(type_document) ],
-         bulk_mode => [ qw(0|1) ],
+         index => [ qw(index) ],
+         type => [ qw(type) ],
          from => [ qw(number) ],
          size => [ qw(count) ],
          _elk => [ qw(INTERNAL) ],
@@ -30,95 +29,100 @@ sub brik_properties {
       attributes_default => {
          nodes => [ qw(http://localhost:9200) ],
          cxn_pool => 'Sniff',
-         bulk_mode => 0,
          from => 0,
          size => 10,
       },
       commands => {
-         install => [ ], # Inherited
-         open => [ qw(index|OPTIONAL type|OPTIONAL) ],
-         index => [ qw(document index|OPTIONAL type|OPTIONAL) ],
-         index_bulk => [ qw(document) ],
+         open => [ qw(nodes_list|OPTIONAL cnx_pool|OPTIONAL) ],
+         open_bulk_mode => [ qw(index|OPTIONAL type|OPTIONAL nodes_list|OPTIONAL cnx_pool|OPTIONAL) ],
+         index_document => [ qw(document index|OPTIONAL type|OPTIONAL) ],
+         index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL) ],
          query => [ qw($query_hash index|OPTIONAL) ],
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
-         get => [ qw(id index|OPTIONAL type|OPTIONAL) ],
+         get_from_id => [ qw(id index|OPTIONAL type|OPTIONAL) ],
          www_search => [ qw(query index|OPTIONAL) ],
-         delete => [ qw(index) ],
-         start => [ ], # Inherited
-         stop => [ ], # Inherited
-         status => [ ], # Inherited
+         delete_index => [ qw(index) ],
          show_indices => [ ],
          get_index => [ qw(index) ],
          get_mappings => [ qw(index) ],
          create_index => [ qw(index) ],
          create_index_with_mappings => [ qw(index mappings) ],
-         # XXX: ./bin/plugin -install lmenezes/elasticsearch-kopf
-         #install_plugin => [ qw(plugin) ],
       },
       require_modules => {
          'Search::Elasticsearch' => [ ],
-         'Metabrik::Client::Rest' => [ ],
-         'Metabrik::Client::Www' => [ ],
          'Metabrik::String::Json' => [ ],
-      },
-      need_packages => {
-         ubuntu => [ qw(elasticsearch) ],
-      },
-      need_services => {
-         ubuntu => [ qw(elasticsearch) ],
       },
    };
 }
 
 sub open {
    my $self = shift;
-   my ($index, $type) = @_;
+   my ($nodes, $cnx_pool) = @_;
 
-   $index ||= $self->index_name;
-   $type ||= $self->type_document;
-   $self->brik_help_run_undef_arg('open', $index) or return;
-   $self->brik_help_run_undef_arg('open', $type) or return;
-
-   my $nodes = $self->nodes;
-   my $cxn_pool = $self->cxn_pool;
+   $nodes ||= $self->nodes;
+   $cnx_pool ||= $self->cnx_pool;
+   $self->brik_help_run_undef_arg('open', $nodes) or return;
+   $self->brik_help_run_undef_arg('open', $cnx_pool) or return;
+   $self->brik_help_run_invalid_arg('open', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('open', $nodes) or return;
 
    my $elk = Search::Elasticsearch->new(
       nodes => $nodes,
-      cxn_pool => $cxn_pool,
+      cxn_pool => $cnx_pool,
    );
    if (! defined($elk)) {
-      return $self->log->error("open: connection failed");
+      return $self->log->error("open: failed");
    }
 
    $self->_elk($elk);
 
-   if ($self->bulk_mode) {
-      my $bulk = $elk->bulk_helper(
-         index => $index,
-         type => $type,
-      );
-      if (! defined($bulk)) {
-         return $self->log->error("open: bulk connection failed");
-      }
+   return $nodes;
+}
 
-      return $self->_bulk($bulk);
+sub open_bulk_mode {
+   my $self = shift;
+   my ($index, $type, $nodes, $cnx_pool) = @_;
+
+   $index ||= $self->index;
+   $type ||= $self->type;
+   $nodes ||= $self->nodes;
+   $cnx_pool ||= $self->cnx_pool;
+   $self->brik_help_run_undef_arg('open_bulk_mode', $index) or return;
+   $self->brik_help_run_undef_arg('open_bulk_mode', $type) or return;
+   $self->brik_help_run_undef_arg('open_bulk_mode', $nodes) or return;
+   $self->brik_help_run_undef_arg('open_bulk_mode', $cnx_pool) or return;
+   $self->brik_help_run_invalid_arg('open_bulk_mode', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('open_bulk_mode', $nodes) or return;
+
+   $self->open($nodes, $cnx_pool) or return;
+
+   my $elk = $self->_elk;
+
+   my $bulk = $elk->bulk_helper(
+      index => $index,
+      type => $type,
+   );
+   if (! defined($bulk)) {
+      return $self->log->error("open_bulk_mode: failed");
    }
+
+   $self->_bulk($bulk);
 
    return $nodes;
 }
 
-sub index {
+sub index_document {
    my $self = shift;
    my ($doc, $index, $type) = @_;
 
    my $elk = $self->_elk;
-   $index ||= $self->index_name;
-   $type ||= $self->type_document;
+   $index ||= $self->index;
+   $type ||= $self->type;
    $self->brik_help_run_undef_arg('open', $elk) or return;
-   $self->brik_help_run_undef_arg('index', $index) or return;
-   $self->brik_help_run_undef_arg('index', $type) or return;
-   $self->brik_help_run_undef_arg('index', $doc) or return;
-   $self->brik_help_run_invalid_arg('index', $doc, 'HASH') or return;
+   $self->brik_help_run_undef_arg('index_document', $index) or return;
+   $self->brik_help_run_undef_arg('index_document', $type) or return;
+   $self->brik_help_run_undef_arg('index_document', $doc) or return;
+   $self->brik_help_run_invalid_arg('index_document', $doc, 'HASH') or return;
 
    my $r = $elk->index(
       index => $index,
@@ -131,11 +135,15 @@ sub index {
 
 sub index_bulk {
    my $self = shift;
-   my ($doc) = @_;
+   my ($doc, $index, $type) = @_;
 
    my $bulk = $self->_bulk;
-   $self->brik_help_run_undef_arg('open', $bulk) or return;
+   $index ||= $self->index;
+   $type ||= $self->type;
+   $self->brik_help_run_undef_arg('open_bulk_mode', $bulk) or return;
    $self->brik_help_run_undef_arg('index_bulk', $doc) or return;
+   $self->brik_help_run_undef_arg('index_bulk', $index) or return;
+   $self->brik_help_run_undef_arg('index_bulk', $type) or return;
 
    return $self->_bulk->index({ source => $doc });
 }
@@ -145,8 +153,8 @@ sub count {
    my ($index, $type) = @_;
 
    my $elk = $self->_elk;
-   $index ||= $self->index_name;
-   $type ||= $self->type_document;
+   $index ||= $self->index;
+   $type ||= $self->type;
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('count', $index) or return;
    $self->brik_help_run_undef_arg('count', $type) or return;
@@ -173,7 +181,7 @@ sub query {
    my ($query, $index) = @_;
 
    my $elk = $self->_elk;
-   $index ||= $self->index_name;
+   $index ||= $self->index;
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('query', $query) or return;
    $self->brik_help_run_undef_arg('query', $index) or return;
@@ -191,17 +199,17 @@ sub query {
    return $r;
 }
 
-sub get {
+sub get_from_id {
    my $self = shift;
    my ($id, $index, $type) = @_;
 
    my $elk = $self->_elk;
-   $index ||= $self->index_name;
-   $type ||= $self->type_document;
+   $index ||= $self->index;
+   $type ||= $self->type;
    $self->brik_help_run_undef_arg('open', $elk) or return;
-   $self->brik_help_run_undef_arg('get', $id) or return;
-   $self->brik_help_run_undef_arg('get', $index) or return;
-   $self->brik_help_run_undef_arg('get', $type) or return;
+   $self->brik_help_run_undef_arg('get_from_id', $id) or return;
+   $self->brik_help_run_undef_arg('get_from_id', $index) or return;
+   $self->brik_help_run_undef_arg('get_from_id', $type) or return;
 
    my $r = $elk->get(
       index => $index,
@@ -214,23 +222,22 @@ sub get {
 
 sub www_search {
    my $self = shift;
-   my ($query, $index_name) = @_;
+   my ($query, $index) = @_;
 
-   $index_name ||= $self->index_name;
-   $self->brik_help_run_undef_arg('www_search', $index_name) or return;
+   $index ||= $self->index;
+   $self->brik_help_run_undef_arg('www_search', $index) or return;
    $self->brik_help_run_undef_arg('www_search', $query) or return;
 
    my $size = $self->size;
 
-   my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
    my $sj = Metabrik::String::Json->new_from_brik_init($self) or return;
 
    my $nodes = $self->nodes;
    for my $node (@$nodes) {
       # http://localhost:9200/INDEX/_search/?size=SIZE&q=QUERY
-      my $url = "$node/$index_name/_search/?size=$size&q=".$query;
+      my $url = "$node/$index/_search/?size=$size&q=".$query;
 
-      my $get = $cw->get($url) or next;
+      my $get = $self->SUPER::get($url) or next;
       my $body = $get->{content};
 
       my $decoded = $sj->decode($body) or next;
@@ -241,14 +248,14 @@ sub www_search {
    return;
 }
 
-sub delete {
+sub delete_index {
    my $self = shift;
    my ($index) = @_;
 
    my $elk = $self->_elk;
-   $index ||= $self->index_name;
+   $index ||= $self->index;
    $self->brik_help_run_undef_arg('open', $elk) or return;
-   $self->brik_help_run_undef_arg('delete', $index) or return;
+   $self->brik_help_run_undef_arg('delete_index', $index) or return;
 
    my $r = $elk->indices->delete(
       index => $index,
@@ -304,7 +311,7 @@ sub get_mappings {
    my $self = shift;
    my ($index) = @_;
 
-   $index ||= $self->index_name;
+   $index ||= $self->index;
    $self->brik_help_run_undef_arg('get_mappings', $index) or return;
 
    my $r = $self->get_index($index) or return;
