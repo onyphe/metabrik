@@ -81,8 +81,6 @@ provides:
     file: lib/Metabrik/Crypto/X509.pm
   Metabrik::Database::Cwe:
     file: lib/Metabrik/Database/Cwe.pm
-  Metabrik::Database::Elasticsearch:
-    file: lib/Metabrik/Database/Elasticsearch.pm
   Metabrik::Database::Keystore:
     file: lib/Metabrik/Database/Keystore.pm
   Metabrik::Database::Mysql:

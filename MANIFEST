@@ -36,7 +36,6 @@ lib/Metabrik/Crypto/Gpg.pm
 lib/Metabrik/Crypto/Letsencrypt.pm
 lib/Metabrik/Crypto/X509.pm
 lib/Metabrik/Database/Cwe.pm
-lib/Metabrik/Database/Elasticsearch.pm
 lib/Metabrik/Database/Keystore.pm
 lib/Metabrik/Database/Mysql.pm
 lib/Metabrik/Database/Nvd.pm
