@@ -7,7 +7,7 @@ package Metabrik::Server::Elasticsearch;
 use strict;
 use warnings;
 
-use base qw(Metabrik::System::Service Metabrik::System::Package);
+use base qw(Metabrik::System::Package Metabrik::System::Process);
 
 sub brik_properties {
    return {
@@ -20,6 +20,7 @@ sub brik_properties {
          listen => [ qw(ip_address) ],
          port => [ qw(port) ],
          conf_file => [ qw(file) ],
+         pidfile => [ qw(file) ],
       },
       attributes_default => {
          listen => '127.0.0.1',
@@ -27,13 +28,14 @@ sub brik_properties {
       },
       commands => {
          install => [ ], # Inherited
-         start => [ ], # Inherited
-         stop => [ ], # Inherited
-         status => [ ], # Inherited
-         restart => [ ], # Inherited
+         start => [ ],
+         stop => [ ],
          generate_conf => [ qw(conf|OPTIONAL) ],
          # XXX: ./bin/plugin -install lmenezes/elasticsearch-kopf
          #install_plugin => [ qw(plugin) ],
+      },
+      require_modules => {
+         'Metabrik::System::Process' => [ ],
       },
       need_packages => {
          ubuntu => [ qw(elasticsearch) ],
@@ -65,6 +67,44 @@ sub generate_conf {
    $conf_file ||= $self->conf_file;
 
    return $conf_file;
+}
+
+sub start {
+   my $self = shift;
+
+   $self->close_output_on_start(1);
+
+   my $pidfile = $self->SUPER::start(sub {
+      my $pid = $self->write_pidfile;
+      $self->log->info("Within daemon with pid[$pid]");
+
+      my $cmd = '/usr/share/elasticsearch/bin/elasticsearch';
+
+      $self->sudo_system($cmd);
+
+      $self->log->error("start: son failed to start");
+      exit(1);
+   });
+
+   $self->log->verbose("here");
+
+   $self->wait_for_pidfile($pidfile) or return;
+
+   $self->pidfile($pidfile);
+
+   return $pidfile;
+}
+
+sub stop {
+   my $self = shift;
+
+   my $pidfile = $self->pidfile;
+   if (! defined($pidfile)) {
+      $self->log->warning("stop: nothing to stop");
+      return 1;
+   }
+
+   return $self->kill_from_pidfile($pidfile);
 }
 
 1;

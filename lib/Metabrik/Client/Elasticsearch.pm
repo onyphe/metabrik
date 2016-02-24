@@ -33,8 +33,8 @@ sub brik_properties {
          size => 10,
       },
       commands => {
-         open => [ qw(nodes_list|OPTIONAL cnx_pool|OPTIONAL) ],
-         open_bulk_mode => [ qw(index|OPTIONAL type|OPTIONAL nodes_list|OPTIONAL cnx_pool|OPTIONAL) ],
+         open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
+         open_bulk_mode => [ qw(index|OPTIONAL type|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
          index_document => [ qw(document index|OPTIONAL type|OPTIONAL) ],
          index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL) ],
          query => [ qw($query_hash index|OPTIONAL) ],
@@ -57,18 +57,18 @@ sub brik_properties {
 
 sub open {
    my $self = shift;
-   my ($nodes, $cnx_pool) = @_;
+   my ($nodes, $cxn_pool) = @_;
 
    $nodes ||= $self->nodes;
-   $cnx_pool ||= $self->cnx_pool;
+   $cxn_pool ||= $self->cxn_pool;
    $self->brik_help_run_undef_arg('open', $nodes) or return;
-   $self->brik_help_run_undef_arg('open', $cnx_pool) or return;
+   $self->brik_help_run_undef_arg('open', $cxn_pool) or return;
    $self->brik_help_run_invalid_arg('open', $nodes, 'ARRAY') or return;
    $self->brik_help_run_empty_array_arg('open', $nodes) or return;
 
    my $elk = Search::Elasticsearch->new(
       nodes => $nodes,
-      cxn_pool => $cnx_pool,
+      cxn_pool => $cxn_pool,
    );
    if (! defined($elk)) {
       return $self->log->error("open: failed");
@@ -81,20 +81,20 @@ sub open {
 
 sub open_bulk_mode {
    my $self = shift;
-   my ($index, $type, $nodes, $cnx_pool) = @_;
+   my ($index, $type, $nodes, $cxn_pool) = @_;
 
    $index ||= $self->index;
    $type ||= $self->type;
    $nodes ||= $self->nodes;
-   $cnx_pool ||= $self->cnx_pool;
+   $cxn_pool ||= $self->cxn_pool;
    $self->brik_help_run_undef_arg('open_bulk_mode', $index) or return;
    $self->brik_help_run_undef_arg('open_bulk_mode', $type) or return;
    $self->brik_help_run_undef_arg('open_bulk_mode', $nodes) or return;
-   $self->brik_help_run_undef_arg('open_bulk_mode', $cnx_pool) or return;
+   $self->brik_help_run_undef_arg('open_bulk_mode', $cxn_pool) or return;
    $self->brik_help_run_invalid_arg('open_bulk_mode', $nodes, 'ARRAY') or return;
    $self->brik_help_run_empty_array_arg('open_bulk_mode', $nodes) or return;
 
-   $self->open($nodes, $cnx_pool) or return;
+   $self->open($nodes, $cxn_pool) or return;
 
    my $elk = $self->_elk;
 
@@ -280,9 +280,17 @@ sub show_indices {
    if ($self->code ne 200) {
       return $self->log->error("show_indices: failed with content [".$get->{content}."]");
    }
-   my $content = $get->{content} or return;
+   my $content = $get->{content};
+   if (! defined($content)) {
+      return;
+   }
 
    my @lines = split(/\n/, $content);
+
+   if (@lines == 0) {
+      return $self->log->warning("show_indices: nothing returned, no index?");
+      return 1;
+   }
 
    return \@lines;
 }
