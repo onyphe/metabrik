@@ -445,6 +445,9 @@
       "Metabrik::Server::Dns" : {
          "file" : "lib/Metabrik/Server/Dns.pm"
       },
+      "Metabrik::Server::Elasticsearch" : {
+         "file" : "lib/Metabrik/Server/Elasticsearch.pm"
+      },
       "Metabrik::Server::Http" : {
          "file" : "lib/Metabrik/Server/Http.pm"
       },

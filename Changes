@@ -9,6 +9,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: xorg::xlsclients Brik
    - new: xorg::xwininfo Brik
    - new: client::elasticsearch Brik
+   - new: server::elasticsearch Brik
    - obsolete: www::splunk Brik
 
 1.21.0 Fri Feb  5 07:53:28 CET 2016

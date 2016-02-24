@@ -139,6 +139,7 @@ lib/Metabrik/Remote/Winexe.pm
 lib/Metabrik/Remote/Wmi.pm
 lib/Metabrik/Repository.pm
 lib/Metabrik/Server/Dns.pm
+lib/Metabrik/Server/Elasticsearch.pm
 lib/Metabrik/Server/Http.pm
 lib/Metabrik/Server/Rest.pm
 lib/Metabrik/Server/Snmp.pm
