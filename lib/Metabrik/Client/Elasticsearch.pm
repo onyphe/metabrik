@@ -47,6 +47,9 @@ sub brik_properties {
          get_mappings => [ qw(index) ],
          create_index => [ qw(index) ],
          create_index_with_mappings => [ qw(index mappings) ],
+         get_template => [ qw(name) ],
+         put_template => [ qw(name template) ],
+         delete_template => [ qw(name) ],
       },
       require_modules => {
          'Search::Elasticsearch' => [ ],
@@ -363,6 +366,63 @@ sub create_index_with_mappings {
       body => {
          mappings => $mappings,
       },
+   );
+
+   return $r;
+}
+
+#
+# http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html
+#
+sub get_template {
+   my $self = shift;
+   my ($template) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('get_template', $template) or return;
+
+   my $r = $elk->indices->get_template(
+      name => $template,
+   );
+
+   return $r;
+}
+
+#
+# http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html
+#
+sub put_template {
+   my $self = shift;
+   my ($name, $template) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('put_template', $name) or return;
+   $self->brik_help_run_undef_arg('put_template', $template) or return;
+   $self->brik_help_run_invalid_arg('put_template', $template, 'HASH') or return;
+
+   my $r = $elk->indices->put_template(
+      name => $name,
+      body => $template,
+   );
+
+   return $r;
+}
+
+#
+# http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html
+#
+sub delete_template {
+   my $self = shift;
+   my ($name) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('delete_template', $name) or return;
+
+   my $r = $elk->indices->delete_template(
+      name => $name,
    );
 
    return $r;
