@@ -37,6 +37,7 @@ sub brik_properties {
          open_bulk_mode => [ qw(index|OPTIONAL type|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
          index_document => [ qw(document index|OPTIONAL type|OPTIONAL) ],
          index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL) ],
+         bulk_flush => [ ],
          query => [ qw($query_hash index|OPTIONAL) ],
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
          get_from_id => [ qw(id index|OPTIONAL type|OPTIONAL) ],
@@ -148,7 +149,16 @@ sub index_bulk {
    $self->brik_help_run_undef_arg('index_bulk', $index) or return;
    $self->brik_help_run_undef_arg('index_bulk', $type) or return;
 
-   return $self->_bulk->index({ source => $doc });
+   return $bulk->index({ source => $doc });
+}
+
+sub bulk_flush {
+   my $self = shift;
+
+   my $bulk = $self->_bulk;
+   $self->brik_help_run_undef_arg('open_bulk_mode', $bulk) or return;
+
+   return $bulk->flush;
 }
 
 sub count {
@@ -172,8 +182,11 @@ sub count {
          },
       },
    );
+   if (! defined($r)) {
+      return $self->log->error("count: search failed");
+   }
 
-   return $r;
+   return $r->{hits}{total};
 }
 
 #
@@ -231,6 +244,7 @@ sub www_search {
    $self->brik_help_run_undef_arg('www_search', $index) or return;
    $self->brik_help_run_undef_arg('www_search', $query) or return;
 
+   my $from = $self->from;
    my $size = $self->size;
 
    my $sj = Metabrik::String::Json->new_from_brik_init($self) or return;
@@ -238,7 +252,7 @@ sub www_search {
    my $nodes = $self->nodes;
    for my $node (@$nodes) {
       # http://localhost:9200/INDEX/_search/?size=SIZE&q=QUERY
-      my $url = "$node/$index/_search/?size=$size&q=".$query;
+      my $url = "$node/$index/_search/?from=$from&size=$size&q=".$query;
 
       my $get = $self->SUPER::get($url) or next;
       my $body = $get->{content};

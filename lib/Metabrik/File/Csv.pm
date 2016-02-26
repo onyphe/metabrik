@@ -27,6 +27,7 @@ sub brik_properties {
          write_header => [ qw(0|1) ],
          _csv => [ qw(INTERNAL) ],
          _fd => [ qw(INTERNAL) ],
+         _header_written => [ qw(INTERNAL) ],
       },
       attributes_default => {
          first_line_is_header => 1,
@@ -35,6 +36,7 @@ sub brik_properties {
          overwrite => 1,
          append => 0,
          write_header => 1,
+         _header_written => 0,
       },
       commands => {
          read => [ qw(input_file|OPTIONAL) ],
@@ -134,29 +136,50 @@ sub write {
 
    my $written = '';
 
+   # If header is provided, we use it to respect the order.
    my $header_set = 0;
    my %order = ();
+   if ($self->header) {
+      my @header = @{$self->header};
+      my $idx = 0;
+      for my $k (@header) {
+         $order{$k} = $idx;
+         $idx++;
+      }
+      if ($self->write_header && ! $self->_header_written) {
+         my $data = join($self->separator, @header)."\n";
+         print $fd $data;
+         $written .= $data;
+         $self->_header_written(1);
+      }
+      $header_set++;
+   }
+
    for my $this (@$csv_struct) {
+      # If header was not provided, we use our own ordering
       if (! $header_set) {
+         my @header = sort { $a cmp $b } keys %$this;
          my $idx = 0;
-         for my $k (sort { $a cmp $b } keys %$this) {
+         for my $k (@header) {
             $order{$k} = $idx;
             $idx++;
          }
-         my @header = sort { $a cmp $b } keys %$this;
-         my $data = join($self->separator, @header)."\n";
-         if ($self->write_header) {
+         if ($self->write_header && ! $self->_header_written) {
+            my $data = join($self->separator, @header)."\n";
             print $fd $data;
             $written .= $data;
+            $self->_header_written(1);
          }
          $header_set++;
       }
 
       my @fields = ();
-      for my $key (sort { $a cmp $b } keys %$this) {
+      for my $key (keys %$this) {
+         next if (! defined($order{$key}));  # We may have some unwanted data in this HASH
          $fields[$order{$key}] = $this->{$key};
       }
 
+      @fields = map { defined($_) ? $_ : 'undef' } @fields;
       my $data = join($self->separator, @fields)."\n";
 
       my $r = $fw->write($data);
