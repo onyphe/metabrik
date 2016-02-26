@@ -1,3 +1,8 @@
+20160226
+   AFFECTS: client::elasticsearch
+
+   - client::elasticsearch count Command to return only count score and no more a HASH
+
 20160224
    AFFECTS: database::elasticsearch, client::elasticsearch
 
