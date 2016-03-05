@@ -1,5 +1,8 @@
 Revision history for Perl extension Metabrik::Repository.
 
+1.21.2
+   - new: devel::mojo Brik
+
 1.21.1 Wed Mar  2 07:46:01 CET 2016
    - new: remote::ssh Brik
    - new: string::syslog Brik

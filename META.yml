@@ -103,6 +103,8 @@ provides:
     file: lib/Metabrik/Devel/Git.pm
   Metabrik::Devel::Mercurial:
     file: lib/Metabrik/Devel/Mercurial.pm
+  Metabrik::Devel::Mojo:
+    file: lib/Metabrik/Devel/Mojo.pm
   Metabrik::Devel::Subversion:
     file: lib/Metabrik/Devel/Subversion.pm
   Metabrik::Email::Mbox:
