@@ -22,13 +22,18 @@ sub brik_properties {
       },
       commands => {
          generate_lite_app => [ qw(file_pl) ],
-         generate_app => [ qw(ModuleName) ],
+         generate_app => [ qw(MyApp) ],
+         morbo => [ qw(file_pl) ],
+         inflate => [ qw(file_pl) ],
+         get => [ qw(url) ],
+         test => [ qw(file_pl) ],
       },
       require_modules => {
          Mojolicious => [ ],
       },
       require_binaries => {
          mojo => [ ],
+         morbo => [ ],
       },
    };
 }
@@ -71,6 +76,63 @@ sub generate_app {
    $she->run_cd($cwd) or return;
 
    return $r;
+}
+
+sub morbo {
+   my $self = shift;
+   my ($pl) = @_;
+
+   my $datadir = $self->datadir;
+   $self->brik_help_run_undef_arg('morbo', $pl) or return;
+   $self->brik_help_run_file_not_found('morbo', $pl) or return;
+
+   my $cmd = "morbo \"$pl\"";
+   return $self->execute($cmd);
+}
+
+sub inflate {
+   my $self = shift;
+   my ($pl) = @_;
+
+   my $she = $self->shell;
+   my $datadir = $self->datadir;
+   $self->brik_help_run_undef_arg('inflate', $pl) or return;
+   $self->brik_help_run_file_not_found('inflate', $pl) or return;
+
+   my $cwd = $she->pwd;
+
+   $she->run_cd($datadir) or return;
+
+   my $cmd = "perl \"$pl\" inflate";
+   my $r = $self->execute($cmd);
+
+   $she->run_cd($cwd) or return;
+
+   return $r;
+}
+
+#
+# ./myapp.pl get -v '/?user=sebastian&pass=secr3t'
+#
+sub get {
+   my $self = shift;
+   my ($pl, $url) = @_;
+
+   $self->brik_help_run_undef_arg('get', $pl) or return;
+   $self->brik_help_run_undef_arg('get', $url) or return;
+
+   my $cmd = "perl \"$pl\" get -v '$url'";
+   return $self->execute($cmd);
+}
+
+sub test {
+   my $self = shift;
+   my ($pl) = @_;
+
+   $self->brik_help_run_undef_arg('test', $pl) or return;
+
+   my $cmd = "perl \"$pl\" test";
+   return $self->execute($cmd);
 }
 
 1;

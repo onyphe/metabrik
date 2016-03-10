@@ -23,6 +23,7 @@ sub brik_properties {
          show_require_modules => [ ],
          command => [ qw(Command) ],
          category => [ qw(Category) ],
+         list_categories => [ ],
       },
    };
 }
@@ -274,6 +275,30 @@ sub category {
    }
 
    return $total;
+}
+
+sub list_categories {
+   my $self = shift;
+
+   my $con = $self->context;
+   my $available = $con->find_available;
+
+   my @categories = ();
+   for my $k (keys %$available) {
+      my @t = split(/::/, $k);
+      if (@t == 2) {  # Category and Name
+         push @categories, $t[0];
+      }
+      elsif (@t == 3) {  # Repository, Category and Name
+         push @categories, $t[1];
+      }
+      else {  # Error
+         $self->log->warning("list_categories: Brik [$k] has no Category?");
+      } 
+   }
+
+   my %uniq = map { $_ => 1 } @categories;
+   return [ sort { $a cmp $b } keys %uniq ];
 }
 
 1;
