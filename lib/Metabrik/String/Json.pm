@@ -52,7 +52,9 @@ sub decode {
 
    my $decoded = '';
    eval {
-      $decoded = JSON::XS::decode_json($data);
+      my $j = JSON::XS->new;
+      $j->relaxed(1);
+      $decoded = $j->decode($data);
    };
    if ($@) {
       chomp($@);

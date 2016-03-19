@@ -27,6 +27,7 @@ sub brik_properties {
          inflate => [ qw(file_pl) ],
          get => [ qw(url) ],
          test => [ qw(file_pl) ],
+         routes => [ qw(file_pl) ],
       },
       require_modules => {
          Mojolicious => [ ],
@@ -132,6 +133,19 @@ sub test {
    $self->brik_help_run_undef_arg('test', $pl) or return;
 
    my $cmd = "perl \"$pl\" test";
+   return $self->execute($cmd);
+}
+
+#
+# ./myapp.pl routes -v
+#
+sub routes {
+   my $self = shift;
+   my ($pl) = @_;
+
+   $self->brik_help_run_undef_arg('routes', $pl) or return;
+
+   my $cmd = "perl \"$pl\" routes -v";
    return $self->execute($cmd);
 }
 

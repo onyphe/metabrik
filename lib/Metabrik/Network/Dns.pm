@@ -23,6 +23,8 @@ sub brik_properties {
          try => [ qw(try_number) ],
          rtimeout => [ qw(timeout) ],
          type => [ qw(query_type) ],
+         resolver => [ qw(INTERNAL) ],
+         use_persistence => [ qw(0|1) ],
       },
       attributes_default => {
          use_recursion => 0,
@@ -30,9 +32,14 @@ sub brik_properties {
          try => 3,
          rtimeout => 2,
          type => 'A',
+         use_persistence => 0,
       },
       commands => {
-         lookup => [ qw(hostname|ip_address type nameserver|OPTIONAL port|OPTIONAL) ],
+         create_resolver => [ qw(nameserver|OPTIONAL port|OPTIONAL) ],
+         reset_resolver => [ ],
+         lookup => [ qw(hostname|ip_address type|OPTIONAL nameserver|OPTIONAL port|OPTIONAL) ],
+         background_lookup => [ qw(hostname|ip_address type|OPTIONAL nameserver|OPTIONAL port|OPTIONAL) ],
+         background_read => [ qw(handle) ],
          version_bind => [ qw(hostname|ip_address) ],
       },
       require_modules => {
@@ -41,19 +48,19 @@ sub brik_properties {
    };
 }
 
-sub lookup {
+sub create_resolver {
    my $self = shift;
-   my ($host, $type, $nameserver, $port) = @_;
+   my ($nameserver, $port, $timeout) = @_;
 
-   $type ||= $self->type || 'A';
    $nameserver ||= $self->nameserver;
-   $port ||= $self->port || 53;
-   $self->brik_help_run_undef_arg('lookup', $host) or return;
-   $self->brik_help_run_undef_arg('lookup', $nameserver) or return;
-   my $ref = $self->brik_help_run_invalid_arg('lookup', $nameserver, 'ARRAY', 'SCALAR')
+   $port ||= $self->port;
+   $timeout ||= $self->rtimeout;
+   $self->brik_help_run_undef_arg('create_resolver', $nameserver) or return;
+   my $ref = $self->brik_help_run_invalid_arg('create_resolver', $nameserver, 'ARRAY', 'SCALAR')
       or return;
 
-   my $timeout = $self->rtimeout;
+   my $try = $self->try;
+   my $persist = $self->use_persistence;
 
    my %args = (
       recurse => $self->use_recursion,
@@ -62,35 +69,60 @@ sub lookup {
       tcp_timeout => $timeout,
       udp_timeout => $timeout,
       port => $port,
-      persistent_udp => 1,
+      persistent_udp => $persist,
+      persistent_tcp => $persist,
+      retrans => $timeout,
+      retry => $try,
    );
 
-   if (ref($nameserver) eq 'ARRAY') {
+   if ($ref eq 'ARRAY') {
+      $self->log->verbose("create_resolver: using nameserver [".join('|', @$nameserver)."]");
       $args{nameservers} = $nameserver;
    }
    else {
+      $self->log->verbose("create_resolver: using nameserver [$nameserver]");
       $args{nameservers} = [ $nameserver ];
    }
 
-   my $dns = Net::DNS::Resolver->new(%args);
-   if (! defined($dns)) {
-      return $self->log->error("lookup: Net::DNS::Resolver new failed");
+   my $resolver = Net::DNS::Resolver->new(%args);
+   if (! defined($resolver)) {
+      return $self->log->error("create_resolver: Net::DNS::Resolver new failed");
+   }
+
+   $self->resolver($resolver);
+
+   return 1;
+}
+
+sub reset_resolver {
+   my $self = shift;
+
+   $self->resolver(undef);
+
+   return 1;
+}
+
+sub lookup {
+   my $self = shift;
+   my ($host, $type, $nameserver, $port) = @_;
+
+   $type ||= $self->type;
+   $nameserver ||= $self->nameserver;
+   $port ||= $self->port;
+   $self->brik_help_run_undef_arg('lookup', $host) or return;
+   $self->brik_help_run_undef_arg('lookup', $nameserver) or return;
+
+   my $resolver = $self->resolver;
+   if (! defined($resolver)) {
+      $self->create_resolver($nameserver, $port) or return;
+      $resolver = $self->resolver;
    }
 
    $self->log->verbose("lookup: host [$host] for type [$type]");
 
-   my $try = $self->try;
-   my $packet;
-   for (1..$try) {
-      $packet = $dns->send($host, $type);
-      if (defined($packet)) {
-         last;
-      }
-      sleep(1);
-   }
-
+   my $packet = $resolver->send($host, $type);
    if (! defined($packet)) {
-      return $self->log->error("lookup: query failed [".$dns->errorstring."]");
+      return $self->log->error("lookup: query failed [".$resolver->errorstring."]");
    }
 
    $self->debug && $self->log->debug("lookup: ".$packet->string);
@@ -99,6 +131,96 @@ sub lookup {
    my @answers = $packet->answer;
    for my $rr (@answers) {
       $self->debug && $self->log->debug("lookup: ".$rr->string);
+
+      my $h = {
+         type => $rr->type,
+         ttl => $rr->ttl,
+         name => $rr->name,
+         string => $rr->string,
+         raw => $rr,
+      };
+      if ($rr->can('address')) {
+         $h->{address} = $rr->address;
+      }
+      if ($rr->can('cname')) {
+         $h->{cname} = $rr->cname;
+      }
+      if ($rr->can('exchange')) {
+         $h->{exchange} = $rr->exchange;
+      }
+      if ($rr->can('nsdname')) {
+         $h->{nsdname} = $rr->nsdname;
+      }
+      if ($rr->can('ptrdname')) {
+         $h->{ptrdname} = $rr->ptrdname;
+      }
+      if ($rr->can('rdatastr')) {
+         $h->{rdatastr} = $rr->rdatastr;
+      }
+      if ($rr->can('dummy')) {
+         $h->{dummy} = $rr->dummy;
+      }
+      if ($rr->can('target')) {
+         $h->{target} = $rr->target;
+      }
+
+      push @res, $h;
+   }
+
+   return \@res;
+}
+
+sub background_lookup {
+   my $self = shift;
+   my ($host, $type, $nameserver, $port) = @_;
+
+   $type ||= $self->type;
+   $nameserver ||= $self->nameserver;
+   $port ||= $self->port;
+   $self->brik_help_run_undef_arg('background_lookup', $host) or return;
+   $self->brik_help_run_undef_arg('background_lookup', $nameserver) or return;
+
+   my $resolver = $self->resolver;
+   if (! defined($resolver)) {
+      $self->create_resolver($nameserver, $port) or return;
+      $resolver = $self->resolver;
+   }
+
+   $self->log->verbose("background_lookup: host [$host] for type [$type]");
+
+   my $handle = $resolver->bgsend($host, $type);
+   if (! defined($handle)) {
+      return $self->log->error("background_lookup: query failed [".$resolver->errorstring."]");
+   }
+
+   return $handle;
+}
+
+sub background_read {
+   my $self = shift;
+   my ($handle) = @_;
+
+   my $resolver = $self->resolver;
+   $self->brik_help_run_undef_arg('background_lookup', $resolver) or return;
+   $self->brik_help_run_undef_arg('background_read', $handle) or return;
+   $self->brik_help_run_invalid_arg('background_read', $handle, 'IO::Socket::IP') or return;
+
+   # Answer not ready
+   if (! $resolver->bgisready($handle)) {
+      return 0;
+   }
+
+   my $packet = $resolver->bgread($handle);
+   if (! defined($packet)) {
+      return [];  # No error checking possible, undef means no response or timeout.
+   }
+
+   $self->debug && $self->log->debug("background_read: ".$packet->string);
+
+   my @res = ();
+   my @answers = $packet->answer;
+   for my $rr (@answers) {
+      $self->debug && $self->log->debug("background_read: ".$rr->string);
 
       my $h = {
          type => $rr->type,
@@ -148,7 +270,7 @@ sub version_bind {
 
    my $timeout = $self->rtimeout;
 
-   my $dns = Net::DNS::Resolver->new(
+   my $resolver = Net::DNS::Resolver->new(
       nameservers => [ $nameserver, ],
       recurse => $self->use_recursion,
       searchlist => [],
@@ -157,12 +279,12 @@ sub version_bind {
       port => $port,
       debug => $self->debug ? 1 : 0,
    ); 
-   if (! defined($dns)) {
+   if (! defined($resolver)) {
       return $self->log->error("version_bind: Net::DNS::Resolver new failed");
    }
 
    my $version = 0;
-   my $res = $dns->send('version.bind', 'TXT', 'CH');
+   my $res = $resolver->send('version.bind', 'TXT', 'CH');
    if (defined($res) && exists($res->{answer})) {
       my $rr = $res->{answer}->[0];
       if (defined($rr) && exists($rr->{rdata})) {
