@@ -118,7 +118,7 @@ sub lookup {
       $resolver = $self->resolver;
    }
 
-   $self->log->verbose("lookup: host [$host] for type [$type]");
+   $self->debug && $self->log->debug("lookup: host [$host] for type [$type]");
 
    my $packet = $resolver->send($host, $type);
    if (! defined($packet)) {
@@ -186,7 +186,7 @@ sub background_lookup {
       $resolver = $self->resolver;
    }
 
-   $self->log->verbose("background_lookup: host [$host] for type [$type]");
+   $self->debug && $self->log->debug("background_lookup: host [$host] for type [$type]");
 
    my $handle = $resolver->bgsend($host, $type);
    if (! defined($handle)) {

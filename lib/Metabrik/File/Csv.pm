@@ -27,7 +27,6 @@ sub brik_properties {
          write_header => [ qw(0|1) ],
          _csv => [ qw(INTERNAL) ],
          _fd => [ qw(INTERNAL) ],
-         _header_written => [ qw(INTERNAL) ],
       },
       attributes_default => {
          first_line_is_header => 1,
@@ -36,7 +35,6 @@ sub brik_properties {
          overwrite => 1,
          append => 0,
          write_header => 1,
-         _header_written => 0,
       },
       commands => {
          read => [ qw(input_file|OPTIONAL) ],
@@ -132,47 +130,46 @@ sub write {
    $fw->encoding($self->encoding);
    $fw->overwrite($self->overwrite);
    $fw->append($self->append);
-   my $fd = $fw->open or return;
 
-   my $written = '';
-
-   # If header is provided, we use it to respect the order.
-   my $header_set = 0;
+   #
+   # Set header ordering
+   #
    my %order = ();
+   my @header = ();
+   # Order headers either by using user provided one or our own default ordering.
    if ($self->header) {
-      my @header = @{$self->header};
+      @header = @{$self->header};
       my $idx = 0;
       for my $k (@header) {
          $order{$k} = $idx;
          $idx++;
       }
-      if ($self->write_header && ! $self->_header_written) {
-         my $data = join($self->separator, @header)."\n";
-         print $fd $data;
-         $written .= $data;
-         $self->_header_written(1);
+   }
+   # If user didn't provide her own header, we use first element from struct.
+   else {
+      my $first = $csv_struct->[0];
+      @header = sort { $a cmp $b } keys %$first;
+      my $idx = 0;
+      for my $k (@header) {
+         $order{$k} = $idx;
+         $idx++;
       }
-      $header_set++;
    }
 
-   for my $this (@$csv_struct) {
-      # If header was not provided, we use our own ordering
-      if (! $header_set) {
-         my @header = sort { $a cmp $b } keys %$this;
-         my $idx = 0;
-         for my $k (@header) {
-            $order{$k} = $idx;
-            $idx++;
-         }
-         if ($self->write_header && ! $self->_header_written) {
-            my $data = join($self->separator, @header)."\n";
-            print $fd $data;
-            $written .= $data;
-            $self->_header_written(1);
-         }
-         $header_set++;
-      }
+   my $is_new_file = (! -f $output);
+   my $fd = $fw->open or return;
 
+   my $written = '';
+
+   # Write header if this is a new file and user asked for it.
+   if ($self->write_header && $is_new_file) {
+      my $data = join($self->separator, @header)."\n";
+      print $fd $data;
+      $written .= $data;
+   }
+
+   # Write the structure to file.
+   for my $this (@$csv_struct) {
       my @fields = ();
       for my $key (keys %$this) {
          next if (! defined($order{$key}));  # We may have some unwanted data in this HASH
