@@ -30,7 +30,7 @@ sub brik_properties {
       },
       attributes_default => {
          first_line_is_header => 1,
-         separator => ';',
+         separator => ',',
          encoding => 'utf8',
          overwrite => 1,
          append => 0,

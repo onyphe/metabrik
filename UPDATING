@@ -1,3 +1,11 @@
+20160321
+   AFFECTS: file::csv, client::whois, lookup::countrycode
+
+   - file::csv separator Attribute default value changed from `;' to `,' character
+   - client::whois parse_raw_whois Command renamed to parse_raw_ip_whois
+   - lookup::countrycode country_code_types Command renamed to list_types
+   - lookup::countrycode output Attribute removed
+
 20160226
    AFFECTS: client::elasticsearch
 

@@ -19,7 +19,7 @@ sub brik_properties {
          from_ip => [ qw(ip_address) ],
          from_domain => [ qw(domain) ],
          is_available_domain => [ qw(domain) ],
-         parse_raw_whois => [ qw($lines_list) ],
+         parse_raw_ip_whois => [ qw($lines_list) ],
          normalize_raw_ip_whois => [ qw($chunks $lines_list) ],
          is_ip_from_owner => [ qw(ip_address owner) ],
       },
@@ -31,11 +31,11 @@ sub brik_properties {
    };
 }
 
-sub parse_raw_whois {
+sub parse_raw_ip_whois {
    my $self = shift;
    my ($lines) = @_;
 
-   $self->brik_help_run_undef_arg('parse_raw_whois', $lines) or return;
+   $self->brik_help_run_undef_arg('parse_raw_ip_whois', $lines) or return;
 
    my $sp = Metabrik::String::Parse->new_from_brik_init($self) or return;
    my $chunks = $sp->split_by_blank_line($lines) or return;
@@ -287,7 +287,7 @@ sub from_ip {
    my $nw = Metabrik::Network::Whois->new_from_brik_init($self) or return;
    my $lines = $nw->target($ip) or return;
 
-   my $chunks = $self->parse_raw_whois($lines) or return;
+   my $chunks = $self->parse_raw_ip_whois($lines) or return;
 
    my $r = $self->normalize_raw_ip_whois($chunks, $lines) or return;
 
@@ -324,9 +324,14 @@ sub from_domain {
    my $nw = Metabrik::Network::Whois->new_from_brik_init($self) or return;
    my $lines = $nw->target($domain) or return;
 
-   my $chunks = $self->parse_raw_whois($lines);
+   #my $chunks = $self->parse_raw_ip_whois($lines);
+   my $chunks = [];
 
    my $r = { raw => $lines };
+   $r->{date_queried} = localtime();
+   $r->{whois_server} = $nw->last_server;
+
+   return $r;
 
    # 4 categories: general, registrant, admin, tech
    for (@$chunks) {

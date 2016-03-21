@@ -92,7 +92,7 @@ sub generate_conf {
    my $virtual_network = $self->virtual_network;
 
    my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
-   $sf->remove($conf) or return;
+   $sf->remove($conf);
 
    my $data =<<EOF
 DataDirectory $datadir

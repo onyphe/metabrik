@@ -16,6 +16,7 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         datadir => [ qw(datadir) ],
          rtimeout => [ qw(timeout) ],
          last_server => [ qw(server) ],
       },
@@ -40,6 +41,10 @@ sub target {
    $self->brik_help_run_undef_arg('target', $target) or return;
 
    $Net::Whois::Raw::TIMEOUT = $self->rtimeout;
+   $Net::Whois::Raw::CACHE_DIR = $self->datadir.'/cache';
+
+   # Whois server custo
+   #$Net::Whois::Raw::Data::servers{TLD} = SRV;
 
    my $info;
    my $server;
@@ -52,7 +57,18 @@ sub target {
       if ($@ =~ /(Connection timeout to \S+)/) {
          $@ = $1;
       }
-      return $self->log->error("target: whois failed with error [$@]");
+      elsif ($@ =~ /(\S+): Invalid argument: /) {
+         $@ = "Invalid server $1";
+      }
+      elsif ($@ =~ /(\S+): Connection refused: /) {
+         $@ = "Connection refused to $1";
+      }
+
+      return $self->log->error("target: failed target [$target]: [$@]");
+   }
+
+   if (! defined($info)) {
+      return $self->log->error("target: whois returned nothing");
    }
 
    my $sp = Metabrik::String::Parse->new_from_brik_init($self) or return;
