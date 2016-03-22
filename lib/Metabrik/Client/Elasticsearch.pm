@@ -70,6 +70,15 @@ sub open {
    $self->brik_help_run_invalid_arg('open', $nodes, 'ARRAY') or return;
    $self->brik_help_run_empty_array_arg('open', $nodes) or return;
 
+   for my $node (@$nodes) {
+      if ($node !~ m{https?://}) {
+         return $self->log->error("open: invalid node[$node], must start with http(s)");
+      }
+   }
+
+   my $nodes_str = join('\|', @$nodes);
+   $self->log->verbose("open: using nodes [$nodes_str]");
+
    my $elk = Search::Elasticsearch->new(
       nodes => $nodes,
       cxn_pool => $cxn_pool,

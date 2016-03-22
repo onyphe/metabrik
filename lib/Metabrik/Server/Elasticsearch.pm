@@ -86,8 +86,6 @@ sub start {
       exit(1);
    });
 
-   $self->log->verbose("here");
-
    $self->wait_for_pidfile($pidfile) or return;
 
    $self->pidfile($pidfile);
