@@ -16,11 +16,9 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
-         sync => [ qw(source destination) ],
+         sync => [ qw(source destination ssh_port|OPTIONAL args|OPTIONAL) ],
       },
       attributes => {
-         source_root => [ qw(path) ],
-         destination_root => [ qw(path) ],
          use_ssh => [ qw(0|1) ],
          ssh_port => [ qw(port) ],
          ssh_args => [ qw(args) ],
@@ -29,45 +27,35 @@ sub brik_properties {
       attributes_default => {
          use_ssh => 1,
          ssh_port => 22,
+         ssh_args => '',
          args => '-azv',
-         source_root => '',
-         destination_root => '',
+      },
+      need_packages => {
+         ubuntu => [ qw(rsync) ],
       },
       require_binaries => {
-         'rsync', => [ ],
+         rsync => [ ],
       },
    };
 }
 
 sub sync {
    my $self = shift;
-   my ($source, $destination) = @_;
+   my ($source, $destination, $ssh_port, $args) = @_;
 
+   $ssh_port ||= $self->ssh_port;
+   $args ||= $self->args;
    $self->brik_help_run_undef_arg('sync', $source) or return;
    $self->brik_help_run_undef_arg('sync', $destination) or return;
 
-   my $source_root = $self->source_root;
-   my $destination_root = $self->destination_root;
+   my $use_ssh = $self->use_ssh;
+   my $ssh_args = $self->ssh_args;
 
-   if (length($self->source_root)) {
-      $source = $self->source_root.'/'.$source;
-   }
-   if (length($self->destination_root)) {
-      $destination = $self->destination_root.'/'.$destination;
-   }
-
-   my $cmd = "rsync";
-   if ($self->use_ssh) {
-      my $port = $self->ssh_port;
-      my $args = $self->args;
-      my $ssh_args = '';
-      if ($self->ssh_args) {
-         $ssh_args = $self->ssh_args;
-      }
-      $cmd .= " -e \"ssh -p $port $ssh_args\" $args $source $destination";
+   my $cmd = 'rsync';
+   if ($use_ssh) {
+      $cmd .= " -e \"ssh -p $ssh_port $ssh_args\" $args $source $destination";
    }
    else {
-      my $args = $self->args;
       $cmd .= " $args $source $destination";
    }
 

@@ -40,11 +40,20 @@ sub brik_properties {
          basefile => [ qw(path) ],
          basedir => [ qw(path) ],
          link => [ qw(from to) ],
+         uniq => [ qw(input output) ],
+         count => [ qw(input) ],
       },
       require_modules => {
          'File::Copy' => [ qw(mv copy) ],
          'File::Path' => [ qw(make_path) ],
          'File::Spec' => [ ],
+      },
+      need_packages => {
+         ubuntu => [ qw(coreutils) ],
+      },
+      require_binaries => {
+         sort => [ ],
+         wc => [ ],
       },
    };
 }
@@ -289,6 +298,45 @@ sub link {
    }
 
    return $to;
+}
+
+#
+# Remove duplicated lines
+#
+sub uniq {
+   my $self = shift;
+   my ($input, $output) = @_;
+
+   $self->brik_help_run_undef_arg('uniq', $input) or return;
+   $self->brik_help_run_undef_arg('uniq', $output) or return;
+
+   my $cmd = "sort -u \"$input\" > \"$output\"";
+
+   $self->execute($cmd) or return;
+
+   return $self->count($output);
+}
+
+#
+# Count number of lines from a file
+#
+sub count {
+   my $self = shift;
+   my ($input) = @_;
+
+   $self->brik_help_run_undef_arg('count', $input) or return;
+
+   my $cmd = "wc -l \"$input\"";
+
+   my $r = $self->capture($cmd) or return;
+
+   if (@$r != 1) {
+      return $r;
+   }
+
+   my ($count) = $r->[0] =~ m{^(\d+)};
+
+   return $count;
 }
 
 1;

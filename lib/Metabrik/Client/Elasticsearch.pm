@@ -82,6 +82,9 @@ sub open {
    my $elk = Search::Elasticsearch->new(
       nodes => $nodes,
       cxn_pool => $cxn_pool,
+      timeout => 60,
+      max_retries => 3,
+      retry_on_timeout => 1,
    );
    if (! defined($elk)) {
       return $self->log->error("open: failed");

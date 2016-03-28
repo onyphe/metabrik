@@ -74,6 +74,17 @@ sub target {
    my $sp = Metabrik::String::Parse->new_from_brik_init($self) or return;
    my $lines = $sp->to_array($info) or return;
 
+   for (@$lines) {
+      if (/Whois Requests exceeded the allowed limit/i
+      ||  /Your request cannot be completed at this time due to query limit controls/i
+      ||  /Maximum Daily connection limit reached. Lookup refused/i
+      ||  /database is contained within a list of IP addresses that may have failed/i
+      ||  /Connection refused: exceeded maximum connection limit from /i
+   ) {
+         return $self->log->error("target: failed target [limit exceeded]");
+      }
+   }
+
    $self->last_server($server);
 
    return $lines;

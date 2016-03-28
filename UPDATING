@@ -1,3 +1,9 @@
+20160328
+   AFFECTS: client::rsync
+
+   - client::rsync source_root and destination_root Attributes removed
+   - client::rsync sync Argument passing changed, no more auto-add of source/dest prefix
+
 20160321
    AFFECTS: file::csv, client::whois, lookup::countrycode
 
