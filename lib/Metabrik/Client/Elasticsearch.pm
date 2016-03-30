@@ -43,7 +43,8 @@ sub brik_properties {
          get_from_id => [ qw(id index|OPTIONAL type|OPTIONAL) ],
          www_search => [ qw(query index|OPTIONAL) ],
          delete_index => [ qw(index) ],
-         show_indices => [ ],
+         show_indices => [ qw(nodes_list|OPTIONAL) ],
+         list_indices => [ qw(nodes_list|OPTIONAL) ],
          get_index => [ qw(index) ],
          get_mappings => [ qw(index) ],
          create_index => [ qw(index) ],
@@ -203,6 +204,9 @@ sub count {
 
 #
 # https://www.elastic.co/guide/en/elasticsearch/reference/current/full-text-queries.html
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-body.html
+#
+# Example: my $q = { query => { term => { ip => "192.168.57.19" } } }
 #
 sub query {
    my $self = shift;
@@ -219,9 +223,7 @@ sub query {
       index => $index,
       from => $self->from,
       size => $self->size,
-      body => {
-         query => $query,
-      },
+      body => $query,
    );
 
    return $r;
@@ -248,6 +250,9 @@ sub get_from_id {
    return $r;
 }
 
+#
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/search-uri-request.html
+#
 sub www_search {
    my $self = shift;
    my ($query, $index) = @_;
@@ -295,8 +300,9 @@ sub delete_index {
 
 sub show_indices {
    my $self = shift;
- 
-   my $nodes = $self->nodes;
+   my ($nodes) = @_;
+
+   $nodes ||= $self->nodes;
    $self->brik_help_run_undef_arg('show_indices', $nodes) or return;
    $self->brik_help_run_invalid_arg('show_indices', $nodes, 'ARRAY') or return;
    $self->brik_help_run_empty_array_arg('show_indices', $nodes) or return;
@@ -322,6 +328,28 @@ sub show_indices {
    }
 
    return \@lines;
+}
+
+sub list_indices {
+   my $self = shift;
+   my ($nodes) = @_;
+
+   $nodes ||= $self->nodes;
+   $self->brik_help_run_undef_arg('list_indices', $nodes) or return;
+   $self->brik_help_run_invalid_arg('list_indices', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('list_indices', $nodes) or return;
+
+   my $lines = $self->show_indices or return;
+
+   my @indices = ();
+   for (@$lines) {
+      my @t = split(/\s+/);
+      if (@t == 9) {
+         push @indices, $t[2];
+      }
+   }
+
+   return [ sort { $a cmp $b } @indices ];
 }
 
 sub get_index {
@@ -461,6 +489,12 @@ __END__
 =head1 NAME
 
 Metabrik::Client::Elasticsearch - client::elasticsearch Brik
+
+=head1 SYNOPSIS
+
+   host:~> my $q = { query => { term => { ip => "192.168.57.19" } } }
+   host:~> run client::elasticsearch open
+   host:~> run client::elasticsearch query $q data-*
 
 =head1 DESCRIPTION
 
