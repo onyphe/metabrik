@@ -1,3 +1,8 @@
+20160402
+   AFFECTS: system::file
+
+   - system::file create Command now returns created filename
+
 20160330
    AFFECTS: client::elasticsearch
 

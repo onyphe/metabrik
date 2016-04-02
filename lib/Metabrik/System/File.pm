@@ -42,6 +42,7 @@ sub brik_properties {
          link => [ qw(from to) ],
          uniq => [ qw(input output) ],
          count => [ qw(input) ],
+         touch => [ qw(file) ],
       },
       require_modules => {
          'File::Copy' => [ qw(mv copy) ],
@@ -183,8 +184,8 @@ sub create {
    my $self = shift;
    my ($file, $size) = @_;
 
-   $self->brik_help_run_undef_arg("create", $file) or return;
-   $self->brik_help_run_undef_arg("create", $size) or return;
+   $self->brik_help_run_undef_arg('create', $file) or return;
+   $self->brik_help_run_undef_arg('create', $size) or return;
 
    my $overwrite = $self->overwrite;
    if (-f $file && ! $self->overwrite) {
@@ -198,10 +199,15 @@ sub create {
    my $fw = Metabrik::File::Write->new_from_brik_init($self) or return;
    $fw->overwrite(1);
    $fw->open($file) or return;
-   $fw->write(sprintf("G"x$size));
+   if ($size > 0) {
+      $fw->write(sprintf("G"x$size));
+   }
+   else {
+      $fw->write('');
+   }
    $fw->close;
 
-   return 1;
+   return $file;
 }
 
 sub glob {
@@ -337,6 +343,18 @@ sub count {
    my ($count) = $r->[0] =~ m{^(\d+)};
 
    return $count;
+}
+
+#
+# Just create an empty file
+#
+sub touch {
+   my $self = shift;
+   my ($file) = @_;
+
+   $self->brik_help_run_undef_arg('touch', $file) or return;
+
+   return $self->create($file, 0);
 }
 
 1;

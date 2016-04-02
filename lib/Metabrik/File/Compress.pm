@@ -28,6 +28,7 @@ sub brik_properties {
          unzip => [ qw(input|OPTIONAL datadir|OPTIONAL) ],
          gunzip => [ qw(input|OPTIONAL output|OPTIONAL datadir|OPTIONAL) ],
          uncompress => [ qw(input|OPTIONAL output|OPTIONAL datadir|OPTIONAL) ],
+         gzip => [ qw(input) ],
       },
       require_modules => {
          'Compress::Zlib' => [ ],
@@ -36,9 +37,10 @@ sub brik_properties {
       },
       require_binaries => {
          unzip => [ ],
+         gzip => [ ],
       },
       need_packages => {
-         ubuntu => [ qw(unzip) ],
+         ubuntu => [ qw(unzip gzip) ],
       },
    };
 }
@@ -140,6 +142,20 @@ sub uncompress {
    }
 
    return $self->log->error("uncompress: don't know how to uncompress file [$input] with MIME type [$type]");
+}
+
+sub gzip {
+   my $self = shift;
+   my ($input) = @_;
+
+   $self->brik_help_run_undef_arg('gzip', $input) or return;
+   $self->brik_help_run_file_not_found('gzip', $input) or return;
+
+   my $cmd = "gzip \"$input\"";
+
+   $self->execute($cmd) or return;
+
+   return "$input.gz";
 }
 
 1;

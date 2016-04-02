@@ -224,6 +224,7 @@ sub query {
       from => $self->from,
       size => $self->size,
       body => $query,
+      #timeout => 60,  # XXX: to test
    );
 
    return $r;
@@ -341,11 +342,15 @@ sub list_indices {
 
    my $lines = $self->show_indices or return;
 
+   # Format depends on ElasticSearch version. We try to detect the format.
    my @indices = ();
    for (@$lines) {
       my @t = split(/\s+/);
       if (@t == 9) {
          push @indices, $t[2];
+      }
+      elsif (@t == 8) {
+         push @indices, $t[1];
       }
    }
 

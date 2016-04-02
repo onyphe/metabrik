@@ -25,6 +25,7 @@ sub brik_properties {
          datadir => [ qw(datadir) ],
          timeout => [ qw(0|1) ],
          rtimeout => [ qw(timeout) ],
+         add_headers => [ qw(http_headers_hash) ],
          _client => [ qw(object|INTERNAL) ],
          _last => [ qw(object|INTERNAL) ],
       },
@@ -33,6 +34,7 @@ sub brik_properties {
          ignore_content => 0,
          timeout => 0,
          rtimeout => 10,
+         add_headers => {},
       },
       commands => {
          install => [ ], # Inherited
@@ -164,6 +166,8 @@ sub _method {
       $self->_client($client);
    }
 
+   my $add_headers = $self->add_headers;
+
    $self->log->verbose("$method: $uri");
 
    my $response;
@@ -172,7 +176,7 @@ sub _method {
          $response = $client->$method($uri, Content => $data);
       }
       elsif ($method eq 'options' || $method eq 'patch') {
-         my $req = HTTP::Request->new($method => $uri);
+         my $req = HTTP::Request->new($method, $uri, $add_headers);
          $response = $client->request($req);
       }
       else {
