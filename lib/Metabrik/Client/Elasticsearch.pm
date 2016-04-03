@@ -141,11 +141,18 @@ sub index_document {
    $self->brik_help_run_undef_arg('index_document', $doc) or return;
    $self->brik_help_run_invalid_arg('index_document', $doc, 'HASH') or return;
 
-   my $r = $elk->index(
-      index => $index,
-      type => $type,
-      body => $doc,
-   );
+   my $r;
+   eval {
+      $r = $elk->index(
+         index => $index,
+         type => $type,
+         body => $doc,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("index_document: index failed for index [$index]: [$@]");
+   }
 
    return $r;
 }
@@ -185,18 +192,22 @@ sub count {
    $self->brik_help_run_undef_arg('count', $index) or return;
    $self->brik_help_run_undef_arg('count', $type) or return;
 
-   my $r = $elk->search(
-      index => $index,
-      type => $type,
-      search_type => 'count',
-      body => {
-         query => {
-            match_all => {},
+   my $r;
+   eval {
+      $r = $elk->search(
+         index => $index,
+         type => $type,
+         search_type => 'count',
+         body => {
+            query => {
+               match_all => {},
+            },
          },
-      },
-   );
-   if (! defined($r)) {
-      return $self->log->error("count: search failed");
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("count: search failed for index [$index]: [$@]");
    }
 
    return $r->{hits}{total};
@@ -219,13 +230,20 @@ sub query {
    $self->brik_help_run_undef_arg('query', $index) or return;
    $self->brik_help_run_invalid_arg('query', $query, 'HASH') or return;
 
-   my $r = $elk->search(
-      index => $index,
-      from => $self->from,
-      size => $self->size,
-      body => $query,
-      #timeout => 60,  # XXX: to test
-   );
+   my $r;
+   eval {
+      $r = $elk->search(
+         index => $index,
+         from => $self->from,
+         size => $self->size,
+         body => $query,
+         #timeout => 60,  # XXX: to test
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("query: failed for index [$index]: [$@]");
+   }
 
    return $r;
 }
@@ -242,11 +260,18 @@ sub get_from_id {
    $self->brik_help_run_undef_arg('get_from_id', $index) or return;
    $self->brik_help_run_undef_arg('get_from_id', $type) or return;
 
-   my $r = $elk->get(
-      index => $index,
-      type => $type,
-      id => $id,
-   );
+   my $r;
+   eval {
+      $r = $elk->get(
+         index => $index,
+         type => $type,
+         id => $id,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_from_id: get failed for index [$index]: [$@]");
+   }
 
    return $r;
 }
@@ -292,9 +317,16 @@ sub delete_index {
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('delete_index', $index) or return;
 
-   my $r = $elk->indices->delete(
-      index => $index,
-   );
+   my $r;
+   eval {
+      $r = $elk->indices->delete(
+         index => $index,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("delete_index: delete failed for index [$index]: [$@]");
+   }
 
    return $r;
 }
@@ -365,9 +397,16 @@ sub get_index {
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('get_index', $index) or return;
 
-   my $r = $elk->indices->get(
-      index => $index,
-   );
+   my $r;
+   eval {
+      $r = $elk->indices->get(
+         index => $index,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_index: get failed for index [$index]: [$@]");
+   }
 
    return $r;
 }
@@ -400,9 +439,16 @@ sub create_index {
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('create_index', $index) or return;
          
-   my $r = $elk->indices->create(
-      index => $index,
-   );
+   my $r;
+   eval {
+      $r = $elk->indices->create(
+         index => $index,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("create_index: create failed for index [$index]: [$@]");
+   }
    
    return $r;
 }
@@ -420,12 +466,19 @@ sub create_index_with_mappings {
    $self->brik_help_run_undef_arg('create_index_with_mappings', $mappings) or return;
    $self->brik_help_run_invalid_arg('create_index_with_mappings', $mappings, 'HASH') or return;
 
-   my $r = $elk->indices->create(
-      index => $index,
-      body => {
-         mappings => $mappings,
-      },
-   );
+   my $r;
+   eval {
+      $r = $elk->indices->create(
+         index => $index,
+         body => {
+            mappings => $mappings,
+         },
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("create_index_with_mappings: create failed for index [$index]: [$@]");
+   }
 
    return $r;
 }
@@ -441,9 +494,16 @@ sub get_template {
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('get_template', $template) or return;
 
-   my $r = $elk->indices->get_template(
-      name => $template,
-   );
+   my $r;
+   eval {
+      $r = $elk->indices->get_template(
+         name => $template,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_template: template failed for name [$template]: [$@]");
+   }
 
    return $r;
 }
@@ -461,10 +521,17 @@ sub put_template {
    $self->brik_help_run_undef_arg('put_template', $template) or return;
    $self->brik_help_run_invalid_arg('put_template', $template, 'HASH') or return;
 
-   my $r = $elk->indices->put_template(
-      name => $name,
-      body => $template,
-   );
+   my $r;
+   eval {
+      $r = $elk->indices->put_template(
+         name => $name,
+         body => $template,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("put_template: template failed for name [$name]: [$@]");
+   }
 
    return $r;
 }
@@ -480,9 +547,16 @@ sub delete_template {
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('delete_template', $name) or return;
 
-   my $r = $elk->indices->delete_template(
-      name => $name,
-   );
+   my $r;
+   eval {
+      $r = $elk->indices->delete_template(
+         name => $name,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("delete_template: failed for name [$name]: [$@]");
+   }
 
    return $r;
 }

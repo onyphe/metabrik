@@ -28,6 +28,7 @@ sub brik_properties {
          search_timezone => [ qw(string) ],
          localtime => [ qw(timezone|OPTIONAL) ],
          today => [ qw(separator|OPTIONAL) ],
+         yesterday => [ qw(separator|OPTIONAL) ],
          date => [ ],
       },
       require_modules => {
@@ -94,6 +95,20 @@ sub today {
    $sep ||= $self->separator;
 
    my @a = CORE::localtime();
+   my $y = $a[5] + 1900;
+   my $m = $a[4] + 1;
+   my $d = $a[3];
+
+   return sprintf("%04d$sep%02d$sep%02d", $y, $m, $d);
+}
+
+sub yesterday {
+   my $self = shift;
+   my ($sep) = @_;
+
+   $sep ||= $self->separator;
+
+   my @a = CORE::localtime(time() - (24 * 3600));
    my $y = $a[5] + 1900;
    my $m = $a[4] + 1;
    my $d = $a[3];

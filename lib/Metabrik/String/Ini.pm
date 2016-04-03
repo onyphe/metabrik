@@ -54,7 +54,7 @@ sub decode {
 
    my ($config) = Config::Tiny->read_string($data);
 
-   return { each %$config };
+   return { %$config };
 }
 
 1;
