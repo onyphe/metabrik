@@ -12,7 +12,7 @@ use base qw(Metabrik);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable netmask) ],
+      tags => [ qw(unstable netmask convert ascii) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
@@ -35,6 +35,8 @@ sub brik_properties {
          get_ipv4_cidr => [ qw(subnet|OPTIONAL) ],
          is_ipv4_subnet => [ qw(subnet|OPTIONAL) ],
          merge_cidr => [ qw($cidr_list) ],
+         ipv4_to_integer => [ qw(ipv4_address) ],
+         integer_to_ipv4 => [ qw(integer) ],
       },
       require_modules => {
          'Net::Netmask' => [ ],
@@ -42,6 +44,7 @@ sub brik_properties {
          'Net::IPv6Addr' => [ ],
          'NetAddr::IP' => [ ],
          'Net::CIDR' => [ ],
+         'Socket' => [ ],
       },
    };
 }
@@ -357,6 +360,24 @@ sub merge_cidr {
    my @list = Net::CIDR::cidradd(@$list) or return;
 
    return \@list;
+}
+
+sub ipv4_to_integer {
+   my $self = shift;
+   my ($ipv4_address) = @_;
+
+   $self->brik_help_run_undef_arg('ipv4_to_integer', $ipv4_address) or return;
+
+   return CORE::unpack('N', Socket::inet_aton($ipv4_address));
+}
+
+sub integer_to_ipv4 { 
+   my $self = shift;
+   my ($integer) = @_;
+
+   $self->brik_help_run_undef_arg('integer_to_ipv4', $integer) or return;
+
+   return Socket::inet_ntoa(pack('N', $integer));
 }
 
 1;
