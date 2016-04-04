@@ -72,6 +72,10 @@ sub localtime {
    my $time = {};
    if (ref($timezone) eq 'ARRAY') {
       for my $tz (@$timezone) {
+         if ($tz !~ m{^\w+\/\w+}) {
+            $self->log->warning("localtime: invalid timezone [$timezone]");
+            next;
+         }
          my $dt = DateTime->now(
             time_zone => $tz,
          );
@@ -79,6 +83,9 @@ sub localtime {
       }
    }
    else {
+      if ($timezone !~ m{^\w+\/\w+}) {
+         return $self->log->error("localtime: invalid timezone [$timezone]");
+      }
       my $dt = DateTime->now(
          time_zone => $timezone,
       );
