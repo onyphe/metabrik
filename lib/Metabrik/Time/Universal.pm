@@ -153,9 +153,9 @@ sub last_month {
 
    my @a = CORE::localtime();
    my $y = $a[5] + 1900;
-   my $m = $a[4] + 1;
+   my $m = $a[4];
 
-   if ($m == 1) {
+   if ($m == 0) {
       $m = 12;
       $y -= 1;
    }
