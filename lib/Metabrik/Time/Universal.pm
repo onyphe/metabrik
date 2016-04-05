@@ -30,6 +30,9 @@ sub brik_properties {
          today => [ qw(separator|OPTIONAL) ],
          yesterday => [ qw(separator|OPTIONAL) ],
          date => [ ],
+         month => [ qw(timezone|OPTIONAL) ],
+         last_month => [ qw(timezone|OPTIONAL) ],
+         is_timezone => [ qw(timezone) ],
       },
       require_modules => {
          'DateTime' => [ ],
@@ -72,7 +75,7 @@ sub localtime {
    my $time = {};
    if (ref($timezone) eq 'ARRAY') {
       for my $tz (@$timezone) {
-         if ($tz !~ m{^\w+\/\w+}) {
+         if (! $self->is_timezone($tz)) {
             $self->log->warning("localtime: invalid timezone [$timezone]");
             next;
          }
@@ -83,7 +86,7 @@ sub localtime {
       }
    }
    else {
-      if ($timezone !~ m{^\w+\/\w+}) {
+      if (! $self->is_timezone($timezone)) {
          return $self->log->error("localtime: invalid timezone [$timezone]");
       }
       my $dt = DateTime->now(
@@ -127,6 +130,49 @@ sub date {
    my $self = shift;
 
    return CORE::localtime()."";
+}
+
+sub month {
+   my $self = shift;
+   my ($sep) = @_;
+
+   $sep ||= $self->separator;
+
+   my @a = CORE::localtime();
+   my $y = $a[5] + 1900;
+   my $m = $a[4] + 1;
+
+   return sprintf("%04d$sep%02d", $y, $m);
+}
+
+sub last_month {
+   my $self = shift;
+   my ($sep) = @_;
+
+   $sep ||= $self->separator;
+
+   my @a = CORE::localtime();
+   my $y = $a[5] + 1900;
+   my $m = $a[4] + 1;
+
+   if ($m == 1) {
+      $m = 12;
+      $y -= 1;
+   }
+
+   return sprintf("%04d$sep%02d", $y, $m);
+}
+
+sub is_timezone {
+   my $self = shift;
+   my ($tz) = @_;
+
+   $self->brik_help_run_undef_arg('is_timezone', $tz) or return;
+
+   my $tz_list = $self->list_timezones;
+   my %h = map { $_ => 1 } @$tz_list;
+
+   return exists($h{$tz}) ? 1 : 0;
 }
 
 1;

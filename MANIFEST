@@ -238,4 +238,5 @@ t/35-use-briks-devel.t
 t/36-use-briks-terminal.t
 t/37-use-briks-video.t
 t/38-use-briks-format.t
+t/39-use-briks-time.t
 UPDATING
