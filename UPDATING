@@ -1,3 +1,8 @@
+20160406
+   AFFECTS: client::elasticsearch
+
+   - database::rir rir key renamed to source in returned data from next_record Command
+
 20160402
    AFFECTS: system::file
 
