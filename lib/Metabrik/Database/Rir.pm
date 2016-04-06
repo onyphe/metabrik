@@ -34,6 +34,7 @@ sub brik_properties {
       require_modules => {
          'Metabrik::Client::Www' => [ ],
          'Metabrik::File::Read' => [ ],
+         'Metabrik::Network::Address' => [ ],
       },
    };
 }
@@ -43,10 +44,10 @@ sub update {
 
    my @urls = qw(
       ftp://ftp.arin.net/pub/stats/arin/delegated-arin-extended-latest
-      ftp://ftp.ripe.net/ripe/stats/delegated-ripencc-latest
-      ftp://ftp.afrinic.net/pub/stats/afrinic/delegated-afrinic-latest
-      ftp://ftp.apnic.net/pub/stats/apnic/delegated-apnic-latest
-      ftp://ftp.lacnic.net/pub/stats/lacnic/delegated-lacnic-latest
+      ftp://ftp.ripe.net/ripe/stats/delegated-ripencc-extended-latest
+      ftp://ftp.afrinic.net/pub/stats/afrinic/delegated-afrinic-extended-latest
+      ftp://ftp.apnic.net/pub/stats/apnic/delegated-apnic-extended-latest
+      ftp://ftp.lacnic.net/pub/stats/lacnic/delegated-lacnic-extended-latest
    );
 
    my $datadir = $self->datadir;
@@ -91,11 +92,14 @@ sub next_record {
       $self->_read($fr);
    }
 
+   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
+
    # 2|afrinic|20150119|4180|00000000|20150119|00000
    # afrinic|*|asn|*|1146|summary
    # afrinic|*|ipv4|*|2586|summary
    # afrinic|*|ipv6|*|448|summary
    # afrinic|ZA|asn|1228|1|19910301|allocated
+   # arin|US|ipv4|13.128.0.0|524288|19860425|assigned|efe0f73dfd0d72364bf64f417b803f18
 
    my $line;
    while ($line = $fr->read_line) {
@@ -121,31 +125,55 @@ sub next_record {
       }
       next if ($type ne 'asn' && $type ne 'ipv4' && $type ne 'ipv6');
 
-      # XXX: TODO, convert IPv4 to int and add $count, then convert to x-subnet
-
-      my $rir = $t[0];
+      my $source = $t[0];
       my $value = $t[3];
       my $count = $t[4];
       my $date = $t[5];
       my $status = $t[6];
 
-      if ($date !~ /^\d{8}$/) {
-         $self->log->verbose("next_record: invalid date [$date] for line [$line]");
+      if ($date !~ /^\d{8}$/ && $date ne '') {
+         $self->log->warning("next_record: invalid date [$date] for line [$line]");
          $date = '1970-01-01';
       }
       else {
          $date =~ s/^(\d{4})(\d{2})(\d{2})$/$1-$2-$3/;
       }
 
+      my $from = 'undef';
+      my $to = 'undef';
+      my $subnet = 'undef';
+      if ($type eq 'ipv4') {
+         $from = $value;
+         my $integer = $na->ipv4_to_integer($from);
+         if (! defined($integer)) {
+            $self->log->warning("next_record: unable to convert IPv4 [$from]");
+            next;
+         }
+         $to = $na->integer_to_ipv4($integer + $count - 1);
+         if (! defined($to)) {
+            $self->log->warning("next_record: unable to convert integer [".$integer + $count."]");
+            next;
+         }
+         $subnet = $na->range_to_cidr($from, $to);
+         if (! defined($subnet)) {
+            $self->log->warning("next_record: unable to get subnet with [$from] [$to]");
+            next;
+         }
+         $subnet = join('|', @$subnet);
+      }
+
       my $h = {
          raw => $line,
-         rir => $rir,
-         cc => $cc,
+         source => uc($source),
+         cc => uc($cc),
          type => $type,
          value => $value,
          count => $count,
-         'rir-date' => $date,
+         date => $date,
          status => $status,
+         subnet => $subnet,
+         from => $value,
+         to => $to,
       };
 
       return $h;

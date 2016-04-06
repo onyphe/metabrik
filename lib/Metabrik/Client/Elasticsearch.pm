@@ -46,12 +46,17 @@ sub brik_properties {
          show_indices => [ qw(nodes_list|OPTIONAL) ],
          list_indices => [ qw(nodes_list|OPTIONAL) ],
          get_index => [ qw(index) ],
+         get_aliases => [ qw(index) ],
          get_mappings => [ qw(index) ],
          create_index => [ qw(index) ],
          create_index_with_mappings => [ qw(index mappings) ],
          get_template => [ qw(name) ],
          put_template => [ qw(name template) ],
          delete_template => [ qw(name) ],
+         is_index_exists => [ qw(index) ],
+         is_type_exists => [ qw(index type) ],
+         is_document_exists => [ qw(index type document) ],
+         refresh_index => [ qw(index) ],
       },
       require_modules => {
          'Search::Elasticsearch' => [ ],
@@ -411,6 +416,24 @@ sub get_index {
    return $r;
 }
 
+sub get_aliases {
+   my $self = shift;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+
+   my $r;
+   eval {
+      $r = $elk->indices->get_aliases;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_aliases: get_aliases failed: [$@]");
+   }
+
+   return $r;
+}
+
 #
 # https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html
 #
@@ -556,6 +579,115 @@ sub delete_template {
    if ($@) {
       chomp($@);
       return $self->log->error("delete_template: failed for name [$name]: [$@]");
+   }
+
+   return $r;
+}
+
+#
+# Return a boolean to state for index existence
+#
+sub is_index_exists {
+   my $self = shift;
+   my ($index) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('is_index_exists', $index) or return;
+
+   my $r;
+   eval {
+      $r = $elk->indices->exists(
+         index => $index,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("is_index_exists: failed for index [$index]: [$@]");
+   }
+
+   return $r ? 1 : 0;
+}
+
+#
+# Return a boolean to state for index with type existence
+#
+sub is_type_exists {
+   my $self = shift;
+   my ($index, $type) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('is_type_exists', $index) or return;
+   $self->brik_help_run_undef_arg('is_type_exists', $type) or return;
+
+   my $r;
+   eval {
+      $r = $elk->indices->exists_type(
+         index => $index,
+         type => $type,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("is_type_exists: failed for index [$index] and ".
+         "type [$type]: [$@]");
+   }
+
+   return $r ? 1 : 0;
+}
+
+#
+# Return a boolean to state for document existence
+#
+sub is_document_exists {
+   my $self = shift;
+   my ($index, $type, $document) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('is_document_exists', $index) or return;
+   $self->brik_help_run_undef_arg('is_document_exists', $type) or return;
+   $self->brik_help_run_undef_arg('is_document_exists', $document) or return;
+   $self->brik_help_run_invalid_arg('is_document_exists', $document, 'HASH') or return;
+
+   my $r;
+   eval {
+      $r = $elk->exists(
+         index => $index,
+         type => $type,
+         %$document,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("is_document_exists: failed for index [$index] and ".
+         "type [$type]: [$@]");
+   }
+
+   return $r ? 1 : 0;
+}
+
+#
+# Refresh an index to receive latest additions
+#
+sub refresh_index {
+   my $self = shift;
+   my ($index) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('refresh_index', $index) or return;
+
+   my $r;
+   eval {
+      $r = $elk->indices->refresh(
+         index => $index,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("refresh_index: failed for index [$index]: [$@]");
    }
 
    return $r;

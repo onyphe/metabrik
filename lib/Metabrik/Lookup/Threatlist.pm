@@ -167,9 +167,6 @@ sub from_ipv4 {
       }
    }
 
-   #$self->log->level($level);
-   #return [ keys %threats ];
-
    for my $file (keys %$lists_b) {
       my $data = $ft->read($datadir.'/'.$file) or next;
       for (@$data) {
