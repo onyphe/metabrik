@@ -15,6 +15,12 @@ sub brik_properties {
       tags => [ qw(unstable) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
+      attributes => {
+         use_normalization => [ qw(0|1) ],
+      },
+      attributes_default => {
+         use_normalization => 1,
+      },
       commands => {
          from_ip => [ qw(ip_address) ],
          from_domain => [ qw(domain) ],
@@ -287,12 +293,15 @@ sub from_ip {
    my $nw = Metabrik::Network::Whois->new_from_brik_init($self) or return;
    my $lines = $nw->target($ip) or return;
 
-   my $chunks = $self->parse_raw_ip_whois($lines) or return;
-
-   my $r = $self->normalize_raw_ip_whois($chunks, $lines) or return;
+   my $r = {};
+   if ($self->use_normalization) {
+      my $chunks = $self->parse_raw_ip_whois($lines) or return;
+      $r = $self->normalize_raw_ip_whois($chunks, $lines) or return;
+   }
 
    $r->{date_queried} = localtime();
    $r->{whois_server} = $nw->last_server;
+   $r->{raw} = $lines;
 
    return $r;
 }
@@ -324,103 +333,102 @@ sub from_domain {
    my $nw = Metabrik::Network::Whois->new_from_brik_init($self) or return;
    my $lines = $nw->target($domain) or return;
 
-   #my $chunks = $self->parse_raw_ip_whois($lines);
-   my $chunks = [];
-
    my $r = { raw => $lines };
    $r->{date_queried} = localtime();
    $r->{whois_server} = $nw->last_server;
 
-   return $r;
+   if ($self->use_normalization) {
+      my $chunks = $self->parse_raw_ip_whois($lines);
 
-   # 4 categories: general, registrant, admin, tech
-   for (@$chunks) {
-      # Registrar,Sponsoring Registrar,
-      $self->_domain_lookup($_, 'registrar', 'registrar', $r);
-      $self->_domain_lookup($_, 'sponsoring_registrar', 'registrar', $r);
+      # 4 categories: general, registrant, admin, tech
+      for (@$chunks) {
+         # Registrar,Sponsoring Registrar,
+         $self->_domain_lookup($_, 'registrar', 'registrar', $r);
+         $self->_domain_lookup($_, 'sponsoring_registrar', 'registrar', $r);
 
-      # Whois Server,
-      $self->_domain_lookup($_, 'whois_server', 'whois_server', $r);
+         # Whois Server,
+         $self->_domain_lookup($_, 'whois_server', 'whois_server', $r);
 
-      # Domain Name,Dominio,domain,
-      $self->_domain_lookup($_, 'domain_name', 'domain_name', $r);
-      $self->_domain_lookup($_, 'dominio', 'domain_name', $r);
-      $self->_domain_lookup($_, 'domain', 'domain_name', $r);
+         # Domain Name,Dominio,domain,
+         $self->_domain_lookup($_, 'domain_name', 'domain_name', $r);
+         $self->_domain_lookup($_, 'dominio', 'domain_name', $r);
+         $self->_domain_lookup($_, 'domain', 'domain_name', $r);
 
-      # Creation Date,Fecha de registro,created,
-      $self->_domain_lookup($_, 'creation_date', 'creation_date', $r);
-      $self->_domain_lookup($_, 'fecha_de_registro', 'creation_date', $r);
-      $self->_domain_lookup($_, 'created', 'creation_date', $r);
+         # Creation Date,Fecha de registro,created,
+         $self->_domain_lookup($_, 'creation_date', 'creation_date', $r);
+         $self->_domain_lookup($_, 'fecha_de_registro', 'creation_date', $r);
+         $self->_domain_lookup($_, 'created', 'creation_date', $r);
 
-      # Updated Date,last-update,
-      $self->_domain_lookup($_, 'updated_date', 'updated_date', $r);
-      $self->_domain_lookup($_, 'last_update', 'updated_date', $r);
+         # Updated Date,last-update,
+         $self->_domain_lookup($_, 'updated_date', 'updated_date', $r);
+         $self->_domain_lookup($_, 'last_update', 'updated_date', $r);
 
-      # Registrar Registration Expiration Date,Expiration Date,Registry Expiry Date,Fecha de vencimiento,Expiry Date,
-      $self->_domain_lookup($_, 'registrar_registration_expiration_date', 'expiration_date', $r);
-      $self->_domain_lookup($_, 'expiration_date', 'expiration_date', $r);
-      $self->_domain_lookup($_, 'registry_expiry_date', 'expiration_date', $r);
-      $self->_domain_lookup($_, 'fecha_de_vencimiento', 'expiration_date', $r);
-      $self->_domain_lookup($_, 'expiry_date', 'expiration_date', $r);
+         # Registrar Registration Expiration Date,Expiration Date,Registry Expiry Date,Fecha de vencimiento,Expiry Date,
+         $self->_domain_lookup($_, 'registrar_registration_expiration_date', 'expiration_date', $r);
+         $self->_domain_lookup($_, 'expiration_date', 'expiration_date', $r);
+         $self->_domain_lookup($_, 'registry_expiry_date', 'expiration_date', $r);
+         $self->_domain_lookup($_, 'fecha_de_vencimiento', 'expiration_date', $r);
+         $self->_domain_lookup($_, 'expiry_date', 'expiration_date', $r);
 
-      # Registrar URL,Referral URL,
-      $self->_domain_lookup($_, 'registrar_url', 'registrar_url', $r);
-      $self->_domain_lookup($_, 'referral_url', 'registrar_url', $r);
+         # Registrar URL,Referral URL,
+         $self->_domain_lookup($_, 'registrar_url', 'registrar_url', $r);
+         $self->_domain_lookup($_, 'referral_url', 'registrar_url', $r);
 
-      # DNSSEC,
-      $self->_domain_lookup($_, 'dnssec', 'dnssec', $r);
+         # DNSSEC,
+         $self->_domain_lookup($_, 'dnssec', 'dnssec', $r);
 
-      # Domain Status,Status,
-      $self->_domain_lookup($_, 'domain_status', 'domain_status', $r);
-      $self->_domain_lookup($_, 'status', 'domain_status', $r);
+         # Domain Status,Status,
+         $self->_domain_lookup($_, 'domain_status', 'domain_status', $r);
+         $self->_domain_lookup($_, 'status', 'domain_status', $r);
 
-      # Name Server,nserver,
-      $self->_domain_lookup($_, 'name_server', 'name_server', $r);
-      $self->_domain_lookup($_, 'nserver', 'name_server', $r);
+         # Name Server,nserver,
+         $self->_domain_lookup($_, 'name_server', 'name_server', $r);
+         $self->_domain_lookup($_, 'nserver', 'name_server', $r);
 
-      # Registrant Name,
-      $self->_domain_lookup($_, 'registrant_name', 'registrant_name', $r);
+         # Registrant Name,
+         $self->_domain_lookup($_, 'registrant_name', 'registrant_name', $r);
 
-      # Registrant Organization,Organizacion,
-      $self->_domain_lookup($_, 'registrant_organization', 'registrant_organization', $r);
-      $self->_domain_lookup($_, 'organizacion', 'registrar', $r);
+         # Registrant Organization,Organizacion,
+         $self->_domain_lookup($_, 'registrant_organization', 'registrant_organization', $r);
+         $self->_domain_lookup($_, 'organizacion', 'registrar', $r);
 
-      # Registrant Street,
-      $self->_domain_lookup($_, 'registrant_street', 'registrant_street', $r);
+         # Registrant Street,
+         $self->_domain_lookup($_, 'registrant_street', 'registrant_street', $r);
 
-      # Registrant City,Ciudad,
-      $self->_domain_lookup($_, 'registrant_city', 'registrant_city', $r);
-      $self->_domain_lookup($_, 'ciudad', 'registrant_city', $r);
+         # Registrant City,Ciudad,
+         $self->_domain_lookup($_, 'registrant_city', 'registrant_city', $r);
+         $self->_domain_lookup($_, 'ciudad', 'registrant_city', $r);
 
-      # Registrant Postal Code,
-      $self->_domain_lookup($_, 'registrant_postal_code', 'registrant_postal_code', $r);
+         # Registrant Postal Code,
+         $self->_domain_lookup($_, 'registrant_postal_code', 'registrant_postal_code', $r);
 
-      # Registrant State/Province,
-      $self->_domain_lookup($_, 'registrant_state_province', 'registrant_state_province', $r);
+         # Registrant State/Province,
+         $self->_domain_lookup($_, 'registrant_state_province', 'registrant_state_province', $r);
 
-      # Registrant Country,Pais,
-      $self->_domain_lookup($_, 'registrant_country', 'registrant_country', $r);
-      $self->_domain_lookup($_, 'pais', 'registrant_country', $r);
+         # Registrant Country,Pais,
+         $self->_domain_lookup($_, 'registrant_country', 'registrant_country', $r);
+         $self->_domain_lookup($_, 'pais', 'registrant_country', $r);
 
-      # Registrant Email,
-      $self->_domain_lookup($_, 'registrant_email', 'registrant_email', $r);
-   }
-
-   # Dedups lines
-   for (keys %$r) {
-      next if $_ eq 'raw';
-      if (my @toks = split(/\n/, $r->{$_})) {
-         my %uniq = map { $_ => 1 } @toks;
-         $r->{$_} = join("\n", sort { $a cmp $b } keys %uniq);  # With a sort
+         # Registrant Email,
+         $self->_domain_lookup($_, 'registrant_email', 'registrant_email', $r);
       }
-   }
 
-   # If there is more than the raw key, domain exists
-   if (keys %$r > 1) {
-      $r->{domain_exists} = 1;
-   }
-   else {
-      $r->{domain_exists} = 0;
+      # Dedups lines
+      for (keys %$r) {
+         next if $_ eq 'raw';
+         if (my @toks = split(/\n/, $r->{$_})) {
+            my %uniq = map { $_ => 1 } @toks;
+            $r->{$_} = join("\n", sort { $a cmp $b } keys %uniq);  # With a sort
+         }
+      }
+
+      # If there is more than the raw key, domain exists
+      if (keys %$r > 1) {
+         $r->{domain_exists} = 1;
+      }
+      else {
+         $r->{domain_exists} = 0;
+      }
    }
 
    return $r;
