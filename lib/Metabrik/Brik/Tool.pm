@@ -35,10 +35,12 @@ sub brik_properties {
          install_all_need_packages => [ ],
          install_needed_packages => [ qw(Brik) ],
          install_required_modules => [ qw(Brik) ],
+         install => [ qw(Brik) ],
          create_tool => [ qw(filename.pl Repository|OPTIONAL) ],
          create_brik => [ qw(Brik Repository|OPTIONAL) ],
          update_core => [ ],
          update_repository => [ ],
+         update => [ ],
          test_repository => [ ],
          view_brik_source => [ qw(Brik) ],
       },
@@ -366,6 +368,18 @@ sub install_required_modules {
    return $pm->install($modules);
 }
 
+sub install {
+   my $self = shift;
+   my ($brik) = @_;
+
+   $self->brik_help_run_undef_arg('install', $brik) or return;
+
+   $self->install_need_packages($brik) or return;
+   $self->install_required_modules($brik) or return;
+
+   return 1;
+}
+
 sub create_tool {
    my $self = shift;
    my ($filename, $repository) = @_;
@@ -625,6 +639,15 @@ sub update_repository {
    $self->log->info("Read it here [$repository/UPDATING].");
 
    return "$repository/UPDATING";
+}
+
+sub update {
+   my $self = shift;
+
+   $self->update_core or return;
+   $self->update_repository or return;
+
+   return 1;
 }
 
 sub test_repository {
