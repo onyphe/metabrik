@@ -374,7 +374,7 @@ sub install {
 
    $self->brik_help_run_undef_arg('install', $brik) or return;
 
-   $self->install_need_packages($brik) or return;
+   $self->install_needed_packages($brik) or return;
    $self->install_required_modules($brik) or return;
 
    return 1;
