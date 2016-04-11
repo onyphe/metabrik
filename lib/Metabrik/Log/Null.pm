@@ -19,6 +19,7 @@ sub brik_properties {
          level => [ qw(0|1|2|3) ],
       },
       commands => {
+         message => [ qw(string caller|OPTIONAL) ],
          info => [ qw(string caller|OPTIONAL) ],
          verbose => [ qw(string caller|OPTIONAL) ],
          warning => [ qw(string caller|OPTIONAL) ],
@@ -27,17 +28,6 @@ sub brik_properties {
          debug => [ qw(string caller|OPTIONAL) ],
       },
    };
-}
-
-sub _msg {
-   my $self = shift;
-   my ($brik, $msg) = @_;
-
-   $msg ||= 'undef';
-
-   $brik =~ s/^metabrik:://i;
-
-   return lc($brik).": $msg\n";
 }
 
 sub warning {
@@ -56,7 +46,7 @@ sub fatal {
    my $self = shift;
    my ($msg, $caller) = @_;
 
-   my $buffer = "[F] ".$self->_msg(($caller) ||= caller(), $msg);
+   my $buffer = "[F] ".$self->message($msg, ($caller) ||= caller());
 
    die($buffer);
 }

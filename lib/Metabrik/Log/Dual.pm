@@ -25,9 +25,9 @@ sub brik_properties {
       attributes_default => {
          time_prefix => 0,
          text_prefix => 0,
-         output => '/tmp/dual.log',
       },
       commands => {
+         message => [ qw(string caller|OPTIONAL) ],
          info => [ qw(string caller|OPTIONAL) ],
          verbose => [ qw(string caller|OPTIONAL) ],
          warning => [ qw(string caller|OPTIONAL) ],
@@ -44,10 +44,13 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
+   my $datadir = $self->datadir;
+
    return {
       attributes_default => {
          debug => $self->log->debug,
          level => $self->log->level,
+         output => $datadir.'/output.log',
       },
    };
 }
@@ -70,24 +73,9 @@ sub brik_init {
    return $self->SUPER::brik_init;
 }
 
-sub _msg {
+sub _print {
    my $self = shift;
-   my ($brik, $msg) = @_;
-
-   $msg ||= 'undef';
-
-   $brik =~ s/^metabrik:://i;
-
-   return lc($brik).": $msg\n";
-}
-
-sub warning {
-   my $self = shift;
-   my ($msg, $caller) = @_;
-
-   my $prefix = $self->text_prefix ? 'WARN ' : '[!]';
-   my $time = $self->time_prefix ? localtime().' ' : '';
-   my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
+   my ($buffer) = @_;
 
    my $fd = $self->_fd;
 
@@ -97,18 +85,26 @@ sub warning {
    return 1;
 }
 
+sub warning {
+   my $self = shift;
+   my ($msg, $caller) = @_;
+
+   my $prefix = $self->text_prefix ? 'WARN ' : '[!]';
+   my $time = $self->time_prefix ? localtime().' ' : '';
+   my $buffer = $time."$prefix ".$self->message($msg, ($caller) ||= caller());
+
+   return $self->_print($buffer);
+}
+
 sub error {
    my $self = shift;
    my ($msg, $caller) = @_;
 
    my $prefix = $self->text_prefix ? 'ERROR' : '[-]';
    my $time = $self->time_prefix ? localtime().' ' : '';
-   my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
+   my $buffer = $time."$prefix ".$self->message($msg, ($caller) ||= caller());
 
-   my $fd = $self->_fd;
-
-   print $fd $buffer;
-   print $buffer;
+   $self->_print($buffer);
 
    # Returning undef is my official way of stating an error occured:
    # Number 0 is for stating a false condition occured, not not error.
@@ -121,7 +117,7 @@ sub fatal {
 
    my $prefix = $self->text_prefix ? 'FATAL' : '[F]';
    my $time = $self->time_prefix ? localtime().' ' : '';
-   my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
+   my $buffer = $time."$prefix ".$self->message($msg, ($caller) ||= caller());
 
    my $fd = $self->_fd;
 
@@ -135,18 +131,11 @@ sub info {
 
    return 1 unless $self->level > 0;
 
-   $msg ||= 'undef';
-
    my $prefix = $self->text_prefix ? 'INFO ' : '[+]';
    my $time = $self->time_prefix ? localtime().' ' : '';
-   my $buffer = $time."$prefix $msg\n";
+   my $buffer = $time."$prefix ".$self->message($msg, ($caller) ||= caller());
 
-   my $fd = $self->_fd;
-
-   print $fd $buffer;
-   print $buffer;
-
-   return 1;
+   return $self->_print($buffer);
 }
 
 sub verbose {
@@ -157,14 +146,9 @@ sub verbose {
 
    my $prefix = $self->text_prefix ? 'VERB ' : '[*]';
    my $time = $self->time_prefix ? localtime().' ' : '';
-   my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
+   my $buffer = $time."$prefix ".$self->message($msg, ($caller) ||= caller());
 
-   my $fd = $self->_fd;
-
-   print $fd $buffer;
-   print $buffer;
-
-   return 1;
+   return $self->_print($buffer);
 }
 
 sub debug {
@@ -188,12 +172,9 @@ sub debug {
 
          my $prefix = $self->text_prefix ? 'DEBUG' : '[D]';
          my $time = $self->time_prefix ? localtime().' ' : '';
-         my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
+         my $buffer = $time."$prefix ".$self->message($msg, ($caller) ||= caller());
 
-         my $fd = $self->_fd;
-
-         print $fd $buffer;
-         print $buffer;
+         $self->_print($buffer);
       }
    }
 

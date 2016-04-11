@@ -107,8 +107,9 @@ sub get_require_modules_recursive {
    my %modules = ();
    for my $this (keys %$available) {
       next if $this =~ m{^core::};
-      #print "available [$this]\n";
-      if (exists($available->{$this}->brik_properties->{require_modules})) {
+      #$self->log->info("get_require_modules_recursive: available [$this]");
+      if (defined($available->{$this})
+      &&  exists($available->{$this}->brik_properties->{require_modules})) {
          my $list = $available->{$this}->brik_properties->{require_modules};
          for my $m (keys %$list) {
             if ($m =~ m{^Metabrik::}) {
@@ -185,7 +186,8 @@ sub get_need_packages_recursive {
    my %packages = ();
    for my $this (keys %$available) {
       next if $this =~ m{^core::};
-      if (exists($available->{$this}->brik_properties->{need_packages})) {
+      if (defined($available->{$this})
+      &&  exists($available->{$this}->brik_properties->{need_packages})) {
          my $list = $available->{$this}->brik_properties->{need_packages}{$os} or next;
          for my $p (@$list) {
             $packages{$p}++;
@@ -203,17 +205,19 @@ sub get_brik_hierarchy {
    $self->brik_help_run_undef_arg('get_brik_hierarchy', $brik) or return;
 
    my @toks = split(/::/, $brik);
-   if (@toks < 2) {
+   if (@toks < 1) {
       return $self->log->error("get_brik_hierarchy: invalid Brik format for [$brik]");
    }
 
    my @final = ();
 
+   # Rebuild module name from Brik name so we can read its @ISA
    my $m = 'Metabrik';
    for (@toks) {
       $_ = ucfirst($_);
       $m .= "::$_";
    }
+
    {
       no strict 'refs';
       my @isa = @{$m.'::ISA'};

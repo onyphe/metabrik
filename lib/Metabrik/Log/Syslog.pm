@@ -36,6 +36,7 @@ sub brik_properties {
       },
       commands => {
          send => [ qw(message priority) ],
+         message => [ qw(string caller|OPTIONAL) ],
          info => [ qw(string caller|OPTIONAL) ],
          verbose => [ qw(string caller|OPTIONAL) ],
          warning => [ qw(string caller|OPTIONAL) ],
@@ -71,17 +72,6 @@ sub brik_init {
    $self->_fd($fd);
 
    return $self->SUPER::brik_init;
-}
-
-sub _msg {
-   my $self = shift;
-   my ($brik, $msg) = @_;
-
-   $msg ||= 'undef';
-
-   $brik =~ s/^metabrik:://i;
-
-   return lc($brik).": $msg\n";
 }
 
 sub send {
@@ -121,7 +111,7 @@ sub warning {
 
    my $prefix = $self->text_prefix ? 'WARN ' : '[!]';
    my $time = $self->time_prefix ? localtime().' ' : '';
-   my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
+   my $buffer = $time."$prefix ".$self->message($msg, ($caller) ||= caller());
 
    return $self->send($buffer, 'warning');
 }
@@ -132,7 +122,7 @@ sub error {
 
    my $prefix = $self->text_prefix ? 'ERROR' : '[-]';
    my $time = $self->time_prefix ? localtime().' ' : '';
-   my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
+   my $buffer = $time."$prefix ".$self->message($msg, ($caller) ||= caller());
 
    return $self->send($buffer, 'error');
 }
@@ -143,7 +133,7 @@ sub fatal {
 
    my $prefix = $self->text_prefix ? 'FATAL' : '[F]';
    my $time = $self->time_prefix ? localtime().' ' : '';
-   my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
+   my $buffer = $time."$prefix ".$self->message($msg, ($caller) ||= caller());
 
    $self->send($buffer, 'critical');
 
@@ -156,11 +146,9 @@ sub info {
 
    return 1 unless $self->level > 0;
 
-   $msg ||= 'undef';
-
    my $prefix = $self->text_prefix ? 'INFO ' : '[+]';
    my $time = $self->time_prefix ? localtime().' ' : '';
-   my $buffer = $time."$prefix $msg\n";
+   my $buffer = $time."$prefix ".$self->message($msg, ($caller) ||= caller());
 
    return $self->send($buffer, 'informational');
 }
@@ -173,7 +161,7 @@ sub verbose {
 
    my $prefix = $self->text_prefix ? 'VERB ' : '[*]';
    my $time = $self->time_prefix ? localtime().' ' : '';
-   my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
+   my $buffer = $time."$prefix ".$self->message($msg, ($caller) ||= caller());
 
    return $self->send($buffer, 'notice');
 }
@@ -199,7 +187,7 @@ sub debug {
 
          my $prefix = $self->text_prefix ? 'DEBUG' : '[D]';
          my $time = $self->time_prefix ? localtime().' ' : '';
-         my $buffer = $time."$prefix ".$self->_msg(($caller) ||= caller(), $msg);
+         my $buffer = $time."$prefix ".$self->message($msg, ($caller) ||= caller());
 
          $self->send($buffer, 'debug') or return;
       }
