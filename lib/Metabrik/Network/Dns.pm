@@ -25,6 +25,8 @@ sub brik_properties {
          type => [ qw(query_type) ],
          resolver => [ qw(INTERNAL) ],
          use_persistence => [ qw(0|1) ],
+         src_ip_address => [ qw(ip_address) ],
+         src_port => [ qw(port) ],
       },
       attributes_default => {
          use_recursion => 0,
@@ -61,6 +63,8 @@ sub create_resolver {
 
    my $try = $self->try;
    my $persist = $self->use_persistence;
+   my $src_ip_address = $self->src_ip_address;
+   my $src_port = $self->src_port;
 
    my %args = (
       recurse => $self->use_recursion,
@@ -74,6 +78,13 @@ sub create_resolver {
       retrans => $timeout,
       retry => $try,
    );
+
+   if (defined($src_ip_address)) {
+      $args{srcaddr} = $src_ip_address;
+   }
+   if (defined($src_port)) {
+      $args{srcport} = $src_port;
+   }
 
    if ($ref eq 'ARRAY') {
       $self->log->verbose("create_resolver: using nameserver [".join('|', @$nameserver)."]");

@@ -50,10 +50,11 @@ sub brik_properties {
          'Metabrik::System::Process' => [ ],
       },
       optional_binaries => {
-         'arpspoof' => [ ],
+         arpspoof => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(dsniff libnet-libdnet-perl) ],
+         ubuntu => [ qw(dsniff libnet-libdnet-perl) ],
+         freebsd => [ qw(libdnet) ],
       },
    };
 }

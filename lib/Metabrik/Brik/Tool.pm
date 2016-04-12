@@ -108,7 +108,7 @@ sub get_require_briks_recursive {
    my $hierarchy = $self->get_brik_hierarchy_recursive($brik) or return;
 
    my %required = ();
-   for my $this (@$hierarchy) {
+   for my $this ($brik, @$hierarchy) {
       my $require_briks = $self->get_require_briks($this) or next;
       for my $b (@$require_briks) {
          $required{$b}++;
@@ -163,7 +163,7 @@ sub get_require_modules_recursive {
    my $hierarchy = $self->get_brik_hierarchy_recursive($brik) or return;
 
    my %required = ();
-   for my $this (@$hierarchy) {
+   for my $this ($brik, @$hierarchy) {
       my $require_modules = $self->get_require_modules($this) or next;
       for my $b (@$require_modules) {
          $required{$b}++;
@@ -220,7 +220,7 @@ sub get_need_packages_recursive {
    my $hierarchy = $self->get_brik_hierarchy_recursive($brik) or return;
 
    my %needed = ();
-   for my $this (@$hierarchy) {
+   for my $this ($brik, @$hierarchy) {
       my $need_packages = $self->get_need_packages($this) or next;
       for my $b (@$need_packages) {
          $needed{$b}++;

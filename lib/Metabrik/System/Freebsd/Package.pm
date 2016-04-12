@@ -52,10 +52,17 @@ sub install {
    my $ref = $self->brik_help_run_invalid_arg('install', $package, 'ARRAY', 'SCALAR')
       or return;
 
-   my $cmd = 'pkg install ';
-   $ref eq 'ARRAY' ? ($cmd .= join(' ', @$package)) : ($cmd .= $package);
+   my $r;
+   if ($ref eq 'ARRAY') {
+      for my $this (@$package) {
+         $r = $self->sudo_system('pkg install '.$this);
+      }
+   }
+   else {
+      $r = $self->sudo_system('pkg install '.$package);
+   }
 
-   return $self->sudo_system($cmd);
+   return $r;
 }
 
 sub update {
