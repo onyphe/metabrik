@@ -123,7 +123,7 @@ sub info {
 
    return 1 unless $self->level > 0;
 
-   return $self->_print($msg, 'INFO', '[+]', ($caller) ||= caller());
+   return $self->_print($msg, 'INFO ', '[+]', ($caller) ||= caller());
 }
 
 sub verbose {
