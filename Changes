@@ -1,6 +1,9 @@
 Revision history for Perl extension Metabrik::Repository.
 
-1.21.2
+1.22.0
+   - new: client::elasticsearch::query Brik
+
+1.21.2 N/A
    - new: devel::mojo Brik
    - new: worker::parallel Brik
 

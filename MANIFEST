@@ -18,6 +18,7 @@ lib/Metabrik/Brik/Search.pm
 lib/Metabrik/Brik/Tool.pm
 lib/Metabrik/Client/Dns.pm
 lib/Metabrik/Client/Elasticsearch.pm
+lib/Metabrik/Client/Elasticsearch/Query.pm
 lib/Metabrik/Client/Openssh.pm
 lib/Metabrik/Client/Rest.pm
 lib/Metabrik/Client/Rsync.pm
