@@ -35,6 +35,7 @@ sub brik_properties {
          get_query_result_timed_out => [ qw($query_result) ],
          get_query_result_took => [ qw($query_result) ],
          term => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
+         wildcard => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
          range => [ qw(kv_from kv_to value index|OPTIONAL type|OPTIONAL) ],
          top => [ qw(kv_count index|OPTIONAL type|OPTIONAL) ],
          top_match => [ qw(kv_count kv_match index|OPTIONAL type|OPTIONAL) ],
@@ -160,6 +161,8 @@ sub term {
    }
    my ($key, $value) = split('=', $kv);
 
+   $self->debug && $self->log->debug("term: key[$key] value[$value]");
+
    my $ce = $self->create_client or return;
 
    my $q = {
@@ -171,6 +174,35 @@ sub term {
    };
 
    return $self->_query($q, $index, $type);
+}
+
+sub wildcard {
+   my $self = shift;
+   my ($kv, $index, $type) = @_;
+
+   $index ||= $self->index;
+   $type ||= $self->type;
+   $self->brik_help_run_undef_arg('wildcard', $kv) or return;
+   $self->brik_help_run_undef_arg('wildcard', $index) or return;
+   $self->brik_help_run_undef_arg('wildcard', $type) or return;
+
+   if ($kv !~ /^\S+=\S+$/) {
+      return $self->log->error("wildcard: kv must be in the form 'key=value'");
+   }
+   my ($key, $value) = split('=', $kv);
+
+   my $ce = $self->create_client or return;
+
+   my $q = {
+      query => {
+         wildcard => {
+            $key => $value,
+         },
+      },
+   };
+
+   return $self->_query($q, $index, $type);
+
 }
 
 #
@@ -188,10 +220,10 @@ sub range {
    $self->brik_help_run_undef_arg('range', $type) or return;
 
    if ($kv_from !~ /^\S+=\S+$/) {
-      return $self->log->error("term: kv_from [$kv_from] must be in the form 'key=value'");
+      return $self->log->error("range: kv_from [$kv_from] must be in the form 'key=value'");
    }
    if ($kv_to !~ /^\S+=\S+$/) {
-      return $self->log->error("term: kv_to [$kv_to] must be in the form 'key=value'");
+      return $self->log->error("range: kv_to [$kv_to] must be in the form 'key=value'");
    }
    my ($key_from, $value_from) = split('=', $kv_from);
    my ($key_to, $value_to) = split('=', $kv_to);
@@ -228,7 +260,7 @@ sub top {
    $self->brik_help_run_undef_arg('top', $type) or return;
 
    if ($kv_count !~ /^\S+=\S+$/) {
-      return $self->log->error("term: kv_count [$kv_count] must be in the form 'key=value'");
+      return $self->log->error("top: kv_count [$kv_count] must be in the form 'key=value'");
    }
    my ($key_count, $value_count) = split('=', $kv_count);
 
@@ -240,6 +272,7 @@ sub top {
             terms => {
                field => $key_count,
                size => int($value_count),
+               order => { _count => 'desc' },
             },
          },
       },
@@ -263,10 +296,10 @@ sub top_match {
    $self->brik_help_run_undef_arg('top_match', $type) or return;
 
    if ($kv_count !~ /^\S+=\S+$/) {
-      return $self->log->error("term: kv_count [$kv_count] must be in the form 'key=value'");
+      return $self->log->error("top_match: kv_count [$kv_count] must be in the form 'key=value'");
    }
    if ($kv_match !~ /^\S+=\S+$/) {
-      return $self->log->error("term: kv_match [$kv_match] must be in the form 'key=value'");
+      return $self->log->error("top_match: kv_match [$kv_match] must be in the form 'key=value'");
    }
    my ($key_count, $value_count) = split('=', $kv_count);
    my ($key_match, $value_match) = split('=', $kv_match);
