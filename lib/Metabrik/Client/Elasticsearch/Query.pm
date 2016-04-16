@@ -167,8 +167,12 @@ sub term {
 
    my $q = {
       query => {
-         term => {
-            $key => $value,
+         constant_score => { 
+            filter => {
+               term => {
+                  $key => $value,
+               },
+            },
          },
       },
    };
@@ -195,9 +199,13 @@ sub wildcard {
 
    my $q = {
       query => {
-         wildcard => {
-            $key => $value,
-         },
+         #constant_score => {  # Does not like constant_score
+            #filter => {
+               wildcard => {
+                  $key => $value,
+               },
+            #},
+         #},
       },
    };
 
@@ -308,9 +316,13 @@ sub top_match {
 
    my $q = {
       query => {
-         match => {
-            $key_match => $value_match,
-         },
+         #constant_score => {   # Does not like constant_score
+            #filter => {
+               match => {
+                  $key_match => $value_match,
+               },
+            #},
+         #},
       },
       aggs => {
          top_values => {
