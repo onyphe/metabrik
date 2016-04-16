@@ -36,7 +36,7 @@ sub brik_properties {
          get_query_result_took => [ qw($query_result) ],
          term => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
          wildcard => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
-         range => [ qw(kv_from kv_to value index|OPTIONAL type|OPTIONAL) ],
+         range => [ qw(kv_from kv_to index|OPTIONAL type|OPTIONAL) ],
          top => [ qw(kv_count index|OPTIONAL type|OPTIONAL) ],
          top_match => [ qw(kv_count kv_match index|OPTIONAL type|OPTIONAL) ],
       },

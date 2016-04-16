@@ -67,7 +67,7 @@ sub brik_properties {
          is_document_exists => [ qw(index type document) ],
          refresh_index => [ qw(index) ],
          export_as_csv => [ qw(index output_csv size) ],
-         import_from_csv => [ qw(input_csv index type) ],
+         import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::String::Json' => [ ],
@@ -896,6 +896,8 @@ sub import_from_csv {
    my $self = shift;
    my ($input_csv, $index, $type) = @_;
 
+   $index ||= $self->index;
+   $type ||= $self->type;
    $self->brik_help_run_undef_arg('import_from_csv', $input_csv) or return;
    $self->brik_help_run_file_not_found('import_from_csv', $input_csv) or return;
    $self->brik_help_run_undef_arg('import_from_csv', $index) or return;
@@ -904,6 +906,8 @@ sub import_from_csv {
    my $max = $self->max;
 
    $self->open_bulk_mode($index, $type) or return;
+
+   $self->log->verbose("import_from_csv: importing to index [$index] with type [$type]");
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->separator(',');
