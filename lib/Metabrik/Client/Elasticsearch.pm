@@ -23,18 +23,24 @@ sub brik_properties {
          type => [ qw(type) ],
          from => [ qw(number) ],
          size => [ qw(count) ],
+         max => [ qw(count) ],
          _elk => [ qw(INTERNAL) ],
          _bulk => [ qw(INTERNAL) ],
+         _scroll => [ qw(INTERNAL) ],
       },
       attributes_default => {
          nodes => [ qw(http://localhost:9200) ],
          cxn_pool => 'Sniff',
          from => 0,
          size => 10,
+         max => 0,
       },
       commands => {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
          open_bulk_mode => [ qw(index|OPTIONAL type|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
+         open_scroll_scan_mode => [ qw(index|OPTIONAL size|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
+         total_scroll => [ ],
+         next_scroll => [ ],
          index_document => [ qw(document index|OPTIONAL type|OPTIONAL) ],
          index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL) ],
          bulk_flush => [ ],
@@ -50,17 +56,24 @@ sub brik_properties {
          get_mappings => [ qw(index) ],
          create_index => [ qw(index) ],
          create_index_with_mappings => [ qw(index mappings) ],
+         get_templates => [ qw(nodes_list|OPTIONAL) ],
+         list_templates => [ qw(nodes_list|OPTIONAL) ],
          get_template => [ qw(name) ],
          put_template => [ qw(name template) ],
+         put_template_from_json_file => [ qw(file) ],
          delete_template => [ qw(name) ],
          is_index_exists => [ qw(index) ],
          is_type_exists => [ qw(index type) ],
          is_document_exists => [ qw(index type document) ],
          refresh_index => [ qw(index) ],
+         export_as_csv => [ qw(index output_csv size) ],
+         import_from_csv => [ qw(input_csv index type) ],
       },
       require_modules => {
-         'Search::Elasticsearch' => [ ],
          'Metabrik::String::Json' => [ ],
+         'Metabrik::File::Csv' => [ ],
+         'Metabrik::File::Json' => [ ],
+         'Search::Elasticsearch' => [ ],
       },
    };
 }
@@ -131,6 +144,57 @@ sub open_bulk_mode {
    $self->_bulk($bulk);
 
    return $nodes;
+}
+
+sub open_scroll_scan_mode {
+   my $self = shift;
+   my ($index, $size, $nodes, $cxn_pool) = @_;
+
+   $index ||= $self->index;
+   $size ||= $self->size;
+   $nodes ||= $self->nodes;
+   $cxn_pool ||= $self->cxn_pool;
+   $self->brik_help_run_undef_arg('open_scroll_scan_mode', $index) or return;
+   $self->brik_help_run_undef_arg('open_scroll_scan_mode', $size) or return;
+   $self->brik_help_run_undef_arg('open_scroll_scan_mode', $nodes) or return;
+   $self->brik_help_run_undef_arg('open_scroll_scan_mode', $cxn_pool) or return;
+   $self->brik_help_run_invalid_arg('open_scroll_scan_mode', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('open_scroll_scan_mode', $nodes) or return;
+
+   $self->open($nodes, $cxn_pool) or return;
+
+   my $elk = $self->_elk;
+
+   my $scroll = $elk->scroll_helper(
+      index => $index,
+      search_type => 'scan',
+      size => $size,
+   );
+   if (! defined($scroll)) {
+      return $self->log->error("open_scroll_scan_mode: failed");
+   }
+
+   $self->_scroll($scroll);
+
+   return $nodes;
+}
+
+sub total_scroll {
+   my $self = shift;
+
+   my $scroll = $self->_scroll;
+   $self->brik_help_run_undef_arg('open_scroll_scan_mode', $scroll) or return;
+
+   return $scroll->total;
+}
+
+sub next_scroll {
+   my $self = shift;
+
+   my $scroll = $self->_scroll;
+   $self->brik_help_run_undef_arg('open_scroll_scan_mode', $scroll) or return;
+
+   return $scroll->next;
 }
 
 sub index_document {
@@ -361,8 +425,7 @@ sub show_indices {
    my @lines = split(/\n/, $content);
 
    if (@lines == 0) {
-      return $self->log->warning("show_indices: nothing returned, no index?");
-      return 1;
+      $self->log->warning("show_indices: nothing returned, no index?");
    }
 
    return \@lines;
@@ -378,6 +441,10 @@ sub list_indices {
    $self->brik_help_run_empty_array_arg('list_indices', $nodes) or return;
 
    my $lines = $self->show_indices or return;
+   if (@$lines == 0) {
+      $self->log->warning("list_indices: no index found");
+      return [];
+   }
 
    # Format depends on ElasticSearch version. We try to detect the format.
    my @indices = ();
@@ -506,6 +573,38 @@ sub create_index_with_mappings {
    return $r;
 }
 
+# GET http://localhost:9200/_template/
+sub get_templates {
+   my $self = shift;
+   my ($nodes) = @_;
+
+   $nodes ||= $self->nodes;
+   $self->brik_help_run_undef_arg('get_templates', $nodes) or return;
+   $self->brik_help_run_invalid_arg('get_templates', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('get_templates', $nodes) or return;
+
+   my $first = $nodes->[0];
+
+   $self->get($first.'/_template') or return;
+   my $content = $self->content or return;
+
+   return $content;
+}
+
+sub list_templates {
+   my $self = shift;
+   my ($nodes) = @_;
+
+   $nodes ||= $self->nodes;
+   $self->brik_help_run_undef_arg('list_templates', $nodes) or return;
+   $self->brik_help_run_invalid_arg('list_templates', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('list_templates', $nodes) or return;
+
+   my $content = $self->get_templates($nodes) or return;
+
+   return [ sort { $a cmp $b } keys %$content ];
+}
+
 #
 # http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html
 #
@@ -557,6 +656,27 @@ sub put_template {
    }
 
    return $r;
+}
+
+sub put_template_from_json_file {
+   my $self = shift;
+   my ($json_file) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('put_template_from_json_file', $json_file) or return;
+   $self->brik_help_run_file_not_found('put_template_from_json_file', $json_file) or return;
+
+   my $fj = Metabrik::File::Json->new_from_brik_init($self) or return;
+   my $data = $fj->read($json_file) or return;
+
+   if (! exists($data->{template})) {
+      return $self->log->error("put_template_from_json_file: no template name found");
+   }
+
+   my $name = $data->{template};
+
+   return $self->put_template($name, $data);
 }
 
 #
@@ -691,6 +811,140 @@ sub refresh_index {
    }
 
    return $r;
+}
+
+sub export_as_csv {
+   my $self = shift;
+   my ($index, $output_csv, $size) = @_;
+
+   $self->brik_help_run_undef_arg('export_as_csv', $index) or return;
+   $self->brik_help_run_undef_arg('export_as_csv', $output_csv) or return;
+   $self->brik_help_run_undef_arg('export_as_csv', $size) or return;
+
+   my $max = $self->max;
+
+   my $scroll = $self->open_scroll_scan_mode($index, $size) or return;
+
+   my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
+   $fc->separator(',');
+   $fc->append(1);
+   $fc->first_line_is_header(0);
+   $fc->write_header(1);
+
+   my $total = $self->total_scroll;
+   $self->log->info("export_as_csv: total [$total]");
+
+   my $first = $self->next_scroll;
+   if (! defined($first) || ! exists($first->{_source})) {
+      return $self->log->error("export_as_csv: nothing in index [$index]?");
+   }
+
+   my $doc = $first->{_source};
+
+   my @header = ();
+   for my $this (keys %$doc) {
+      if (ref($doc->{$this}) eq 'HASH') {
+         for my $k (sort { $a cmp $b } keys %{$doc->{$this}}) {
+            push @header, "$this.$k";  # Object field notation.
+         }
+      }
+      # For an ARRAY, we have nothing special todo.
+      else {
+         push @header, $this;
+      }
+   }
+   $fc->header(\@header);
+
+   my $processed = 0;
+   while (my $this = $self->next_scroll) {
+      my $doc = $this->{_source};
+
+      my $h = {};
+      for my $this (keys %$doc) {
+         my $ref = ref($doc->{$this});
+         if ($ref eq 'HASH') {   # An object lies here.
+            for my $k (keys %{$doc->{$this}}) {
+               $h->{"$this.$k"} = $doc->{$this}{$k};
+            }
+         }
+         elsif ($ref eq 'ARRAY') {  # An ARRAY lies here.
+            $h->{$this} = join('\|', @{$doc->{$this}});
+         }
+         else {
+            $h->{$this} = $doc->{$this};
+         }
+      }
+
+      $fc->write([ $h ], $output_csv) or return;
+
+      # Log a status sometimes.
+      if (! (++$processed % 100_000)) {
+         $self->log->verbose("export_as_csv: fetched [$processed/$total] elements");
+      }
+
+      # Limit export to specified maximum
+      if ($max > 0 && $processed >= $max) {
+         $self->log->verbose("export_from_csv: max export reached [$processed]");
+         last;
+      }
+   }
+
+   return $output_csv;
+}
+
+sub import_from_csv {
+   my $self = shift;
+   my ($input_csv, $index, $type) = @_;
+
+   $self->brik_help_run_undef_arg('import_from_csv', $input_csv) or return;
+   $self->brik_help_run_file_not_found('import_from_csv', $input_csv) or return;
+   $self->brik_help_run_undef_arg('import_from_csv', $index) or return;
+   $self->brik_help_run_undef_arg('import_from_csv', $type) or return;
+
+   my $max = $self->max;
+
+   $self->open_bulk_mode($index, $type) or return;
+
+   my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
+   $fc->separator(',');
+   $fc->first_line_is_header(1);
+
+   my $processed = 0;
+   while (my $this = $fc->read_next($input_csv)) {
+      my $h = {};
+      for my $key (keys %$this) {
+         if ($key =~ m{^(\S+)\.(\S+)$}) {  # An OBJECT is waiting
+            my $k = $1;
+            my $v = $2;
+            $h->{$k}{$v} = $this->{$key};
+         }
+         else {
+            if ($this->{$key} =~ m{\|}) { # An ARRAY is waiting
+               $h->{$key} = [ split('\|', $this->{$key}) ];
+            }
+            else {
+               $h->{$key} = $this->{$key};
+            }
+         }
+      }
+
+      $self->index_bulk($h) or return;
+
+      # Log a status sometimes.
+      if (! (++$processed % 100_000)) {
+         $self->log->verbose("import_from_csv: processed [$processed] entries");
+      }
+
+      # Limit import to specified maximum
+      if ($max > 0 && $processed >= $max) {
+         $self->log->verbose("import_from_csv: max import reached [$processed]");
+         last;
+      }
+   }
+
+   $self->bulk_flush or return;
+
+   return $processed;
 }
 
 1;
