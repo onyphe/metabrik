@@ -48,7 +48,7 @@ sub brik_properties {
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
          get_from_id => [ qw(id index|OPTIONAL type|OPTIONAL) ],
          www_search => [ qw(query index|OPTIONAL) ],
-         delete_index => [ qw(index) ],
+         delete_index => [ qw(index_or_indices_list) ],
          show_indices => [ qw(nodes_list|OPTIONAL) ],
          list_indices => [ qw(nodes_list|OPTIONAL) ],
          get_index => [ qw(index) ],
@@ -61,6 +61,8 @@ sub brik_properties {
          get_template => [ qw(name) ],
          put_template => [ qw(name template) ],
          put_template_from_json_file => [ qw(file) ],
+         get_settings => [ qw(index_or_indices_list|OPTIONAL name_or_names_list|OPTIONAL) ],
+         put_settings => [ qw(settings_hash index_or_indices_list|OPTIONAL) ],
          delete_template => [ qw(name) ],
          is_index_exists => [ qw(index) ],
          is_type_exists => [ qw(index type) ],
@@ -377,6 +379,9 @@ sub www_search {
    return;
 }
 
+#
+# Search::Elasticsearch::Client::2_0::Direct::Indices
+#
 sub delete_index {
    my $self = shift;
    my ($index) = @_;
@@ -385,6 +390,7 @@ sub delete_index {
    $index ||= $self->index;
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('delete_index', $index) or return;
+   $self->brik_help_run_invalid_arg('delete_index', $index, 'ARRAY', 'SCALAR') or return;
 
    my $r;
    eval {
@@ -677,6 +683,82 @@ sub put_template_from_json_file {
    my $name = $data->{template};
 
    return $self->put_template($name, $data);
+}
+
+#
+# http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-settings.html
+# Search::Elasticsearch::Client::2_0::Direct::Indices
+#
+sub get_settings {
+   my $self = shift;
+   my ($indices, $names) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+
+   my %args = ();
+   if (defined($indices)) {
+      $self->brik_help_run_undef_arg('get_settings', $indices) or return;
+      my $ref = $self->brik_help_run_invalid_arg('get_settings', $indices, 'ARRAY', 'SCALAR')
+         or return;
+      $args{index} = $indices;
+   }
+   if (defined($names)) {
+      $self->brik_help_run_file_not_found('get_settings', $names) or return;
+      my $ref = $self->brik_help_run_invalid_arg('get_settings', $names, 'ARRAY', 'SCALAR')
+         or return;
+      $args{name} = $names;
+   }
+
+   my $r;
+   eval {
+      $r = $elk->indices->get_settings(%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_settings: failed: [$@]");
+   }
+
+   return $r;
+}
+
+#
+# http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-settings.html
+# Search::Elasticsearch::Client::2_0::Direct::Indices
+#
+# Example:
+#
+# run client::elasticsearch put_settings "{ 'index.refresh_interval' => -1 }"
+#
+sub put_settings {
+   my $self = shift;
+   my ($settings, $indices) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('put_settings', $settings) or return;
+   $self->brik_help_run_invalid_arg('put_settings', $settings, 'HASH') or return;
+
+   my %args = (
+      body => $settings,
+   );
+   if (defined($indices)) {
+      $self->brik_help_run_undef_arg('put_settings', $indices) or return;
+      my $ref = $self->brik_help_run_invalid_arg('put_settings', $indices, 'ARRAY', 'SCALAR')
+         or return;
+      $args{index} = $indices;
+   }
+
+   my $r;
+   eval {
+      $r = $elk->indices->put_settings(%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("put_settings: failed: [$@]");
+   }
+
+   return $r;
 }
 
 #

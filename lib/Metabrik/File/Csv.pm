@@ -25,6 +25,7 @@ sub brik_properties {
          overwrite => [ qw(0|1) ],
          append => [ qw(0|1) ],
          write_header => [ qw(0|1) ],
+         use_quoting => [ qw(0|1) ],
          _csv => [ qw(INTERNAL) ],
          _fd => [ qw(INTERNAL) ],
       },
@@ -35,6 +36,7 @@ sub brik_properties {
          overwrite => 1,
          append => 0,
          write_header => 1,
+         use_quoting => 0,
       },
       commands => {
          read => [ qw(input_file|OPTIONAL) ],
@@ -177,6 +179,12 @@ sub write {
       }
 
       @fields = map { defined($_) ? $_ : 'undef' } @fields;
+      if ($self->use_quoting) {
+         for (@fields) {
+            s/"/\\"/g;
+            $_ = '"'.$_.'"';
+         }
+      }
       my $data = join($self->separator, @fields)."\n";
 
       my $r = $fw->write($data);
