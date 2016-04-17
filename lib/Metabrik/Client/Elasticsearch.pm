@@ -728,7 +728,7 @@ sub get_settings {
 #
 # Example:
 #
-# run client::elasticsearch put_settings "{ 'index.refresh_interval' => -1 }"
+# run client::elasticsearch put_settings "{ index => { refresh_interval => -1 } }"
 #
 sub put_settings {
    my $self = shift;
@@ -1029,6 +1029,8 @@ sub import_from_csv {
    }
 
    $self->bulk_flush or return;
+
+   $self->refresh_index($index) or return;
 
    return $processed;
 }
