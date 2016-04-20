@@ -70,6 +70,10 @@ sub brik_properties {
          refresh_index => [ qw(index) ],
          export_as_csv => [ qw(index output_csv size) ],
          import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL) ],
+         get_stats_process => [ qw(nodes_list|OPTIONAL) ],
+         get_process => [ qw(nodes_list|OPTIONAL) ],
+         get_cluster_state => [ qw(nodes_list|OPTIONAL) ],
+         get_cluster_health => [ qw(nodes_list|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::String::Json' => [ ],
@@ -97,7 +101,7 @@ sub open {
       }
    }
 
-   my $nodes_str = join('\|', @$nodes);
+   my $nodes_str = join('|', @$nodes);
    $self->log->verbose("open: using nodes [$nodes_str]");
 
    my $elk = Search::Elasticsearch->new(
@@ -419,7 +423,7 @@ sub show_indices {
 
    $self->log->verbose("show_indices: uri[$uri]");
 
-   my $get = $self->SUPER::get("$uri/_cat/indices?pretty=true") or return;
+   my $get = $self->SUPER::get("$uri/_cat/indices") or return;
    if ($self->code ne 200) {
       return $self->log->error("show_indices: failed with content [".$get->{content}."]");
    }
@@ -937,6 +941,25 @@ sub export_as_csv {
    }
    $fc->header(\@header);
 
+   # Handle this first entry now.
+   my $h = {};
+   for my $this (keys %$doc) {
+      my $ref = ref($doc->{$this});
+      if ($ref eq 'HASH') {   # An object lies here.
+         for my $k (keys %{$doc->{$this}}) {
+            $h->{"$this.$k"} = $doc->{$this}{$k};
+         }
+      }
+      elsif ($ref eq 'ARRAY') {  # An ARRAY lies here.
+         $h->{$this} = join('|', @{$doc->{$this}});
+      }
+      else {
+         $h->{$this} = $doc->{$this};
+      }
+   }
+   $fc->write([ $h ], $output_csv) or return;
+
+   # And all other entries.
    my $processed = 0;
    while (my $this = $self->next_scroll) {
       my $doc = $this->{_source};
@@ -950,7 +973,7 @@ sub export_as_csv {
             }
          }
          elsif ($ref eq 'ARRAY') {  # An ARRAY lies here.
-            $h->{$this} = join('\|', @{$doc->{$this}});
+            $h->{$this} = join('|', @{$doc->{$this}});
          }
          else {
             $h->{$this} = $doc->{$this};
@@ -1035,6 +1058,119 @@ sub import_from_csv {
    return $processed;
 }
 
+# http://localhost:9200/_nodes/stats/process?pretty
+sub get_stats_process {
+   my $self = shift;
+   my ($nodes) = @_;
+
+   $nodes ||= $self->nodes;
+   $self->brik_help_run_undef_arg('get_stats_process', $nodes) or return;
+   $self->brik_help_run_invalid_arg('get_stats_process', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('get_stats_process', $nodes) or return;
+
+   my @content_list = ();
+   for my $node (@$nodes) {
+      my $r = $self->get($node.'/_nodes/stats/process');
+      if (! defined($r)) {
+         $self->log->warning("get_stats_process: unable to retrieve stats for node [$node]");
+         next;
+      }
+      my $content = $self->content;
+      if (! defined($content)) {
+         $self->log->warning("get_stats_process: unable to retrieve content for node [$node]");
+         next;
+      }
+      push @content_list, $content;
+   }
+
+   return \@content_list;
+}
+
+# curl http://localhost:9200/_nodes/process?pretty
+sub get_process {
+   my $self = shift;
+   my ($nodes) = @_;
+
+   $nodes ||= $self->nodes;
+   $self->brik_help_run_undef_arg('get_process', $nodes) or return;
+   $self->brik_help_run_invalid_arg('get_process', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('get_process', $nodes) or return;
+
+   my @content_list = ();
+   for my $node (@$nodes) {
+      my $r = $self->get($node.'/_nodes/process');
+      if (! defined($r)) {
+         $self->log->warning("get_process: unable to retrieve process for node [$node]");
+         next;
+      }
+      my $content = $self->content;
+      if (! defined($content)) {
+         $self->log->warning("get_process: unable to retrieve content for node [$node]");
+         next;
+      }
+      push @content_list, $content;
+   }
+
+   return \@content_list;
+}
+
+# curl -XGET 'http://localhost:9200/_cluster/state?pretty'
+sub get_cluster_state {
+   my $self = shift;
+   my ($nodes) = @_;
+
+   $nodes ||= $self->nodes;
+   $self->brik_help_run_undef_arg('get_cluster_state', $nodes) or return;
+   $self->brik_help_run_invalid_arg('get_cluster_state', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('get_cluster_state', $nodes) or return;
+
+   my @content_list = ();
+   for my $node (@$nodes) {
+      my $r = $self->get($node.'/_cluster/state');
+      if (! defined($r)) {
+         $self->log->warning("get_cluster_state: unable to retrieve state for node [$node]");
+         next;
+      }
+      my $content = $self->content;
+      if (! defined($content)) {
+         $self->log->warning("get_cluster_state: unable to retrieve content for node [$node]");
+         next;
+      }
+      push @content_list, $content;
+   }
+
+   return \@content_list;
+}
+
+# curl -XGET 'http://localhost:9200/_cluster/health?pretty'
+sub get_cluster_health {
+   my $self = shift;
+   my ($nodes) = @_;
+
+   $nodes ||= $self->nodes;
+   $self->brik_help_run_undef_arg('get_cluster_health', $nodes) or return;
+   $self->brik_help_run_invalid_arg('get_cluster_health', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('get_cluster_health', $nodes) or return;
+
+   my @content_list = ();
+   for my $node (@$nodes) {
+      my $r = $self->get($node.'/_cluster/health');
+      if (! defined($r)) {
+         $self->log->warning("get_cluster_health: unable to retrieve health for node [$node]");
+         next;
+      }
+      my $content = $self->content;
+      if (! defined($content)) {
+         $self->log->warning("get_cluster_health: unable to retrieve content for node [$node]");
+         next;
+      }
+      push @content_list, $content;
+   }
+
+   return \@content_list;
+
+}
+
 1;
 
 __END__
@@ -1045,7 +1181,7 @@ Metabrik::Client::Elasticsearch - client::elasticsearch Brik
 
 =head1 SYNOPSIS
 
-   host:~> my $q = { query => { term => { ip => "192.168.57.19" } } }
+   host:~> my $q = { term => { ip => "192.168.57.19" } }
    host:~> run client::elasticsearch open
    host:~> run client::elasticsearch query $q data-*
 

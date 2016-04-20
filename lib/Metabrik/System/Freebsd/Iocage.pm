@@ -39,6 +39,9 @@ sub brik_properties {
          set_template => [ qw(tag) ],
          unset_template => [ qw(tag) ],
          clone => [ qw(template tag interface ipv4_address ipv6_address|OPTIONAL) ],
+         get_all_properties => [ qw(tag) ],
+         get_property => [ qw(tag property) ],
+         set_property => [ qw(tag property value) ],
       },
       require_binaries => {
          iocage => [ ],
@@ -252,6 +255,42 @@ sub clone {
    if (defined($ipv6_address)) {
       $cmd .= " ip6_addr=\"$interface|$ipv6_address\"";
    }
+
+   return $self->sudo_system($cmd);
+}
+
+sub get_all_properties {
+   my $self = shift;
+   my ($tag) = @_;
+
+   $self->brik_help_run_undef_arg('get_all_properties', $tag) or return;
+
+   my $cmd = "iocage get all $tag";
+
+   return $self->sudo_system($cmd);
+}
+
+sub get_property {
+   my $self = shift;
+   my ($tag, $property) = @_;
+
+   $self->brik_help_run_undef_arg('get_property', $tag) or return;
+   $self->brik_help_run_undef_arg('get_property', $property) or return;
+
+   my $cmd = "iocage get $property $tag";
+
+   return $self->sudo_system($cmd);
+}
+
+sub set_property {
+   my $self = shift;
+   my ($tag, $property, $value) = @_;
+
+   $self->brik_help_run_undef_arg('get_property', $tag) or return;
+   $self->brik_help_run_undef_arg('get_property', $property) or return;
+   $self->brik_help_run_undef_arg('get_property', $value) or return;
+
+   my $cmd = "iocage set $property=\"$value\" $tag";
 
    return $self->sudo_system($cmd);
 }
