@@ -916,6 +916,7 @@ sub export_as_csv {
    $fc->append(1);
    $fc->first_line_is_header(0);
    $fc->write_header(1);
+   $fc->use_quoting(1);
 
    my $total = $self->total_scroll;
    $self->log->info("export_as_csv: total [$total]");
@@ -1037,7 +1038,7 @@ sub import_from_csv {
          }
       }
 
-      $self->index_bulk($h) or return;
+      $self->index_bulk($h, $index, $type) or return;
 
       # Log a status sometimes.
       if (! (++$processed % 100_000)) {

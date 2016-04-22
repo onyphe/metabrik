@@ -286,9 +286,9 @@ sub set_property {
    my $self = shift;
    my ($tag, $property, $value) = @_;
 
-   $self->brik_help_run_undef_arg('get_property', $tag) or return;
-   $self->brik_help_run_undef_arg('get_property', $property) or return;
-   $self->brik_help_run_undef_arg('get_property', $value) or return;
+   $self->brik_help_run_undef_arg('set_property', $tag) or return;
+   $self->brik_help_run_undef_arg('set_property', $property) or return;
+   $self->brik_help_run_undef_arg('set_property', $value) or return;
 
    my $cmd = "iocage set $property=\"$value\" $tag";
 
