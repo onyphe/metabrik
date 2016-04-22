@@ -308,16 +308,12 @@ provides:
     file: lib/Metabrik/Server/Tor.pm
   Metabrik::Shell::Command:
     file: lib/Metabrik/Shell/Command.pm
-    version: '1.20'
   Metabrik::Shell::History:
     file: lib/Metabrik/Shell/History.pm
-    version: '1.20'
   Metabrik::Shell::Rc:
     file: lib/Metabrik/Shell/Rc.pm
-    version: '1.20'
   Metabrik::Shell::Script:
     file: lib/Metabrik/Shell/Script.pm
-    version: '1.20'
   Metabrik::String::Ascii:
     file: lib/Metabrik/String/Ascii.pm
   Metabrik::String::Base64:
