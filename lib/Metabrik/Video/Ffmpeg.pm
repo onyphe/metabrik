@@ -64,7 +64,7 @@ sub convert_to_youtube {
    my ($input, $output) = @_;
 
    $self->brik_help_run_undef_arg('convert_to_youtube', $input) or return;
-   $self->brik_help_run_undef_arg('convert_to_youtube', $ouput) or return;
+   $self->brik_help_run_undef_arg('convert_to_youtube', $output) or return;
 
    my $cmd = "ffmpeg -i \"$input\" -codec:v libx264 -crf 21 -bf 2 -flags +cgop ".
       "-pix_fmt yuv420p -codec:a aac -strict -2 -b:a 384k -r:a 48000 -movflags faststart ".
