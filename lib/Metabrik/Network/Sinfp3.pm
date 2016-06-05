@@ -35,8 +35,8 @@ sub brik_properties {
       },
       commands => {
          update => [ ],
-         active_ipv4 => [ qw(target|OPTIONAL tcp_port|OPTIONAL) ],
-         active_ipv6 => [ qw(target|OPTIONAL tcp_port|OPTIONAL) ],
+         active_ipv4 => [ qw(target_host|OPTIONAL target_port|OPTIONAL) ],
+         active_ipv6 => [ qw(target_host|OPTIONAL target_port|OPTIONAL) ],
          export_active_db => [ qw(sinfp3_db|OPTIONAL) ],
          save_active_ipv4_fingerprint => [ qw(target_host|OPTIONAL target_port|OPTIONAL) ],
          save_active_ipv6_fingerprint => [ qw(target_host|OPTIONAL target_port|OPTIONAL) ],
@@ -139,10 +139,12 @@ sub active_ipv4 {
    my $self = shift;
    my ($target, $port) = @_;
 
-   $self->brik_help_run_must_be_root('active_ipv4') or return;
-
    $target ||= $self->target;
    $port ||= $self->port;
+   $self->brik_help_run_must_be_root('active_ipv4') or return;
+   $self->brik_help_run_undef_arg('active_ipv4', $target) or return;
+   $self->brik_help_run_undef_arg('active_ipv4', $port) or return;
+
    my $device = $self->device;
    my $threshold = $self->threshold;
 

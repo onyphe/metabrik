@@ -346,6 +346,10 @@ sub tcp_syn_start_receiver {
    else {
       $ip = $self->my_ipv4 or return;
    }
+
+   if (defined($port_list)) {
+      $self->log->verbose("tcp_syn_start_receiver: scanning for ".scalar(@$port_list)." port(s)");
+   }
     
    # Create a filter if not provided by user
    my $filter = $self->use_ipv6
@@ -467,19 +471,28 @@ sub tcp_syn_scan {
    my $self = shift;
    my ($ip_list, $port_list, $pps, $try) = @_;
 
-   $port_list ||= $self->ports || $self->top100;
+   $port_list ||= $self->ports;
+   $port_list ||= $self->top100;
    $pps ||= $self->pps;
    $try ||= $self->try;
    $self->brik_help_run_undef_arg('tcp_syn_scan', $ip_list) or return;
-   $self->brik_help_run_invalid_arg('tcp_syn_scan', $ip_list, 'ARRAY') or return;
+   my $ref1 = $self->brik_help_run_invalid_arg('tcp_syn_scan', $ip_list, 'ARRAY', 'SCALAR')
+      or return;
+   if ($ref1 eq 'SCALAR') {
+      $ip_list = [ $ip_list ];
+   }
    $self->brik_help_run_empty_array_arg('tcp_syn_scan', $ip_list) or return;
    $self->brik_help_run_undef_arg('tcp_syn_scan', $port_list, 'ARRAY') or return;
-   $self->brik_help_run_invalid_arg('tcp_syn_scan', $port_list, 'ARRAY') or return;
+   my $ref2 = $self->brik_help_run_invalid_arg('tcp_syn_scan', $port_list, 'ARRAY', 'SCALAR')
+      or return;
+   if ($ref2 eq 'SCALAR') {
+      $port_list = [ $port_list ]; 
+   }
    $self->brik_help_run_empty_array_arg('tcp_syn_scan', $port_list) or return;
 
    my $wait = $self->wait;
 
-   my $nr = $self->tcp_syn_start_receiver($ip_list, $port_list) or return;
+   my $nr = $self->tcp_syn_start_receiver($port_list) or return;
 
    my $estimate = $self->estimate_runtime($ip_list, $port_list, $pps, $try);
    if (defined($estimate)) {

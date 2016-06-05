@@ -37,6 +37,7 @@ sub brik_properties {
          snapshot_restore => [ qw(name snapshot_name) ],
          screenshot => [ qw(name file.png) ],
          dumpguestcore => [ qw(name file.elf) ],
+         dumpvmcore => [ qw(name file.elf) ],
          extract_memdump_from_dumpguestcore => [ qw(input output) ],
          restart => [ qw(name type|OPTIONAL) ],
       },
@@ -163,6 +164,9 @@ sub screenshot {
    return $file;
 }
 
+#
+# Dump guestcore
+#
 sub dumpguestcore {
    my $self = shift;
    my ($name, $file) = @_;
@@ -171,6 +175,22 @@ sub dumpguestcore {
    $self->brik_help_run_undef_arg('dumpguestcore', $file) or return;
 
    $self->command("debugvm \"$name\" dumpguestcore --filename \"$file\"") or return;
+
+   return $file;
+}
+
+#
+# Dump vmcore, same as dump guestcore but for newer versions of VirtualBox which renamed 
+# the function
+#
+sub dumpvmcore {
+   my $self = shift;
+   my ($name, $file) = @_;
+
+   $self->brik_help_run_undef_arg('dumpvmcore', $name) or return;
+   $self->brik_help_run_undef_arg('dumpvmcore', $file) or return;
+
+   $self->command("debugvm \"$name\" dumpvmcore --filename \"$file\"") or return;
 
    return $file;
 }

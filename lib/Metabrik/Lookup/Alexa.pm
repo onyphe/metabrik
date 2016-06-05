@@ -29,6 +29,8 @@ sub brik_properties {
          update => [ ],
          load => [ qw(input|OPTIONAL) ],
          from_string => [ qw(domain) ],
+         from_pattern => [ qw(domain) ],
+         list_from_pattern => [ qw(domain) ],
       },
       require_modules => {
          'Metabrik::File::Compress' => [ ],
@@ -95,6 +97,49 @@ sub from_string {
    }
 
    return 0;
+}
+
+sub from_pattern {
+   my $self = shift;
+   my ($domain) = @_;
+
+   $self->brik_help_run_undef_arg('from_pattern', $domain) or return;
+
+   my $data = $self->_loaded;
+   if (! defined($data)) {
+      $data = $self->load or return;
+      $self->_loaded($data);
+   }
+
+   for my $this (@$data) {
+      if ($this->[1] =~ m{$domain}i) {
+         return 1;
+      }
+   }
+
+   return 0;
+}
+
+sub list_from_pattern {
+   my $self = shift;
+   my ($domain) = @_;
+
+   $self->brik_help_run_undef_arg('list_from_pattern', $domain) or return;
+
+   my $data = $self->_loaded;
+   if (! defined($data)) {
+      $data = $self->load or return;
+      $self->_loaded($data);
+   }
+
+   my @list = ();
+   for my $this (@$data) {
+      if ($this->[1] =~ m{$domain}i) {
+         push @list, $this->[1];
+      }
+   }
+
+   return \@list;
 }
 
 1;

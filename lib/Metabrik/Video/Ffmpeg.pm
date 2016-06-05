@@ -12,14 +12,16 @@ use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable) ],
+      tags => [ qw(unstable audio sound record micro) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          resolution => [ qw(resolution) ],
+         use_micro => [ qw(0|1) ],
       },
       attributes_default => {
          resolution => '1024x768',
+         use_micro => 0,
       },
       commands => {
          install => [ ],  # Inherited
@@ -42,19 +44,34 @@ sub record_desktop {
    $resolution ||= $self->resolution;
    $self->brik_help_run_undef_arg('record_desktop', $output) or return;
 
-   my $cmd = "ffmpeg -f x11grab -r 25 -s $resolution -i :0.0 ".
-      "-vcodec libx264 -preset ultrafast -crf 0 -threads 0 \"$output\"";
+   my $cmd = 'ffmpeg';
+   if ($self->use_micro) {
+      $cmd .= " -f alsa -i pulse -f x11grab -r 25 -s $resolution -i :0.0 ".
+         "-acodec pcm_s16le -vcodec libx264 -preset ultrafast -crf 0 -threads 0";
+   }
+   else {
+      $cmd .= " -f x11grab -r 25 -s $resolution -i :0.0 -vcodec libx264 ".
+         "-preset ultrafast -crf 0 -threads 0";
+   }
+
+   $cmd .= " \"$output\"";
 
    return $self->execute($cmd);
 }
 
 sub convert_to_youtube {
-   # ffmpeg -i video.mkv -vcodec libx264 -vpre hq -crf 22 -threads 0 video.mp4
-}
+   my $self = shift;
+   my ($input, $output) = @_;
 
-# With audio
-# ffmpeg -f alsa -ac 2 -i hw:0,0 -f x11grab -r 30 -s $(xwininfo -root | grep 'geometry' | awk '{print $2;}') -i :0.0 -acodec pcm_s16le -vcodec libx264 -preset ultrafast -y output.mkv
-# ffmpeg -f alsa -i pulse -f x11grab -r 25 -s 1280x720 -i :0.0+0,24 -acodec pcm_s16le -vcodec libx264 -preset ultrafast -threads 0 output.mkv
+   $self->brik_help_run_undef_arg('convert_to_youtube', $input) or return;
+   $self->brik_help_run_undef_arg('convert_to_youtube', $ouput) or return;
+
+   my $cmd = "ffmpeg -i \"$input\" -codec:v libx264 -crf 21 -bf 2 -flags +cgop ".
+      "-pix_fmt yuv420p -codec:a aac -strict -2 -b:a 384k -r:a 48000 -movflags faststart ".
+      "\"$output\"";
+
+   return $self->execute($cmd);
+}
 
 1;
 
