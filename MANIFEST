@@ -189,11 +189,13 @@ lib/Metabrik/System/Virtualbox.pm
 lib/Metabrik/Terminal/Control.pm
 lib/Metabrik/Time/Universal.pm
 lib/Metabrik/Video/Convert.pm
+lib/Metabrik/Video/Ffmpeg.pm
 lib/Metabrik/Worker/Fork.pm
 lib/Metabrik/Worker/Parallel.pm
 lib/Metabrik/Www/Shorten.pm
 lib/Metabrik/Xorg/Screenshot.pm
 lib/Metabrik/Xorg/Xlsclients.pm
+lib/Metabrik/Xorg/Xrandr.pm
 lib/Metabrik/Xorg/Xwininfo.pm
 LICENSE
 Makefile.PL

@@ -4,7 +4,7 @@
       "GomoR <gomor_at_metabrik.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.421",
+   "generated_by" : "Module::Build version 0.4214",
    "license" : [
       "bsd"
    ],
@@ -595,6 +595,9 @@
       "Metabrik::Video::Convert" : {
          "file" : "lib/Metabrik/Video/Convert.pm"
       },
+      "Metabrik::Video::Ffmpeg" : {
+         "file" : "lib/Metabrik/Video/Ffmpeg.pm"
+      },
       "Metabrik::Worker::Fork" : {
          "file" : "lib/Metabrik/Worker/Fork.pm"
       },
@@ -610,6 +613,9 @@
       "Metabrik::Xorg::Xlsclients" : {
          "file" : "lib/Metabrik/Xorg/Xlsclients.pm"
       },
+      "Metabrik::Xorg::Xrandr" : {
+         "file" : "lib/Metabrik/Xorg/Xrandr.pm"
+      },
       "Metabrik::Xorg::Xwininfo" : {
          "file" : "lib/Metabrik/Xorg/Xwininfo.pm"
       }
@@ -620,5 +626,6 @@
          "http://opensource.org/licenses/BSD-3-Clause"
       ]
    },
-   "version" : "1.22"
+   "version" : "1.22",
+   "x_serialization_backend" : "JSON::PP version 2.27300"
 }

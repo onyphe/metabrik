@@ -6,7 +6,7 @@ build_requires: {}
 configure_requires:
   Module::Build: '0'
 dynamic_config: 1
-generated_by: 'Module::Build version 0.421, CPAN::Meta::Converter version 2.142690'
+generated_by: 'Module::Build version 0.4214, CPAN::Meta::Converter version 2.150005'
 license: bsd
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -388,6 +388,8 @@ provides:
     file: lib/Metabrik/Time/Universal.pm
   Metabrik::Video::Convert:
     file: lib/Metabrik/Video/Convert.pm
+  Metabrik::Video::Ffmpeg:
+    file: lib/Metabrik/Video/Ffmpeg.pm
   Metabrik::Worker::Fork:
     file: lib/Metabrik/Worker/Fork.pm
   Metabrik::Worker::Parallel:
@@ -398,6 +400,8 @@ provides:
     file: lib/Metabrik/Xorg/Screenshot.pm
   Metabrik::Xorg::Xlsclients:
     file: lib/Metabrik/Xorg/Xlsclients.pm
+  Metabrik::Xorg::Xrandr:
+    file: lib/Metabrik/Xorg/Xrandr.pm
   Metabrik::Xorg::Xwininfo:
     file: lib/Metabrik/Xorg/Xwininfo.pm
 requires:
@@ -412,3 +416,4 @@ requires:
 resources:
   license: http://opensource.org/licenses/BSD-3-Clause
 version: '1.22'
+x_serialization_backend: 'CPAN::Meta::YAML version 0.012'

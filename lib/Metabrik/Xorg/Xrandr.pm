@@ -1,0 +1,268 @@
+#
+# $Id$
+#
+# xorg::xrandr Brik
+#
+package Metabrik::Xorg::Xrandr;
+use strict;
+use warnings;
+
+use base qw(Metabrik::Shell::Command Metabrik::System::Package);
+
+sub brik_properties {
+   return {
+      revision => '$Revision$',
+      tags => [ qw(unstable) ],
+      author => 'GomoR <GomoR[at]metabrik.org>',
+      license => 'http://opensource.org/licenses/BSD-3-Clause',
+      attributes => {
+         output => [ qw(output) ],
+         resolution => [ qw(resolution) ],
+      },
+      commands => {
+         install => [ ],  # Inherited
+         list_outputs => [ ],
+         list_connected_outputs => [ ],
+         list_disconnected_outputs => [ ],
+         list_output_resolutions => [ qw(output) ],
+         list_first_output_resolutions => [ qw(output) ],
+         list_secondary_output_resolutions => [ qw(output) ],
+         get_first_output => [ ],
+         get_secondary_output => [ ],
+         get_first_output_resolution => [ ],
+         set_first_output_resolution => [ qw(resolution) ],
+      },
+      require_binaries => {
+         xrandr => [ ],
+      },
+      need_packages => {
+         ubuntu => [ qw(x11-xserver-utils) ],
+      },
+   };
+}
+
+sub list_outputs {
+   my $self = shift;
+
+   my $lines = $self->capture('xrandr') or return;
+
+   my @list = ();
+   for my $line (@$lines) {
+      if ($line =~ m{^(\S+)\s+(connected|disconnected)}) {
+         push @list, $1;
+      }
+   }
+
+   return \@list;
+}
+
+sub list_connected_outputs {
+   my $self = shift;
+
+   my $lines = $self->capture('xrandr') or return;
+
+   my @list = ();
+   for my $line (@$lines) {
+      if ($line =~ m{^(\S+)\s+connected}) {
+         push @list, $1;
+      }
+   }
+
+   return \@list;
+}
+
+sub list_disconnected_outputs {
+   my $self = shift;
+
+   my $lines = $self->capture('xrandr') or return;
+
+   my @list = ();
+   for my $line (@$lines) {
+      if ($line =~ m{^(\S+)\s+disconnected}) {
+         push @list, $1;
+      }
+   }
+
+   return \@list;
+}
+
+#
+# Return a HASHref of output names with their list of available resolutions
+#
+sub list_output_resolutions {
+   my $self = shift;
+   my ($output) = @_;
+
+   $output ||= $self->output;
+   my $lines = $self->capture('xrandr') or return;
+
+   my $current_output = '';
+   my %list = ();
+   for my $line (@$lines) {
+      if ($line =~ m{^(\S+)\s+(connected|disconnected)}) {
+         $current_output = $1;
+         next;
+      }
+
+      if (defined($output)) {
+         if (length($current_output) && $current_output eq $output) {
+            if ($line =~ m{^\s+(\d+x\d+)\s+}) {
+               push @{$list{$current_output}}, $1;
+            }
+         }
+      }
+      else {
+         if (length($current_output)) {
+            if ($line =~ m{^\s+(\d+x\d+)\s+}) {
+               push @{$list{$current_output}}, $1;
+            }
+         }
+      }
+   }
+
+   # If output was specified, we return only this one.
+   if (defined($output)) {
+      return $list{$output};
+   }
+
+   return \%list;
+}
+
+#
+# Return the list of available resolutions for first connected output
+#
+sub list_first_output_resolutions {
+   my $self = shift;
+
+   my $output = $self->get_first_output or return;
+   return $self->list_output_resolutions($output);
+}
+
+#
+# Return the list of available resolutions for secondary connected output
+#
+sub list_secondary_output_resolutions {
+   my $self = shift;
+
+   my $output = $self->get_secondary_output or return;
+   return $self->list_output_resolutions($output);
+}
+
+#
+# Return first connected output
+#
+sub get_first_output {
+   my $self = shift;
+
+   my $lines = $self->capture('xrandr') or return;
+
+   my $first_output = '';
+   for my $line (@$lines) {
+      if ($line =~ m{^(\S+)\s+connected}) {
+         $first_output = $1;
+         last;
+      }
+   }
+
+   return $first_output;
+}
+
+#
+# Return second connected output
+#
+sub get_secondary_output {
+   my $self = shift;
+
+   my $lines = $self->capture('xrandr') or return;
+
+   my $first = 1;
+   my $secondary_output = '';
+   for my $line (@$lines) {
+      if ($line =~ m{^(\S+)\s+connected}) {
+         if ($first) {
+            $first--;
+            next;
+         }
+         $secondary_output = $1;
+         last;
+      } 
+   }
+
+   return $secondary_output;
+}
+
+#
+# Return first connected output resolution
+#
+sub get_first_output_resolution {
+   my $self = shift;
+
+   my $lines = $self->capture('xrandr') or return;
+
+   my $current_output = '';
+   my $current_resolution = 0;
+   for my $line (@$lines) {
+      if ($line =~ m{^(\S+)\s+connected}) {
+         $current_output = $1;
+         next;
+      }
+
+      if (length($current_output)) {
+         if ($line =~ m{^\s+(\d+x\d+)\s+\S+\*\+}) {
+            $current_resolution = $1;
+         }
+      }
+   }
+
+   return $current_resolution;
+}
+
+#
+# Set first connected output resolution
+#
+sub set_first_output_resolution {
+   my $self = shift;
+   my ($resolution) = @_;
+
+   $self->brik_help_run_undef_arg('set_first_output_resolution', $resolution) or return;
+
+   my $lines = $self->capture('xrandr') or return;
+   my $output = $self->get_first_output or return;
+   my $possible = $self->list_output_resolutions($output) or return;
+
+   my $ok = 0;
+   for my $this (@$possible) {
+      if ($this eq $resolution) {
+         $ok++;
+         last;
+      }
+   }
+
+   if (! $ok) {
+      return $self->log->error("set_first_output_resolution: resolution [$resolution] ".
+         "not available for output [$output]");
+   }
+
+   return $self->capture("xrandr --output $output --mode $resolution");
+}
+
+1;
+
+__END__
+
+=head1 NAME
+
+Metabrik::Xorg::Xrandr - xorg::xrandr Brik
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (c) 2014-2016, Patrice E<lt>GomoRE<gt> Auffret
+
+You may distribute this module under the terms of The BSD 3-Clause License.
+See LICENSE file in the source distribution archive.
+
+=head1 AUTHOR
+
+Patrice E<lt>GomoRE<gt> Auffret
+
+=cut
