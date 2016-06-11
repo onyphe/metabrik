@@ -559,8 +559,14 @@
       "Metabrik::System::Freebsd::Pf" : {
          "file" : "lib/Metabrik/System/Freebsd/Pf.pm"
       },
+      "Metabrik::System::Fsck" : {
+         "file" : "lib/Metabrik/System/Fsck.pm"
+      },
       "Metabrik::System::Libvirt" : {
          "file" : "lib/Metabrik/System/Libvirt.pm"
+      },
+      "Metabrik::System::Mount" : {
+         "file" : "lib/Metabrik/System/Mount.pm"
       },
       "Metabrik::System::Os" : {
          "file" : "lib/Metabrik/System/Os.pm"

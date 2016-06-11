@@ -177,7 +177,9 @@ lib/Metabrik/System/Freebsd/Iocage.pm
 lib/Metabrik/System/Freebsd/Jail.pm
 lib/Metabrik/System/Freebsd/Package.pm
 lib/Metabrik/System/Freebsd/Pf.pm
+lib/Metabrik/System/Fsck.pm
 lib/Metabrik/System/Libvirt.pm
+lib/Metabrik/System/Mount.pm
 lib/Metabrik/System/Os.pm
 lib/Metabrik/System/Package.pm
 lib/Metabrik/System/Process.pm
