@@ -236,7 +236,7 @@ sub delete {
 sub update {
    my $self = shift;
 
-   my $cmd = "sudo ezjail-admin update -i";
+   my $cmd = "sudo ezjail-admin update -u";
 
    return $self->system($cmd);
 }
