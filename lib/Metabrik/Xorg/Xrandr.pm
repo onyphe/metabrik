@@ -30,7 +30,19 @@ sub brik_properties {
          get_first_output => [ ],
          get_secondary_output => [ ],
          get_first_output_resolution => [ ],
+         get_first_output_max_resolution => [ ],
+         get_secondary_output_resolution => [ ],
+         get_secondary_output_max_resolution => [ ],
+         get_output_max_resolution => [ ],            # Alias to get_first_output_max_resolution
+         get_output_resolution => [ ],                # Alias to get_first_output_resolution
          set_first_output_resolution => [ qw(resolution) ],
+         set_first_output_max_resolution => [ ],
+         set_secondary_output_resolution => [ qw(resolution) ],
+         set_secondary_output_max_resolution => [ ],
+         set_output_max_resolution => [ ],            # Alias to set_first_output_max_resolution
+         set_output_resolution => [ qw(resolution) ], # Alias to set_first_output_resolution
+         clone_first_to => [ qw(secondary_output) ],
+         dual_first_right_of => [ qw(secondary_output) ],
       },
       require_binaries => {
          xrandr => [ ],
@@ -208,13 +220,85 @@ sub get_first_output_resolution {
       }
 
       if (length($current_output)) {
-         if ($line =~ m{^\s+(\d+x\d+)\s+\S+\*\+}) {
+         if ($line =~ m{^\s+(\d+x\d+)\s+\S+\*}) {
             $current_resolution = $1;
          }
       }
    }
 
    return $current_resolution;
+}
+
+sub get_first_output_max_resolution {
+   my $self = shift;
+
+   my $list = $self->list_first_output_resolutions or return;
+
+   if (@$list > 0) {
+      return $list->[0];
+   }
+
+   return $self->log->error("get_first_output_max_resolution: resolution not possible?");
+}
+
+sub get_secondary_output_resolution {
+   my $self = shift;
+
+   my $second = $self->get_secondary_output or return;
+
+   my $lines = $self->capture('xrandr') or return;
+
+   my $current_output = '';
+   my $current_resolution = 0;
+   for my $line (@$lines) {
+      if ($line =~ m{^(\S+)\s+connected}) {
+         if ($1 eq $second) {
+            $current_output = $1;
+            next;
+         }
+         else {
+            next;
+         }
+      }
+
+      if (length($current_output)) {
+         if ($line =~ m{^\s+(\d+x\d+)\s+\S+\*}) {
+            $current_resolution = $1;
+         }
+      }
+   }
+
+   return $current_resolution;
+}
+
+sub get_secondary_output_max_resolution {
+   my $self = shift;
+
+   my $list = $self->list_secondary_output_resolutions or return;
+
+   if (@$list > 0) {
+      return $list->[0];
+   }
+
+   return $self->log->error("get_secondary_output_max_resolution: resolution not possible?");
+}
+
+#
+# Alias to get_first_output_max_resolution
+#
+sub get_output_max_resolution {
+   my $self = shift;
+
+   return $self->get_first_output_max_resolution;
+}
+
+#
+# Alias to get_first_output_resolution
+#
+sub get_output_resolution {
+   my $self = shift;
+
+   return $self->get_first_output_resolution;
 }
 
 #
@@ -244,6 +328,119 @@ sub set_first_output_resolution {
    }
 
    return $self->capture("xrandr --output $output --mode $resolution");
+}
+
+sub set_first_output_max_resolution {
+   my $self = shift;
+
+   my $max = $self->get_first_output_max_resolution or return;
+
+   return $self->set_first_output_resolution($max);
+}
+
+#
+# Set secondary connected output resolution
+#
+sub set_secondary_output_resolution {
+   my $self = shift;
+   my ($resolution) = @_;
+
+   $self->brik_help_run_undef_arg('set_secondary_output_resolution', $resolution) or return;
+
+   my $lines = $self->capture('xrandr') or return;
+   my $output = $self->get_secondary_output or return;
+   my $possible = $self->list_output_resolutions($output) or return;
+
+   my $ok = 0;
+   for my $this (@$possible) {
+      if ($this eq $resolution) {
+         $ok++;
+         last;
+      }
+   }
+
+   if (! $ok) {
+      return $self->log->error("set_secondary_output_resolution: resolution [$resolution] ".
+         "not available for output [$output]");
+   }
+
+   return $self->capture("xrandr --output $output --mode $resolution");
+}
+
+sub set_secondary_output_max_resolution {
+   my $self = shift;
+
+   my $max = $self->get_secondary_output_max_resolution or return;
+
+   return $self->set_secondary_output_resolution($max);
+}
+
+#
+# Alias to set_first_output_max_resolution
+#
+sub set_output_max_resolution {
+   my $self = shift;
+
+   return $self->set_first_output_max_resolution;
+}
+
+sub clone_first_to {
+   my $self = shift;
+   my ($second) = @_;
+
+   $self->brik_help_run_undef_arg('clone_first_to', $second) or return;
+
+   my $connected = $self->list_connected_outputs or return;
+   my $found = 0;
+   for my $this (@$connected) {
+      if ($this eq $second) {
+         $found++;
+         last;
+      }
+   }
+
+   if (! $found) {
+      return $self->log->error("clone_first_to: output [$second] not connected");
+   }
+
+   my $current_output = $self->get_first_output or return;
+   my $current_resolution = $self->get_first_output_resolution or return;
+
+   my $cmd = "xrandr --output \"$second\" --mode $current_resolution ".
+      "--same-as \"$current_output\"";
+
+   $self->log->verbose("clone_first_to: [$cmd]");
+
+   return $self->capture($cmd);
+}
+
+sub dual_first_right_of {
+   my $self = shift;
+   my ($second) = @_;
+
+   $self->brik_help_run_undef_arg('dual_first_right_of', $second) or return;
+
+   my $connected = $self->list_connected_outputs or return;
+   my $found = 0;
+   for my $this (@$connected) {
+      if ($this eq $second) {
+         $found++;
+         last;
+      }
+   }
+
+   if (! $found) {
+      return $self->log->error("dual_first_right_of: output [$second] not connected");
+   }
+
+   my $current_output = $self->get_first_output or return;
+   my $current_resolution = $self->get_first_output_resolution or return;
+
+   my $cmd = "xrandr --output \"$second\" --auto --left-of \"$current_output\"";
+
+   $self->log->verbose("dual_first_right_of: [$cmd]");
+
+   return $self->capture($cmd);
 }
 
 1;

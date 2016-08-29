@@ -16,27 +16,32 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         service => [ qw(default|tinyurl|linkz|shorl) ],
          ssl_verify => [ qw(0|1) ],
       },
       attributes_default => {
+         service => 'default',
          ssl_verify => 0,
       },
       commands => {
          'shorten' => [ qw(uri) ],
+         'shorten_default' => [ qw(uri) ],
+         'shorten_tinyurl' => [ qw(uri) ],
          'unshorten' => [ qw(uri) ],
       },
       require_modules => {
+         'WWW::Shorten' => [ ],
          'Metabrik::Client::Www' => [ ],
          'Metabrik::String::Uri' => [ ],
       },
    };
 }
 
-sub shorten {
+sub shorten_default {
    my $self = shift;
    my ($uri) = @_;
 
-   $self->brik_help_run_undef_arg('shorten', $uri) or return;
+   $self->brik_help_run_undef_arg('shorten_default', $uri) or return;
 
    my $service = 'http://url.pm';
 
@@ -47,6 +52,47 @@ sub shorten {
    my $content = $cw->content or return;
    if (length($content)) {
       ($shorten) = $content =~ m{(http://url\.pm/[^"]+)};
+   }
+
+   return $shorten;
+}
+
+sub shorten_tinyurl {
+   my $self = shift;
+   my ($uri) = @_;
+
+   $self->brik_help_run_undef_arg('shorten_tinyurl', $uri) or return;
+
+   eval("use WWW::Shorten 'TinyURL';");
+
+   my $shorten;
+   eval {
+      $shorten = makeashorterlink($uri);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("shorten_tinyurl: failed with [$@]");
+   }
+
+   return $shorten;
+}
+
+sub shorten {
+   my $self = shift;
+   my ($uri) = @_;
+
+   my $service = $self->service;
+   $self->brik_help_run_undef_arg('shorten', $uri) or return;
+
+   my $shorten = '';
+   if ($service eq 'default') {
+      $shorten = $self->shorten_default($uri) or return;
+   }
+   elsif ($service eq 'tinyurl') {
+      $shorten = $self->shorten_tinyurl($uri) or return;
+   }
+   else {
+      return $self->log->error("shorten: don't know how to shorten service with [$service]");
    }
 
    return $shorten;
