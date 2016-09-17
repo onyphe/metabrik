@@ -7,12 +7,12 @@ package Metabrik::File::Hash;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command);
+use base qw(Metabrik);
 
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable) ],
+      tags => [ qw(unstable sha sha1 sha256 sha512 md5 md5sum sum) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
