@@ -42,6 +42,8 @@ sub brik_properties {
          get_all_properties => [ qw(tag) ],
          get_property => [ qw(tag property) ],
          set_property => [ qw(tag property value) ],
+         backup => [ qw(tag_name|$tag_list) ],
+         restore => [ qw(tag_name) ],
       },
       require_binaries => {
          iocage => [ ],
@@ -201,7 +203,7 @@ sub execute {
    $self->brik_help_run_undef_arg('execute', $tag) or return;
    $self->brik_help_run_undef_arg('execute', $command) or return;
 
-   my $cmd = "iocage exec $tag \"$command\"";
+   my $cmd = "iocage exec $tag $command";
 
    return $self->sudo_execute($cmd);
 }
@@ -266,8 +268,9 @@ sub get_all_properties {
    $self->brik_help_run_undef_arg('get_all_properties', $tag) or return;
 
    my $cmd = "iocage get all $tag";
+   my $r = $self->sudo_capture($cmd) or return;
 
-   return $self->sudo_system($cmd);
+   return $r;
 }
 
 sub get_property {
@@ -278,8 +281,10 @@ sub get_property {
    $self->brik_help_run_undef_arg('get_property', $property) or return;
 
    my $cmd = "iocage get $property $tag";
+   my $r = $self->sudo_capture($cmd) or return;
+   chomp($r);
 
-   return $self->sudo_system($cmd);
+   return $r;
 }
 
 sub set_property {
@@ -291,6 +296,38 @@ sub set_property {
    $self->brik_help_run_undef_arg('set_property', $value) or return;
 
    my $cmd = "iocage set $property=\"$value\" $tag";
+
+   return $self->sudo_system($cmd);
+}
+
+sub backup {
+   my $self = shift;
+   my ($tag_name) = @_;
+
+   $self->brik_help_run_undef_arg('backup', $tag_name) or return;
+   my $ref = $self->brik_help_run_invalid_arg('backup', $tag_name, 'ARRAY', 'SCALAR')
+      or return;
+
+   if ($ref eq 'ARRAY') {
+      for my $tag (@$tag_name) {
+         my $cmd = "iocage snapshot \"$tag\"";
+         $self->sudo_system($cmd);
+      }
+      return 1;
+   }
+
+   my $cmd = "iocage snapshot \"$tag_name\"";
+
+   return $self->sudo_system($cmd);
+}
+
+sub restore {
+   my $self = shift;
+   my ($tag_name) = @_;
+
+   $self->brik_help_run_undef_arg('restore', $tag_name) or return;
+
+   my $cmd = "iocage rollback \"$tag_name\"";
 
    return $self->sudo_system($cmd);
 }
