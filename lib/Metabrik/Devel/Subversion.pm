@@ -40,7 +40,9 @@ sub checkout {
    $self->brik_help_run_undef_arg('checkout', $repository) or return;
 
    my $cmd = "svn co $repository $directory";
-   return $self->execute($cmd);
+   $self->execute($cmd) or return;
+
+   return $directory;
 }
 
 # alias to checkout

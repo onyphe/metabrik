@@ -12,7 +12,7 @@ use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable read) ],
+      tags => [ qw(unstable read vbs) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
@@ -48,10 +48,7 @@ sub install {
    $self->SUPER::install or return;
 
    # Then Python dependant packages
-   my $prev = $self->use_sudo;
-   $self->use_sudo(1);
-   $self->system('pip install oletools --upgrade');
-   $self->use_sudo($prev);
+   $self->sudo_system('pip install oletools --upgrade');
 
    return 1;
 }

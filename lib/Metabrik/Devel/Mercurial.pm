@@ -56,7 +56,9 @@ sub clone {
 
    my $cmd = "hg clone $repository $directory";
 
-   return $self->execute($cmd);
+   $self->execute($cmd) or return;
+
+   return $directory;
 }
 
 sub push {

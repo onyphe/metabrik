@@ -35,7 +35,7 @@ sub brik_properties {
          delete => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
          options => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
          code => [ ],
-         content => [ ],
+         content => [ qw(output_mode|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::String::Xml' => [ ],
@@ -46,6 +46,7 @@ sub brik_properties {
 
 sub content {
    my $self = shift;
+   my ($output_mode) = @_;
 
    my $last = $self->_last;
    if (! defined($last)) {
@@ -53,7 +54,7 @@ sub content {
    }
 
    my $sm;
-   my $output_mode = $self->output_mode;
+   $output_mode ||= $self->output_mode;
    if ($output_mode eq 'json') {
       $sm = Metabrik::String::Json->new_from_brik_init($self) or return;
    }

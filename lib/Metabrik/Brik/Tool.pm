@@ -417,7 +417,9 @@ exit(0);
 EOF
 ;
 
-   return $ft->write($data, $filename);
+   $ft->write($data, $filename) or return;
+
+   return $filename;
 }
 
 sub create_brik {
@@ -568,7 +570,9 @@ Patrice E<lt>GomoRE<gt> Auffret
 EOF
 ;
 
-   return $ft->write($data, $filename);
+   $ft->write($data, $filename) or return;
+
+   return $filename;
 }
 
 sub update_core {

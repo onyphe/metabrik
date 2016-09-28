@@ -55,7 +55,9 @@ sub clone {
 
    my $cmd = "git clone $repository $directory";
 
-   return $self->execute($cmd);
+   $self->execute($cmd) or return;
+
+   return $directory;
 }
 
 1;

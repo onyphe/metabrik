@@ -87,12 +87,17 @@ sub list {
       }
 
       my @toks = split(/\s+/, $_);
+      my ($ip, $interface) = split(/,/, $toks[5]);
+      $ip ||= '';
+      $interface ||= '';
       push @jails, {
          jid => $toks[0],
          uuid => $toks[1],
          boot => $toks[2],
          state => $toks[3],
          tag => $toks[4],
+         ip => $ip,
+         interface => $interface,
       };
    }
 

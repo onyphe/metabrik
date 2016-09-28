@@ -1,3 +1,9 @@
+20160927
+   AFFECTS: devel::git, devel::subversion, devel::mercurial, brik::tool
+
+   - devel::git, devel::subversion, devel::mercurial clone Command now returns target directory
+   - brik::tool create_brik and create_tool Command now return create filename
+
 20160406
    AFFECTS: client::elasticsearch
 

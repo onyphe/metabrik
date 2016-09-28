@@ -83,6 +83,7 @@ sub init_database {
       'sbin/db_mgmt.py -p', 'sbin/db_mgmt_cpe_dictionary.py', 'sbin/db_updater.py -c'
    ) {
       my $cmd = $repo.'/'.$this;
+      $self->log->verbose("init_database: cmd [$cmd]");
       $self->execute($cmd);
    }
 
@@ -122,14 +123,14 @@ sub cpe_search {
    my $self = shift;
    my ($cpe) = @_;
 
-   $self->brik_help_run_undef_arg('search_cpe', $cpe) or return;
+   $self->brik_help_run_undef_arg('cpe_search', $cpe) or return;
 
    my $repo = $self->repo;
 
    my $cmd = $repo.'/bin/search.py -o json -p '.$cpe;
 
    my $json = $self->capture($cmd) or return;
-   if (@$json <= 0) {
+   if (@$json <= 0 || (@$json == 1 && $json->[0] eq 'undef')) {
       return $self->log->error("search_cpe: invalid response: ".join('', @$json));
    }
 
@@ -151,7 +152,7 @@ sub cve_search {
    my $self = shift;
    my ($cve) = @_;
 
-   $self->brik_help_run_undef_arg('search_cve', $cve) or return;
+   $self->brik_help_run_undef_arg('cve_search', $cve) or return;
 
    if ($cve !~ m{^(cve|can)\-\d+\-\d+$}i) {
       return $self->log->error("search_cve: invalid CVE format [$cve]");
@@ -162,7 +163,7 @@ sub cve_search {
    my $cmd = $repo.'/bin/search.py -o json -c '.$cve;
 
    my $json = $self->capture($cmd) or return;
-   if (@$json <= 0) {
+   if (@$json <= 0 || (@$json == 1 && $json->[0] eq 'undef')) {
       return $self->log->error("search_cve: invalid response: ".join('', @$json));
    }
 
@@ -185,7 +186,7 @@ sub dump_last {
    my $cmd = $repo.'/bin/dump_last.py -f atom';
 
    my $xml = $self->capture($cmd) or return;
-   if (@$xml <= 0) {
+   if (@$xml <= 0 || (@$xml == 1 && $xml->[0] eq 'undef')) {
       return $self->log->error("last_entries: invalid response: ".join('', @$xml));
    }
 
