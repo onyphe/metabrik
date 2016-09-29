@@ -74,6 +74,9 @@ sub brik_properties {
          get_process => [ qw(nodes_list|OPTIONAL) ],
          get_cluster_state => [ qw(nodes_list|OPTIONAL) ],
          get_cluster_health => [ qw(nodes_list|OPTIONAL) ],
+         count_green_shards => [ ],
+         count_yellow_shards => [ ],
+         count_red_shards => [ ],
       },
       require_modules => {
          'Metabrik::String::Json' => [ ],
@@ -1170,6 +1173,51 @@ sub get_cluster_health {
 
    return \@content_list;
 
+}
+
+sub count_green_shards {
+   my $self = shift;
+
+   my $get = $self->show_indices or return;
+
+   my $count = 0;
+   for (@$get) {
+      if (/^\s*green\s+/) {
+         $count++;
+      }
+   }
+
+   return $count;
+}
+
+sub count_yellow_shards {
+   my $self = shift;
+
+   my $get = $self->show_indices or return;
+
+   my $count = 0;
+   for (@$get) {
+      if (/^\s*yellow\s+/) {
+         $count++;
+      }
+   }
+
+   return $count;
+}
+
+sub count_red_shards {
+   my $self = shift;
+
+   my $get = $self->show_indices or return;
+
+   my $count = 0;
+   for (@$get) {
+      if (/^\s*red\s+/) {
+         $count++;
+      }
+   }
+
+   return $count;
 }
 
 1;
