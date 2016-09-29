@@ -1,3 +1,8 @@
+20160928
+   AFFECTS: system::docker
+
+   - system::docker delete Command now returns $name of deleted image
+
 20160927
    AFFECTS: devel::git, devel::subversion, devel::mercurial, brik::tool
 

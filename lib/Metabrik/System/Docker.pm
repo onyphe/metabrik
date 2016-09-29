@@ -207,8 +207,9 @@ sub delete {
    $self->brik_help_run_undef_arg('delete', $name) or return;
 
    my $cmd = "docker rmi -f $name";
+   $self->SUPER::execute($cmd) or return;
 
-   return $self->SUPER::execute($cmd);
+   return $name;
 }
 
 sub update {
