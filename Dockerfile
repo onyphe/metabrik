@@ -1,4 +1,4 @@
-FROM ubuntu:vivid
+FROM ubuntu:xenial
 
 RUN apt-get -y update
 
@@ -11,28 +11,34 @@ RUN apt-get install -y build-essential sudo less cpanminus nvi iputils-ping merc
 #
 # Perl modules
 #
-RUN cpanm -n Lexical::Persistence PPI Term::ReadLine::Gnu Class::Gomor Data::Dump File::Find Term::ANSIColor Module::Reload Exporter::Tiny File::HomeDir IO::All Term::Shell IPC::Run3
+RUN cpanm -n Metabrik
+RUN cpanm -n Metabrik::Repository
 
 #
-# Metabrik itselves
+# Update Metabrik to latest head
 #
-RUN mkdir ~/metabrik
-RUN hg clone http://trac.metabrik.org/hg/core ~/metabrik/core
-RUN hg clone http://trac.metabrik.org/hg/repository ~/metabrik/repository
+RUN mkdir -p /root/metabrik/brik-tool
+RUN perl -MMetabrik::Core::Context -e 'Metabrik::Core::Context->new_brik_run("brik::tool","update")'
 
 # Set locale
 RUN locale-gen en_GB.UTF-8
 RUN update-locale LANG=en_GB.UTF-8
 
-# Install Metabrik
-RUN cd ~/metabrik/core && perl Build.PL && ./Build install
-RUN cd ~/metabrik/repository && perl Build.PL
-
 # Initialise the environment
 RUN perl -MMetabrik::Core::Context -e 'Metabrik::Core::Context->new_brik_run("shell::rc", "write_default")'
+RUN echo 'use shell::command' >> /root/.metabrik_rc
+RUN echo 'use shell::history' >> /root/.metabrik_rc
+RUN echo 'use brik::tool' >> /root/.metabrik_rc
+RUN echo 'use brik::search' >> /root/.metabrik_rc
+RUN echo 'alias ! "run shell::history exec"' >> /root/.metabrik_rc
+RUN echo 'alias history "run shell::history show"' >> /root/.metabrik_rc
+RUN echo 'set core::shell ps1 docker' >> /root/.metabrik_rc
+RUN echo 'alias ls "run shell::command capture ls -Fh"' >> /root/.metabrik_rc
+RUN echo 'alias l "run shell::command capture ls -lFh"' >> /root/.metabrik_rc
+RUN echo 'alias ll "run shell::command capture ls -lFh"' >> /root/.metabrik_rc
 
 # Install dependencies
-RUN perl -I/root/metabrik/repository/lib -MMetabrik::Core::Context -e 'Metabrik::Core::Context->new_brik_run("brik::tool", "install_ubuntu_packages")'
-RUN perl -I/root/metabrik/repository/lib -MMetabrik::Core::Context -e 'Metabrik::Core::Context->new_brik_run("brik::tool", "install_modules")'
+#RUN perl -I/root/metabrik/repository/lib -MMetabrik::Core::Context -e 'Metabrik::Core::Context->new_brik_run("brik::tool", "install_ubuntu_packages")'
+#RUN perl -I/root/metabrik/repository/lib -MMetabrik::Core::Context -e 'Metabrik::Core::Context->new_brik_run("brik::tool", "install_modules")'
 
 CMD ["/usr/local/bin/metabrik.sh"]
