@@ -18,6 +18,7 @@ sub brik_properties {
          as_matrix => [ qw(0|1) ],
          capture_stderr => [ qw(0|1) ],
          capture_mode => [ qw(0|1) ],
+         capture_system => [ qw(0|1) ],
          ignore_error => [ qw(0|1) ],
          use_sudo => [ qw(0|1) ],
          use_pager => [ qw(0|1) ],
@@ -29,6 +30,7 @@ sub brik_properties {
          as_matrix => 0,
          capture_stderr => 1,
          capture_mode => 0,
+         capture_system => 0,
          ignore_error => 1,
          use_sudo => 0,
          use_pager => 0,
@@ -40,11 +42,20 @@ sub brik_properties {
          sudo_system => [ qw(command) ],
          capture => [ qw(command) ],
          sudo_capture => [ qw(command) ],
+         system_capture => [ qw(command) ],
+         sudo_system_capture => [ qw(command) ],
          execute => [ qw(command) ],
          sudo_execute => [ qw(command) ],
       },
+      require_binaries => {
+         script => [ ],
+      },
       require_modules => {
          'IPC::Run3' => [ ],
+         'Metabrik::File::Text' => [ ],
+      },
+      need_packages => {
+         ubuntu => [ qw(bsdutils) ],
       },
    };
 }
@@ -101,6 +112,12 @@ sub system {
       $command .= " | $pager";
    }
 
+   # Also capture output to terminal to a file
+   my $output_file = 'capture_system.script';
+   if ($self->capture_system) {
+      $command = "script --quiet --command '".$command."' $output_file";
+   }
+
    my $r = CORE::system($command);
 
    $self->debug && $self->log->debug("system: command returned code [$r] with status [$?]");
@@ -113,6 +130,13 @@ sub system {
    }
 
    $self->debug && $self->log->debug("system: program exit with success");
+
+   # Program succeeded, we return output content if capture_system is on
+   if ($self->capture_system) {
+      my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+      $ft->as_array(1);
+      return $ft->read($output_file);
+   }
 
    return 1;
 }
@@ -250,13 +274,44 @@ sub sudo_capture {
    return $r;
 }
 
+sub system_capture {
+   my $self = shift;
+   my ($cmd, @args) = @_;
+
+   $self->brik_help_run_undef_arg('system_capture', $cmd) or return;
+
+   my $prev = $self->capture_system;
+   $self->capture_system(1);
+   my $r = $self->system($cmd, @args);
+   $self->capture_system($prev);
+
+   return $r;
+}
+
+sub sudo_system_capture {
+   my $self = shift;
+   my ($cmd, @args) = @_;
+
+   $self->brik_help_run_undef_arg('sudo_system_capture', $cmd) or return;
+
+   my $prev = $self->capture_system;
+   $self->capture_system(1);
+   my $r = $self->sudo_system($cmd, @args);
+   $self->capture_system($prev);
+
+   return $r;
+}
+
 sub execute {
    my $self = shift;
    my ($cmd, @args) = @_;
    
    $self->brik_help_run_undef_arg('execute', $cmd) or return;
 
-   if ($self->capture_mode) {
+   if ($self->capture_system) {
+      return $self->system_capture($cmd, @args);
+   }
+   elsif ($self->capture_mode) {
       return $self->capture($cmd, @args);
    }
    else {  # non-capture mode
@@ -273,7 +328,10 @@ sub sudo_execute {
 
    $self->brik_help_run_undef_arg('sudo_execute', $cmd) or return;
 
-   if ($self->capture_mode) {
+   if ($self->capture_system) {
+      return $self->sudo_system_capture($cmd, @args);
+   }
+   elsif ($self->capture_mode) {
       return $self->sudo_capture($cmd, @args);
    }
    else {  # non-capture mode
