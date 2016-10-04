@@ -104,10 +104,8 @@ set core::shell echo 0
 my \$home = \$ENV{HOME}
 my \$user = \$ENV{USER}
 
-my \$datadir = "\$home/metabrik"
 my \$sudo = "sudo -E \$0 --no-splash"
 
-set core::global datadir \$datadir
 set core::global ctimeout 5
 set core::global rtimeout 5
 

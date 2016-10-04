@@ -12,7 +12,7 @@ use base qw(Metabrik::Shell::Command Metabrik::System::Package);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable) ],
+      tags => [ qw(unstable svn) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {

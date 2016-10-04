@@ -20,16 +20,16 @@ sub brik_properties {
          search => [ qw(string) ],
          install => [ qw(package|$package_list) ],
          remove => [ qw(package|$package_list) ],
-         update => [ ],
-         upgrade => [ ],
+         update => [ qw(version|OPTIONAL) ],
+         upgrade => [ qw(version|OPTIONAL) ],
          is_os => [ qw(os) ],
          is_os_ubuntu => [ ],
          is_os_freebsd => [ ],
          is_installed => [ qw(package|$package_list) ],
          my_os => [ ],
          which => [ qw(file) ],
-         system_update => [ ],
-         system_upgrade => [ ],
+         system_update => [ qw(version|OPTIONAL) ],
+         system_upgrade => [ qw(version|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::System::Os' => [ ],
@@ -111,7 +111,7 @@ sub update {
 
    my $sp = $self->get_system_package or return;
 
-   return $sp->update;
+   return $sp->update(@_);
 }
 
 sub upgrade {
@@ -119,7 +119,7 @@ sub upgrade {
 
    my $sp = $self->get_system_package or return;
 
-   return $sp->upgrade;
+   return $sp->upgrade(@_);
 }
 
 sub system_update {
@@ -127,7 +127,7 @@ sub system_update {
 
    my $sp = $self->get_system_package or return;
 
-   return $sp->system_update;
+   return $sp->system_update(@_);
 }
 
 sub system_upgrade {
@@ -135,7 +135,7 @@ sub system_upgrade {
 
    my $sp = $self->get_system_package or return;
 
-   return $sp->system_upgrade;
+   return $sp->system_upgrade(@_);
 }
 
 sub list {

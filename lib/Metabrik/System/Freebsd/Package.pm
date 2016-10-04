@@ -24,7 +24,7 @@ sub brik_properties {
          is_installed => [ qw(package|$package_list) ],
          which => [ qw(file) ],
          system_update => [ ],
-         system_upgrade => [ ],
+         system_upgrade => [ qw(RELEASE|OPTIONAL) ],
       },
       require_binaries => {
          'pkg' => [ ],
@@ -124,8 +124,17 @@ sub system_update {
 
 sub system_upgrade {
    my $self = shift;
+   my ($release) = @_;
 
-   my $cmd = 'freebsd-update install';
+   my $cmd = 'freebsd-update';
+   if (defined($release)) {
+      $cmd .= ' upgrade -r '.$release;
+      # We should also run a freebsd-update install after that
+   }
+   else {
+      $cmd .= ' install';
+   }
+
 
    return $self->sudo_system($cmd);
 }

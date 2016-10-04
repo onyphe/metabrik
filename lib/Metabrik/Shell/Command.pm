@@ -52,7 +52,7 @@ sub brik_properties {
       },
       require_modules => {
          'IPC::Run3' => [ ],
-         'Metabrik::File::Text' => [ ],
+         'Metabrik::System::Os' => [ ],
       },
       need_packages => {
          ubuntu => [ qw(bsdutils) ],
@@ -113,10 +113,18 @@ sub system {
    }
 
    # Also capture output to terminal to a file
+   my $so = Metabrik::System::Os->new_from_brik_init($self) or return;
    my $output_file = 'capture_system.script';
    if ($self->capture_system) {
-      $command = "script --quiet --command '".$command."' $output_file";
+      if ($so->is_freebsd) {
+         $command = "script -q $output_file $command";
+      }
+      else {
+         $command = "script -q --command '".$command."' $output_file";
+      }
    }
+
+   $self->log->verbose("system: command[$command]");
 
    my $r = CORE::system($command);
 
@@ -131,11 +139,15 @@ sub system {
 
    $self->debug && $self->log->debug("system: program exit with success");
 
-   # Program succeeded, we return output content if capture_system is on
+   # Program succeeded, we only return full path to output file, 
+   # maybe the caller will have some optimization to not process ths full 
+   # file content afterwards.
    if ($self->capture_system) {
-      my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
-      $ft->as_array(1);
-      return $ft->read($output_file);
+      # XXX: replace with $self->shell->full_pwd when Metabrik Core 1.23 released
+      my $pwd = $self->shell->pwd;
+      my $homedir = $self->global->homedir;
+      $pwd =~ s{^~}{$homedir};
+      return $pwd.'/'.$output_file;
    }
 
    return 1;
@@ -215,6 +227,7 @@ sub capture {
    my $err;
    eval {
       my $cmd = join(' ', @toks);
+      $self->log->verbose("capture: command[$cmd]");
       IPC::Run3::run3($cmd, undef, \$out, \$err);
    };
    # Error in executing run3()

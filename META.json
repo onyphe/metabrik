@@ -4,7 +4,7 @@
       "GomoR <gomor_at_metabrik.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4214",
+   "generated_by" : "Module::Build version 0.4216",
    "license" : [
       "bsd"
    ],
@@ -443,7 +443,7 @@
       },
       "Metabrik::Repository" : {
          "file" : "lib/Metabrik/Repository.pm",
-         "version" : "1.22"
+         "version" : "1.23"
       },
       "Metabrik::Server::Dns" : {
          "file" : "lib/Metabrik/Server/Dns.pm"
@@ -632,6 +632,6 @@
          "http://opensource.org/licenses/BSD-3-Clause"
       ]
    },
-   "version" : "1.22",
+   "version" : "1.23",
    "x_serialization_backend" : "JSON::PP version 2.27300"
 }
