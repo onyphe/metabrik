@@ -1,6 +1,6 @@
 Revision history for Perl extension Metabrik::Repository.
 
-1.23.0
+1.23.0 Tue  4 Oct 07:00:32 CEST 2016
    - new: video::ffmpeg Brik
    - new: xorg::xrandr Brik
    - new: system::fsck Brik
