@@ -609,7 +609,7 @@ sub update_repository {
    # If we define the core::global repository Attribute, we use that as 
    # a local repository. We will not install Metabrik::Repository in that case.
    my $datadir = $self->datadir;
-   my $repository = $self->global->repository || $datadir.'/repository';
+   my $repository = $datadir.'/repository';
 
    my $url = 'https://www.metabrik.org/hg/repository';
 
