@@ -1,3 +1,8 @@
+20161005
+   AFFECTS: shell::command
+
+   - shell::command use_globbing Attribute default value change to false
+
 20160928
    AFFECTS: system::docker
 

@@ -34,7 +34,7 @@ sub brik_properties {
          ignore_error => 1,
          use_sudo => 0,
          use_pager => 0,
-         use_globbing => 1,
+         use_globbing => 0,
          sudo_args => '-E',  # Keep environment
       },
       commands => {
