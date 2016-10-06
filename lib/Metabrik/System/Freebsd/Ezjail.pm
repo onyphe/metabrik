@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# system::freebsd::jail Brik
+# system::freebsd::ezjail Brik
 #
-package Metabrik::System::Freebsd::Jail;
+package Metabrik::System::Freebsd::Ezjail;
 use strict;
 use warnings;
 
@@ -256,7 +256,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::System::Freebsd::Jail - system::freebsd::jail Brik
+Metabrik::System::Freebsd::Ezjail - system::freebsd::ezjail Brik
 
 =head1 COPYRIGHT AND LICENSE
 
