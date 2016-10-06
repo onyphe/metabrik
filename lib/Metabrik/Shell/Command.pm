@@ -143,8 +143,7 @@ sub system {
    # maybe the caller will have some optimization to not process ths full 
    # file content afterwards.
    if ($self->capture_system) {
-      # XXX: replace with $self->shell->full_pwd when Metabrik Core 1.23 released
-      my $pwd = $self->shell->pwd;
+      my $pwd = $self->shell->full_pwd;
       my $homedir = $self->global->homedir;
       $pwd =~ s{^~}{$homedir};
       return $pwd.'/'.$output_file;

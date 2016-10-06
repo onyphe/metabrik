@@ -27,6 +27,7 @@ sub brik_properties {
          distribution => [ ],
          is => [ qw(os) ],
          is_ubuntu => [ ],
+         is_debian => [ ],
          is_linux => [ ],
          is_freebsd => [ ],
          my => [ ],
@@ -135,6 +136,47 @@ sub distribution {
             description => $info{DISTRIB_DESCRIPTION}, # Ubuntu 14.10
          };
       }
+      elsif (-f '/etc/debian_version' && -f '/etc/os-release') {
+         my $lines = $ft->read('/etc/os-release')
+            or return $self->log->error("distribution: read failed");
+
+         # /etc/os-release
+         # PRETTY_NAME="Raspbian GNU/Linux 8 (jessie)"
+         # NAME="Raspbian GNU/Linux"
+         # VERSION_ID="8"
+         # VERSION="8 (jessie)"
+         # ID=raspbian
+         # ID_LIKE=debian
+         # HOME_URL="http://www.raspbian.org/"
+         # SUPPORT_URL="http://www.raspbian.org/RaspbianForums"
+         # BUG_REPORT_URL="http://www.raspbian.org/RaspbianBugs"
+
+         my %info = ();
+         for my $line (@$lines) {
+            my ($k, $v) = split('\s*=\s*', $line);
+            $v =~ s{^"*}{};
+            $v =~ s{"*$}{};
+            $info{$k} = $v;
+         }
+
+         $lines = $ft->read('/etc/debian_version')
+            or return $self->log->error("distribution: read2 failed");
+
+         my $release = '0.0';
+         if (@$lines > 0) {
+            chomp($release = $lines->[0]);
+         }
+
+         my ($codename) = $info{VERSION} =~ m{\(([^)]+)\)};
+
+         return {
+            name => 'Debian',  # Debian
+            full_name => $info{NAME},           # Raspbian GNU/Linux
+            release => $release,                # 8.0
+            codename => $codename,              # jessis
+            description => $info{PRETTY_NAME},  # Raspbian GNU/Linux 8 (jessie)
+         };
+      }
       elsif (-f '/etc/redhat-release') {
          return {
             name => 'RedHat',  # RedHat
@@ -201,6 +243,12 @@ sub is_ubuntu {
    my $self = shift;
 
    return $self->is('ubuntu');
+}
+
+sub is_debian {
+   my $self = shift;
+
+   return $self->is('debian');
 }
 
 sub is_linux {

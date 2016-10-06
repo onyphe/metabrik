@@ -49,7 +49,10 @@ sub brik_properties {
          'Metabrik::File::Find' => [ ],
       },
       require_binaries => {
-         'ps', => [ ],
+         ps => [ ],
+      },
+      need_packages => {
+         ubuntu => [ qw(procps) ],
       },
    };
 }

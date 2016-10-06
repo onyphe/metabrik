@@ -31,7 +31,7 @@ sub brik_properties {
          system_upgrade => [ ],
       },
       optional_binaries => {
-         'aptitude' => [ ],
+         aptitude => [ ],
       },
       require_binaries => {
          'apt-get' => [ ],

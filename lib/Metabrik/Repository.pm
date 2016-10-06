@@ -6,7 +6,7 @@ use strict;
 use warnings;
 
 # Breaking.Feature.Fix
-our $VERSION = '1.23';
+our $VERSION = '1.24';
 our $FIX = '0';
 
 1;
