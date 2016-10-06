@@ -5,6 +5,7 @@ examples/iplocation-standalone-brik.pl
 lib/Metabrik/Address/Generate.pm
 lib/Metabrik/Antivirus/Clamav.pm
 lib/Metabrik/Api/Bluecoat.pm
+lib/Metabrik/Api/Cvesearch.pm
 lib/Metabrik/Api/Shodan.pm
 lib/Metabrik/Api/Splunk.pm
 lib/Metabrik/Api/Virustotal.pm
@@ -36,6 +37,7 @@ lib/Metabrik/Crypto/Aes.pm
 lib/Metabrik/Crypto/Gpg.pm
 lib/Metabrik/Crypto/Letsencrypt.pm
 lib/Metabrik/Crypto/X509.pm
+lib/Metabrik/Database/Cvesearch.pm
 lib/Metabrik/Database/Cwe.pm
 lib/Metabrik/Database/Keystore.pm
 lib/Metabrik/Database/Mysql.pm
@@ -50,6 +52,7 @@ lib/Metabrik/Devel/Git.pm
 lib/Metabrik/Devel/Mercurial.pm
 lib/Metabrik/Devel/Mojo.pm
 lib/Metabrik/Devel/Subversion.pm
+lib/Metabrik/Email/Imap.pm
 lib/Metabrik/Email/Mbox.pm
 lib/Metabrik/Email/Message.pm
 lib/Metabrik/Email/Send.pm
@@ -156,6 +159,7 @@ lib/Metabrik/String/Ascii.pm
 lib/Metabrik/String/Base64.pm
 lib/Metabrik/String/Compress.pm
 lib/Metabrik/String/Csv.pm
+lib/Metabrik/String/Hash.pm
 lib/Metabrik/String/Hexa.pm
 lib/Metabrik/String/Hostname.pm
 lib/Metabrik/String/Html.pm
@@ -171,13 +175,17 @@ lib/Metabrik/String/Syslog.pm
 lib/Metabrik/String/Uri.pm
 lib/Metabrik/String/Xml.pm
 lib/Metabrik/String/Yara.pm
+lib/Metabrik/System/Debian/Package.pm
+lib/Metabrik/System/Debian/Service.pm
+lib/Metabrik/System/Debian/User.pm
 lib/Metabrik/System/Docker.pm
 lib/Metabrik/System/File.pm
-lib/Metabrik/System/Freebsd/Iocage.pm
 lib/Metabrik/System/Freebsd/Ezjail.pm
+lib/Metabrik/System/Freebsd/Iocage.pm
 lib/Metabrik/System/Freebsd/Package.pm
 lib/Metabrik/System/Freebsd/Pf.pm
 lib/Metabrik/System/Fsck.pm
+lib/Metabrik/System/Gphotofs.pm
 lib/Metabrik/System/Libvirt.pm
 lib/Metabrik/System/Mount.pm
 lib/Metabrik/System/Os.pm

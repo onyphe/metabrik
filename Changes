@@ -9,7 +9,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: video::ffmpeg Brik
    - new: xorg::xrandr Brik
    - new: system::fsck Brik
-   - new: sustem::mount Brik
+   - new: system::mount Brik
    - new: system::gphotofs Brik
    - new: string::hash Brik
    - new: database::cvesearch Brik

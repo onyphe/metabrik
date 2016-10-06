@@ -42,6 +42,9 @@
       "Metabrik::Api::Bluecoat" : {
          "file" : "lib/Metabrik/Api/Bluecoat.pm"
       },
+      "Metabrik::Api::Cvesearch" : {
+         "file" : "lib/Metabrik/Api/Cvesearch.pm"
+      },
       "Metabrik::Api::Shodan" : {
          "file" : "lib/Metabrik/Api/Shodan.pm"
       },
@@ -135,6 +138,9 @@
       "Metabrik::Crypto::X509" : {
          "file" : "lib/Metabrik/Crypto/X509.pm"
       },
+      "Metabrik::Database::Cvesearch" : {
+         "file" : "lib/Metabrik/Database/Cvesearch.pm"
+      },
       "Metabrik::Database::Cwe" : {
          "file" : "lib/Metabrik/Database/Cwe.pm"
       },
@@ -176,6 +182,9 @@
       },
       "Metabrik::Devel::Subversion" : {
          "file" : "lib/Metabrik/Devel/Subversion.pm"
+      },
+      "Metabrik::Email::Imap" : {
+         "file" : "lib/Metabrik/Email/Imap.pm"
       },
       "Metabrik::Email::Mbox" : {
          "file" : "lib/Metabrik/Email/Mbox.pm"
@@ -496,6 +505,9 @@
       "Metabrik::String::Csv" : {
          "file" : "lib/Metabrik/String/Csv.pm"
       },
+      "Metabrik::String::Hash" : {
+         "file" : "lib/Metabrik/String/Hash.pm"
+      },
       "Metabrik::String::Hexa" : {
          "file" : "lib/Metabrik/String/Hexa.pm"
       },
@@ -541,6 +553,15 @@
       "Metabrik::String::Yara" : {
          "file" : "lib/Metabrik/String/Yara.pm"
       },
+      "Metabrik::System::Debian::Package" : {
+         "file" : "lib/Metabrik/System/Debian/Package.pm"
+      },
+      "Metabrik::System::Debian::Service" : {
+         "file" : "lib/Metabrik/System/Debian/Service.pm"
+      },
+      "Metabrik::System::Debian::User" : {
+         "file" : "lib/Metabrik/System/Debian/User.pm"
+      },
       "Metabrik::System::Docker" : {
          "file" : "lib/Metabrik/System/Docker.pm"
       },
@@ -561,6 +582,9 @@
       },
       "Metabrik::System::Fsck" : {
          "file" : "lib/Metabrik/System/Fsck.pm"
+      },
+      "Metabrik::System::Gphotofs" : {
+         "file" : "lib/Metabrik/System/Gphotofs.pm"
       },
       "Metabrik::System::Libvirt" : {
          "file" : "lib/Metabrik/System/Libvirt.pm"
