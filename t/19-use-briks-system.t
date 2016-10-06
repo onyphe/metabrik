@@ -4,7 +4,7 @@ BEGIN { plan(tests => 18) }
 ok(sub { eval("use Metabrik::System::Docker"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::System::File"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::System::Freebsd::Iocage"); $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::System::Freebsd::Jail"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::System::Freebsd::Ezjail"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::System::Freebsd::Package"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::System::Freebsd::Pf"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::System::Fsck"); $@ ? 0 : 1 }, 1, $@);

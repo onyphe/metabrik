@@ -547,11 +547,11 @@
       "Metabrik::System::File" : {
          "file" : "lib/Metabrik/System/File.pm"
       },
+      "Metabrik::System::Freebsd::Ezjail" : {
+         "file" : "lib/Metabrik/System/Freebsd/Ezjail.pm"
+      },
       "Metabrik::System::Freebsd::Iocage" : {
          "file" : "lib/Metabrik/System/Freebsd/Iocage.pm"
-      },
-      "Metabrik::System::Freebsd::Jail" : {
-         "file" : "lib/Metabrik/System/Freebsd/Jail.pm"
       },
       "Metabrik::System::Freebsd::Package" : {
          "file" : "lib/Metabrik/System/Freebsd/Package.pm"

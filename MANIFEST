@@ -174,7 +174,7 @@ lib/Metabrik/String/Yara.pm
 lib/Metabrik/System/Docker.pm
 lib/Metabrik/System/File.pm
 lib/Metabrik/System/Freebsd/Iocage.pm
-lib/Metabrik/System/Freebsd/Jail.pm
+lib/Metabrik/System/Freebsd/Ezjail.pm
 lib/Metabrik/System/Freebsd/Package.pm
 lib/Metabrik/System/Freebsd/Pf.pm
 lib/Metabrik/System/Fsck.pm

@@ -1,3 +1,8 @@
+20161006
+   AFFECTS: system::freebsd::jail
+
+   - system::freebsd::jail Brik renamed to system::freebsd::ezjail
+
 20161005
    AFFECTS: shell::command
 

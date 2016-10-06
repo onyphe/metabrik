@@ -30,7 +30,6 @@ sub brik_properties {
          console => [ qw(jail_name) ],
       },
       require_binaries => {
-         'sudo' => [ ],
          'ezjail-admin' => [ ],
          'jls' => [ ],
          'jexec' => [ ],
@@ -72,8 +71,8 @@ sub execute {
    if (ref($jail_name) eq 'ARRAY') {
       for my $jail (@$jail_name) {
          my $id = $self->name_to_id($jail) or next;
-         my $cmd = "sudo jexec $id $command";
-         $r = $self->SUPER::execute($cmd);
+         my $cmd = "jexec $id $command";
+         $r = $self->SUPER::sudo_execute($cmd);
          if ($self->capture_mode) {
             push @lines, $r;
          }
@@ -81,8 +80,8 @@ sub execute {
    }
    else {
       my $id = $self->name_to_id($jail_name) or return;
-      my $cmd = "sudo jexec $id $command";
-      $r = $self->SUPER::execute($cmd);
+      my $cmd = "jexec $id $command";
+      $r = $self->SUPER::sudo_execute($cmd);
       if ($self->capture_mode) {
          push @lines, $r;
       }
@@ -113,15 +112,15 @@ sub stop {
 
    if ($ref eq 'ARRAY') {
       for my $jail (@$jail_name) {
-         my $cmd = "sudo ezjail-admin stop $jail";
-         $self->system($cmd);
+         my $cmd = "ezjail-admin stop $jail";
+         $self->sudo_system($cmd);
       }
       return 1;
    }
 
-   my $cmd = "sudo ezjail-admin stop $jail_name";
+   my $cmd = "ezjail-admin stop $jail_name";
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub start {
@@ -134,15 +133,15 @@ sub start {
 
    if ($ref eq 'ARRAY') {
       for my $jail (@$jail_name) {
-         my $cmd = "sudo ezjail-admin start $jail";
-         $self->system($cmd);
+         my $cmd = "ezjail-admin start $jail";
+         $self->sudo_system($cmd);
       }
       return 1;
    }
 
-   my $cmd = "sudo ezjail-admin start $jail_name";
+   my $cmd = "ezjail-admin start $jail_name";
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub restart {
@@ -155,15 +154,15 @@ sub restart {
 
    if (ref($jail_name) eq 'ARRAY') {
       for my $jail (@$jail_name) {
-         my $cmd = "sudo ezjail-admin restart $jail";
-         $self->system($cmd);
+         my $cmd = "ezjail-admin restart $jail";
+         $self->sudo_system($cmd);
       }
       return 1;
    }
 
-   my $cmd = "sudo ezjail-admin restart $jail_name";
+   my $cmd = "ezjail-admin restart $jail_name";
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub create {
@@ -173,9 +172,9 @@ sub create {
    $self->brik_help_run_undef_arg('create', $jail_name) or return;
    $self->brik_help_run_undef_arg('create', $ip_address) or return;
 
-   my $cmd = "sudo ezjail-admin create $jail_name $ip_address";
+   my $cmd = "ezjail-admin create $jail_name $ip_address";
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub backup {
@@ -188,15 +187,15 @@ sub backup {
 
    if ($ref eq 'ARRAY') {
       for my $jail (@$jail_name) {
-         my $cmd = "sudo ezjail-admin archive -f $jail";
-         $self->system($cmd);
+         my $cmd = "ezjail-admin archive -f $jail";
+         $self->sudo_system($cmd);
       }
       return 1;
    }
 
-   my $cmd = "sudo ezjail-admin archive -f $jail_name";
+   my $cmd = "ezjail-admin archive -f $jail_name";
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub restore {
@@ -207,9 +206,9 @@ sub restore {
    $self->brik_help_run_undef_arg('restore', $ip_address) or return;
    $self->brik_help_run_undef_arg('restore', $archive_tar_gz) or return;
 
-   my $cmd = "sudo ezjail-admin create -a $archive_tar_gz $jail_name $ip_address";
+   my $cmd = "ezjail-admin create -a $archive_tar_gz $jail_name $ip_address";
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub delete {
@@ -222,32 +221,32 @@ sub delete {
 
    if (ref($jail_name) eq 'ARRAY') {
       for my $jail (@$jail_name) {
-         my $cmd = "sudo ezjail-admin delete -fw $jail";
-         $self->system($cmd);
+         my $cmd = "ezjail-admin delete -fw $jail";
+         $self->sudo_system($cmd);
       }
       return 1;
    }
 
-   my $cmd = "sudo ezjail-admin delete -fw $jail_name";
+   my $cmd = "ezjail-admin delete -fw $jail_name";
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub update {
    my $self = shift;
 
-   my $cmd = "sudo ezjail-admin update -u";
+   my $cmd = "ezjail-admin update -u";
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub console {
    my $self = shift;
    my ($jail_name) = @_;
 
-   my $cmd = "sudo ezjail-admin console $jail_name";
+   my $cmd = "ezjail-admin console $jail_name";
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 1;
