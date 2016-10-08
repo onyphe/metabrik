@@ -276,25 +276,32 @@ sub get_brik_hierarchy_recursive {
 
    $self->brik_help_run_undef_arg('get_brik_hierarchy_recursive', $brik) or return;
 
-   # We first gather our own Brik hierarchy
-   my %hierarchy = ();
-   my $mine = $self->get_brik_hierarchy($brik) or return;
-   for (@$mine) {
-      $hierarchy{$_}++;
+   my $hierarchy = {};
+
+   # We first gather the provided Brik hierarchy
+   my $provided = $self->get_brik_hierarchy($brik) or return;
+   for (@$provided) {
+      $self->debug && $self->log->debug("get_brik [$_]");
+      $hierarchy->{$_}++;
    }
 
-   # Then we search for all required Briks recursively
-   my $require_briks = $self->get_require_briks($brik) or return;
-   for my $this (@$require_briks) {
-      #$self->log->info("require_brik [$this]");
-      $hierarchy{$this}++;
-      my $this_hierarchy = $self->get_brik_hierarchy_recursive($this) or next;
-      for (@$this_hierarchy) {
-         $hierarchy{$_}++;
+   # And required Briks hierarchy
+   my $required = $self->get_require_briks($brik) or return;
+   for (@$required) {
+      $self->debug && $self->log->debug("get_require [$_]");
+      $hierarchy->{$_}++;
+   }
+
+   # Then we search for complete hierarchy recursively
+   for my $this (keys %$hierarchy) {
+      next if $this eq $brik;  # Skip the provided one.
+      my $new = $self->get_brik_hierarchy_recursive($this) or return;
+      for (@$new) {
+         $hierarchy->{$_}++;
       }
    }
 
-   return [ sort { $a cmp $b } keys %hierarchy ];
+   return [ sort { $a cmp $b } keys %$hierarchy ];
 }
 
 sub install_all_need_packages {
