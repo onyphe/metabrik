@@ -104,7 +104,6 @@ sub system {
       }
       $command = join(' ', @sudo)." $command";
       @toks = ( @sudo, @toks );
-      $self->log->verbose("system: using sudo: cmd[$command]");
    }
 
    if ($self->use_pager) {
@@ -219,7 +218,6 @@ sub capture {
       }
       $command = join(' ', @sudo)." $command";
       @toks = ( @sudo, @toks );
-      $self->log->verbose("capture: using sudo: cmd[$command]");
    }
 
    my $out;

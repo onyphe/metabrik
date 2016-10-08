@@ -304,6 +304,13 @@ sub content {
       return $self->log->error("content: you have to execute a request first");
    }
 
+   if ($self->do_javascript) {
+      # decoded_content method is available in WWW::Mechanize::PhantomJS
+      # but is available in HTTP::Request response otherwise.
+      my $client = $self->_client;
+      return $client->decoded_content;
+   }
+
    return $last->decoded_content;
 }
 
