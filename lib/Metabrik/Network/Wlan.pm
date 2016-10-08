@@ -45,7 +45,8 @@ sub brik_properties {
          'airmon-ng' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(aircrack-ng iw) ],
+         ubuntu => [ qw(aircrack-ng iw) ],
+         debian => [ qw(aircrack-ng iw) ],
       },
    };
 }

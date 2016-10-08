@@ -45,7 +45,8 @@ sub brik_properties {
          'snmpd' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(libsnmp-dev snmpd) ],
+         ubuntu => [ qw(libsnmp-dev snmpd) ],
+         debian => [ qw(libsnmp-dev snmpd) ],
       },
    };
 }

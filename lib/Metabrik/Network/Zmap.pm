@@ -40,6 +40,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(zmap) ],
+         debian => [ qw(zmap) ],
       },
    };
 }

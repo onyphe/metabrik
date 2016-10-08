@@ -32,6 +32,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(libz-dev) ],
+         debian => [ qw(libz-dev) ],
       },
    };
 }

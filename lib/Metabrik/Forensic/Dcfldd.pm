@@ -24,7 +24,8 @@ sub brik_properties {
          'dcfldd' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(dcfldd) ],
+         ubuntu => [ qw(dcfldd) ],
+         debian => [ qw(dcfldd) ],
       },
    };
 }

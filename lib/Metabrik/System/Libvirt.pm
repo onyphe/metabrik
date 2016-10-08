@@ -43,6 +43,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(qemu-kvm libvirt-bin virtinst) ],
+         debian => [ qw(qemu-kvm libvirt-bin virtinst) ],
       },
    };
 }

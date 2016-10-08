@@ -48,10 +48,12 @@ sub brik_properties {
          'Redis' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(redis-server) ],
+         ubuntu => [ qw(redis-server) ],
+         debian => [ qw(redis-server) ],
       },
       need_services => {
-         'ubuntu' => [ qw(redis-server) ],
+         ubuntu => [ qw(redis-server) ],
+         debian => [ qw(redis-server) ],
       },
    };
 }

@@ -33,6 +33,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(binutils) ],
+         debian => [ qw(binutils) ],
       },
    };
 }

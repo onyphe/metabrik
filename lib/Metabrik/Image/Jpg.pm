@@ -23,7 +23,8 @@ sub brik_properties {
          'jhead' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(jhead) ],
+         ubuntu => [ qw(jhead) ],
+         debian => [ qw(jhead) ],
       },
    };
 }

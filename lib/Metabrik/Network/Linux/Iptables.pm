@@ -104,6 +104,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(iptables) ],
+         debian => [ qw(iptables) ],
       },
    };
 }

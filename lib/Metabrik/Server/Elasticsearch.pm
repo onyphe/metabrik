@@ -39,9 +39,11 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(elasticsearch) ],
+         debian => [ qw(elasticsearch) ],
       },
       need_services => {
          ubuntu => [ qw(elasticsearch) ],
+         debian => [ qw(elasticsearch) ],
       },
    };
 }

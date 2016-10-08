@@ -56,6 +56,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(bsdutils) ],
+         debian => [ qw(bsdutils) ],
       },
    };
 }

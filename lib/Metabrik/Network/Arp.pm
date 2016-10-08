@@ -54,6 +54,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(dsniff libnet-libdnet-perl) ],
+         debian => [ qw(dsniff libnet-libdnet-perl) ],
          freebsd => [ qw(libdnet) ],
       },
    };

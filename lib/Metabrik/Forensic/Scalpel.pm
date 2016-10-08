@@ -40,7 +40,8 @@ sub brik_properties {
          'scalpel' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(scalpel) ],
+         ubuntu => [ qw(scalpel) ],
+         debian => [ qw(scalpel) ],
       },
    };
 }

@@ -30,7 +30,8 @@ sub brik_properties {
          'exif' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(exif) ],
+         ubuntu => [ qw(exif) ],
+         debian => [ qw(exif) ],
       },
    };
 }

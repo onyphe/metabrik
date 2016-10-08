@@ -25,6 +25,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(x11-utils) ],
+         debian => [ qw(x11-utils) ],
       },
    };
 }

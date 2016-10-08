@@ -31,7 +31,8 @@ sub brik_properties {
          'clamscan' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(clamav) ],
+         ubuntu => [ qw(clamav) ],
+         debian => [ qw(clamav) ],
       },
    };
 }

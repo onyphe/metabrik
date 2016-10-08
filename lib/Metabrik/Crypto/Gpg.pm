@@ -60,7 +60,8 @@ sub brik_properties {
          'rngd' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(rng-tools) ],
+         ubuntu => [ qw(rng-tools) ],
+         debian => [ qw(rng-tools) ],
       },
    };
 }

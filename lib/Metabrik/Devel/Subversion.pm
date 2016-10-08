@@ -27,7 +27,8 @@ sub brik_properties {
          'svn' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(subversion) ],
+         ubuntu => [ qw(subversion) ],
+         debian => [ qw(subversion) ],
       },
    };
 }

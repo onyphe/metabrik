@@ -38,6 +38,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(iputils-ping) ],
+         debian => [ qw(iputils-ping) ],
       },
    };
 }

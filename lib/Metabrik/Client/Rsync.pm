@@ -32,6 +32,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(rsync) ],
+         debian => [ qw(rsync) ],
       },
       require_binaries => {
          rsync => [ ],

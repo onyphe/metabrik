@@ -52,6 +52,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(libssh2-1-dev) ],
+         debian => [ qw(libssh2-1-dev) ],
       },
    };
 }

@@ -45,7 +45,8 @@ sub brik_properties {
          'nmap' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(nmap) ],
+         ubuntu => [ qw(nmap) ],
+         debian => [ qw(nmap) ],
       },
    };
 }

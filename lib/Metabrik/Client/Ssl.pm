@@ -35,6 +35,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(libssl-dev) ],
+         debian => [ qw(libssl-dev) ],
       },
    };
 }

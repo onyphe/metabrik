@@ -25,6 +25,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(adduser) ],
+         debian => [ qw(adduser) ],
       },
    };
 }

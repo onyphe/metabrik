@@ -31,6 +31,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(gphotofs fuse) ],
+         debian => [ qw(gphotofs fuse) ],
       },
    };
 }

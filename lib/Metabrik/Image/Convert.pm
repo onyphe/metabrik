@@ -30,7 +30,8 @@ sub brik_properties {
          'convert' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(imagemagick) ],
+         ubuntu => [ qw(imagemagick) ],
+         debian => [ qw(imagemagick) ],
       },
    };
 }

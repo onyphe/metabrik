@@ -24,6 +24,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(dosfstools) ],
+         debian => [ qw(dosfstools) ],
       },
    };
 }

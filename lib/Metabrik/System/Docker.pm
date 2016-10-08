@@ -53,7 +53,8 @@ sub brik_properties {
          'wget' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(wget) ],
+         ubuntu => [ qw(wget) ],
+         debian => [ qw(wget) ],
       },
    };
 }

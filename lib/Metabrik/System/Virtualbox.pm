@@ -51,6 +51,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(virtualbox) ],
+         debian => [ qw(virtualbox) ],
       },
    };
 }

@@ -51,6 +51,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(syslog-ng) ],
+         debian => [ qw(syslog-ng) ],
       },
    };
 }

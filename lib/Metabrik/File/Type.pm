@@ -27,6 +27,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(libmagic-dev) ],
+         debian => [ qw(libmagic-dev) ],
       },
    };
 }

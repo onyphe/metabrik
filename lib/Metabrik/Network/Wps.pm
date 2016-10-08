@@ -27,7 +27,8 @@ sub brik_properties {
          'reaver', => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(reaver) ],
+         ubuntu => [ qw(reaver) ],
+         debian => [ qw(reaver) ],
       },
    };
 }

@@ -36,7 +36,8 @@ sub brik_properties {
          'tcptraceroute', => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(tcptraceroute) ],
+         ubuntu => [ qw(tcptraceroute) ],
+         debian => [ qw(tcptraceroute) ],
       },
    };
 }

@@ -33,6 +33,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(ffmpeg) ],
+         debian => [ qw(ffmpeg) ],
       },
    };
 }

@@ -53,6 +53,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(procps) ],
+         debian => [ qw(procps) ],
       },
    };
 }

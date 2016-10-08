@@ -43,6 +43,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(build-essential autoconf) ],
+         debian => [ qw(build-essential autoconf) ],
       },
    };
 }

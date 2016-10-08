@@ -51,6 +51,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(coreutils) ],
+         debian => [ qw(coreutils) ],
       },
       require_binaries => {
          sort => [ ],

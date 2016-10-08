@@ -61,7 +61,8 @@ sub brik_properties {
          'mysqladmin' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(libmysqlclient-dev mysql-client) ],
+         ubuntu => [ qw(libmysqlclient-dev mysql-client) ],
+         debian => [ qw(libmysqlclient-dev mysql-client) ],
       },
    };
 }

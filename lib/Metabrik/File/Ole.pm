@@ -36,7 +36,8 @@ sub brik_properties {
          'python' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(python python-pip) ],
+         ubuntu => [ qw(python python-pip) ],
+         debian => [ qw(python python-pip) ],
       },
    };
 }

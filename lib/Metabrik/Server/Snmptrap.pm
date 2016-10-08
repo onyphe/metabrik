@@ -36,7 +36,8 @@ sub brik_properties {
          'Metabrik::Worker::Fork' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(libsnmp-dev) ],
+         ubuntu => [ qw(libsnmp-dev) ],
+         debian => [ qw(libsnmp-dev) ],
       },
    };
 }

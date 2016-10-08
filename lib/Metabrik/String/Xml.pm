@@ -25,6 +25,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(libexpat1-dev libxml2-dev) ],
+         debian => [ qw(libexpat1-dev libxml2-dev) ],
          freebsd => [ qw(expat libxml2) ],
       },
    };

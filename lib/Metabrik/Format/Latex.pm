@@ -40,6 +40,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(texlive texlive-latex-extra texlive-lang-french) ],  # Sorry, the author is French
+         debian => [ qw(texlive texlive-latex-extra texlive-lang-french) ],  # Sorry, the author is French
       },
    };
 }

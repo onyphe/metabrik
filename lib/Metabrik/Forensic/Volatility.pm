@@ -49,7 +49,8 @@ sub brik_properties {
          'volatility' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(volatility) ],
+         ubuntu => [ qw(volatility) ],
+         debian => [ qw(volatility) ],
       },
    };
 }

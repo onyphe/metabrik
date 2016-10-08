@@ -28,6 +28,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(mount) ],
+         debian => [ qw(mount) ],
       },
    };
 }

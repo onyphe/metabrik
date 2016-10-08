@@ -39,6 +39,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(aptitude) ],
+         debian => [ qw(aptitude) ],
       },
    };
 }

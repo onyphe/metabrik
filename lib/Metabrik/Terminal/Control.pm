@@ -29,7 +29,8 @@ sub brik_properties {
          'scriptreplay' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(bsdutils) ],
+         ubuntu => [ qw(bsdutils) ],
+         debian => [ qw(bsdutils) ],
       },
    };
 }

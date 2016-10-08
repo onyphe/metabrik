@@ -38,6 +38,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(python3 python3-pip mongodb redis-server) ],
+         debian => [ qw(python3 python3-pip mongodb redis-server) ],
       },
    };
 }

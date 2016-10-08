@@ -41,6 +41,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(unzip gzip) ],
+         debian => [ qw(unzip gzip) ],
       },
    };
 }

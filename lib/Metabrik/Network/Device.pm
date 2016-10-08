@@ -41,6 +41,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(libpcap-dev libnet-libdnet-perl) ],
+         debian => [ qw(libpcap-dev libnet-libdnet-perl) ],
          freebsd => [ qw(p5-Net-Pcap libdnet) ],
       },
    };

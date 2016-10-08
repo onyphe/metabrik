@@ -37,7 +37,8 @@ sub brik_properties {
          'nikto' => [ ],
       },
       need_packages => {
-         'ubuntu' => [ qw(nikto) ],
+         ubuntu => [ qw(nikto) ],
+         debian => [ qw(nikto) ],
       },
    };
 }
