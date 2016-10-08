@@ -56,6 +56,9 @@ sub search {
 
    my $keywords = join(' ', @args);
 
+   my $si = Metabrik::String::Uri->new_from_brik_init($self) or return;
+   $keywords = $si->encode($keywords) or return;
+
    if ($language eq 'fr' || $language eq 'uk' || $language eq 'de' || $language eq 'ch') {
    }
    else {
