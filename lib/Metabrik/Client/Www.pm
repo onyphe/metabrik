@@ -26,6 +26,7 @@ sub brik_properties {
          timeout => [ qw(0|1) ],
          rtimeout => [ qw(timeout) ],
          add_headers => [ qw(http_headers_hash) ],
+         do_javascript => [ qw(0|1) ],
          _client => [ qw(object|INTERNAL) ],
          _last => [ qw(object|INTERNAL) ],
       },
@@ -35,6 +36,7 @@ sub brik_properties {
          timeout => 0,
          rtimeout => 10,
          add_headers => {},
+         do_javascript => 0,
       },
       commands => {
          install => [ ], # Inherited
@@ -55,10 +57,11 @@ sub brik_properties {
          links => [ ],
          trace_redirect => [ qw(uri|OPTIONAL) ],
          screenshot => [ qw(uri output) ],
-         eval_javascript => [ qw(js uri) ],
+         eval_javascript => [ qw(js) ],
          info => [ qw(uri|OPTIONAL) ],
          mirror => [ qw(url|$url_list output|OPTIONAL datadir|OPTIONAL) ],
          parse => [ qw(html) ],
+         get_last => [ ],
       },
       require_modules => {
          'Progress::Any::Output' => [ ],
@@ -112,7 +115,18 @@ sub create_user_agent {
 
    $ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = 'Net::SSL';
 
-   my $mech = WWW::Mechanize->new(
+   my $mechanize = 'WWW::Mechanize';
+   if ($self->do_javascript) {
+      if ($self->brik_has_module('WWW::Mechanize::PhantomJS')
+      &&  $self->brik_has_binary('phantomjs')) {
+         $mechanize = 'WWW::Mechanize::PhantomJS';
+      }
+      else {
+         return $self->log->error("create_user_agent: module [WWW::Mechanize::PhantomJS] not found, cannot do_javascript");
+      }
+   }
+
+   my $mech = $mechanize->new(
       autocheck => 0,  # Do not throw on error by checking HTTP code. Let us do it.
       timeout => $self->rtimeout,
       ssl_opts => {
@@ -127,7 +141,10 @@ sub create_user_agent {
       $mech->agent($self->user_agent);
    }
    else {
-      $mech->agent_alias('Linux Mozilla');
+      # Some WWW::Mechanize::* modules can't do that
+      if ($mech->can('agent_alias')) {
+         $mech->agent_alias('Linux Mozilla');
+      }
    }
 
    $username ||= $self->username;
@@ -196,7 +213,14 @@ sub _method {
    my %response = ();
    $response{code} = $response->code;
    if (! $self->ignore_content) {
-      $response{content} = $response->decoded_content;
+      if ($self->do_javascript) {
+         # decoded_content method is available in WWW::Mechanize::PhantomJS
+         # but is available in HTTP::Request response otherwise.
+         $response{content} = $client->decoded_content;
+      }
+      else {
+         $response{content} = $response->decoded_content;
+      }
    }
 
    my $headers = $response->headers;
@@ -463,28 +487,22 @@ sub screenshot {
 
 sub eval_javascript {
    my $self = shift;
-   my ($js, $uri) = @_;
+   my ($js) = @_;
 
    $self->brik_help_run_undef_arg('eval_javascript', $js) or return;
-   $self->brik_help_run_undef_arg('eval_javascript', $uri) or return;
 
    # Perl module Wight may also be an option.
 
    if ($self->brik_has_module('WWW::Mechanize::PhantomJS')
    &&  $self->brik_has_binary('phantomjs')) {
-      my $mech = WWW::Mechanize::PhantomJS->new
+      my $mech = WWW::Mechanize::PhantomJS->new(launch_arg => ['ghostdriver/src/main.js'])
          or return $self->log->error("eval_javascript: PhantomJS failed");
-
-      my $get = $mech->get($uri)
-         or return $self->log->error("eval_javascript: get uri [$uri] failed");
-      if (! $get->is_success) {
-         return $self->log->error("eval_javascript: error from GET: [".$get->status_line."]");
-      }
 
       return $mech->eval_in_page($js);
    }
 
-   return $self->log->error("eval_javascript: optional module [WWW::Mechanize::PhantomJS] and optional binary [phantomjs] are not available");
+   return $self->log->error("eval_javascript: optional module [WWW::Mechanize::PhantomJS] ".
+      "and optional binary [phantomjs] are not available");
 }
 
 sub info {
@@ -631,6 +649,12 @@ sub parse {
    $self->brik_help_run_undef_arg('parse', $html) or return;
 
    return HTML::TreeBuilder->new_from_content($html);
+}
+
+sub get_last {
+   my $self = shift;
+
+   return $self->_last;
 }
 
 1;
