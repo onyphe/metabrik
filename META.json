@@ -634,6 +634,9 @@
       "Metabrik::Worker::Parallel" : {
          "file" : "lib/Metabrik/Worker/Parallel.pm"
       },
+      "Metabrik::Www::Google" : {
+         "file" : "lib/Metabrik/Www/Google.pm"
+      },
       "Metabrik::Www::Shorten" : {
          "file" : "lib/Metabrik/Www/Shorten.pm"
       },

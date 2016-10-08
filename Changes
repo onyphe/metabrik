@@ -1,5 +1,8 @@
 Revision history for Perl extension Metabrik::Repository.
 
+1.24.1
+   - new: www::google Brik
+
 1.24.0 Thu  6 Oct 19:12:32 CEST 2016
    - new: system::debian::user Brik
    - new: system::debian::service Brik
