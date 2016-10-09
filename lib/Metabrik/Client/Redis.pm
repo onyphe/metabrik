@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# database::redis Brik
+# client::redis Brik
 #
-package Metabrik::Database::Redis;
+package Metabrik::Client::Redis;
 use strict;
 use warnings;
 
@@ -86,7 +86,7 @@ sub _get_redis {
 #
 # Command list: http://redis.io/commands
 #
-# Or 'run database::redis command command'
+# Or 'run client::redis command command'
 #
 sub command {
    my $self = shift;
@@ -240,7 +240,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Database::Redis - database::redis Brik
+Metabrik::Client::Redis - client::redis Brik
 
 =head1 COPYRIGHT AND LICENSE
 

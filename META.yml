@@ -53,6 +53,8 @@ provides:
     file: lib/Metabrik/Client/Mongodb.pm
   Metabrik::Client::Openssh:
     file: lib/Metabrik/Client/Openssh.pm
+  Metabrik::Client::Redis:
+    file: lib/Metabrik/Client/Redis.pm
   Metabrik::Client::Rest:
     file: lib/Metabrik/Client/Rest.pm
   Metabrik::Client::Rsync:
@@ -95,8 +97,6 @@ provides:
     file: lib/Metabrik/Database/Mysql.pm
   Metabrik::Database::Nvd:
     file: lib/Metabrik/Database/Nvd.pm
-  Metabrik::Database::Redis:
-    file: lib/Metabrik/Database/Redis.pm
   Metabrik::Database::Ripe:
     file: lib/Metabrik/Database/Ripe.pm
   Metabrik::Database::Rir:

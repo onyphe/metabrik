@@ -1,3 +1,8 @@
+20161009
+   AFFECTS: database::redis
+
+   - database::redis Brik renamed to client::redis
+
 20161006
    AFFECTS: system::freebsd::jail
 

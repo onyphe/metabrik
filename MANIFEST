@@ -22,6 +22,7 @@ lib/Metabrik/Client/Elasticsearch.pm
 lib/Metabrik/Client/Elasticsearch/Query.pm
 lib/Metabrik/Client/Mongodb.pm
 lib/Metabrik/Client/Openssh.pm
+lib/Metabrik/Client/Redis.pm
 lib/Metabrik/Client/Rest.pm
 lib/Metabrik/Client/Rsync.pm
 lib/Metabrik/Client/Splunk.pm
@@ -43,7 +44,6 @@ lib/Metabrik/Database/Cwe.pm
 lib/Metabrik/Database/Keystore.pm
 lib/Metabrik/Database/Mysql.pm
 lib/Metabrik/Database/Nvd.pm
-lib/Metabrik/Database/Redis.pm
 lib/Metabrik/Database/Ripe.pm
 lib/Metabrik/Database/Rir.pm
 lib/Metabrik/Database/Sinfp3.pm
