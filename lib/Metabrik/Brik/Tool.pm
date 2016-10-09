@@ -43,9 +43,12 @@ sub brik_properties {
          update => [ ],
          test_repository => [ ],
          view_brik_source => [ qw(Brik) ],
+         get_brik_module_file => [ qw(Brik directory_list|OPTIONAL) ],
+         clone => [ qw(Brik Repository|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::Devel::Mercurial' => [ ],
+         'Metabrik::File::Find' => [ ],
          'Metabrik::File::Text' => [ ],
          'Metabrik::Perl::Module' => [ ],
          'Metabrik::System::File' => [ ],
@@ -709,6 +712,99 @@ sub view_brik_source {
    }
 
    return $self->system($cmd);
+}
+
+sub get_brik_module_file {
+   my $self = shift;
+   my ($brik, $inc) = @_;
+
+   $self->brik_help_run_undef_arg('get_brik_module_file', $brik) or return;
+   my @toks = split('::', $brik);
+   if (@toks < 2 || @toks > 3) {
+      return $self->log->error("get_brik_module_file: invalid Brik format [$brik]");
+   }
+
+   # If directories are not given, we use the default one
+   if (! defined($inc)) {
+      $inc = [ @INC ];
+   }
+
+   my $repository = $self->global->repository;
+
+   my $name = $toks[-1];
+   $name = ucfirst($name);
+   $name .= '\.pm';
+
+   my $file = 'undef';
+   my $ff = Metabrik::File::Find->new_from_brik_init($self) or return;
+   for my $directory (@$inc) {
+      next if ! -d $directory; # Skip if directory does not exists
+
+      my $list = $ff->files($directory, "^$name\$") or return;
+      for my $this (@$list) {
+         my $this_brik = $this;
+         $this_brik =~ s{^$directory/Metabrik/}{};
+         $this_brik =~ s{/}{::}g;
+         $this_brik =~ s{\.pm$}{}g;
+         $this_brik = lc($this_brik);
+         if ($this_brik eq $brik) {
+            $file = $this;
+            last;
+         }
+      }
+
+      if ($file ne 'undef') {
+         last;
+      }
+   }
+
+   return $file;
+}
+
+sub clone {
+   my $self = shift;
+   my ($brik, $repository) = @_;
+
+   $repository ||= $self->global->repository;
+   $self->brik_help_run_undef_arg('clone', $brik) or return;
+
+   my @directories = ();
+   for (@INC) {
+      next if $_ eq $repository;  # Skip local repository
+      push @directories, $_;
+   }
+
+   my $module_file = $self->get_brik_module_file($brik, \@directories) or return;
+   if ($module_file eq 'undef') {
+      $self->log->error("clone: unable to find file name matching Brik [$brik]");
+   }
+
+   $self->log->verbose("clone: found Brik [$brik] to clone from module file [$module_file]");
+
+   my @toks = split('::', $brik);
+   my $file = '';
+   for (@toks) {
+      $_ = ucfirst($_);
+      $file .= "$_/";
+   }
+   $file =~ s{/$}{.pm};
+
+   my $src_file = $module_file;
+   my $dst_file = $repository.'/lib/Metabrik/'.$file;
+   (my $dst_mkdir = $dst_file) =~ s{/[^/]+$}{};
+
+   $self->debug && $self->log->debug("clone: src[$src_file] dst[$dst_file]");
+   $self->debug && $self->log->debug("clone: mkdir[$dst_mkdir]");
+
+   if (-f $dst_file) {
+      return $self->log->error("clone: destination file [$dst_file] already exists");
+   }
+
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   $sf->mkdir($dst_mkdir) or return;
+   $sf->copy($src_file, $dst_file) or return;
+
+   return $dst_file;
 }
 
 1;
