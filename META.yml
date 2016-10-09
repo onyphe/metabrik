@@ -49,6 +49,8 @@ provides:
     file: lib/Metabrik/Client/Elasticsearch.pm
   Metabrik::Client::Elasticsearch::Query:
     file: lib/Metabrik/Client/Elasticsearch/Query.pm
+  Metabrik::Client::Mongodb:
+    file: lib/Metabrik/Client/Mongodb.pm
   Metabrik::Client::Openssh:
     file: lib/Metabrik/Client/Openssh.pm
   Metabrik::Client::Rest:
