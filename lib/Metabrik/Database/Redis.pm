@@ -43,6 +43,8 @@ sub brik_properties {
          hset => [ qw(key $hash) ],
          hget => [ qw(key hash_field) ],
          hgetall => [ qw(key) ],
+         client_list => [ ],
+         client_getname => [ ],
       },
       require_modules => {
          'Redis' => [ ],
@@ -83,6 +85,8 @@ sub _get_redis {
 
 #
 # Command list: http://redis.io/commands
+#
+# Or 'run database::redis command command'
 #
 sub command {
    my $self = shift;
@@ -212,6 +216,22 @@ sub hgetall {
    my %h = @{$r};
 
    return \%h;
+}
+
+sub client_list {
+   my $self = shift;
+
+   my $r = $self->command('client_list') or return;
+
+   return [ split(/\n/, $r) ];
+}
+
+sub client_getname {
+   my $self = shift;
+
+   my $r = $self->command('client_getname') or return;
+
+   return [ split(/\n/, $r) ];
 }
 
 1;
