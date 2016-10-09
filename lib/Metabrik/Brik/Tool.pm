@@ -803,6 +803,9 @@ sub clone {
    my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
    $sf->mkdir($dst_mkdir) or return;
    $sf->copy($src_file, $dst_file) or return;
+   $sf->chmod($dst_file, '644') or return;
+
+   $self->context->update_available or return;
 
    return $dst_file;
 }
