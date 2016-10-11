@@ -28,6 +28,7 @@ sub brik_properties {
          search => [ qw(keywords) ],
       },
       require_modules => {
+         'WWW::Mechanize::PhantomJS' => [ ],
          'Metabrik::String::Html' => [ ],
          'Metabrik::String::Uri' => [ ],
       },

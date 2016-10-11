@@ -23,6 +23,7 @@ sub brik_properties {
          text_prefix => [ qw(0|1) ],
          facility => [ qw(kernel|user|mail|system|security|internal|printer|news|uucp|clock|security2|FTP|NTP|audit|alert|clock2|local0|local1|local2|local3|local4|local5|local6|local7) ],
          name => [ qw(program) ],
+         do_rfc3164 => [ qw(0|1) ],
          _fd => [ qw(INTERNAL) ],
       },
       attributes_default => {
@@ -33,6 +34,7 @@ sub brik_properties {
          port => 514,
          facility => 'local5',
          name => 'metabrik',
+         do_rfc3164 => 0,
       },
       commands => {
          send => [ qw(message priority) ],
@@ -86,6 +88,7 @@ sub send {
    my $port = $self->port;
    my $name = $self->name;
    my $facility = $self->facility;
+   my $rfc3164 = $self->do_rfc3164;
 
    # Priorities can be:
    # emergency, alert, critical, error, warning, notice, informational, debug
@@ -97,6 +100,7 @@ sub send {
       Priority => $priority,
       SyslogHost => $host,
       SyslogPort => $port,
+      rfc3164 => $rfc3164,
    );
    if (! defined($r)) {
       return $self->log->error("send: unable to send message to [$host]:$port");

@@ -20,10 +20,12 @@ sub brik_properties {
          hostname => [ qw(hostname) ],
          process => [ qw(name) ],
          pid => [ qw(id) ],
+         do_rfc3164 => [ qw(0|1) ],
       },
       attributes_default => {
          process => 'metabrik',
-         pid => '0',
+         pid => $$,
+         do_rfc3164 => 0,
       },
       commands => {
          encode => [ qw($data hostname|OPTIONAL process|OPTIONAL pid|OPTIONAL) ],
@@ -70,7 +72,15 @@ sub encode {
       ':'.
       (($time[0] < 10) ? ('0'.$time[0]) : $time[0]);
 
-   return "$timestamp $hostname $process\[$pid\]: $data";
+   my $message = '';
+   if ($self->do_rfc3164) {
+      $message = "$timestamp $hostname $process\[$pid\]: $data";
+   }
+   else {
+      $message = "$process\[$pid\]: $data";
+   }
+
+   return $message;
 }
 
 sub decode {

@@ -639,12 +639,7 @@ sub update_repository {
    $pm->clean($repository) or return;
    $pm->build($repository) or return;
    $pm->test($repository) or return;
-
-   # If we define the core::global repository Attribute, we use that as 
-   # a local repository. We will not install Metabrik::Repository in that case.
-   if (! defined($self->global->repository)) {
-      $pm->install($repository) or return;
-   }
+   $pm->install($repository) or return;
 
    $self->execute("cat $repository/UPDATING");
 

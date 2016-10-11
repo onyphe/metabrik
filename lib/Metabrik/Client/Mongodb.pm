@@ -40,6 +40,11 @@ sub brik_properties {
    };
 }
 
+#
+# Some search examples:
+# https://metacpan.org/pod/distribution/MongoDB/lib/MongoDB/Examples.pod
+#
+
 sub connect {
    my $self = shift;
    my ($host, $port) = @_;
