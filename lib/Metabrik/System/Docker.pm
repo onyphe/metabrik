@@ -44,6 +44,7 @@ sub brik_properties {
          login => [ qw(email|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
          push => [ qw(name) ],
          tag => [ qw(id tag) ],
+         pull => [ qw(name) ],
       },
       # Have to be optional because of install Command
       optional_binaries => {
@@ -271,6 +272,17 @@ sub tag {
    $self->brik_help_run_undef_arg('tag', $tag) or return;
 
    my $cmd = "docker tag $id $tag";
+
+   return $self->SUPER::execute($cmd);
+}
+
+sub pull {
+   my $self = shift;
+   my ($name) = @_;
+
+   $self->brik_help_run_undef_arg('pull', $name) or return;
+
+   my $cmd = "docker pull $name";
 
    return $self->SUPER::execute($cmd);
 }
