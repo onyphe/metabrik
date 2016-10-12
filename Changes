@@ -1,5 +1,9 @@
 Revision history for Perl extension Metabrik::Repository.
 
+1.25.1
+   - new: binjitsu::checksec Brik
+   - new: binjitsu::pattern Brik ( \o/ first contributed Brik by ZadYree, thanks to him)
+
 1.25.0 Tue 11 Oct 19:06:20 CEST 2016
    - new: www::google Brik
    - new: client::mongodb Brik

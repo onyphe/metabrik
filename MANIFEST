@@ -17,6 +17,8 @@ lib/Metabrik/Audit/Smtp.pm
 lib/Metabrik/Audit/Twiki.pm
 lib/Metabrik/Brik/Search.pm
 lib/Metabrik/Brik/Tool.pm
+lib/Metabrik/Binjitsu/Checksec.pm
+lib/Metabrik/Binjitsu/Pattern.pm
 lib/Metabrik/Client/Dns.pm
 lib/Metabrik/Client/Elasticsearch.pm
 lib/Metabrik/Client/Elasticsearch/Query.pm
@@ -221,7 +223,7 @@ t/03-use-briks-audit.t
 t/04-use-briks-convert.t
 t/05-use-briks-crypto.t
 t/06-use-briks-database.t
-t/07-use-briks-encoding.t
+t/07-use-briks-binjitsu.t
 t/08-use-briks-forensic.t
 t/09-use-briks-file.t
 t/10-use-briks-http.t

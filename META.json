@@ -72,6 +72,12 @@
       "Metabrik::Audit::Twiki" : {
          "file" : "lib/Metabrik/Audit/Twiki.pm"
       },
+      "Metabrik::Binjitsu::Checksec" : {
+         "file" : "lib/Metabrik/Binjitsu/Checksec.pm"
+      },
+      "Metabrik::Binjitsu::Pattern" : {
+         "file" : "lib/Metabrik/Binjitsu/Pattern.pm"
+      },
       "Metabrik::Brik::Search" : {
          "file" : "lib/Metabrik/Brik/Search.pm"
       },
