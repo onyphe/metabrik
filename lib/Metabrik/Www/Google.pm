@@ -132,7 +132,7 @@ sub _traverse {
          my $tag = $this->tag;
          if ($tag eq 'a') {
             my $h = $self->_href_to_hash($this);
-            if ($h) {
+            if ($h && keys %$h > 0) {
                #print Data::Dumper::Dumper($h)."\n";
                push @results, $h;
             }
@@ -153,6 +153,7 @@ sub _href_to_hash {
    my ($element) = @_;
 
    # /url?q=http://www.justanswer.com/military-law/5ps6l-read-gomor-submitted-rebuttal-go-will.html&sa=U&ved=0ahUKEwi_hP_LgJTPAhVEWRoKHdlaDKQQFghHMAk&usg=AFQjCNGs50hYJHY-aJ6yxYeiP0p5Qd52-A
+   my $is_incomplete = 0;
    my $title = '';
    my $url = '';
    my $href = $element->{href};
@@ -163,8 +164,13 @@ sub _href_to_hash {
       my @list = @{$element->content};
       for (@list) {
          if (ref($_) eq 'HTML::Element') {
-            my $txt = join(' ', @{$_->content});
-            $title .= $txt;
+            if (defined($_->content)) {
+               my $txt = join(' ', @{$_->content});
+               $title .= $txt;
+            }
+            else {
+               return {};
+            }
          }
          else {
             $title .= $_;
