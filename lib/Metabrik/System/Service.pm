@@ -27,6 +27,7 @@ sub brik_properties {
       },
       require_modules => {
          'Metabrik::System::Os' => [ ],
+         'Metabrik::System::Debian::Service' => [ ],
          'Metabrik::System::Ubuntu::Service' => [ ],
       },
       require_binaries => {
@@ -43,6 +44,9 @@ sub get_system_service {
    my $ss;
    if ($os eq 'ubuntu') {
       $ss = Metabrik::System::Ubuntu::Service->new_from_brik_init($self) or return;
+   }
+   elsif ($os eq 'debian') {
+      $ss = Metabrik::System::Debian::Service->new_from_brik_init($self) or return;
    }
    else {
       $ss = $self;

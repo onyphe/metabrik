@@ -387,6 +387,17 @@ sub install {
    $self->install_needed_packages($brik) or return;
    $self->install_required_modules($brik) or return;
 
+   my $module = 'Metabrik';
+   my @toks = split(/::/, $brik);
+   for (@toks) {
+      $module .= '::'.ucfirst($_);
+   }
+
+   my $new = $module->new_from_brik_init($self) or return;
+   if ($new->can('install')) {
+      $new->install or return;
+   }
+
    return 1;
 }
 

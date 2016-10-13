@@ -24,6 +24,7 @@ sub brik_properties {
          upgrade => [ qw(version|OPTIONAL) ],
          is_os => [ qw(os) ],
          is_os_ubuntu => [ ],
+         is_os_debian => [ ],
          is_os_freebsd => [ ],
          is_installed => [ qw(package|$package_list) ],
          my_os => [ ],
@@ -34,6 +35,7 @@ sub brik_properties {
       require_modules => {
          'Metabrik::System::Os' => [ ],
          'Metabrik::System::Ubuntu::Package' => [ ],
+         'Metabrik::System::Debian::Package' => [ ],
          'Metabrik::System::Freebsd::Package' => [ ],
       },
    };
@@ -48,11 +50,14 @@ sub get_system_package {
    if ($os eq 'ubuntu') {
       $sp = Metabrik::System::Ubuntu::Package->new_from_brik_init($self) or return;
    }
+   elsif ($os eq 'debian') {
+      $sp = Metabrik::System::Debian::Package->new_from_brik_init($self) or return;
+   }
    elsif ($os eq 'freebsd') {
       $sp = Metabrik::System::Freebsd::Package->new_from_brik_init($self) or return;
    }
    else {
-      return $self->log->error("get_system_package: cannot determine package system for OS [os]");
+      return $self->log->error("get_system_package: cannot determine package system for OS [$os]");
    }
 
    return $sp;
@@ -160,6 +165,12 @@ sub is_os_ubuntu {
    my $self = shift;
 
    return $self->is_os('ubuntu');
+}
+
+sub is_os_debian {
+   my $self = shift;
+
+   return $self->is_os('debian');
 }
 
 sub is_os_freebsd {
