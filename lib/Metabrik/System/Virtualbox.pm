@@ -40,6 +40,9 @@ sub brik_properties {
          dumpvmcore => [ qw(name file.elf) ],
          extract_memdump_from_dumpguestcore => [ qw(input output) ],
          restart => [ qw(name type|OPTIONAL) ],
+         info => [ qw(name) ],
+         is_started => [ qw(name) ],
+         is_stopped => [ qw(name) ],
       },
       require_modules => {
          'Metabrik::File::Raw' => [ ],
@@ -266,6 +269,60 @@ sub restart {
    $self->stop($name) or return;
    sleep(2);
    return $self->start($name, $type);
+}
+
+sub info {
+   my $self = shift;
+   my ($name) = @_;
+
+   $self->brik_help_run_undef_arg('info', $name) or return;
+
+   my $lines = $self->command("showvminfo \"$name\"") or return;
+
+   my $info = {};
+   if (@$lines > 0) {
+      for my $line (@$lines) {
+         my @t = split(/:/, $line, 2);
+         my $k = $t[0];
+         my $v = $t[1];
+         $k =~ s{^\s*}{};
+         $k =~ s{\s*$}{};
+         $v =~ s{^\s*}{};
+         $v =~ s{\s*$}{};
+         if (length($k) && length($v)) {
+            $k =~ s{ }{_}g;
+            $k =~ s{(\(|\))}{}g;
+            $info->{lc($k)} = $v;
+         }
+      }
+   }
+
+   return $info;
+
+}
+
+sub is_started {
+   my $self = shift;
+   my ($name) = @_;
+
+   $self->brik_help_run_undef_arg('is_started', $name) or return;
+
+   my $info = $self->info($name) or return;
+   my $state = $info->{state} || 'undef';
+   if ($state !~ m{powered off}) {
+      return 1;
+   }
+
+   return 0;
+}
+
+sub is_stopped {
+   my $self = shift;
+   my ($name) = @_;
+
+   $self->brik_help_run_undef_arg('is_stopped', $name) or return;
+
+   return ! $self->is_started($name);
 }
 
 1;

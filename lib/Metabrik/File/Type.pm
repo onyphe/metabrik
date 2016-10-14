@@ -17,10 +17,11 @@ sub brik_properties {
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
          install => [ ], # Inherited
-         get_mime_type => [ qw(file) ],
-         get_magic_type => [ qw(file) ],
-         is_mime_type => [ qw(file mime_type) ],
-         is_magic_type => [ qw(file mime_type) ],
+         get_mime_type => [ qw(file|file_list) ],
+         get_magic_type => [ qw(file|file_list) ],
+         is_mime_type => [ qw(file|file_list mime_type) ],
+         is_magic_type => [ qw(file|file_list mime_type) ],
+         get_types => [ qw(file|file_list) ],
       },
       require_modules => {
          'File::LibMagic' => [ ],
@@ -146,6 +147,23 @@ sub is_magic_type {
    }
 
    return $ref eq 'ARRAY' ? $types : $types->{$files};
+}
+
+sub get_types {
+   my $self = shift;
+   my ($files) = @_;
+
+   $self->brik_help_run_undef_arg('get_types', $files) or return;
+   my $ref = $self->brik_help_run_invalid_arg('get_types', $files, 'ARRAY', 'SCALAR')
+      or return;
+
+   my $mime = $self->get_mime_type($files) or return;
+   my $magic = $self->get_magic_type($files) or return;
+
+   return {
+      mime => $mime,
+      magic => $magic,
+   };
 }
 
 1;

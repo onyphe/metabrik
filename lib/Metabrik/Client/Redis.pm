@@ -31,6 +31,7 @@ sub brik_properties {
          status => [ ], # Inherited
          connect => [ ],
          command => [ qw(command $arg1 $arg2 ... $argN) ],
+         command_as_list => [ qw(command $arg1 $arg2 ... $argN) ],
          time => [ ],
          disconnect => [ ],
          quit => [ ],  # Same as disconnect
@@ -45,6 +46,8 @@ sub brik_properties {
          hgetall => [ qw(key) ],
          client_list => [ ],
          client_getname => [ ],
+         list_databases => [ qw(database) ],
+         list_keys => [ qw(database keys|OPTIONAL) ],
       },
       require_modules => {
          'Redis' => [ ],
@@ -100,6 +103,23 @@ sub command {
    }
 
    return $r;
+}
+
+#
+# Dump content from db10:
+#
+# run client::redis command select 10
+# run client::redis command_as_list keys *
+#
+sub command_as_list {
+   my $self = shift;
+   my ($cmd, @args) = @_;
+
+   my $redis = $self->_get_redis or return;
+
+   my @r = $redis->$cmd(@args);
+
+   return \@r;
 }
 
 sub time {
@@ -232,6 +252,27 @@ sub client_getname {
    my $r = $self->command('client_getname') or return;
 
    return [ split(/\n/, $r) ];
+}
+
+sub list_databases {
+   my $self = shift;
+
+   return $self->command('info', 'keyspace');
+}
+
+sub list_keys {
+   my $self = shift;
+   my ($database, $keys) = @_;
+
+   $keys ||= '*';
+   $self->brik_help_run_undef_arg('list_keys', $database) or return;
+
+   my $r = $self->command('select', $database) or return;
+   $self->log->info("list_keys: $r");
+
+   my @r = $self->command_as_list('keys', $keys) or return;
+
+   return \@r;
 }
 
 1;

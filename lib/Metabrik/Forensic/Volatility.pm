@@ -138,7 +138,50 @@ sub pslist {
 
    my $cmd = "volatility --profile $profile pslist -v -f $file";
 
-   return $self->execute($cmd);
+   $self->capture_stderr(0);
+   my $lines = $self->execute($cmd) or return;
+   $self->capture_stderr(1);
+
+   # Offset(V)|Name|PID|PPID|Thds|Hnds|Sess|Wow64|Start                          Exit
+   my $skip = 3;
+   my @info = ();
+   for my $line (@$lines) {
+      if ($skip != 0) {
+         $skip--;
+         next;
+      }
+      my @t = split(/\s+/, $line, 9);
+      my $offset = $t[0];
+      my $name = $t[1];
+      my $pid = $t[2];
+      my $ppid = $t[3];
+      my $thds = $t[4];
+      my $hhds = $t[5];
+      my $sess = $t[6];
+      my $wow64 = $t[7];
+      my $start_exit = $t[8];
+
+      # "2016-06-04 16:23:13 UTC+0000"
+      # "2016-06-04 16:26:04 UTC+0000   2016-06-04 16:26:06 UTC+0000"
+      $start_exit =~ s{\s*$}{};
+      my ($start, $exit) = $start_exit =~ m{^(\S+ \S+ \S+)(?:\s+(\S+ \S+ \S+))?$};
+
+      push @info, {
+         offset => $offset,
+         name => $name,
+         pid => $pid,
+         ppid => $ppid,
+         thds => $thds,
+         hhds => $hhds,
+         sess => $sess,
+         wow64 => $wow64,
+         start => $start,
+         exit => $exit,
+         #start_exit => $start_exit,
+      };
+   }
+
+   return \@info;
 }
 
 sub netscan {
