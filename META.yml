@@ -291,10 +291,16 @@ provides:
     file: lib/Metabrik/Proxy/Http.pm
   Metabrik::Proxy::Ssh2tcp:
     file: lib/Metabrik/Proxy/Ssh2tcp.pm
+  Metabrik::Remote::Msoffice:
+    file: lib/Metabrik/Remote/Msoffice.pm
   Metabrik::Remote::Ssh:
     file: lib/Metabrik/Remote/Ssh.pm
   Metabrik::Remote::Tcpdump:
     file: lib/Metabrik/Remote/Tcpdump.pm
+  Metabrik::Remote::Windiff:
+    file: lib/Metabrik/Remote/Windiff.pm
+  Metabrik::Remote::Windows:
+    file: lib/Metabrik/Remote/Windows.pm
   Metabrik::Remote::Winexe:
     file: lib/Metabrik/Remote/Winexe.pm
   Metabrik::Remote::Wmi:

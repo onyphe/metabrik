@@ -15,10 +15,10 @@ lib/Metabrik/Audit/Elasticsearch.pm
 lib/Metabrik/Audit/Https.pm
 lib/Metabrik/Audit/Smtp.pm
 lib/Metabrik/Audit/Twiki.pm
-lib/Metabrik/Brik/Search.pm
-lib/Metabrik/Brik/Tool.pm
 lib/Metabrik/Binjitsu/Checksec.pm
 lib/Metabrik/Binjitsu/Pattern.pm
+lib/Metabrik/Brik/Search.pm
+lib/Metabrik/Brik/Tool.pm
 lib/Metabrik/Client/Dns.pm
 lib/Metabrik/Client/Elasticsearch.pm
 lib/Metabrik/Client/Elasticsearch/Query.pm
@@ -141,8 +141,11 @@ lib/Metabrik/Network/Zmap.pm
 lib/Metabrik/Perl/Module.pm
 lib/Metabrik/Proxy/Http.pm
 lib/Metabrik/Proxy/Ssh2tcp.pm
+lib/Metabrik/Remote/Msoffice.pm
 lib/Metabrik/Remote/Ssh.pm
 lib/Metabrik/Remote/Tcpdump.pm
+lib/Metabrik/Remote/Windiff.pm
+lib/Metabrik/Remote/Windows.pm
 lib/Metabrik/Remote/Winexe.pm
 lib/Metabrik/Remote/Wmi.pm
 lib/Metabrik/Repository.pm

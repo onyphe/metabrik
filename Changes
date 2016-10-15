@@ -4,6 +4,9 @@ Revision history for Perl extension Metabrik::Repository.
    - new: binjitsu::checksec Brik
    - new: binjitsu::pattern Brik ( \o/ first contributed Brik by ZadYree, thanks to him)
    - new: client::smbclient Brik
+   - new: remote::msoffice Brik
+   - new: remote::winwdows Brik
+   - new: remote::windiff Brik
 
 1.25.0 Tue 11 Oct 19:06:20 CEST 2016
    - new: www::google Brik

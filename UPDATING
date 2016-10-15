@@ -1,3 +1,9 @@
+20161015
+   AFFECTS: forensic::volatility, system::virtualbox
+
+   - forensic::volatility pslist, netscan, hivelist Commands to return a parsed ARRAY of HASHes 
+   - system::virtualbox snapshot_list Command to return a parsed ARRAY of HASHes
+
 20161009
    AFFECTS: database::redis
 
