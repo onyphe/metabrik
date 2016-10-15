@@ -26,6 +26,7 @@ sub brik_properties {
       commands => {
          install => [ ], # Inherited
          execute => [ qw(command host|OPTIONAL user|OPTIONAL password|OPTIONAL) ],
+         execute_in_background => [ qw(command host|OPTIONAL user|OPTIONAL password|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::System::File' => [ ],
@@ -126,7 +127,26 @@ sub execute {
    $self->brik_help_run_undef_arg('execute', $user) or return;
    $self->brik_help_run_undef_arg('execute', $password) or return;
 
-   my $cmd = "winexe -U$user".'%'."$password //$host \"$command\"";
+   # Do not put $command between quotes, let user do it.
+   my $cmd = "winexe -U$user".'%'."$password //$host $command";
+
+   return $self->SUPER::execute($cmd);
+}
+
+sub execute_in_background {
+   my $self = shift;
+   my ($command, $host, $user, $password) = @_;
+
+   $host ||= $self->host;
+   $user ||= $self->user;
+   $password ||= $self->password;
+   $self->brik_help_run_undef_arg('execute_in_background', $command) or return;
+   $self->brik_help_run_undef_arg('execute_in_background', $host) or return;
+   $self->brik_help_run_undef_arg('execute_in_background', $user) or return;
+   $self->brik_help_run_undef_arg('execute_in_background', $password) or return;
+
+   # Do not put $command between quotes, let user do it.
+   my $cmd = "winexe -U$user".'%'."$password //$host $command &";
 
    return $self->SUPER::execute($cmd);
 }

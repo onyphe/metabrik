@@ -18,7 +18,7 @@ sub brik_properties {
       attributes => {
          datadir => [ qw(datadir) ],
          domain => [ qw(domain) ],
-         username => [ qw(username) ],
+         user => [ qw(username) ],
          password => [ qw(password) ],
          host => [ qw(host) ],
          share => [ qw(path) ],
@@ -26,7 +26,7 @@ sub brik_properties {
       },
       attributes_default => {
          domain => 'WORKGROUP',
-         username => 'Administrator',
+         user => 'Administrator',
          host => '127.0.0.1',
          share => 'c$',
          remote_path => '\\windows\\temp',
@@ -34,6 +34,7 @@ sub brik_properties {
       commands => {
          install => [ ],  # Inherited
          upload => [ qw(file|file_list share|OPTIONAL) ],
+         download => [ qw(file|file_list share|OPTIONAL) ],
       },
       require_modules => {
       },
@@ -61,7 +62,7 @@ sub upload {
       or return;
 
    my $domain = $self->domain;
-   my $username = $self->username;
+   my $username = $self->user;
    my $password = $self->password;
    my $host = $self->host;
    my $remote_path = $self->remote_path;
@@ -96,6 +97,52 @@ sub upload {
    }
 
    return $self->log->error("upload: unhandled exception");
+}
+
+sub download {
+   my $self = shift;
+   my ($files, $share) = @_;
+
+   $share ||= $self->share;
+   $self->brik_help_run_undef_arg('download', $files) or return;
+   my $ref = $self->brik_help_run_invalid_arg('download', $files, 'ARRAY', 'SCALAR')
+      or return;
+
+   my $domain = $self->domain;
+   my $username = $self->user;
+   my $password = $self->password;
+   my $host = $self->host;
+   $self->brik_help_set_undef_arg('download', $domain) or return;
+   $self->brik_help_set_undef_arg('download', $username) or return;
+   $self->brik_help_set_undef_arg('download', $password) or return;
+   $self->brik_help_set_undef_arg('download', $host) or return;
+
+   if ($ref eq 'ARRAY') {
+      my @files = ();
+      for my $file (@$files) {
+         my $this = $self->download($file, $share) or next;
+         push @files, $this;
+      }
+
+      return \@files;
+   }
+   else {
+      my ($output) = $files =~ m{\\([^\\]+)$};
+      my $cmd = "smbclient -U $domain/$username%$password //$host/$share -c ".
+         "'get \\$files $output'";
+
+      (my $cmd_hidden = $cmd) =~ s{$password}{XXX};
+      $self->log->verbose("download: cmd[$cmd_hidden]");
+
+      my $level = $self->log->level;
+      $self->log->level(0);
+      $self->system($cmd) or return;
+      $self->log->level($level);
+
+      return $output;
+   }
+
+   return $self->log->error("download: unhandled exception");
 }
 
 1;

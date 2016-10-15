@@ -20,12 +20,16 @@ sub brik_properties {
          separator => [ qw(character) ],
          header => [ qw($column_header_list) ],
          encoding => [ qw(utf8|ascii) ],
+         escape => [ qw(character) ],
+         quote => [ qw(character) ],
       },
       attributes_default => {
          first_line_is_header => 0,
          header => [ ],
          separator => ';',
          encoding => 'utf8',
+         escape => '"',
+         quote => '"',
       },
       commands => {
          encode => [ qw($data) ],
@@ -76,6 +80,12 @@ sub encode {
          $fields[$order{$key}] = $this->{$key};
       }
 
+      for (@fields) {
+         if (! defined($_)) {
+            $_ = '';
+         }
+      }
+
       my $string = join($self->separator, @fields)."\n";
       print $fd $string;
    }
@@ -100,6 +110,8 @@ sub decode {
       sep_char => $self->separator,
       allow_loose_quotes => 1,
       allow_loose_escapes => 1,
+      escape_char => $self->escape,
+      quote_char => $self->quote,
    }) or return $self->log->error("decode: Text::CSV_XS new failed");
 
    my $fd = IO::Scalar->new(\$data);
@@ -132,7 +144,7 @@ sub decode {
 
    if (! $csv->eof) {
       my $error_str = "".$csv->error_diag();
-      $self->log->error("read: incomplete: error [$error_str]");
+      $self->log->error("decode: incomplete: error [$error_str]");
       return \@rows;
    }
 

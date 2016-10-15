@@ -20,7 +20,7 @@ sub brik_properties {
          username => [ qw(username) ],  # Inherited
          password => [ qw(password) ],  # Inherited
          ssl_verify => [ qw(0|1) ], # Inherited
-         output_mode => [ qw(json|xml) ],
+         output_mode => [ qw(json|xml|csv) ],
          count => [ qw(number) ],
          offset => [ qw(number) ],
       },
@@ -28,7 +28,7 @@ sub brik_properties {
          uri => 'https://localhost:8089',
          username => 'admin',
          ssl_verify => 0,
-         output_mode => 'xml',
+         output_mode => 'json',
          count => 1000,
          offset => 0,
       },
@@ -36,9 +36,6 @@ sub brik_properties {
          search => [ qw(string) ],
          is_job_done => [ qw(sid) ],
          get_results => [ qw(sid) ],
-      },
-      require_modules => {
-         'Metabrik::String::Csv' => [ ],
       },
    };
 }
@@ -51,14 +48,12 @@ sub search {
    my $self = shift;
    my ($search) = @_;
 
-   my $uri = $self->uri;
-   $self->brik_help_set_undef_arg('uri', $uri) or return;
    $self->brik_help_run_undef_arg('search', $search) or return;
 
    my $r = $self->search_jobs({ search => "search $search" }) or return;
 
    if (! exists($r->{sid})) {
-      return $self->log->error("search_jobs: sid not found in response");
+      return $self->log->error("search: sid not found in response");
    }
 
    return $r->{sid};
@@ -68,8 +63,6 @@ sub is_job_done {
    my $self = shift;
    my ($sid) = @_;
 
-   my $uri = $self->uri;
-   $self->brik_help_set_undef_arg('uri', $uri) or return;
    $self->brik_help_run_undef_arg('is_job_done', $sid) or return;
 
    my $r = $self->search_jobs_sid($sid);
@@ -96,11 +89,16 @@ sub get_results {
    my $self = shift;
    my ($sid, $count, $offset) = @_;
 
-   my $uri = $self->uri;
    $count ||= $self->count;
    $offset ||= $self->offset;
-   $self->brik_help_set_undef_arg('uri', $uri) or return;
    $self->brik_help_run_undef_arg('get_results', $sid) or return;
+
+   my $output_mode = $self->output_mode;
+   if ($output_mode ne 'xml'
+   &&  $output_mode ne 'json'
+   &&  $output_mode ne 'csv') {
+      return $self->log->error("get_results: output_mode not supported [$output_mode]");
+   }
 
    my $r = $self->search_jobs_sid_results($sid, $count, $offset);
    if (! defined($r)) {
@@ -112,12 +110,7 @@ sub get_results {
       return [];
    }
 
-   my $sc = Metabrik::String::Csv->new_from_brik_init($self) or return;
-   $sc->encoding('ascii');
-   $sc->separator(',');
-   $sc->first_line_is_header(1);
-
-   return $sc->decode($r);
+   return $r;
 }
 
 1;

@@ -37,18 +37,20 @@ sub brik_properties {
          snapshot_delete => [ qw(name snapshot_name) ],
          snapshot_restore => [ qw(name snapshot_name) ],
          screenshot => [ qw(name output.png|OPTIONAL) ],
-         dumpguestcore => [ qw(name file.elf) ],
-         dumpvmcore => [ qw(name file.elf) ],
-         extract_memdump_from_dumpguestcore => [ qw(input output) ],
+         dumpguestcore => [ qw(name output.elf|OPTIONAL) ],
+         dumpvmcore => [ qw(name output.elf|OPTIONAL) ],
+         extract_memdump_from_dumpguestcore => [ qw(input output.vol|OPTIONAL) ],
          restart => [ qw(name type|OPTIONAL) ],
          info => [ qw(name) ],
          is_started => [ qw(name) ],
          is_stopped => [ qw(name) ],
+         get_current_snapshot_id => [ qw(name) ],
       },
       require_modules => {
          'Metabrik::File::Raw' => [ ],
          'Metabrik::File::Read' => [ ],
          'Metabrik::File::Readelf' => [ ],
+         'Metabrik::System::File' => [ ],
       },
       require_binaries => {
          vboxmanage => [ ],
@@ -131,7 +133,28 @@ sub snapshot_list {
 
    $self->brik_help_run_undef_arg('snapshot_list', $name) or return;
 
-   return $self->command("snapshot \"$name\" list");
+   my $lines = $self->command("snapshot \"$name\" list");
+
+   my @list = ();
+   for my $line (@$lines) {
+      if ($line =~ m{^\s*Name:}) {
+         my ($descr, $id) = $line =~ m{^\s*Name:\s+([^\(]+)\(UUID:\s+([^\)]+)\)};
+         if (defined($descr) && defined($id)) {
+            my $current = 0;
+            if ($line =~ m{\*$}) {
+               $current = 1;
+            }
+            $descr =~ s{\s*$}{};
+            push @list, {
+               name => $descr,
+               uuid => $id,
+               current => $current,
+            };
+         }
+      }
+   }
+
+   return \@list;
 }
 
 sub snapshot_live {
@@ -182,14 +205,19 @@ sub screenshot {
 #
 sub dumpguestcore {
    my $self = shift;
-   my ($name, $file) = @_;
+   my ($name, $output) = @_;
 
+   $output ||= $self->datadir.'/output.elf';
    $self->brik_help_run_undef_arg('dumpguestcore', $name) or return;
-   $self->brik_help_run_undef_arg('dumpguestcore', $file) or return;
 
-   $self->command("debugvm \"$name\" dumpguestcore --filename \"$file\"") or return;
+   if (-f $output) {
+      my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+      $sf->remove($output) or return;
+   }
 
-   return $file;
+   $self->command("debugvm \"$name\" dumpguestcore --filename \"$output\"") or return;
+
+   return $output;
 }
 
 #
@@ -198,14 +226,19 @@ sub dumpguestcore {
 #
 sub dumpvmcore {
    my $self = shift;
-   my ($name, $file) = @_;
+   my ($name, $output) = @_;
 
+   $output ||= $self->datadir.'/output.elf';
    $self->brik_help_run_undef_arg('dumpvmcore', $name) or return;
-   $self->brik_help_run_undef_arg('dumpvmcore', $file) or return;
 
-   $self->command("debugvm \"$name\" dumpvmcore --filename \"$file\"") or return;
+   if (-f $output) {
+      my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+      $sf->remove($output) or return;
+   }
 
-   return $file;
+   $self->command("debugvm \"$name\" dumpvmcore --filename \"$output\"") or return;
+
+   return $output;
 }
 
 #
@@ -216,8 +249,8 @@ sub extract_memdump_from_dumpguestcore {
    my $self = shift;
    my ($input, $output) = @_;
 
+   $output ||= $self->datadir.'/output.vol';
    $self->brik_help_run_undef_arg('extract_memdump_from_dumpguestcore', $input) or return;
-   $self->brik_help_run_undef_arg('extract_memdump_from_dumpguestcore', $output) or return;
 
    my $fraw = Metabrik::File::Raw->new_from_brik_init($self) or return;
    my $fread = Metabrik::File::Read->new_from_brik_init($self) or return;
@@ -333,6 +366,23 @@ sub is_stopped {
    $self->brik_help_run_undef_arg('is_stopped', $name) or return;
 
    return ! $self->is_started($name);
+}
+
+sub get_current_snapshot_id {
+   my $self = shift;
+   my ($name) = @_;
+
+   $self->brik_help_run_undef_arg('get_current_snapshot_id', $name) or return;
+
+   my $list = $self->snapshot_list($name) or return;
+
+   for my $this (@$list) {
+      if ($this->{current}) {
+         return $this->{uuid};
+      }
+   }
+
+   return 0;
 }
 
 1;

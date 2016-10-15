@@ -43,6 +43,7 @@ sub brik_properties {
          set_output_resolution => [ qw(resolution) ], # Alias to set_first_output_resolution
          clone_first_to => [ qw(secondary_output) ],
          dual_first_right_of => [ qw(secondary_output) ],
+         clone => [ qw(resolution) ],
       },
       require_binaries => {
          xrandr => [ ],
@@ -442,6 +443,46 @@ sub dual_first_right_of {
    $self->log->verbose("dual_first_right_of: [$cmd]");
 
    return $self->capture($cmd);
+}
+
+sub clone {
+   my $self = shift;
+   my ($resolution) = @_;
+
+   $self->brik_help_run_undef_arg('clone', $resolution) or return;
+
+   my $list1 = $self->list_first_output_resolutions or return;
+   my $ok = 0;
+   for (@$list1) {
+      if ($_ eq $resolution) {
+         $ok = 1;
+         last;
+      }
+   }
+   if (! $ok) {
+      return $self->log->error("clone: first output does not support ".
+         "resolution [$resolution]");
+   }
+
+   $self->set_first_output_resolution($resolution) or return;
+
+   my $second = $self->get_secondary_output or return;
+   my $list2 = $self->list_secondary_output_resolutions or return;
+   $ok = 0;
+   for (@$list2) {
+      if ($_ eq $resolution) {
+         $ok = 1;
+         last;
+      }
+   }
+   if (! $ok) {
+      return $self->log->error("clone: secondary output does not support ".
+         "resolution [$resolution]");
+   }
+
+   $self->set_secondary_output_resolution($resolution) or return;
+
+   return $self->clone_first_to($second);
 }
 
 1;

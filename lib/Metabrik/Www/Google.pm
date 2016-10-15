@@ -18,11 +18,13 @@ sub brik_properties {
       attributes => {
          language => [ qw(fr|uk|de|ch) ],
          page => [ qw(number) ],
+         filter => [ qw(0|1) ],
       },
       attributes_default => {
          language => 'fr',
          page => 1,
          do_javascript => 1,
+         filter => 0,
       },
       commands => {
          search => [ qw(keywords) ],
@@ -54,6 +56,7 @@ sub search {
 
    my $language = $self->language;
    my $page = $self->page;
+   my $filter = $self->filter;
 
    my $keywords = join(' ', @args);
 
@@ -84,7 +87,7 @@ sub search {
       $start = 0;
    }
    $start *= 10;
-   my $search = $url.$keywords.'&start='.$start;
+   my $search = $url.$keywords.'&start='.$start.'&filter='.$filter;
 
    $self->log->verbose("search: [$search]");
 

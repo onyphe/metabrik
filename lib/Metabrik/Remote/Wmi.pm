@@ -128,12 +128,16 @@ sub request {
    my $cmd = "wmic -U$user".'%'."$password //$host \"$query\"";
 
    my $r = $self->SUPER::execute($cmd) or return;
+   #return $r;
    if (@$r > 1) {
       # First line is useless for us. Example: "CLASS: Win32_OperatingSystem"
       shift @$r;
       my $sp = Metabrik::String::Psv->new_from_brik_init($self) or return;
       $sp->first_line_is_header(1);
-      return $sp->decode(join("\n", @$r));
+      # Need to desactivate double-quote parsing we may find in a process name
+      $sp->quote("'");
+      my $data = join("\n", @$r);
+      return $sp->decode($data);
    }
 
    return $r;

@@ -195,7 +195,70 @@ sub netscan {
 
    my $cmd = "volatility --profile $profile netscan -v -f $file";
 
-   return $self->execute($cmd);
+   $self->capture_stderr(0);
+   my $lines = $self->execute($cmd) or return;
+   $self->capture_stderr(1);
+
+   # "Offset(P)   Proto   Local Address   Foreign Address    State     Pid   Owner     Created",
+   my $skip = 1;
+   my @info = ();
+   my @raw = ();
+   for my $line (@$lines) {
+      if ($skip != 0) {
+         $skip--;
+         next;
+      }
+
+# "0x41b9520  TCPv6  -:0   7808:2401:80fa:ffff:7808:2401:80fa:ffff:0 CLOSED 1820  avgmfapx.exe"
+      if ($line =~ m{\s+TCPv(4|6)\s+}) {
+         my @t = split(/\s+/, $line, 7);
+         my $offset = $t[0];
+         my $proto = $t[1];
+         my $local_address = $t[2];
+         my $foreign_address = $t[3];
+         my $state = $t[4];
+         my $pid = $t[5];
+         my $owner = $t[6];
+
+         push @info, {
+            offset => $offset,
+            proto => $proto,
+            local_address => $local_address,
+            foreign_address => $foreign_address,
+            state => $state,
+            pid => $pid,
+            owner => $owner,
+            created => 'undef',
+         };
+      }
+# "0x171e1360 UDPv4  10.0.3.15:138  *:*    4  System  2016-10-15 14:58:46 UTC+0000",
+      elsif ($line =~ m{\s+UDPv(4|6)\s+}) {
+         my @t = split(/\s+/, $line, 7);
+         my $offset = $t[0];
+         my $proto = $t[1];
+         my $local_address = $t[2];
+         my $foreign_address = $t[3];
+         my $pid = $t[4];
+         my $owner = $t[5];
+         my $created = $t[6];
+
+         push @info, {
+            offset => $offset,
+            proto => $proto,
+            local_address => $local_address,
+            foreign_address => $foreign_address,
+            state => 'undef',
+            pid => $pid,
+            owner => $owner,
+            created => $created,
+         };
+      }
+      else {
+         $self->log->warning("netscan: don't know what to do with line [$line]");
+      }
+   }
+
+   return \@info;
 }
 
 sub memdump {
@@ -256,7 +319,31 @@ sub hivelist {
 
    my $cmd = "volatility --profile $profile hivelist -f $file";
 
-   return $self->execute($cmd);
+   $self->capture_stderr(0);
+   my $lines = $self->execute($cmd) or return;
+   $self->capture_stderr(1);
+
+   # "Virtual            Physical           Name"
+   my $skip = 2;
+   my @info = ();
+   for my $line (@$lines) {
+      if ($skip != 0) {
+         $skip--;
+         next;
+      }
+      my @t = split(/\s+/, $line, 3);
+      my $virtual = $t[0];
+      my $physical = $t[1];
+      my $name = $t[2];
+
+      push @info, {
+         virtual => $virtual,
+         physical => $physical,
+         name => $name,
+      };
+   }
+
+   return \@info;
 }
 
 sub hivedump {
