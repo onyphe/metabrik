@@ -40,6 +40,8 @@ sub encode {
 
    my $xs = XML::Simple->new;
 
+   $self->log->debug("encode: data[$data]");
+
    return $xs->XMLout($data);
 }
 
@@ -50,6 +52,8 @@ sub decode {
    $self->brik_help_run_undef_arg('decode', $data) or return;
 
    my $xs = XML::Simple->new;
+
+   $self->log->debug("decode: data[$data]");
 
    return $xs->XMLin($data);
 }

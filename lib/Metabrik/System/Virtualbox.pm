@@ -16,6 +16,7 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         datadir => [ qw(datadir) ],
          capture_mode => [ qw(0|1) ],
          type => [ qw(gui|sdl|headless) ],
       },
@@ -35,7 +36,7 @@ sub brik_properties {
          snapshot_live => [ qw(name snapshot_name description|OPTIONAL) ],
          snapshot_delete => [ qw(name snapshot_name) ],
          snapshot_restore => [ qw(name snapshot_name) ],
-         screenshot => [ qw(name file.png) ],
+         screenshot => [ qw(name output.png|OPTIONAL) ],
          dumpguestcore => [ qw(name file.elf) ],
          dumpvmcore => [ qw(name file.elf) ],
          extract_memdump_from_dumpguestcore => [ qw(input output) ],
@@ -89,6 +90,10 @@ sub start {
    $self->brik_help_run_undef_arg('start', $name) or return;
    $self->brik_help_run_undef_arg('start', $type) or return;
 
+   if ($self->is_started($name)) {
+      return $self->log->info("start: VM with name [$name] already started");
+   }
+
    return $self->command("startvm \"$name\" --type $type");
 }
 
@@ -103,6 +108,10 @@ sub stop {
    my ($name) = @_;
 
    $self->brik_help_run_undef_arg('stop', $name) or return;
+
+   if ($self->is_stopped($name)) {
+      return $self->log->info("start: VM with name [$name] already stopped");
+   }
 
    return $self->command("controlvm \"$name\" poweroff");
 }
@@ -158,14 +167,14 @@ sub snapshot_restore {
 
 sub screenshot {
    my $self = shift;
-   my ($name, $file) = @_;
+   my ($name, $output) = @_;
 
+   $output ||= $self->datadir."/screenshot.png";
    $self->brik_help_run_undef_arg('screenshot', $name) or return;
-   $self->brik_help_run_undef_arg('screenshot', $file) or return;
 
-   $self->command("controlvm \"$name\" screenshotpng \"$file\"") or return;
+   $self->command("controlvm \"$name\" screenshotpng \"$output\"") or return;
 
-   return $file;
+   return $output;
 }
 
 #
@@ -285,6 +294,7 @@ sub info {
          my @t = split(/:/, $line, 2);
          my $k = $t[0];
          my $v = $t[1];
+         next unless defined($v);
          $k =~ s{^\s*}{};
          $k =~ s{\s*$}{};
          $v =~ s{^\s*}{};

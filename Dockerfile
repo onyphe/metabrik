@@ -1,6 +1,7 @@
 FROM ubuntu:xenial
 
 RUN apt-get -y update
+RUN apt-get -y upgrade
 
 #
 # Packages required by Metabrik::Core

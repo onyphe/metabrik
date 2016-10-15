@@ -65,7 +65,8 @@ sub content {
       return $self->log->error("content: output_mode not supported [$output_mode]");
    }
 
-   return $sm->decode($last->content);
+   # We must decode content cause it may be gzipped, for instance.
+   return $sm->decode($last->decoded_content);
 }
 
 1;
