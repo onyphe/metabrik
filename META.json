@@ -108,6 +108,9 @@
       "Metabrik::Client::Rsync" : {
          "file" : "lib/Metabrik/Client/Rsync.pm"
       },
+      "Metabrik::Client::Smbclient" : {
+         "file" : "lib/Metabrik/Client/Smbclient.pm"
+      },
       "Metabrik::Client::Splunk" : {
          "file" : "lib/Metabrik/Client/Splunk.pm"
       },

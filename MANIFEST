@@ -27,6 +27,7 @@ lib/Metabrik/Client/Openssh.pm
 lib/Metabrik/Client/Redis.pm
 lib/Metabrik/Client/Rest.pm
 lib/Metabrik/Client/Rsync.pm
+lib/Metabrik/Client/Smbclient.pm
 lib/Metabrik/Client/Splunk.pm
 lib/Metabrik/Client/Ssh.pm
 lib/Metabrik/Client/Ssl.pm
