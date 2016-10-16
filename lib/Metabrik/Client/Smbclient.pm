@@ -33,8 +33,8 @@ sub brik_properties {
       },
       commands => {
          install => [ ],  # Inherited
-         upload => [ qw(file|file_list share|OPTIONAL) ],
-         download => [ qw(file|file_list share|OPTIONAL) ],
+         upload => [ qw(file|file_list remote_path|OPTIONAL) ],
+         download => [ qw(file|file_list remote_path|OPTIONAL) ],
       },
       require_modules => {
       },
@@ -52,10 +52,14 @@ sub brik_properties {
 # More good stuff here: https://github.com/jrmdev/smbwrapper
 #
 
+#
+# run client::smbclient upload $file \\windows\temp\ c$
+#
 sub upload {
    my $self = shift;
-   my ($files, $share) = @_;
+   my ($files, $remote_path, $share) = @_;
 
+   $remote_path ||= $self->remote_path;
    $share ||= $self->share;
    $self->brik_help_run_undef_arg('upload', $files) or return;
    my $ref = $self->brik_help_run_invalid_arg('upload', $files, 'ARRAY', 'SCALAR')
@@ -65,17 +69,15 @@ sub upload {
    my $username = $self->user;
    my $password = $self->password;
    my $host = $self->host;
-   my $remote_path = $self->remote_path;
    $self->brik_help_set_undef_arg('upload', $domain) or return;
    $self->brik_help_set_undef_arg('upload', $username) or return;
    $self->brik_help_set_undef_arg('upload', $password) or return;
    $self->brik_help_set_undef_arg('upload', $host) or return;
-   $self->brik_help_set_undef_arg('upload', $remote_path) or return;
 
    if ($ref eq 'ARRAY') {
       my @files = ();
       for my $file (@$files) {
-         my $this = $self->upload($file, $share) or next;
+         my $this = $self->upload($file, $remote_path, $share) or next;
          push @files, $this;
       }
 
@@ -83,7 +85,7 @@ sub upload {
    }
    else {
       my $cmd = "smbclient -U $domain/$username%$password //$host/$share -c ".
-         "'put \"$files\" \\$remote_path\\$files'";
+         "'put \"$files\" $remote_path\\$files'";
 
       (my $cmd_hidden = $cmd) =~ s{$password}{XXX};
       $self->log->verbose("upload: cmd[$cmd_hidden]");
@@ -93,12 +95,15 @@ sub upload {
       $self->system($cmd) or return;
       $self->log->level($level);
 
-      return "\\$remote_path\\$files";
+      return "$remote_path\\$files";
    }
 
    return $self->log->error("upload: unhandled exception");
 }
 
+#
+# run client::smbclient download \\windows\temp\file.txt c$
+#
 sub download {
    my $self = shift;
    my ($files, $share) = @_;
@@ -129,7 +134,7 @@ sub download {
    else {
       my ($output) = $files =~ m{\\([^\\]+)$};
       my $cmd = "smbclient -U $domain/$username%$password //$host/$share -c ".
-         "'get \\$files $output'";
+         "'get $files $output'";
 
       (my $cmd_hidden = $cmd) =~ s{$password}{XXX};
       $self->log->verbose("download: cmd[$cmd_hidden]");

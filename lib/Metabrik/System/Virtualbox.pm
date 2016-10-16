@@ -277,6 +277,11 @@ sub extract_memdump_from_dumpguestcore {
    my $fdin = $fread->open($input) or return;
    $fread->seek($offset) or return;
 
+   if (-f $output) {
+      my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+      $sf->remove($output) or return;
+   }
+
    my $written = 0;
    my $fdout = $fraw->open($output) or return;
    while (<$fdin>) {
