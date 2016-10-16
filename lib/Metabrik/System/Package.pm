@@ -84,7 +84,8 @@ sub install {
       return $sp->install($package);
    }
    elsif (! exists($self->brik_properties->{need_packages})) {
-      return $self->log->error($self->brik_help_run('install'));
+      #return $self->log->error($self->brik_help_run('install'));
+      return 1;
    }
    else {
       my $os = $self->my_os;

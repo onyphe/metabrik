@@ -68,7 +68,15 @@ sub install {
    my $url = 'https://github.com/cve-search/cve-search';
 
    my $dg = Metabrik::Devel::Git->new_from_brik_init($self) or return;
-   my $repo = $dg->clone($url) or return;
+
+   my $repo = '';
+   my $datadir = $self->global->datadir;
+   if (-d "$datadir/devel-git/cve-search") {
+      $repo = $dg->update($url) or return;
+   }
+   else {
+      $repo = $dg->clone($url) or return;
+   }
 
    $self->sudo_execute('pip3 install -r '.$repo.'/requirements.txt') or return;
 

@@ -29,6 +29,7 @@ sub brik_properties {
       commands => {
          install => [ ], # Inherited
          clone => [ qw(repository directory|OPTIONAL) ],
+         update => [ qw(repository directory|OPTIONAL) ],
       },
       require_binaries => {
          git => [ ],
@@ -55,6 +56,27 @@ sub clone {
    }
 
    my $cmd = "git clone $repository $directory";
+
+   $self->execute($cmd) or return;
+
+   return $directory;
+}
+
+sub update {
+   my $self = shift;
+   my ($repository, $directory) = @_;
+
+   $self->brik_help_run_undef_arg('update', $repository) or return;
+
+   if (! defined($directory)) {
+      my $datadir = $self->datadir;
+
+      $directory ||= $datadir;
+      my ($name) = $repository =~ m{^.*/(.*)$};
+      $directory .= '/'.$name;
+   }
+
+   my $cmd = "git pull -u $repository $directory";
 
    $self->execute($cmd) or return;
 
