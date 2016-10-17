@@ -92,6 +92,7 @@ sub snapshot {
 
    $output ||= $self->datadir.'/'.$vm.'.snapshot';
    $self->brik_help_run_undef_arg('snapshot', $vm) or return;
+
    if ($vm !~ m{^[-a-z0-9]+$}) {
       return $self->log->error("snapshot: vm [$vm] does not look like an ID");
    }
@@ -123,9 +124,11 @@ sub process_diff {
    $fv->profile($self->profile);
 
    $self->log->info("process_diff: performing pslist on first snapshot...");
+
    my $pslist1 = $fv->pslist($snap1) or return;
 
    $self->log->info("process_diff: performing pslist on second snapshot...");
+
    my $pslist2 = $fv->pslist($snap2) or return;
 
    my %pid = ();
@@ -158,9 +161,11 @@ sub netstat_diff {
    $fv->profile($self->profile);
 
    $self->log->info("netstat_diff: performing netscan on first snapshot...");
+
    my $netscan1 = $fv->netscan($snap1) or return;
 
    $self->log->info("netstat_diff: performing netscan on second snapshot...");
+
    my $netscan2 = $fv->netscan($snap2) or return;
 
    my %pid = ();
