@@ -78,6 +78,7 @@ sub start {
                error_string => 'undef'
             };
             $res->add_content($se->encode($hash));
+            $res->header('Content-Type' => 'application/'.$output_mode);
             return 1;
          },
          wildcard => 1,
