@@ -316,6 +316,8 @@ provides:
     file: lib/Metabrik/Server/Http.pm
   Metabrik::Server::Kibana:
     file: lib/Metabrik/Server/Kibana.pm
+  Metabrik::Server::Logstash:
+    file: lib/Metabrik/Server/Logstash.pm
   Metabrik::Server::Rest:
     file: lib/Metabrik/Server/Rest.pm
   Metabrik::Server::Snmp:

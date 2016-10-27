@@ -11,6 +11,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: system::centos::service Brik
    - new: system::centos::user Brik
    - new: server::kibana Brik
+   - new: server::logstash Brik
 
 1.25.0 Tue 11 Oct 19:06:20 CEST 2016
    - new: www::google Brik

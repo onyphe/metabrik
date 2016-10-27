@@ -153,6 +153,7 @@ lib/Metabrik/Server/Dns.pm
 lib/Metabrik/Server/Elasticsearch.pm
 lib/Metabrik/Server/Http.pm
 lib/Metabrik/Server/Kibana.pm
+lib/Metabrik/Server/Logstash.pm
 lib/Metabrik/Server/Rest.pm
 lib/Metabrik/Server/Snmp.pm
 lib/Metabrik/Server/Snmptrap.pm
