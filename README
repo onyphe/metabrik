@@ -16,21 +16,41 @@ DEPENDENCIES
 
    This module requires these other programs and modules:
 
-   A. For Debian-based systems:
+   A. For Debian-based systems
 
+   apt-get
    sudo
    mercurial
-   apt-get
+   less
    cpanminus
+   libreadline-dev
+   build-essential
 
    B. For FreeBSD systems
 
    pkg
+   security/sudo
    devel/mercurial
    devel/p5-App-cpanminus
-   security/sudo
 
-   C. For all systems
+   C. For CentOS systems
+
+   yum
+   sudo
+   mercurial
+   less
+   perl-App-cpanminus
+   readline-devel
+   gcc
+
+   D. For Mac OS X systems
+
+   port
+   mercurial
+   readline
+   p5-app-cpanminus
+
+   Z. And for all systems
 
    Perl v5.6.1
    Metabrik

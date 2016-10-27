@@ -53,6 +53,10 @@ sub brik_properties {
          content => [ ],
          save_content => [ qw(output) ],
          headers => [ ],
+         get_response_headers => [ ],
+         delete_request_header => [ qw(header) ],
+         get_response_header => [ qw(header) ],
+         set_request_header => [ qw(header value|value_list) ],
          forms => [ ],
          links => [ ],
          trace_redirect => [ qw(uri|OPTIONAL) ],
@@ -73,6 +77,8 @@ sub brik_properties {
          'LWP::UserAgent::ProgressAny' => [ ],
          'HTTP::Request' => [ ],
          'WWW::Mechanize' => [ ],
+         'Mozilla::CA' => [ ],
+         'HTML::Form' => [ ],
          'Metabrik::File::Write' => [ ],
          'Metabrik::Client::Ssl' => [ ],
          'Metabrik::System::File' => [ ],
@@ -93,6 +99,8 @@ sub brik_properties {
 sub create_user_agent {
    my $self = shift;
    my ($uri, $username, $password) = @_;
+
+   $self->log->verbose("create_user_agent: creating agent");
 
    $uri ||= $self->uri;
    if ($self->ssl_verify) {
@@ -132,6 +140,7 @@ sub create_user_agent {
       timeout => $self->rtimeout,
       ssl_opts => {
          verify_hostname => 0,
+         SSL_ca_file => Mozilla::CA::SSL_ca_file(),
       },
    );
    if (! defined($mech)) {
@@ -154,6 +163,11 @@ sub create_user_agent {
       $self->log->verbose("create_user_agent: using Basic authentication");
       $mech->cookie_jar({});
       $mech->credentials($username, $password);
+   }
+
+   if ($self->debug) {
+      $mech->add_handler("request_send",  sub { shift->dump; return });
+      $mech->add_handler("response_done", sub { shift->dump; return });
    }
 
    return $mech;
@@ -185,11 +199,26 @@ sub _method {
    }
 
    my $add_headers = $self->add_headers;
+   if (defined($add_headers)) {
+      for my $k (keys %$add_headers) {
+         my $v = $add_headers->{$k};
+         if (ref($v) eq 'ARRAY') {
+            my $this = join('; ', @$v);
+            $client->add_header($k => $this);
+         }
+         else {
+            $client->add_header($k => $v);
+         }
+      }
+   }
 
    $self->log->verbose("$method: $uri");
 
    my $response;
    eval {
+      if ($method ne 'get' && ref($client) eq 'WWW::Mechanize::PhantomJS') {
+         return $self->log->error("$method: method not supported by WWW::Mechanize::PhantomJS");
+      }
       if ($method eq 'post' || $method eq 'put') {
          $response = $client->$method($uri, Content => $data);
       }
@@ -206,7 +235,7 @@ sub _method {
       if ($@ =~ /read timeout/i) {
          $self->timeout(1);
       }
-      return $self->log->error("$method: unable to $method uri [$uri]: $@");
+      return $self->log->error("$method: unable to use method [$method] to uri [$uri]: $@");
    }
 
    $self->_last($response);
@@ -346,6 +375,66 @@ sub headers {
    return $last->headers;
 }
 
+#
+# Alias for headers Command
+#
+sub get_response_headers {
+   my $self = shift;
+
+   return $self->headers;
+}
+
+#
+# Remove one header for next request.
+#
+sub delete_request_header {
+   my $self = shift;
+   my ($header) = @_;
+
+   $self->brik_help_run_undef_arg('delete_header', $header) or return;
+
+   my $headers = $self->add_headers;
+   my $value = $headers->{$header} || 'undef';
+   delete $headers->{$header};
+
+   return $value;
+}
+
+#
+# Return one header from last response.
+#
+sub get_response_header {
+   my $self = shift;
+   my ($header) = @_;
+
+   $self->brik_help_run_undef_arg('get_header', $header) or return;
+
+   my $headers = $self->headers or return;
+   if (exists($headers->{$header})) {
+      return $headers->{$header};
+   }
+
+   $self->log->verbose("get_header: header [$header] not found");
+
+   return 0;
+}
+
+#
+# Set header for next request.
+#
+sub set_request_header {
+   my $self = shift;
+   my ($header, $value) = @_;
+
+   $self->brik_help_run_undef_arg('set_header', $header) or return;
+   $self->brik_help_run_undef_arg('set_header', $value) or return;
+
+   my $headers = $self->add_headers;
+   $headers->{$header} = $value;
+
+   return $value;
+}
+
 sub links {
    my $self = shift;
 
@@ -377,15 +466,22 @@ sub forms {
       print Data::Dumper::Dumper($last->headers)."\n";
    }
 
+   # We use our own "manual" way to get access to content:
+   # WWW::Mechanize::PhantomJS is clearly broken, and we have to support
+   # WWW::Mechanize also. At some point, we should write a good WWW::Mechanize::PhantomJS
+   # module.
+   #my @forms = $client->forms;
+   my $content = $self->content or return;
+   my @forms = HTML::Form->parse($content, $client->base);
+
    my @result = ();
-   my @forms = $client->forms;
    for my $form (@forms) {
       my $name = $form->{attr}{name} || 'undef';
       my $action = $form->{action};
       my $method = $form->{method} || 'undef';
 
       my $h = {
-         action => $action,
+         action => $action->as_string,
          method => $method,
       };
 
@@ -393,8 +489,8 @@ sub forms {
          my $type = $input->{type} || '';
          my $name = $input->{name} || '';
          my $value = $input->{value} || '';
-         if ($type eq 'text') {
-            push @{$h->{input}}, $name;
+         if ($type ne 'submit') {
+            $h->{input}{$name} = $value;
          }
       }
 

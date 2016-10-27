@@ -7,7 +7,7 @@ package Metabrik::Server::Elasticsearch;
 use strict;
 use warnings;
 
-use base qw(Metabrik::System::Package Metabrik::System::Process);
+use base qw(Metabrik::System::Process);
 
 sub brik_properties {
    return {
@@ -21,29 +21,33 @@ sub brik_properties {
          port => [ qw(port) ],
          conf_file => [ qw(file) ],
          pidfile => [ qw(file) ],
+         version => [ qw(version) ],
+         download_url => [ qw(url) ],
+         no_output => [ qw(0|1) ],
       },
       attributes_default => {
          listen => '127.0.0.1',
          port => 9200,
+         version => '2.4.1',
+         download_url => 'https://download.elastic.co/elasticsearch/release/org/'.
+            'elasticsearch/distribution/tar/elasticsearch/'.
+            'VERSION/elasticsearch-VERSION.tar.gz',
+         no_output => 1,
       },
       commands => {
-         install => [ ], # Inherited
+         install => [ ],
          start => [ ],
          stop => [ ],
          generate_conf => [ qw(conf|OPTIONAL) ],
          # XXX: ./bin/plugin -install lmenezes/elasticsearch-kopf
          #install_plugin => [ qw(plugin) ],
       },
-      require_modules => {
-         'Metabrik::System::Process' => [ ],
+      require_binaries => {
+         tar => [ ],
       },
       need_packages => {
-         ubuntu => [ qw(elasticsearch) ],
-         debian => [ qw(elasticsearch) ],
-      },
-      need_services => {
-         ubuntu => [ qw(elasticsearch) ],
-         debian => [ qw(elasticsearch) ],
+         ubuntu => [ qw(tar) ],
+         debian => [ qw(tar) ],
       },
    };
 }
@@ -52,10 +56,13 @@ sub brik_use_properties {
    my $self = shift;
 
    my $datadir = $self->datadir;
+   my $version = $self->version;
+
+   my $conf_file = $datadir.'/elasticsearch-'.$version.'/config/elasticsearch.xml';
 
    return {
       attributes_default => {
-         conf_file => "$datadir/elasticsearch.xml",
+         conf_file => $conf_file,
       },
    };
 }
@@ -71,18 +78,53 @@ sub generate_conf {
    return $conf_file;
 }
 
+sub install {
+   my $self = shift;
+
+   my $datadir = $self->datadir;
+   my $url = $self->download_url;
+   my $version = $self->version;
+   $url =~ s{VERSION}{$version}g;
+   my $she = $self->shell;
+
+   my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
+   $cw->mirror($url, "$datadir/es.tar.gz") or return;
+
+   my $cwd = $she->pwd;
+
+   $she->run_cd($datadir) or return;
+
+   my $cmd = "tar zxvf es.tar.gz";
+   my $r = $self->execute($cmd) or return;
+
+   $she->run_cd($cwd) or return;
+
+   return 1;
+}
+
 sub start {
    my $self = shift;
 
-   $self->close_output_on_start(1);
+   my $datadir = $self->datadir;
+   my $version = $self->version;
+   my $no_output = $self->no_output;
 
-   my $pidfile = $self->SUPER::start(sub {
-      my $pid = $self->write_pidfile;
-      $self->log->info("Within daemon with pid[$pid]");
+   $self->close_output_on_start($no_output);
 
-      my $cmd = '/usr/share/elasticsearch/bin/elasticsearch';
+   my $pidfile = $datadir.'/daemon.pid';
+   if (-f $pidfile) {
+      return $self->log->error("start: already started with pidfile [$pidfile]");
+   }
 
-      $self->sudo_system($cmd);
+   $self->use_pidfile(0);
+
+   $self->SUPER::start(sub {
+      $self->log->verbose("Within daemon");
+
+      my $cmd = $datadir.'/elasticsearch-'.$version.'/bin/elasticsearch -p '.
+         $datadir.'/daemon.pid';
+
+      $self->system($cmd);
 
       $self->log->error("start: son failed to start");
       exit(1);

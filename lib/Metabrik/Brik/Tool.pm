@@ -45,6 +45,7 @@ sub brik_properties {
          view_brik_source => [ qw(Brik) ],
          get_brik_module_file => [ qw(Brik directory_list|OPTIONAL) ],
          clone => [ qw(Brik Repository|OPTIONAL) ],
+         get_require_binaries => [ qw(Brik|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::Devel::Mercurial' => [ ],
@@ -814,6 +815,40 @@ sub clone {
    $self->context->update_available or return;
 
    return $dst_file;
+}
+
+#
+# Will return the complete list of required binaries if no Argument is given,
+# or the list of required binaries for the specified Brik.
+#
+sub get_require_binaries {
+   my $self = shift;
+   my ($brik) = @_;
+
+   my $con = $self->context;
+   my $available = $con->available;
+
+   # If we asked for one Brik, we rewrite available to only have this one.
+   if (defined($brik)) {
+      $available = { $brik => $available->{$brik} };
+   }
+
+   my $sp = Metabrik::System::Package->new_from_brik_init($self) or return;
+   my $os = $sp->my_os or return;
+
+   my %packages = ();
+   for my $this (keys %$available) {
+      next if $this =~ m{^core::};
+      if (defined($available->{$this})
+      &&  exists($available->{$this}->brik_properties->{require_binaries})) {
+         my $list = [ keys %{$available->{$this}->brik_properties->{require_binaries}} ];
+         for my $p (@$list) {
+            $packages{$p}++;
+         }
+      }
+   }
+
+   return [ sort { $a cmp $b } keys %packages ];
 }
 
 1;

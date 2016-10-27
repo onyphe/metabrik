@@ -19,10 +19,12 @@ sub brik_properties {
          datadir => [ qw(datadir) ],
          force_kill => [ qw(0|1) ],
          close_output_on_start => [ qw(0|1) ],
+         use_pidfile => [ qw(0|1) ],
       },
       attributes_default => {
          force_kill => 0,
          close_output_on_start => 1,
+         use_pidfile => 1,
       },
       commands => {
          parse_ps_output => [ qw(data) ],
@@ -187,11 +189,15 @@ sub start {
       );
    }
 
-   my $pidfile = $self->get_new_pidfile or return;
+   if ($self->use_pidfile) {
+      my $pidfile = $self->get_new_pidfile or return;
 
-   $self->log->verbose("start: new daemon started with pidfile [$pidfile]");
+      $self->log->verbose("start: new daemon started with pidfile [$pidfile]");
 
-   return $pidfile;
+      return $pidfile;
+   }
+
+   return 1;
 }
 
 sub list_daemons {
