@@ -484,6 +484,9 @@
       "Metabrik::Server::Http" : {
          "file" : "lib/Metabrik/Server/Http.pm"
       },
+      "Metabrik::Server::Kibana" : {
+         "file" : "lib/Metabrik/Server/Kibana.pm"
+      },
       "Metabrik::Server::Rest" : {
          "file" : "lib/Metabrik/Server/Rest.pm"
       },
