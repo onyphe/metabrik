@@ -26,6 +26,7 @@ sub brik_properties {
          is_os_ubuntu => [ ],
          is_os_debian => [ ],
          is_os_freebsd => [ ],
+         is_os_centos => [ ],
          is_installed => [ qw(package|$package_list) ],
          my_os => [ ],
          which => [ qw(file) ],
@@ -37,6 +38,7 @@ sub brik_properties {
          'Metabrik::System::Ubuntu::Package' => [ ],
          'Metabrik::System::Debian::Package' => [ ],
          'Metabrik::System::Freebsd::Package' => [ ],
+         'Metabrik::System::Centos::Package' => [ ],
       },
    };
 }
@@ -55,6 +57,9 @@ sub get_system_package {
    }
    elsif ($os eq 'freebsd') {
       $sp = Metabrik::System::Freebsd::Package->new_from_brik_init($self) or return;
+   }
+   elsif ($os eq 'centos') {
+      $sp = Metabrik::System::Centos::Package->new_from_brik_init($self) or return;
    }
    else {
       return $self->log->error("get_system_package: cannot determine package system for OS [$os]");
@@ -178,6 +183,12 @@ sub is_os_freebsd {
    my $self = shift;
 
    return $self->is_os('freebsd');
+}
+
+sub is_os_centos {
+   my $self = shift;
+
+   return $self->is_os('centos');
 }
 
 sub is_installed {

@@ -30,6 +30,7 @@ sub brik_properties {
          is_debian => [ ],
          is_linux => [ ],
          is_freebsd => [ ],
+         is_centos => [ ],
          my => [ ],
       },
       require_modules => {
@@ -177,6 +178,11 @@ sub distribution {
             description => $info{PRETTY_NAME},  # Raspbian GNU/Linux 8 (jessie)
          };
       }
+      elsif (-f '/etc/centos-release') {
+         return {
+            name => 'CentOS',  # CentOS
+         };
+      }
       elsif (-f '/etc/redhat-release') {
          return {
             name => 'RedHat',  # RedHat
@@ -261,6 +267,12 @@ sub is_freebsd {
    my $self = shift;
 
    return $self->is('freebsd');
+}
+
+sub is_centos {
+   my $self = shift;
+
+   return $self->is('centos');
 }
 
 sub my {

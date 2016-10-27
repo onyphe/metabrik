@@ -29,6 +29,7 @@ sub brik_properties {
          'Metabrik::System::Os' => [ ],
          'Metabrik::System::Debian::Service' => [ ],
          'Metabrik::System::Ubuntu::Service' => [ ],
+         'Metabrik::System::Centos::Service' => [ ],
       },
       require_binaries => {
          service => [ ],
@@ -47,6 +48,9 @@ sub get_system_service {
    }
    elsif ($os eq 'debian') {
       $ss = Metabrik::System::Debian::Service->new_from_brik_init($self) or return;
+   }
+   elsif ($os eq 'centos') {
+      $ss = Metabrik::System::Centos::Service->new_from_brik_init($self) or return;
    }
    else {
       $ss = $self;
