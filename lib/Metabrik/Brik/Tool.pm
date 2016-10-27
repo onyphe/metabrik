@@ -332,7 +332,7 @@ sub install_all_need_packages {
    }
 
    if (@missing > 0) {
-      return $self->log->error("install_all_need_packages: unable to install packages for ".
+      $self->log->warning("install_all_need_packages: unable to install packages for ".
          "Brik(s): [".join(', ', @missing)."]");
    }
 
