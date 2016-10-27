@@ -182,6 +182,9 @@ lib/Metabrik/String/Syslog.pm
 lib/Metabrik/String/Uri.pm
 lib/Metabrik/String/Xml.pm
 lib/Metabrik/String/Yara.pm
+lib/Metabrik/System/Centos/Package.pm
+lib/Metabrik/System/Centos/Service.pm
+lib/Metabrik/System/Centos/User.pm
 lib/Metabrik/System/Debian/Package.pm
 lib/Metabrik/System/Debian/Service.pm
 lib/Metabrik/System/Debian/User.pm

@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 21) }
+BEGIN { plan(tests => 24) }
 
 ok(sub { eval("use Metabrik::System::Docker"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::System::File"); $@ ? 0 : 1 }, 1, $@);
@@ -22,3 +22,6 @@ ok(sub { eval("use Metabrik::System::Debian::Service"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::System::Debian::User"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::System::Virtualbox"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::System::Gphotofs"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::System::Centos::Package"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::System::Centos::Service"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::System::Centos::User"); $@ ? 0 : 1 }, 1, $@);

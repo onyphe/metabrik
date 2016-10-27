@@ -7,6 +7,9 @@ Revision history for Perl extension Metabrik::Repository.
    - new: remote::msoffice Brik
    - new: remote::winwdows Brik
    - new: remote::windiff Brik
+   - new: system::centos::package Brik
+   - new: system::centos::service Brik
+   - new: system::centos::user Brik
 
 1.25.0 Tue 11 Oct 19:06:20 CEST 2016
    - new: www::google Brik

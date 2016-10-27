@@ -574,6 +574,15 @@
       "Metabrik::String::Yara" : {
          "file" : "lib/Metabrik/String/Yara.pm"
       },
+      "Metabrik::System::Centos::Package" : {
+         "file" : "lib/Metabrik/System/Centos/Package.pm"
+      },
+      "Metabrik::System::Centos::Service" : {
+         "file" : "lib/Metabrik/System/Centos/Service.pm"
+      },
+      "Metabrik::System::Centos::User" : {
+         "file" : "lib/Metabrik/System/Centos/User.pm"
+      },
       "Metabrik::System::Debian::Package" : {
          "file" : "lib/Metabrik/System/Debian/Package.pm"
       },
