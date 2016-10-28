@@ -42,8 +42,9 @@ sub brik_properties {
          get_all_properties => [ qw(tag) ],
          get_property => [ qw(tag property) ],
          set_property => [ qw(tag property value) ],
-         backup => [ qw(tag_name|$tag_list) ],
-         restore => [ qw(tag_name) ],
+         backup => [ qw(tag|$tag_list) ],
+         restore => [ qw(tag) ],
+         tag_to_uuid => [ qw(tag) ],
       },
       require_binaries => {
          iocage => [ ],
@@ -311,34 +312,50 @@ sub set_property {
 
 sub backup {
    my $self = shift;
-   my ($tag_name) = @_;
+   my ($tag) = @_;
 
-   $self->brik_help_run_undef_arg('backup', $tag_name) or return;
-   my $ref = $self->brik_help_run_invalid_arg('backup', $tag_name, 'ARRAY', 'SCALAR')
+   $self->brik_help_run_undef_arg('backup', $tag) or return;
+   my $ref = $self->brik_help_run_invalid_arg('backup', $tag, 'ARRAY', 'SCALAR')
       or return;
 
    if ($ref eq 'ARRAY') {
-      for my $tag (@$tag_name) {
+      for my $tag (@$tag) {
          my $cmd = "iocage snapshot \"$tag\"";
          $self->sudo_system($cmd);
       }
       return 1;
    }
 
-   my $cmd = "iocage snapshot \"$tag_name\"";
+   my $cmd = "iocage snapshot \"$tag\"";
 
    return $self->sudo_system($cmd);
 }
 
 sub restore {
    my $self = shift;
-   my ($tag_name) = @_;
+   my ($tag) = @_;
 
-   $self->brik_help_run_undef_arg('restore', $tag_name) or return;
+   $self->brik_help_run_undef_arg('restore', $tag) or return;
 
-   my $cmd = "iocage rollback \"$tag_name\"";
+   my $cmd = "iocage rollback \"$tag\"";
 
    return $self->sudo_system($cmd);
+}
+
+sub tag_to_uuid {
+   my $self = shift;
+   my ($tag) = @_;
+
+   $self->brik_help_run_undef_arg('tag_to_uuid', $tag) or return;
+
+   my $list = $self->list or return;
+   for my $this (@$list) {
+      if ($this->{tag} eq $tag) {
+         return $this->{uuid};
+      }
+   }
+
+   return 'undef';
 }
 
 1;
