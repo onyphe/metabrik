@@ -86,6 +86,10 @@ sub list {
          next;
       }
 
+      if (/non iocage jails currently active/) {
+         last;
+      }
+
       my @toks = split(/\s+/, $_);
       my ($ip, $interface) = split(/,/, $toks[5]);
       $ip ||= '';

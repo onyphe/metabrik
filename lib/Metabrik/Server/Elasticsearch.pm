@@ -46,8 +46,8 @@ sub brik_properties {
          tar => [ ],
       },
       need_packages => {
-         ubuntu => [ qw(tar) ],
-         debian => [ qw(tar) ],
+         ubuntu => [ qw(tar openjdk-8-jre-headless) ],
+         debian => [ qw(tar openjdk-8-jre-headless) ],
       },
    };
 }

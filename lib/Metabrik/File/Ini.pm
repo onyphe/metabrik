@@ -30,7 +30,6 @@ sub brik_properties {
          write => [ qw(ini_hash output|OPTIONAL) ],
       },
       require_modules => {
-         'Config::Tiny' => [ ],
          'Metabrik::String::Ini' => [ ],
          'Metabrik::File::Text' => [ ],
       },
