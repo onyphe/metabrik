@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 34) }
+BEGIN { plan(tests => 32) }
 
 ok(sub { eval("use Metabrik::Network::Address"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Arp"); $@ ? 0 : 1 }, 1, $@);
@@ -13,7 +13,6 @@ ok(sub { eval("use Metabrik::Network::Icmp"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Linux::Iptables"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Modbus"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Netbios"); $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Network::Netstat"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Nikto"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Nmap"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Ping"); $@ ? 0 : 1 }, 1, $@);
@@ -21,7 +20,6 @@ ok(sub { eval("use Metabrik::Network::Freebsd::Ping"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Linux::Ping"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Portscan"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Read"); $@ ? 0 : 1 }, 1, $@);
-ok(sub { eval("use Metabrik::Network::Route"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::S7comm"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Sinfp3"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Network::Sinfp3::Arpdiscover"); $@ ? 0 : 1 }, 1, $@);

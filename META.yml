@@ -55,6 +55,8 @@ provides:
     file: lib/Metabrik/Client/Elasticsearch/Query.pm
   Metabrik::Client::Mongodb:
     file: lib/Metabrik/Client/Mongodb.pm
+  Metabrik::Client::Mysql:
+    file: lib/Metabrik/Client/Mysql.pm
   Metabrik::Client::Openssh:
     file: lib/Metabrik/Client/Openssh.pm
   Metabrik::Client::Redis:
@@ -67,6 +69,8 @@ provides:
     file: lib/Metabrik/Client/Smbclient.pm
   Metabrik::Client::Splunk:
     file: lib/Metabrik/Client/Splunk.pm
+  Metabrik::Client::Sqlite:
+    file: lib/Metabrik/Client/Sqlite.pm
   Metabrik::Client::Ssh:
     file: lib/Metabrik/Client/Ssh.pm
   Metabrik::Client::Ssl:
@@ -99,8 +103,6 @@ provides:
     file: lib/Metabrik/Database/Cwe.pm
   Metabrik::Database::Keystore:
     file: lib/Metabrik/Database/Keystore.pm
-  Metabrik::Database::Mysql:
-    file: lib/Metabrik/Database/Mysql.pm
   Metabrik::Database::Nvd:
     file: lib/Metabrik/Database/Nvd.pm
   Metabrik::Database::Ripe:
@@ -109,8 +111,6 @@ provides:
     file: lib/Metabrik/Database/Rir.pm
   Metabrik::Database::Sinfp3:
     file: lib/Metabrik/Database/Sinfp3.pm
-  Metabrik::Database::Sqlite:
-    file: lib/Metabrik/Database/Sqlite.pm
   Metabrik::Database::Vfeed:
     file: lib/Metabrik/Database/Vfeed.pm
   Metabrik::Devel::Git:
@@ -245,8 +245,6 @@ provides:
     file: lib/Metabrik/Network/Modbus.pm
   Metabrik::Network::Netbios:
     file: lib/Metabrik/Network/Netbios.pm
-  Metabrik::Network::Netstat:
-    file: lib/Metabrik/Network/Netstat.pm
   Metabrik::Network::Nikto:
     file: lib/Metabrik/Network/Nikto.pm
   Metabrik::Network::Nmap:
@@ -257,8 +255,6 @@ provides:
     file: lib/Metabrik/Network/Portscan.pm
   Metabrik::Network::Read:
     file: lib/Metabrik/Network/Read.pm
-  Metabrik::Network::Route:
-    file: lib/Metabrik/Network/Route.pm
   Metabrik::Network::S7comm:
     file: lib/Metabrik/Network/S7comm.pm
   Metabrik::Network::Sinfp3:
@@ -410,12 +406,16 @@ provides:
     file: lib/Metabrik/System/Libvirt.pm
   Metabrik::System::Mount:
     file: lib/Metabrik/System/Mount.pm
+  Metabrik::System::Netstat:
+    file: lib/Metabrik/System/Netstat.pm
   Metabrik::System::Os:
     file: lib/Metabrik/System/Os.pm
   Metabrik::System::Package:
     file: lib/Metabrik/System/Package.pm
   Metabrik::System::Process:
     file: lib/Metabrik/System/Process.pm
+  Metabrik::System::Route:
+    file: lib/Metabrik/System/Route.pm
   Metabrik::System::Service:
     file: lib/Metabrik/System/Service.pm
   Metabrik::System::Ubuntu::Package:

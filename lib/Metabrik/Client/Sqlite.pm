@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# database::sqlite Brik
+# client::sqlite Brik
 #
-package Metabrik::Database::Sqlite;
+package Metabrik::Client::Sqlite;
 use strict;
 use warnings;
 
@@ -263,7 +263,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Database::Sqlite - database::sqlite Brik
+Metabrik::Client::Sqlite - client::sqlite Brik
 
 =head1 COPYRIGHT AND LICENSE
 

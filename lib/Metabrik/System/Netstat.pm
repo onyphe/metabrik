@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# network::netstat Brik
+# system::netstat Brik
 #
-package Metabrik::Network::Netstat;
+package Metabrik::System::Netstat;
 use strict;
 use warnings;
 
@@ -77,7 +77,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Network::Netstat - network::netstat Brik
+Metabrik::System::Netstat - system::netstat Brik
 
 =head1 COPYRIGHT AND LICENSE
 

@@ -1,3 +1,9 @@
+20161029
+   AFFECTS: database::mysql, database::sqlite
+
+   - database::mysql renamed to client::mysql
+   - database::sqlite renamed to client::sqlite
+
 20161015
    AFFECTS: forensic::volatility, system::virtualbox
 
