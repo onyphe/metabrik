@@ -1,13 +1,13 @@
 #
 # $Id$
 #
-# database::mysql Brik
+# client::mysql Brik
 #
-package Metabrik::Database::Mysql;
+package Metabrik::Client::Mysql;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Database::Sqlite Metabrik::System::Package);
+use base qw(Metabrik::Client::Sqlite Metabrik::System::Package);
 
 sub brik_properties {
    return {
@@ -262,7 +262,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Database::Mysql - database::mysql Brik
+Metabrik::Client::Mysql - client::mysql Brik
 
 =head1 COPYRIGHT AND LICENSE
 

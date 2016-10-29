@@ -1,9 +1,9 @@
 #
 # $Id$
 #
-# network::route Brik
+# system::route Brik
 #
-package Metabrik::Network::Route;
+package Metabrik::System::Route;
 use strict;
 use warnings;
 
@@ -242,7 +242,7 @@ __END__
 
 =head1 NAME
 
-Metabrik::Network::Route - network::route Brik
+Metabrik::System::Route - system::route Brik
 
 =head1 COPYRIGHT AND LICENSE
 
