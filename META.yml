@@ -314,6 +314,8 @@ provides:
     file: lib/Metabrik/Server/Kibana.pm
   Metabrik::Server::Logstash:
     file: lib/Metabrik/Server/Logstash.pm
+  Metabrik::Server::Redis:
+    file: lib/Metabrik/Server/Redis.pm
   Metabrik::Server::Rest:
     file: lib/Metabrik/Server/Rest.pm
   Metabrik::Server::Snmp:
