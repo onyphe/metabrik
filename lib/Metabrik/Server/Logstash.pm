@@ -19,15 +19,12 @@ sub brik_properties {
          datadir => [ qw(datadir) ],
          conf_file => [ qw(file) ],
          pidfile => [ qw(file) ],
-         version => [ qw(version) ],
-         download_url => [ qw(url) ],
+         version => [ qw(5.0.0) ],
          no_output => [ qw(0|1) ],
       },
       attributes_default => {
          version => '5.0.0',
-         download_url => 'https://artifacts.elastic.co/downloads/logstash/logstash-'.
-            'VERSION.tar.gz',
-         no_output => 1,
+         no_output => 0,
       },
       commands => {
          install => [ ],
@@ -36,6 +33,7 @@ sub brik_properties {
          start_in_foreground => [ qw(conf) ],
          stop => [ ],
          generate_conf => [ qw(conf|OPTIONAL) ],
+         status => [ ],
       },
       require_binaries => {
          tar => [ ],
@@ -43,6 +41,7 @@ sub brik_properties {
       need_packages => {
          ubuntu => [ qw(tar openjdk-8-jre-headless) ],
          debian => [ qw(tar openjdk-8-jre-headless) ],
+         freebsd => [ qw(openjdk logstash) ],
       },
    };
 }
@@ -77,10 +76,9 @@ sub install {
    my $self = shift;
 
    my $datadir = $self->datadir;
-   my $url = $self->download_url;
-   my $version = $self->version;
-   $url =~ s{VERSION}{$version}g;
    my $she = $self->shell;
+
+   my $url = 'https://artifacts.elastic.co/downloads/logstash/logstash-5.0.0.tar.gz';
 
    my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
    $cw->mirror($url, "$datadir/logstash.tar.gz") or return;
@@ -113,27 +111,37 @@ sub check_config {
    return $self->system($cmd);
 }
 
+#
+# logstash -f <config_file> -l <log_file>
+#
 sub start {
    my $self = shift;
    my ($file) = @_;
 
    $self->brik_help_run_undef_arg('start', $file) or return;
+   $self->brik_help_run_file_not_found('start', $file) or return;
+
+   # Make if a full path file
+   if ($file !~ m{^/}) {
+      my $cwd = $self->shell->full_pwd;
+      $file = $cwd.'/'.$file;
+   }
 
    my $datadir = $self->datadir;
    my $version = $self->version;
    my $no_output = $self->no_output;
 
-   $self->close_output_on_start($no_output);
+   my $binary = $datadir.'/logstash-'.$version.'/bin/logstash';
+   $self->brik_help_run_file_not_found('start', $binary) or return;
 
-   my $pidfile = $datadir.'/daemon.pid';
-   if (-f $pidfile) {
-      return $self->log->error("start: already started with pidfile [$pidfile]");
-   }
+   $self->log->verbose("start: using binary[$binary]");
+
+   $self->close_output_on_start($no_output);
 
    $self->SUPER::start(sub {
       $self->log->verbose("Within daemon");
 
-      my $cmd = $datadir.'/logstash-'.$version.'/bin/logstash -f '.$file;
+      my $cmd = $binary.' -f '.$file;
 
       $self->system($cmd);
 
@@ -141,7 +149,7 @@ sub start {
       exit(1);
    });
 
-   return $pidfile;
+   return 1;
 }
 
 sub start_in_foreground {
@@ -168,6 +176,12 @@ sub stop {
    }
 
    return $self->kill_from_pidfile($pidfile);
+}
+
+sub status {
+   my $self = shift;
+
+   return $self->log->info("TODO");
 }
 
 1;

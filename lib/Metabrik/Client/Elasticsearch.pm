@@ -459,11 +459,19 @@ sub list_indices {
       return [];
    }
 
+   #
    # Format depends on ElasticSearch version. We try to detect the format.
+   #
+   # 5.0.0: 
+   # "yellow open www-2016-08-14 BmNE9RaBRSCKqB5Oe8yZcw 5 1  146 0 251.8kb 251.8kb"
+   #
    my @indices = ();
    for (@$lines) {
       my @t = split(/\s+/);
-      if (@t == 9) {
+      if (@t == 10) {  # Version 5.0.0
+         push @indices, $t[2];
+      }
+      elsif (@t == 9) {
          push @indices, $t[2];
       }
       elsif (@t == 8) {

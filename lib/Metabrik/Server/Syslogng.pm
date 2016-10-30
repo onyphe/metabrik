@@ -68,6 +68,10 @@ sub brik_use_properties {
    };
 }
 
+#
+# https://www.balabit.com/documents/syslog-ng-ose-3.5-guides/en/syslog-ng-ose-guide-admin/html-single/index.html
+#
+
 sub generate_conf {
    my $self = shift;
    my ($conf_file) = @_;

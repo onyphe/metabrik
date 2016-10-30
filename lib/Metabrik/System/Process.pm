@@ -105,10 +105,19 @@ sub is_running {
    my $list = $self->list or return;
    for my $this (@$list) {
       my $command = $this->{COMMAND};
-      my @toks = split(/\s+/, $command);
-      $toks[0] =~ s/^.*\/(.*?)$/$1/;
-      if ($toks[0] eq $process) {
-         return 1;
+      if ($command =~ m{^\[.*\]$}) {   # Example: "[migration/0]"
+         $self->log->debug("is_running: list[$command] process[$process]");
+         if ($command eq $process) {
+            return 1;
+         }
+      }
+      else {
+         my @toks = split(/\s+/, $command);
+         $toks[0] =~ s/^.*\/(.*?)$/$1/;
+         $self->log->debug("is_running: list[$toks[0]] process[$process]");
+         if ($toks[0] eq $process) {
+            return 1;
+         }
       }
    }
 

@@ -21,23 +21,24 @@ sub brik_properties {
          port => [ qw(port) ],
          conf_file => [ qw(file) ],
          pidfile => [ qw(file) ],
-         version => [ qw(version) ],
-         download_url => [ qw(url) ],
+         version => [ qw(4.6.2|5.0.0) ],
          no_output => [ qw(0|1) ],
       },
       attributes_default => {
          listen => '127.0.0.1',
          port => 5601,
-         version => '4.6.2',
-         download_url => 'https://download.elastic.co/kibana/kibana/kibana-'.
-            'VERSION-linux-x86_64.tar.gz',
-         no_output => 1,
+         version => '5.0.0',
+         no_output => 0,
       },
       commands => {
          install => [ ],
          start => [ ],
          stop => [ ],
          generate_conf => [ qw(conf|OPTIONAL) ],
+         status => [ ],
+      },
+      require_modules => {
+         'Metabrik::System::Process' => [ ],
       },
       require_binaries => {
          tar => [ ],
@@ -45,6 +46,7 @@ sub brik_properties {
       need_packages => {
          ubuntu => [ qw(tar openjdk-8-jre-headless) ],
          debian => [ qw(tar openjdk-8-jre-headless) ],
+         freebsd => [ qw(openjdk node012 kibana45) ],
       },
    };
 }
@@ -79,10 +81,13 @@ sub install {
    my $self = shift;
 
    my $datadir = $self->datadir;
-   my $url = $self->download_url;
    my $version = $self->version;
-   $url =~ s{VERSION}{$version}g;
    my $she = $self->shell;
+
+   my $url = 'https://artifacts.elastic.co/downloads/kibana/kibana-5.0.0-linux-x86_64.tar.gz';
+   if ($version eq '4.6.2') {
+      $url = 'https://download.elastic.co/kibana/kibana/kibana-4.6.2-linux-x86_64.tar.gz';
+   }
 
    my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
    $cw->mirror($url, "$datadir/kibana.tar.gz") or return;
@@ -99,6 +104,9 @@ sub install {
    return 1;
 }
 
+#
+# /usr/local/bin/node /usr/local/www/kibana44/src/cli serve --config /usr/local/etc/kibana.yml --log-file /var/log/kibana.log
+#
 sub start {
    my $self = shift;
 
@@ -106,12 +114,15 @@ sub start {
    my $version = $self->version;
    my $no_output = $self->no_output;
 
+   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+   if ($sp->is_running('node')) {
+      return $self->log->error("start: process already running");
+   }
+
    $self->close_output_on_start($no_output);
 
-   my $pidfile = $datadir.'/daemon.pid';
-   if (-f $pidfile) {
-      return $self->log->error("start: already started with pidfile [$pidfile]");
-   }
+   my $binary = $datadir.'/kibana-'.$version.'-linux-x86_64/bin/kibana';
+   $self->brik_help_run_file_not_found('start', $binary) or return;
 
    $self->SUPER::start(sub {
       $self->log->verbose("Within daemon");
@@ -125,19 +136,31 @@ sub start {
       exit(1);
    });
 
-   return $pidfile;
+   return 1;
 }
 
 sub stop {
    my $self = shift;
 
-   my $pidfile = $self->pidfile;
-   if (! defined($pidfile)) {
-      $self->log->warning("stop: nothing to stop");
+   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+   if (! $sp->is_running('node')) {
+      return $self->log->info("stop: process NOT running");
+   }
+
+   return $self->kill('node');
+}
+
+sub status {
+   my $self = shift;
+
+   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+   if ($sp->is_running('node')) {
+      $self->log->verbose("status: process 'node' is running");
       return 1;
    }
 
-   return $self->kill_from_pidfile($pidfile);
+   $self->log->verbose("status: process 'node' is NOT running");
+   return 0;
 }
 
 1;

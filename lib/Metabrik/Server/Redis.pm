@@ -156,9 +156,8 @@ sub start {
    $port ||= $self->port;
    $listen ||= $self->listen;
 
-   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
-   if ($sp->is_running('redis-server')) {
-      return $self->log->info("start: process already started");
+   if ($self->status) {
+      return 1;
    }
 
    my $datadir = $self->datadir;
@@ -185,10 +184,11 @@ sub stop {
    my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
 
    if ($sp->is_running_from_pidfile($pidfile)) {
-      $sp->kill_from_pidfile($pidfile) or return;
+      return $sp->kill_from_pidfile($pidfile);
    }
 
-   return $pidfile;
+   $self->log->verbose("stop: process NOT running");
+   return 0;
 }
 
 sub status {

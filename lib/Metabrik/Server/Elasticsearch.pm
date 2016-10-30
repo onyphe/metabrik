@@ -21,17 +21,13 @@ sub brik_properties {
          port => [ qw(port) ],
          conf_file => [ qw(file) ],
          pidfile => [ qw(file) ],
-         version => [ qw(version) ],
-         download_url => [ qw(url) ],
+         version => [ qw(2.4.1|5.0.0) ],
          no_output => [ qw(0|1) ],
       },
       attributes_default => {
          listen => '127.0.0.1',
          port => 9200,
-         version => '2.4.1',
-         download_url => 'https://download.elastic.co/elasticsearch/release/org/'.
-            'elasticsearch/distribution/tar/elasticsearch/'.
-            'VERSION/elasticsearch-VERSION.tar.gz',
+         version => '5.0.0',
          no_output => 1,
       },
       commands => {
@@ -41,6 +37,7 @@ sub brik_properties {
          generate_conf => [ qw(conf|OPTIONAL) ],
          # XXX: ./bin/plugin -install lmenezes/elasticsearch-kopf
          #install_plugin => [ qw(plugin) ],
+         status => [ ],
       },
       require_binaries => {
          tar => [ ],
@@ -48,6 +45,7 @@ sub brik_properties {
       need_packages => {
          ubuntu => [ qw(tar openjdk-8-jre-headless) ],
          debian => [ qw(tar openjdk-8-jre-headless) ],
+         freebsd => [ qw(openjdk elasticsearch2) ],
       },
    };
 }
@@ -57,12 +55,14 @@ sub brik_use_properties {
 
    my $datadir = $self->datadir;
    my $version = $self->version;
+   my $pidfile = $datadir.'/daemon.pid';
 
    my $conf_file = $datadir.'/elasticsearch-'.$version.'/config/elasticsearch.xml';
 
    return {
       attributes_default => {
          conf_file => $conf_file,
+         pidfile => $pidfile,
       },
    };
 }
@@ -82,10 +82,15 @@ sub install {
    my $self = shift;
 
    my $datadir = $self->datadir;
-   my $url = $self->download_url;
    my $version = $self->version;
-   $url =~ s{VERSION}{$version}g;
    my $she = $self->shell;
+
+   my $url = 'https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.0.0.tar.gz';
+   if ($version eq '2.4.1') {
+      $url = 'https://download.elastic.co/elasticsearch/release/org/'.
+             'elasticsearch/distribution/tar/elasticsearch/2.4.1/'.
+             'elasticsearch-2.4.1.tar.gz';
+   }
 
    my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
    $cw->mirror($url, "$datadir/es.tar.gz") or return;
@@ -109,12 +114,14 @@ sub start {
    my $version = $self->version;
    my $no_output = $self->no_output;
 
+   # If already started, we return.
+   if ($self->status) {
+      return 1;
+   }
+
    $self->close_output_on_start($no_output);
 
    my $pidfile = $datadir.'/daemon.pid';
-   if (-f $pidfile) {
-      return $self->log->error("start: already started with pidfile [$pidfile]");
-   }
 
    $self->use_pidfile(0);
 
@@ -147,6 +154,20 @@ sub stop {
    }
 
    return $self->kill_from_pidfile($pidfile);
+}
+
+sub status {
+   my $self = shift;
+
+   my $pidfile = $self->pidfile;
+
+   if (-f $pidfile) {
+      $self->log->verbose("status: process is running");
+      return 1;
+   }
+
+   $self->log->verbose("status: process NOT running");
+   return 0;
 }
 
 1;
