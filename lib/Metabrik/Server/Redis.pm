@@ -7,7 +7,7 @@ package Metabrik::Server::Redis;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Shell::Command Metabrik::System::Package);
+use base qw(Metabrik::System::Process);
 
 sub brik_properties {
    return {
@@ -18,12 +18,13 @@ sub brik_properties {
       attributes => {
          datadir => [ qw(datadir) ],
          version => [ qw(version) ],
-         conf => [ qw(file) ],
+         conf_file => [ qw(file) ],
          listen => [ qw(address) ],
          port => [ qw(port) ],
+         pidfile => [ qw(pidfile) ],
+         log_file => [ qw(log_file) ],
       },
       attributes_default => {
-         conf => 'redis.conf',
          listen => '127.0.0.1',
          port => 6379,
       },
@@ -37,7 +38,6 @@ sub brik_properties {
       require_modules => {
          'Metabrik::File::Text' => [ ],
          'Metabrik::System::File' => [ ],
-         'Metabrik::System::Process' => [ ],
       },
       require_binaries => {
          'redis-server' => [ ],
@@ -45,38 +45,52 @@ sub brik_properties {
       need_packages => {
          ubuntu => [ qw(redis-server) ],
          debian => [ qw(redis-server) ],
+         freebsd => [ qw(redis) ],
+      },
+   };
+}
+
+sub brik_use_properties {
+   my $self = shift;
+
+   my $datadir = $self->datadir;
+   my $conf_file = $datadir.'/redis.conf';
+   my $log_file = $datadir.'/redis.log';
+   my $pidfile = $datadir.'/redis.pid';
+
+   return {
+      attributes_default => {
+         conf_file => $conf_file,
+         log_file => $log_file,
+         pidfile => $pidfile,
       },
    };
 }
 
 sub generate_conf {
    my $self = shift;
-   my ($conf, $port, $listen) = @_;
+   my ($conf_file, $port, $listen) = @_;
 
-   my $datadir = $self->datadir;
-   $conf ||= $datadir.'/'.$self->conf;
-
+   $conf_file ||= $self->conf_file;
    $port ||= $self->port;
    $listen ||= $self->listen;
 
+   my $datadir = $self->datadir;
+   my $log_file = $self->log_file;
+   my $pidfile = $self->pidfile;
+
    my $lib_dir = 'var/lib/redis';
-   my $log_dir = 'var/log/redis';
-   my $run_dir = 'var/run/redis';
 
    my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
    $sf->mkdir($datadir.'/'.$lib_dir) or return;
-   $sf->mkdir($datadir.'/'.$log_dir) or return;
-   $sf->mkdir($datadir.'/'.$run_dir) or return;
 
    my $dir = $self->datadir.'/'.$lib_dir;
-   my $logfile = $self->datadir.'/'.$log_dir.'/redis-server.log';
-   my $pidfile = $self->datadir.'/'.$run_dir.'/redis-server.pid';
 
    my $params = {
       "daemonize" => "yes",
       "bind" => $listen,
       "dir" => $dir,
-      "logfile" => $logfile,
+      "logfile" => $log_file,
       "pidfile" => $pidfile,
       "port" => $port,
       "client-output-buffer-limit" => [
@@ -140,9 +154,9 @@ sub generate_conf {
    my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
    $ft->append(0);
    $ft->overwrite(1);
-   $ft->write(\@lines, $conf) or return;
+   $ft->write(\@lines, $conf_file) or return;
 
-   return $conf;
+   return $conf_file;
 }
 
 #
@@ -157,18 +171,21 @@ sub start {
    $listen ||= $self->listen;
 
    if ($self->status) {
-      return 1;
+      return $self->error_process_is_running;
    }
 
-   my $datadir = $self->datadir;
-   my $conf = $datadir.'/'.$self->conf;
+   my $conf_file = $self->conf_file;
+   $self->brik_help_run_file_not_found('start', $conf_file) or return;
 
-   my $cmd = "redis-server $conf";
+   my $cmd = "redis-server $conf_file";
    if ($port) {
       $cmd .= " --port $port";
    }
    if ($listen) {
       $cmd .= " --bind $listen";
+   }
+   if ($self->debug) {
+      $cmd .= " --loglevel debug";
    }
 
    return $self->system($cmd);
@@ -177,30 +194,26 @@ sub start {
 sub stop {
    my $self = shift;
 
-   my $datadir = $self->datadir;
-   my $run_dir = 'var/run/redis';
-   my $pidfile = $self->datadir.'/'.$run_dir.'/redis-server.pid';
-
-   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
-
-   if ($sp->is_running_from_pidfile($pidfile)) {
-      return $sp->kill_from_pidfile($pidfile);
+   if (! $self->status) {
+      return $self->info_process_is_not_running;
    }
 
-   $self->log->verbose("stop: process NOT running");
-   return 0;
+   my $pidfile = $self->pidfile;
+
+   return $self->kill_from_pidfile($pidfile);
 }
 
 sub status {
    my $self = shift;
 
-   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
-   if ($sp->is_running('redis-server')) {
-      $self->log->verbose("status: process 'redis-server' is running");
+   my $pidfile = $self->pidfile;
+
+   if ($self->is_running_from_pidfile($pidfile)) {
+      $self->verbose_process_is_running;
       return 1;
    }
 
-   $self->log->verbose("status: process 'redis-server' is NOT running");
+   $self->verbose_process_is_not_running;
    return 0;
 }
 

@@ -30,6 +30,8 @@ sub brik_properties {
          parse_ps_output => [ qw(data) ],
          list => [ ],
          is_running => [ qw(process) ],
+         is_running_from_string => [ qw(string) ],
+         get_pid_from_string => [ qw(string) ],
          get_process_info => [ qw(process) ],
          kill => [ qw(process|pid) ],
          start => [ qw($sub) ],
@@ -43,6 +45,12 @@ sub brik_properties {
          write_pidfile => [ ],
          delete_pidfile => [ qw(pidfile) ],
          wait_for_pidfile => [ qw(pidfile) ],
+         info_process_is_running => [ ],
+         info_process_is_not_running => [ ],
+         verbose_process_is_running => [ ],
+         verbose_process_is_not_running => [ ],
+         error_process_is_running => [ ],
+         error_process_is_not_running => [ ],
       },
       require_modules => {
          'Daemon::Daemonize' => [ ],
@@ -118,6 +126,40 @@ sub is_running {
          if ($toks[0] eq $process) {
             return 1;
          }
+      }
+   }
+
+   return 0;
+}
+
+sub is_running_from_string {
+   my $self = shift;
+   my ($string) = @_;
+
+   $self->brik_help_run_undef_arg('is_running_from_string', $string) or return;
+
+   my $list = $self->list or return;
+   for my $this (@$list) {
+      my $command = $this->{COMMAND};
+      if ($command =~ m{$string}i) {
+         return 1;
+      }
+   }
+
+   return 0;
+}
+
+sub get_pid_from_string {
+   my $self = shift;
+   my ($string) = @_;
+
+   $self->brik_help_run_undef_arg('get_pid_from_string', $string) or return;
+
+   my $list = $self->list or return;
+   for my $this (@$list) {
+      my $command = $this->{COMMAND};
+      if ($command =~ m{$string}i) {
+         return $this->{PID};
       }
    }
 
@@ -382,6 +424,42 @@ sub wait_for_pidfile {
    }
 
    return $found;
+}
+
+sub info_process_is_running {
+   my $self = shift;
+
+   return $self->log->info("process is running");
+}
+
+sub info_process_is_not_running {
+   my $self = shift;
+
+   return $self->log->info("process is NOT running");
+}
+
+sub verbose_process_is_running {
+   my $self = shift;
+
+   return $self->log->verbose("process is running");
+}
+
+sub verbose_process_is_not_running {
+   my $self = shift;
+
+   return $self->log->verbose("process is NOT running");
+}
+
+sub error_process_is_running {
+   my $self = shift;
+
+   return $self->log->error("process is running");
+}
+
+sub error_process_is_not_running {
+   my $self = shift;
+
+   return $self->log->error("process is NOT running");
 }
 
 1;

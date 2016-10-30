@@ -18,22 +18,27 @@ sub brik_properties {
       attributes => {
          datadir => [ qw(datadir) ],
          conf_file => [ qw(file) ],
-         pidfile => [ qw(file) ],
-         version => [ qw(5.0.0) ],
+         log_file => [ qw(file) ],
+         version => [ qw(2.4.0|5.0.0) ],
          no_output => [ qw(0|1) ],
       },
       attributes_default => {
          version => '5.0.0',
          no_output => 0,
+         log_file => 'logstash.log',
       },
       commands => {
          install => [ ],
-         check_config => [ qw(conf) ],
-         start => [ qw(conf) ],
-         start_in_foreground => [ qw(conf) ],
+         get_binary => [ ],
+         check_config => [ qw(conf_file) ],
+         start => [ qw(conf_file|OPTIONAL) ],
+         start_in_foreground => [ qw(conf_file|OPTIONAL) ],
          stop => [ ],
-         generate_conf => [ qw(conf|OPTIONAL) ],
+         generate_conf => [ qw(conf_file|OPTIONAL) ],
          status => [ ],
+      },
+      require_modules => {
+         'Metabrik::File::Text' => [ ],
       },
       require_binaries => {
          tar => [ ],
@@ -51,23 +56,98 @@ sub brik_use_properties {
 
    my $datadir = $self->datadir;
    my $version = $self->version;
-
-   #my $conf_file = $datadir.'/elasticsearch-'.$version.'/config/elasticsearch.xml';
+   my $conf_file = $datadir."/logstash-$version.conf";
+   my $log_file = $datadir."/logstash-$version.log";
 
    return {
-      #attributes_default => {
-         #conf_file => $conf_file,
-      #},
+      attributes_default => {
+         conf_file => $conf_file,
+         log_file => $log_file,
+      },
    };
+}
+
+sub get_binary {
+   my $self = shift;
+
+   my $datadir = $self->datadir;
+   my $version = $self->version;
+
+   my $binary = $datadir.'/logstash-'.$version.'/bin/logstash';
+   $self->brik_help_run_file_not_found('get_binary', $binary) or return;
+
+   $self->log->verbose("get_binary: found binary [$binary]");
+
+   return $binary;
 }
 
 sub generate_conf {
    my $self = shift;
    my ($conf_file) = @_;
 
-   $self->log->info("TO DO");
-
    $conf_file ||= $self->conf_file;
+
+   my $conf =<<EOF
+input {
+   file {
+      type => "apache"
+      path => "/var/log/www/example.com-access.log*"
+      add_field => { "site" => "www.example.com" }
+      start_position => "beginning" # Start from beginning of every files
+      sincedb_path => "/dev/null"   # Read files entirely every times
+      ignore_older => "0"           # Process every file, even older than 24 hours
+   }
+}
+
+filter {
+   if [type] == "apache" {
+      if [message] =~ /: logfile turned over\$/ {
+         drop {}
+      }
+      # Defining patterns:
+      # https://www.elastic.co/guide/en/logstash/current/plugins-filters-grok.html
+      grok {
+         match => { "message" => "%{COMBINEDAPACHELOG}" }
+      }
+      date {
+         match => [ "timestamp" , "dd/MMM/yyyy:HH:mm:ss Z" ]
+      }
+   }
+}
+
+output {
+   if [type] == "apache" {
+      if "_grokparsefailure" in [tags] {
+         null {}
+      }
+
+      redis {
+         host => "127.0.0.1"
+         data_type => "list"
+         key => "logstash"
+         codec => json
+         congestion_interval => 1
+         congestion_threshold => 20000000
+         # Batch processing requires redis >= 2.4.0
+         batch => true
+         batch_events => 50
+         batch_timeout => 5
+      }
+   }
+   else {
+      stdout {
+         codec => json
+      }
+   }
+}
+EOF
+;
+
+   my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+   $ft->append(0);
+   $ft->overwrite(1);
+
+   $ft->write($conf, $conf_file) or return;
 
    return $conf_file;
 }
@@ -76,9 +156,13 @@ sub install {
    my $self = shift;
 
    my $datadir = $self->datadir;
+   my $version = $self->version;
    my $she = $self->shell;
 
    my $url = 'https://artifacts.elastic.co/downloads/logstash/logstash-5.0.0.tar.gz';
+   if ($version eq '2.4.0') {
+      $url = 'https://download.elastic.co/logstash/logstash/logstash-2.4.0.tar.gz';
+   }
 
    my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
    $cw->mirror($url, "$datadir/logstash.tar.gz") or return;
@@ -97,51 +181,59 @@ sub install {
 
 sub check_config {
    my $self = shift;
-   my ($file) = @_;
+   my ($conf_file) = @_;
 
-   $self->brik_help_run_undef_arg('start', $file) or return;
+   $self->brik_help_run_undef_arg('start', $conf_file) or return;
+   $self->brik_help_run_file_not_found('start', $conf_file) or return;
 
    my $datadir = $self->datadir;
    my $version = $self->version;
+   my $log_file = $self->log_file;
 
-   my $cmd = $datadir.'/logstash-'.$version.'/bin/logstash -t -f '.$file;
+   my $binary = $self->get_binary or return;
 
-   $self->log->info("check_config: running...");
+   my $cmd = "$binary -t -f $conf_file -l $log_file";
+
+   $self->log->info("check_config: started...");
 
    return $self->system($cmd);
 }
 
 #
-# logstash -f <config_file> -l <log_file>
+# logstash -f <config_file> -l <log_file> --debug
 #
 sub start {
    my $self = shift;
-   my ($file) = @_;
+   my ($conf_file) = @_;
 
-   $self->brik_help_run_undef_arg('start', $file) or return;
-   $self->brik_help_run_file_not_found('start', $file) or return;
+   $conf_file ||= $self->conf_file;
+   $self->brik_help_run_undef_arg('start', $conf_file) or return;
+   $self->brik_help_run_file_not_found('start', $conf_file) or return;
 
-   # Make if a full path file
-   if ($file !~ m{^/}) {
-      my $cwd = $self->shell->full_pwd;
-      $file = $cwd.'/'.$file;
+   if ($self->status) {
+      return $self->error_process_is_running;
    }
 
-   my $datadir = $self->datadir;
-   my $version = $self->version;
+   # Make if a full path file
+   if ($conf_file !~ m{^/}) {
+      my $cwd = $self->shell->full_pwd;
+      $conf_file = $cwd.'/'.$conf_file;
+   }
+
+   my $log_file = $self->log_file;
    my $no_output = $self->no_output;
 
-   my $binary = $datadir.'/logstash-'.$version.'/bin/logstash';
-   $self->brik_help_run_file_not_found('start', $binary) or return;
-
-   $self->log->verbose("start: using binary[$binary]");
+   my $binary = $self->get_binary or return;
 
    $self->close_output_on_start($no_output);
 
    $self->SUPER::start(sub {
       $self->log->verbose("Within daemon");
 
-      my $cmd = $binary.' -f '.$file;
+      my $cmd = "$binary -f $conf_file -l $log_file";
+      if ($self->debug) {
+         $cmd .= ' --debug';
+      }
 
       $self->system($cmd);
 
@@ -154,14 +246,24 @@ sub start {
 
 sub start_in_foreground {
    my $self = shift;
-   my ($file) = @_;
+   my ($conf_file) = @_;
 
-   $self->brik_help_run_undef_arg('start_in_foreground', $file) or return;
+   $conf_file ||= $self->conf_file;
+   $self->brik_help_run_undef_arg('start_in_foreground', $conf_file) or return;
+   $self->brik_help_run_file_not_found('start_in_foreground', $conf_file) or return;
 
-   my $datadir = $self->datadir;
-   my $version = $self->version;
+   if ($self->status) {
+      return $self->error_process_is_running;
+   }
 
-   my $cmd = $datadir.'/logstash-'.$version.'/bin/logstash -f '.$file;
+   my $log_file = $self->log_file;
+
+   my $binary = $self->get_binary or return;
+
+   my $cmd = "$binary -f $conf_file -l $log_file";
+   if ($self->debug) {
+      $cmd .= ' --debug';
+   }
 
    return $self->system($cmd);
 }
@@ -169,19 +271,35 @@ sub start_in_foreground {
 sub stop {
    my $self = shift;
 
-   my $pidfile = $self->pidfile;
-   if (! defined($pidfile)) {
-      $self->log->warning("stop: nothing to stop");
-      return 1;
+   if (! $self->status) {
+      return $self->info_process_is_not_running;
    }
 
-   return $self->kill_from_pidfile($pidfile);
+   my $conf_file = $self->conf_file;
+
+   my $binary = $self->get_binary or return;
+
+   my $string = "$binary -f $conf_file";
+   my $pid = $self->get_pid_from_string($string) or return;
+
+   return $self->kill($pid);
 }
 
 sub status {
    my $self = shift;
 
-   return $self->log->info("TODO");
+   my $conf_file = $self->conf_file;
+
+   my $binary = $self->get_binary or return;
+
+   my $string = "$binary -f $conf_file";
+   if ($self->is_running_from_string($string)) {
+      $self->verbose_process_is_running;
+      return 1;
+   }
+
+   $self->verbose_process_is_not_running;
+   return 0;
 }
 
 1;

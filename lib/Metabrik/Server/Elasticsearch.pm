@@ -23,21 +23,32 @@ sub brik_properties {
          pidfile => [ qw(file) ],
          version => [ qw(2.4.1|5.0.0) ],
          no_output => [ qw(0|1) ],
+         cluster_name => [ qw(name) ],
+         node_name => [ qw(name) ],
+         db_dir => [ qw(directory) ],
+         log_dir => [ qw(directory) ],
       },
       attributes_default => {
          listen => '127.0.0.1',
          port => 9200,
          version => '5.0.0',
          no_output => 1,
+         cluster_name => 'metabrik',
+         node_name => 'metabrik-1',
       },
       commands => {
          install => [ ],
+         get_binary => [ ],
          start => [ ],
          stop => [ ],
-         generate_conf => [ qw(conf|OPTIONAL) ],
+         generate_conf => [ qw(conf_file|OPTIONAL) ],
          # XXX: ./bin/plugin -install lmenezes/elasticsearch-kopf
          #install_plugin => [ qw(plugin) ],
          status => [ ],
+      },
+      require_modules => {
+         'Metabrik::File::Text' => [ ],
+         'Metabrik::System::File' => [ ],
       },
       require_binaries => {
          tar => [ ],
@@ -55,25 +66,72 @@ sub brik_use_properties {
 
    my $datadir = $self->datadir;
    my $version = $self->version;
-   my $pidfile = $datadir.'/daemon.pid';
-
-   my $conf_file = $datadir.'/elasticsearch-'.$version.'/config/elasticsearch.xml';
+   my $pidfile = $datadir."/elasticsearch-$version.pid";
+   my $conf_file = $datadir."/elasticsearch-$version/config/elasticsearch.yml";
+   my $db_dir = $datadir."/db-$version";
+   my $log_dir = $datadir."/log-$version";
 
    return {
       attributes_default => {
          conf_file => $conf_file,
          pidfile => $pidfile,
+         db_dir => $db_dir,
+         log_dir => $log_dir,
       },
    };
+}
+
+sub get_binary {
+   my $self = shift;
+
+   my $datadir = $self->datadir;
+   my $version = $self->version;
+
+   my $binary = $datadir.'/elasticsearch-'.$version.'/bin/elasticsearch';
+   $self->brik_help_run_file_not_found('get_binary', $binary) or return;
+
+   $self->log->verbose("get_binary: found binary [$binary]");
+
+   return $binary;
 }
 
 sub generate_conf {
    my $self = shift;
    my ($conf_file) = @_;
 
-   $self->log->info("TO DO");
-
    $conf_file ||= $self->conf_file;
+
+   my $version = $self->version;
+   my $cluster_name = $self->cluster_name;
+   my $node_name = $self->node_name;
+   my $listen = $self->listen;
+   my $port = $self->port;
+   my $db_dir = $self->db_dir;
+   my $log_dir = $self->log_dir;
+
+   $self->log->debug("mkdir db_dir [$db_dir]");
+   $self->log->debug("mkdir log_dir [$log_dir]");
+
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   $sf->mkdir($db_dir) or return;
+   $sf->mkdir($log_dir) or return;
+
+   my $conf =<<EOF
+cluster.name: $cluster_name
+node.name: $node_name
+path.data: $db_dir
+path.logs: $log_dir
+network.bind_host: ["$listen"]
+network.publish_host: $listen
+http.port: $port
+EOF
+;
+
+   my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+   $ft->append(0);
+   $ft->overwrite(1);
+
+   $ft->write($conf, $conf_file) or return;
 
    return $conf_file;
 }
@@ -110,26 +168,28 @@ sub install {
 sub start {
    my $self = shift;
 
-   my $datadir = $self->datadir;
-   my $version = $self->version;
+   my $conf_file = $self->conf_file;
+   $self->brik_help_run_file_not_found('start', $conf_file) or return;
+
+   if ($self->status) {
+      return $self->error_process_is_running;
+   }
+
    my $no_output = $self->no_output;
 
-   # If already started, we return.
-   if ($self->status) {
-      return 1;
-   }
+   my $binary = $self->get_binary or return;
 
    $self->close_output_on_start($no_output);
 
-   my $pidfile = $datadir.'/daemon.pid';
+   my $datadir = $self->datadir;
+   my $pidfile = $self->pidfile;
 
    $self->use_pidfile(0);
 
    $self->SUPER::start(sub {
       $self->log->verbose("Within daemon");
 
-      my $cmd = $datadir.'/elasticsearch-'.$version.'/bin/elasticsearch -p '.
-         $datadir.'/daemon.pid';
+      my $cmd = "$binary -p $pidfile";
 
       $self->system($cmd);
 
@@ -137,21 +197,17 @@ sub start {
       exit(1);
    });
 
-   $self->wait_for_pidfile($pidfile) or return;
-
-   $self->pidfile($pidfile);
-
    return $pidfile;
 }
 
 sub stop {
    my $self = shift;
 
-   my $pidfile = $self->pidfile;
-   if (! defined($pidfile)) {
-      $self->log->warning("stop: nothing to stop");
-      return 1;
+   if (! $self->status) {
+      return $self->info_process_is_not_running;
    }
+
+   my $pidfile = $self->pidfile;
 
    return $self->kill_from_pidfile($pidfile);
 }
@@ -161,12 +217,12 @@ sub status {
 
    my $pidfile = $self->pidfile;
 
-   if (-f $pidfile) {
-      $self->log->verbose("status: process is running");
+   if ($self->is_running_from_pidfile($pidfile)) {
+      $self->verbose_process_is_running;
       return 1;
    }
 
-   $self->log->verbose("status: process NOT running");
+   $self->verbose_process_is_not_running;
    return 0;
 }
 

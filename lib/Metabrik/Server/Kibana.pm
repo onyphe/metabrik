@@ -20,25 +20,27 @@ sub brik_properties {
          listen => [ qw(ip_address) ],
          port => [ qw(port) ],
          conf_file => [ qw(file) ],
-         pidfile => [ qw(file) ],
+         log_file => [ qw(file) ],
          version => [ qw(4.6.2|5.0.0) ],
          no_output => [ qw(0|1) ],
+         es_nodes => [ qw(node|node_list) ],
       },
       attributes_default => {
          listen => '127.0.0.1',
          port => 5601,
          version => '5.0.0',
-         no_output => 0,
+         no_output => 1,
+         es_nodes => 'http://localhost:9200',
       },
       commands => {
          install => [ ],
-         start => [ ],
+         start => [ qw(conf_file) ],
          stop => [ ],
          generate_conf => [ qw(conf|OPTIONAL) ],
          status => [ ],
       },
       require_modules => {
-         'Metabrik::System::Process' => [ ],
+         'Metabrik::File::Text' => [ ],
       },
       require_binaries => {
          tar => [ ],
@@ -56,23 +58,61 @@ sub brik_use_properties {
 
    my $datadir = $self->datadir;
    my $version = $self->version;
-
-   #my $conf_file = $datadir.'/elasticsearch-'.$version.'/config/elasticsearch.xml';
+   my $conf_file = $datadir."/kibana-$version.conf";
+   my $log_file = $datadir."/kibana-$version.log";
 
    return {
-      #attributes_default => {
-         #conf_file => $conf_file,
-      #},
+      attributes_default => {
+         conf_file => $conf_file,
+         log_file => $log_file,
+      },
    };
+}
+
+sub get_binary {
+   my $self = shift;
+
+   my $datadir = $self->datadir;
+   my $version = $self->version;
+
+   my $binary = $datadir.'/kibana-'.$version.'-linux-x86_64/bin/kibana';
+   $self->brik_help_run_file_not_found('get_binary', $binary) or return;
+
+   $self->log->verbose("get_binary: found binary [$binary]");
+
+   return $binary;
 }
 
 sub generate_conf {
    my $self = shift;
    my ($conf_file) = @_;
 
-   $self->log->info("TO DO");
-
    $conf_file ||= $self->conf_file;
+
+   my $version = $self->version;
+   my $listen = $self->listen;
+   my $port = $self->port;
+   my $es_nodes = $self->es_nodes;
+
+   my $node = $es_nodes;
+   if ($es_nodes eq 'ARRAY') {
+      $node = $es_nodes->[0];
+   }
+
+   my $conf =<<EOF
+server.port: $port
+server.host: "$listen"
+#server.basePath: ""
+#server.name: "your-hostname"
+elasticsearch.url: "$node"
+EOF
+;
+
+   my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+   $ft->append(0);
+   $ft->overwrite(1);
+
+   $ft->write($conf, $conf_file) or return;
 
    return $conf_file;
 }
@@ -104,31 +144,33 @@ sub install {
    return 1;
 }
 
-#
-# /usr/local/bin/node /usr/local/www/kibana44/src/cli serve --config /usr/local/etc/kibana.yml --log-file /var/log/kibana.log
-#
 sub start {
    my $self = shift;
+   my ($conf_file) = @_;
 
-   my $datadir = $self->datadir;
-   my $version = $self->version;
+   $conf_file ||= $self->conf_file;
+
+   $self->brik_help_run_undef_arg('start', $conf_file) or return;
+   $self->brik_help_run_file_not_found('start', $conf_file) or return;
+
+   if ($self->status) {
+      return $self->error_process_is_running;
+   }
+
+   my $log_file = $self->log_file;
    my $no_output = $self->no_output;
 
-   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
-   if ($sp->is_running('node')) {
-      return $self->log->error("start: process already running");
-   }
+   my $binary = $self->get_binary or return;
 
    $self->close_output_on_start($no_output);
 
-   my $binary = $datadir.'/kibana-'.$version.'-linux-x86_64/bin/kibana';
-   $self->brik_help_run_file_not_found('start', $binary) or return;
+   $self->use_pidfile(0);
 
    $self->SUPER::start(sub {
       $self->log->verbose("Within daemon");
 
       # -p port, -l log-file -c config-file -e elasticsearch-uri
-      my $cmd = $datadir.'/kibana-'.$version.'-linux-x86_64/bin/kibana -Q';
+      my $cmd = "$binary -Q -l $log_file -c $conf_file";
 
       $self->system($cmd);
 
@@ -142,24 +184,34 @@ sub start {
 sub stop {
    my $self = shift;
 
-   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
-   if (! $sp->is_running('node')) {
-      return $self->log->info("stop: process NOT running");
+   if (! $self->status) {
+      return $self->info_process_is_not_running;
    }
 
-   return $self->kill('node');
+   my $binary = $self->get_binary or return;
+
+   my $log_file = $self->conf_file;
+   my $conf_file = $self->conf_file;
+
+   my $string = "cli -Q -l $log_file -c $conf_file";
+   my $pid = $self->get_pid_from_string($string) or return;
+
+   return $self->kill($pid);
 }
 
 sub status {
    my $self = shift;
 
-   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
-   if ($sp->is_running('node')) {
-      $self->log->verbose("status: process 'node' is running");
+   my $log_file = $self->log_file;
+   my $conf_file = $self->conf_file;
+
+   my $string = "cli -Q -l $log_file -c $conf_file";
+   if ($self->is_running_from_string($string)) {
+      $self->verbose_process_is_running;
       return 1;
    }
 
-   $self->log->verbose("status: process 'node' is NOT running");
+   $self->verbose_process_is_not_running;
    return 0;
 }
 
