@@ -25,6 +25,28 @@ sub brik_properties {
    };
 }
 
+sub _convert_size {
+   my $self = shift;
+   my ($size) = @_;
+
+   return unless defined($size);
+
+   if ($size =~ m{^(\d+)K$}) {
+      return $1."000";
+   }
+   elsif ($size =~ m{^(\d+)M$}) {
+      return $1."000000";
+   }
+   elsif ($size =~ m{^(\d+)G$}) {
+      return $1."000000000";
+   }
+   elsif ($size =~ m{^(\d+)T$}) { # LOL
+      return $1."000000000000";
+   }
+
+   return $size;
+}
+
 sub stats {
    my $self = shift;
 
@@ -35,6 +57,7 @@ sub stats {
    #
    # 0: last pid: 61608;  load averages:  0.99,  1.04,  1.06  up 4+20:20:19    10:32:11
    # 1: 279 processes: 2 running, 269 sleeping, 1 stopped, 6 zombie, 1 waiting
+   # 1: 272 processes: 2 running, 263 sleeping, 6 zombie, 1 waiting,
    # 2: 
    # 3: Mem: 4116M Active, 15G Inact, 11G Wired, 21M Cache, 958M Free
    # 4: ARC: 9086M Total, 3939M MFU, 1973M MRU, 1417K Anon, 102M Header, 3071M Other
@@ -63,48 +86,49 @@ sub stats {
          $info->{time} = $f[5];
       }
       elsif ($row == 1) {
-         my @f = $line =~ m{^(\d+) processes: (\d+) running, (\d+) sleeping, (\d+) stopped, (\d+) zombie, (\d+) waiting$};
+         my @f = $line =~ m{^(\d+) processes: (?:(\d+) running, )?(?:(\d+) sleeping, )?(?:(\d+) stopped, )?(?:(\d+) zombie, )?(?:(\d+) waiting)?$};
 
-         $self->log->debug("@f");
+         #$self->log->debug("@f");
 
-         $info->{total_processes} = $f[0];
-         $info->{running_processes} = $f[1];
-         $info->{sleeping_processes} = $f[2];
-         $info->{stopped_processes} = $f[3];
-         $info->{zombie_processes} = $f[4];
-         $info->{waiting_processes} = $f[5];
+         $info->{total_processes} = $f[0] || 0;
+         $info->{running_processes} = $f[1] || 0;
+         $info->{sleeping_processes} = $f[2] || 0;
+         $info->{stopped_processes} = $f[3] || 0;
+         $info->{zombie_processes} = $f[4] || 0;
+         $info->{waiting_processes} = $f[5] || 0;
       }
       elsif ($row == 3) {
-         my @f = $line =~ m{^Mem: (\S+) Active, (\S+) Inact, (\S+) Wired, (\S+) Cache, (\S+) Free$};
+         my @f = $line =~ m{^Mem: (?:(\S+) Active, )?(?:(\S+) Inact, )?(?:(\S+) Wired, )?(?:(\S+) Cache, )?(?:(\S+) Free)?$};
 
          $self->log->debug("@f");
 
-         $info->{active_memory} = $f[0];
-         $info->{inactive_memory} = $f[1];
-         $info->{wired_memory} = $f[2];
-         $info->{cache_memory} = $f[3];
-         $info->{free_memory} = $f[4];
+         $info->{active_memory} = $self->_convert_size($f[0]) || 0;
+         $info->{inactive_memory} = $self->_convert_size($f[1]) || 0;
+         $info->{wired_memory} = $self->_convert_size($f[2]) || 0;
+         $info->{cache_memory} = $self->_convert_size($f[3]) || 0;
+         $info->{free_memory} = $self->_convert_size($f[4]) || 0;
       }
       elsif ($row == 4) {
          my @f = $line =~ m{^ARC: (\S+) Total, (\S+) MFU, (\S+) MRU, (\S+) Anon, (\S+) Header, (\S+) Other$};
 
          $self->log->debug("@f");
 
-         $info->{total_arc} = $f[0];
-         $info->{mfu_arc} = $f[1];
-         $info->{mru_arc} = $f[2];
-         $info->{anon_arc} = $f[3];
-         $info->{header_arc} = $f[4];
-         $info->{other_arc} = $f[5];
+         $info->{total_arc} = $self->_convert_size($f[0]) || 0;
+         $info->{mfu_arc} = $self->_convert_size($f[1]) || 0;
+         $info->{mru_arc} = $self->_convert_size($f[2]) || 0;
+         $info->{anon_arc} = $self->_convert_size($f[3]) || 0;
+         $info->{header_arc} = $self->_convert_size($f[4]) || 0;
+         $info->{other_arc} = $self->_convert_size($f[5]) || 0;
       }
       elsif ($row == 5) {
-         my @f = $line =~ m{^Swap: (\S+) Total, (\S+) Used, (\S+) Free$};
+         # "Swap: 16G Total, 16G Free"
+         my @f = $line =~ m{^Swap: (?:(\S+) Total, )?(?:(\S+) Used, )?(?:(\S+) Free)?$};
 
-         $self->log->debug("@f");
+         #$self->log->debug("@f");
 
-         $info->{total_swap} = $f[0];
-         $info->{used_swap} = $f[1];
-         $info->{free_swap} = $f[2];
+         $info->{total_swap} = $self->_convert_size($f[0]) || 0;
+         $info->{used_swap} = $self->_convert_size($f[1]) || 0;
+         $info->{free_swap} = $self->_convert_size($f[2]) || 0;
       }
 
       $row++;
