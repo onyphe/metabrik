@@ -55,7 +55,23 @@ sub encode {
    $self->brik_help_run_undef_arg('encode', $hostname) or return;
    $self->brik_help_run_undef_arg('encode', $process) or return;
    $self->brik_help_run_undef_arg('encode', $pid) or return;
-   $self->brik_help_run_invalid_arg('encode', $data, 'SCALAR') or return;
+   my $ref = $self->brik_help_run_invalid_arg('encode', $data, 'HASH', 'SCALAR')
+      or return;
+
+   # Convert to key=value
+   if ($ref eq 'HASH') {
+      my $kv = '';
+      for my $k (sort { $a cmp $b } keys %$data) {
+         if ($k !~ m{\s}) {  # If there is no space char, we don't put between double quotes
+            $kv .= "$k=\"".$data->{$k}."\" ";
+         }
+         else {
+            $kv .= "\"$k\"=\"".$data->{$k}."\" ";
+         }
+      }
+      $kv =~ s{\s*$}{};
+      $data = $kv;
+   }
 
    my @month = qw{Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec};
 

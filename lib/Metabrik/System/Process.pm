@@ -20,6 +20,7 @@ sub brik_properties {
          force_kill => [ qw(0|1) ],
          close_output_on_start => [ qw(0|1) ],
          use_pidfile => [ qw(0|1) ],
+         pidfile => [ qw(file) ],
       },
       attributes_default => {
          force_kill => 0,
@@ -340,9 +341,15 @@ sub grep_by_name {
 sub get_new_pidfile {
    my $self = shift;
 
+   # Use provided one.
+   my $pidfile = $self->pidfile;
+   if (defined($pidfile)) {
+      return $pidfile;
+   }
+
    my $id = $self->get_latest_daemon_id;
    defined($id) ? $id++ : ($id = 1);
-   my $pidfile = sprintf("%s/daemonpid.%05d", $self->datadir, $id);
+   $pidfile = sprintf("%s/daemonpid.%05d", $self->datadir, $id);
 
    return $pidfile;
 }
@@ -350,7 +357,12 @@ sub get_new_pidfile {
 sub get_latest_pidfile {
    my $self = shift;
 
-   my $pidfile;
+   # Return user provided one.
+   my $pidfile = $self->pidfile;
+   if (defined($pidfile)) {
+      return $pidfile;
+   }
+
    my $id = $self->get_latest_daemon_id;
    if (defined($id)) {
       $pidfile = sprintf("%s/daemonpid.%05d", $self->datadir, $id);
@@ -460,6 +472,17 @@ sub error_process_is_not_running {
    my $self = shift;
 
    return $self->log->error("process is NOT running");
+}
+
+sub brik_fini {
+   my $self = shift;
+
+   my $pidfile = $self->get_latest_pidfile;
+   if (-f $pidfile) {
+      $self->delete_pidfile($pidfile);
+   }
+
+   return $self->SUPER::brik_fini;
 }
 
 1;
