@@ -607,11 +607,23 @@
       "Metabrik::System::Freebsd::Iocage" : {
          "file" : "lib/Metabrik/System/Freebsd/Iocage.pm"
       },
+      "Metabrik::System::Freebsd::Iostat" : {
+         "file" : "lib/Metabrik/System/Freebsd/Iostat.pm"
+      },
+      "Metabrik::System::Freebsd::Netstat" : {
+         "file" : "lib/Metabrik/System/Freebsd/Netstat.pm"
+      },
       "Metabrik::System::Freebsd::Package" : {
          "file" : "lib/Metabrik/System/Freebsd/Package.pm"
       },
       "Metabrik::System::Freebsd::Pf" : {
          "file" : "lib/Metabrik/System/Freebsd/Pf.pm"
+      },
+      "Metabrik::System::Freebsd::Top" : {
+         "file" : "lib/Metabrik/System/Freebsd/Top.pm"
+      },
+      "Metabrik::System::Freebsd::Who" : {
+         "file" : "lib/Metabrik/System/Freebsd/Who.pm"
       },
       "Metabrik::System::Fsck" : {
          "file" : "lib/Metabrik/System/Fsck.pm"

@@ -13,6 +13,10 @@ Revision history for Perl extension Metabrik::Repository.
    - new: server::kibana Brik
    - new: server::logstash Brik
    - new: server::redis Brik
+   - new: system::frebsd::iostat Brik
+   - new: system::frebsd::netstat Brik
+   - new: system::frebsd::top Brik
+   - new: system::frebsd::who Brik
 
 1.25.0 Tue 11 Oct 19:06:20 CEST 2016
    - new: www::google Brik

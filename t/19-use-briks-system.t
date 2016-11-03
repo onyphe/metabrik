@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 26) }
+BEGIN { plan(tests => 30) }
 
 ok(sub { eval("use Metabrik::System::Docker"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::System::File"); $@ ? 0 : 1 }, 1, $@);
@@ -27,3 +27,7 @@ ok(sub { eval("use Metabrik::System::Centos::Service"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::System::Centos::User"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::System::Netstat"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::System::Route"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::System::Freebsd::Netstat"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::System::Freebsd::Iostat"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::System::Freebsd::Who"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::System::Freebsd::Top"); $@ ? 0 : 1 }, 1, $@);

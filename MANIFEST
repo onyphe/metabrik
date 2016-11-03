@@ -193,8 +193,12 @@ lib/Metabrik/System/Docker.pm
 lib/Metabrik/System/File.pm
 lib/Metabrik/System/Freebsd/Ezjail.pm
 lib/Metabrik/System/Freebsd/Iocage.pm
+lib/Metabrik/System/Freebsd/Iostat.pm
+lib/Metabrik/System/Freebsd/Netstat.pm
 lib/Metabrik/System/Freebsd/Package.pm
 lib/Metabrik/System/Freebsd/Pf.pm
+lib/Metabrik/System/Freebsd/Top.pm
+lib/Metabrik/System/Freebsd/Who.pm
 lib/Metabrik/System/Fsck.pm
 lib/Metabrik/System/Gphotofs.pm
 lib/Metabrik/System/Libvirt.pm
