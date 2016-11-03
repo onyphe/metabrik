@@ -435,6 +435,9 @@
       "Metabrik::Network::Zmap" : {
          "file" : "lib/Metabrik/Network/Zmap.pm"
       },
+      "Metabrik::Password::Mirai" : {
+         "file" : "lib/Metabrik/Password/Mirai.pm"
+      },
       "Metabrik::Perl::Module" : {
          "file" : "lib/Metabrik/Perl/Module.pm"
       },

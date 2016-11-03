@@ -17,6 +17,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: system::frebsd::netstat Brik
    - new: system::frebsd::top Brik
    - new: system::frebsd::who Brik
+   - new: password::mirai Brik
 
 1.25.0 Tue 11 Oct 19:06:20 CEST 2016
    - new: www::google Brik

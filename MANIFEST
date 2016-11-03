@@ -136,6 +136,7 @@ lib/Metabrik/Network/Wlan.pm
 lib/Metabrik/Network/Wps.pm
 lib/Metabrik/Network/Write.pm
 lib/Metabrik/Network/Zmap.pm
+lib/Metabrik/Password/Mirai.pm
 lib/Metabrik/Perl/Module.pm
 lib/Metabrik/Proxy/Http.pm
 lib/Metabrik/Proxy/Ssh2tcp.pm
@@ -240,7 +241,7 @@ t/06-use-briks-database.t
 t/07-use-briks-binjitsu.t
 t/08-use-briks-forensic.t
 t/09-use-briks-file.t
-t/10-use-briks-http.t
+t/10-use-briks-password.t
 t/11-use-briks-identify.t
 t/12-use-briks-netbios.t
 t/13-use-briks-network.t
