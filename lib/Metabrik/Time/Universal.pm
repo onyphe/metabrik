@@ -30,13 +30,16 @@ sub brik_properties {
          today => [ qw(separator|OPTIONAL) ],
          yesterday => [ qw(separator|OPTIONAL) ],
          date => [ ],
+         gmdate => [ ],
          month => [ qw(timezone|OPTIONAL) ],
          last_month => [ qw(timezone|OPTIONAL) ],
          is_timezone => [ qw(timezone) ],
+         timestamp => [ ],
       },
       require_modules => {
          'DateTime' => [ ],
          'DateTime::TimeZone' => [ ],
+         'POSIX' => [ qw(strftime) ],
       },
    };
 }
@@ -132,6 +135,14 @@ sub date {
    return CORE::localtime()."";
 }
 
+sub gmdate {
+   my $self = shift;
+
+   eval("use POSIX qw(strftime);");
+
+   return strftime("%a %b %e %H:%M:%S %Y", CORE::gmtime());
+}
+
 sub month {
    my $self = shift;
    my ($sep) = @_;
@@ -173,6 +184,12 @@ sub is_timezone {
    my %h = map { $_ => 1 } @$tz_list;
 
    return exists($h{$tz}) ? 1 : 0;
+}
+
+sub timestamp {
+   my $self = shift;
+
+   return CORE::time();
 }
 
 1;

@@ -7,7 +7,7 @@ package Metabrik::System::Package;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command);
 
 sub brik_properties {
    return {
@@ -47,6 +47,7 @@ sub get_system_package {
    my $self = shift;
 
    my $os = $self->my_os;
+   my $sudo_args = $self->sudo_args;
 
    my $sp;
    if ($os eq 'ubuntu') {
@@ -64,6 +65,8 @@ sub get_system_package {
    else {
       return $self->log->error("get_system_package: cannot determine package system for OS [$os]");
    }
+
+   $sp->sudo_args($sudo_args);
 
    return $sp;
 }

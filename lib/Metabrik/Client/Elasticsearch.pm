@@ -77,6 +77,7 @@ sub brik_properties {
          count_green_shards => [ ],
          count_yellow_shards => [ ],
          count_red_shards => [ ],
+         list_datatypes => [ ],
       },
       require_modules => {
          'Metabrik::String::Json' => [ ],
@@ -1226,6 +1227,17 @@ sub count_red_shards {
    }
 
    return $count;
+}
+
+#
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html
+#
+sub list_datatypes {
+   my $self = shift;
+
+   return {
+      core => [ qw(string long integer short byte double float data boolean binary) ],
+   };
 }
 
 1;
