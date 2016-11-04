@@ -164,7 +164,7 @@ sub write {
    my $written = '';
 
    # Write header if this is a new file and user asked for it.
-   if ($self->write_header && $is_new_file) {
+   if ($self->write_header && ($is_new_file || $self->overwrite)) {
       my $data = join($self->separator, @header)."\n";
       print $fd $data;
       $written .= $data;
