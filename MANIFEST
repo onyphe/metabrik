@@ -35,6 +35,7 @@ lib/Metabrik/Client/Ssh.pm
 lib/Metabrik/Client/Ssl.pm
 lib/Metabrik/Client/Tcpdump.pm
 lib/Metabrik/Client/Tcp.pm
+lib/Metabrik/Client/Telnet.pm
 lib/Metabrik/Client/Twitter.pm
 lib/Metabrik/Client/Udp.pm
 lib/Metabrik/Client/Whois.pm

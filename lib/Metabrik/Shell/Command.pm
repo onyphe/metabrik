@@ -35,7 +35,10 @@ sub brik_properties {
          use_sudo => 0,
          use_pager => 0,
          use_globbing => 0,
-         sudo_args => '-E',  # Keep environment
+         #sudo_args => '-E',  # Keep environment
+         sudo_args => '',     # Do not keep env by default.
+                              # Not needed anymore cause Metabrik is installed
+                              # system-wide.
       },
       commands => {
          system => [ qw(command) ],

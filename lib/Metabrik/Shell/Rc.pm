@@ -104,13 +104,37 @@ set core::shell echo 0
 my \$home = \$ENV{HOME}
 my \$user = \$ENV{USER}
 
-my \$sudo = "sudo -E \$0 --no-splash"
-
 set core::global ctimeout 5
 set core::global rtimeout 5
+set core::shell ps1 Meta
+set core::log level 2
+
+use shell::command
+use shell::history
+use shell::rc
+use brik::tool
+use brik::search
 
 alias reuse "run core::context reuse"
 alias pwd "run core::shell pwd"
+alias update_available "run core::context update_available"
+alias reuse "run core::context reuse"
+alias system "run shell::command system"
+alias capture "run shell::command capture"
+alias ls "run shell::command capture ls -Fh"
+alias l "run shell::command capture ls -lFh"
+alias ll "run shell::command capture ls -lFh"
+alias cp "run shell::command capture cp -rfp"
+alias rm "run shell::command capture rm -rf"
+alias find "run shell::command capture find"
+alias grep "run shell::command capture grep"
+alias ! "run shell::history exec"
+alias history "run shell::history show"
+alias source "run shell::rc load_and_execute"
+alias search "run brik::search"
+alias show "run brik::search all"
+
+run shell::history load
 
 set core::shell echo 1
 EOF

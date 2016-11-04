@@ -132,6 +132,9 @@
       "Metabrik::Client::Tcpdump" : {
          "file" : "lib/Metabrik/Client/Tcpdump.pm"
       },
+      "Metabrik::Client::Telnet" : {
+         "file" : "lib/Metabrik/Client/Telnet.pm"
+      },
       "Metabrik::Client::Twitter" : {
          "file" : "lib/Metabrik/Client/Twitter.pm"
       },
