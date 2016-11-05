@@ -56,6 +56,7 @@ sub brik_properties {
          get_mappings => [ qw(index) ],
          create_index => [ qw(index) ],
          create_index_with_mappings => [ qw(index mappings) ],
+         info => [ qw(nodes_list|OPTIONAL) ],
          get_templates => [ qw(nodes_list|OPTIONAL) ],
          list_templates => [ qw(nodes_list|OPTIONAL) ],
          get_template => [ qw(name) ],
@@ -593,6 +594,23 @@ sub create_index_with_mappings {
    }
 
    return $r;
+}
+
+# GET http://localhost:9200/
+sub info {
+   my $self = shift;
+   my ($nodes) = @_;
+
+   $nodes ||= $self->nodes;
+   $self->brik_help_run_undef_arg('info', $nodes) or return;
+   $self->brik_help_run_invalid_arg('info', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('info', $nodes) or return;
+
+   my $first = $nodes->[0];
+
+   $self->get($first) or return;
+
+   return $self->content;
 }
 
 # GET http://localhost:9200/_template/
