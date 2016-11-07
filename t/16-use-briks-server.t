@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 12) }
+BEGIN { plan(tests => 13) }
 
 ok(sub { eval("use Metabrik::Server::Dns"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Server::Elasticsearch"); $@ ? 0 : 1 }, 1, $@);
@@ -13,3 +13,4 @@ ok(sub { eval("use Metabrik::Server::Tor"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Server::Kibana"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Server::Logstash"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Server::Redis"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::Server::Logstash::Indexer"); $@ ? 0 : 1 }, 1, $@);

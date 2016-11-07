@@ -490,6 +490,9 @@
       "Metabrik::Server::Logstash" : {
          "file" : "lib/Metabrik/Server/Logstash.pm"
       },
+      "Metabrik::Server::Logstash::Indexer" : {
+         "file" : "lib/Metabrik/Server/Logstash/Indexer.pm"
+      },
       "Metabrik::Server::Redis" : {
          "file" : "lib/Metabrik/Server/Redis.pm"
       },

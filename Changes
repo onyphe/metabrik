@@ -1,5 +1,8 @@
 Revision history for Perl extension Metabrik::Repository.
 
+1.25.2
+   - new: server::logstash::indexer Brik
+
 1.25.1 Fri  4 Nov 07:16:27 CET 2016
    - new: binjitsu::checksec Brik
    - new: binjitsu::pattern Brik ( \o/ first contributed Brik by ZadYree, thanks to him)
