@@ -50,6 +50,8 @@ sub brik_properties {
          www_search => [ qw(query index|OPTIONAL) ],
          delete_index => [ qw(index_or_indices_list) ],
          show_indices => [ qw(nodes_list|OPTIONAL) ],
+         show_nodes => [ qw(nodes_list|OPTIONAL) ],
+         show_health => [ qw(nodes_list|OPTIONAL) ],
          list_indices => [ qw(nodes_list|OPTIONAL) ],
          get_index => [ qw(index) ],
          get_aliases => [ qw(index) ],
@@ -441,6 +443,64 @@ sub show_indices {
 
    if (@lines == 0) {
       $self->log->warning("show_indices: nothing returned, no index?");
+   }
+
+   return \@lines;
+}
+
+sub show_nodes {
+   my $self = shift;
+   my ($nodes) = @_;
+
+   $nodes ||= $self->nodes;
+   $self->brik_help_run_undef_arg('show_nodes', $nodes) or return;
+   $self->brik_help_run_invalid_arg('show_nodes', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('show_nodes', $nodes) or return;
+
+   my $uri = $nodes->[0];
+
+   my $get = $self->SUPER::get("$uri/_cat/nodes") or return;
+   if ($self->code ne 200) {
+      return $self->log->error("show_nodes: failed with content [".$get->{content}."]");
+   }
+   my $content = $get->{content};
+   if (! defined($content)) {
+      return;
+   }
+
+   my @lines = split(/\n/, $content);
+
+   if (@lines == 0) {
+      $self->log->warning("show_nodes: nothing returned, no nodes?");
+   }
+
+   return \@lines;
+}
+
+sub show_health {
+   my $self = shift;
+   my ($nodes) = @_;
+
+   $nodes ||= $self->nodes;
+   $self->brik_help_run_undef_arg('show_health', $nodes) or return;
+   $self->brik_help_run_invalid_arg('show_health', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('show_health', $nodes) or return;
+
+   my $uri = $nodes->[0];
+
+   my $get = $self->SUPER::get("$uri/_cat/health") or return;
+   if ($self->code ne 200) {
+      return $self->log->error("show_health: failed with content [".$get->{content}."]");
+   }
+   my $content = $get->{content};
+   if (! defined($content)) {
+      return;
+   }
+
+   my @lines = split(/\n/, $content);
+
+   if (@lines == 0) {
+      $self->log->warning("show_health: nothing returned, no health?");
    }
 
    return \@lines;

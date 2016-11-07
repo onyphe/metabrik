@@ -88,13 +88,14 @@ sub from_ipv4 {
 
    # Convert from blessed hashref to hashref
    my $h = { map { $_ => $record->{$_} } keys %$record };
-   $h->{time_zone} = $record->time_zone;
+   $h->{timezone} = $record->time_zone;
 
    my $asn = '';
    my $organization = '';
    my $asn_organization = $gi_asn->name_by_addr($ipv4);
    if ($asn_organization) {
       ($asn, $organization) = $asn_organization =~ m{^(\S+)(?:\s+(.*))?$};
+      $asn ||= $asn_organization;  # Not able to parse, we put it raw.
    }
    $organization ||= 'undef';
 
