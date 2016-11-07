@@ -76,13 +76,41 @@ sub from_ipv4 {
 
    $self->brik_help_run_undef_arg('from_ipv4', $ipv4) or return;
 
+   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
+
    my $gi = Geo::IP->open($self->datadir.'/GeoIPCity.dat', Geo::IP::GEOIP_STANDARD())
       or return $self->log->error("from_ipv4: unable to open GeoIPCity.dat");
+
+   my $gi_asn = Geo::IP->open($self->datadir.'/GeoIPASNum.dat', Geo::IP::GEOIP_STANDARD())
+      or return $self->log->error("from_ipv4: unable to open GeoIPASNum.dat");
 
    my $record = $gi->record_by_addr($ipv4);
 
    # Convert from blessed hashref to hashref
-   return { map { $_ => $record->{$_} } keys %$record };
+   my $h = { map { $_ => $record->{$_} } keys %$record };
+   $h->{time_zone} = $record->time_zone;
+
+   my $asn = '';
+   my $organization = '';
+   my $asn_organization = $gi_asn->name_by_addr($ipv4);
+   if ($asn_organization) {
+      ($asn, $organization) = $asn_organization =~ m{^(\S+)(?:\s+(.*))?$};
+   }
+   $organization ||= 'undef';
+
+   my ($from, $to) = $gi->range_by_ip($ipv4);
+
+   my $network = $na->range_to_cidr($from, $to) or return;
+   my $network_list = join('|', @$network);
+
+   # Add other info and return
+   $h->{asn} = $asn;
+   $h->{organization} = $organization;
+   $h->{first_ip} = $from;
+   $h->{last_ip} = $to;
+   $h->{networks} = $network_list;
+
+   return $h;
 }
 
 sub from_ipv6 {

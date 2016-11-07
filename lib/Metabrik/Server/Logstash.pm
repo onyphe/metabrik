@@ -100,27 +100,33 @@ input {
 }
 
 filter {
+   if [message] =~ /: logfile turned over\$/ {
+      drop {}
+   }
    if [type] == "apache" {
-      if [message] =~ /: logfile turned over\$/ {
-         drop {}
-      }
       # Defining patterns:
       # https://www.elastic.co/guide/en/logstash/current/plugins-filters-grok.html
       grok {
          match => { "message" => "%{COMBINEDAPACHELOG}" }
+         overwrite => [ "message" ]
+      }
+      geoip {
+         source => "clientip"
+         target => "geoip"
+         add_tag => [ "apache-geoip" ]
       }
       date {
          match => [ "timestamp" , "dd/MMM/yyyy:HH:mm:ss Z" ]
+         remove_field => [ "timestamp" ]
       }
    }
 }
 
 output {
+   if "_grokparsefailure" in [tags] {
+      null {}
+   }
    if [type] == "apache" {
-      if "_grokparsefailure" in [tags] {
-         null {}
-      }
-
       redis {
          host => "127.0.0.1"
          data_type => "list"
