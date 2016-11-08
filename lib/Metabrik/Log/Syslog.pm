@@ -76,6 +76,37 @@ sub brik_init {
    return $self->SUPER::brik_init;
 }
 
+sub message {
+   my $self = shift;
+   my ($text, $caller) = @_;
+
+   $text ||= 'undef';
+
+   # Convert to a string of key="value" pairs
+   if (ref($text) eq 'HASH') {
+      my $kv = '';
+      for my $k (sort { $a cmp $b } keys %$text) {
+         if ($k !~ m{\s}) {  # If there is no space char, we don't put between double quotes
+            $kv .= "$k=\"".$text->{$k}."\" ";
+         }
+         else {
+            $kv .= "\"$k\"=\"".$text->{$k}."\" ";
+         }
+      }
+      $kv =~ s{\s*$}{};
+      $text = $kv;
+   }
+
+   my $message = '';
+   if (defined($caller)) {
+      $caller =~ s/^metabrik:://i;
+      $caller = lc($caller);
+      $message .= lc($caller).': ';
+   }
+
+   return $message."$text\n";
+}
+
 sub send {
    my $self = shift;
    my ($msg, $priority) = @_;

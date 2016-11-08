@@ -1116,7 +1116,12 @@ sub import_from_csv {
          if ($key =~ m{^(\S+)\.(\S+)$}) {  # An OBJECT is waiting
             my $k = $1;
             my $v = $2;
-            $h->{$k}{$v} = $this->{$key};
+            if ($this->{$key} =~ m{\|}) { # An ARRAY is waiting
+               $h->{$k}{$v} = [ split('\|', $this->{$key}) ];
+            }
+            else {
+               $h->{$k}{$v} = $this->{$key};
+            }
          }
          else {
             if ($this->{$key} =~ m{\|}) { # An ARRAY is waiting
