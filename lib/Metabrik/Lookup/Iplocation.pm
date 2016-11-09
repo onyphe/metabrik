@@ -25,6 +25,8 @@ sub brik_properties {
          from_ipv6 => [ qw(ipv6_address) ],
          subnet4 => [ qw(ipv4_address) ],
          organization_name => [ qw(ip_address) ],
+         range_from_ipv4 => [ qw(ipv4_address) ],
+         networks_from_ipv4 => [ qw(ipv4_address) ],
       },
       require_modules => {
          'Geo::IP' => [ ],
@@ -84,7 +86,8 @@ sub from_ipv4 {
    my $gi_asn = Geo::IP->open($self->datadir.'/GeoIPASNum.dat', Geo::IP::GEOIP_STANDARD())
       or return $self->log->error("from_ipv4: unable to open GeoIPASNum.dat");
 
-   my $record = $gi->record_by_addr($ipv4);
+   my $record = $gi->record_by_addr($ipv4)
+      or return $self->log->error("from_ipv4: unable to find info for IPv4 [$ipv4]");
 
    # Convert from blessed hashref to hashref
    my $h = { map { $_ => $record->{$_} } keys %$record };
@@ -97,6 +100,7 @@ sub from_ipv4 {
       ($asn, $organization) = $asn_organization =~ m{^(\S+)(?:\s+(.*))?$};
       $asn ||= $asn_organization;  # Not able to parse, we put it raw.
    }
+   $asn ||= 'undef';
    $organization ||= 'undef';
 
    my ($from, $to) = $gi->range_by_ip($ipv4);
@@ -111,6 +115,11 @@ sub from_ipv4 {
    $h->{last_ip} = $to;
    $h->{networks} = $network_list;
 
+   # Set as undef if nothing found
+   for my $k (keys %$h) {
+      $h->{$k} ||= 'undef';
+   }
+
    return $h;
 }
 
@@ -119,6 +128,10 @@ sub from_ipv6 {
    my ($ipv6) = @_;
 
    $self->brik_help_run_undef_arg('from_ipv6', $ipv6) or return;
+
+   # XXX: IPv6:
+   # my $gi = Geo::IP->open( "/usr/local/share/GeoIP/GeoIPASNumv6.dat", GEOIP_STANDARD );
+   # print $gi->name_by_addr_v6('::ffff:24.24.24.24') || '';
 
    my $gi = Geo::IP->open($self->datadir.'/GeoIPv6.dat')
       or return $self->log->error("from_ipv6: unable to open GeoIPv6.dat");
@@ -174,6 +187,33 @@ sub organization_name {
    my $record = $gi->name_by_addr($ip_address);
 
    return $record;
+}
+
+sub range_from_ipv4 {
+   my $self = shift;
+   my ($ipv4) = @_;
+
+   $self->brik_help_run_undef_arg('range_from_ipv4', $ipv4) or return;
+
+   my $gi = Geo::IP->open($self->datadir.'/GeoIPCity.dat', Geo::IP::GEOIP_STANDARD())
+      or return $self->log->error("range_from_ipv4: unable to open GeoIPCity.dat");
+
+   my ($from, $to) = $gi->range_by_ip($ipv4);
+
+   return [ $from, $to ];
+}
+
+sub networks_from_ipv4 {
+   my $self = shift;
+   my ($ipv4) = @_;
+
+   $self->brik_help_run_undef_arg('networks_from_ipv4', $ipv4) or return;
+
+   my $range = $self->range_from_ipv4($ipv4) or return;
+
+   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
+
+   return $na->range_to_cidr($range->[0], $range->[1]);
 }
 
 1;
