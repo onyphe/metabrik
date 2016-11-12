@@ -104,6 +104,9 @@ sub from_ipv4 {
    $organization ||= 'undef';
 
    my ($from, $to) = $gi->range_by_ip($ipv4);
+   if (! defined($from) || ! defined($to)) {
+      return $self->log->error("from_ipv4: unable to find range for IPv4 [$ipv4]");
+   }
 
    my $network = $na->range_to_cidr($from, $to) or return;
    my $network_list = join('|', @$network);
@@ -115,9 +118,16 @@ sub from_ipv4 {
    $h->{last_ip} = $to;
    $h->{networks} = $network_list;
 
+   # If not defined, we set to 0, as this should be a number.
+   $h->{dma_code} ||= 0;
+   $h->{area_code} ||= 0;
+   $h->{metro_code} ||= 0;
+
    # Set as undef if nothing found
    for my $k (keys %$h) {
-      $h->{$k} ||= 'undef';
+      if (! defined($h->{$k}) || ! length($h->{$k})) {
+         $h->{$k} = 'undef';
+      }
    }
 
    return $h;
