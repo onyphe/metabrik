@@ -88,6 +88,12 @@ sub brik_properties {
          disable_shard_allocation => [ ],
          enable_shard_allocation => [ ],
          flush_synced => [ ],
+         create_snapshot_repository => [ qw(name settings) ],
+         get_snapshot_repositories => [ ],
+         get_snapshot_status => [ ],
+         create_snapshot => [ qw(repository_name snapshot_name) ],
+         is_snapshot_finished => [ ],
+         get_snapshot_state => [ ],
       },
       require_modules => {
          'Metabrik::String::Json' => [ ],
@@ -1094,12 +1100,12 @@ sub export_as_csv {
 
       # Log a status sometimes.
       if (! (++$processed % 100_000)) {
-         $self->log->verbose("export_as_csv: fetched [$processed/$total] elements");
+         $self->log->info("export_as_csv: fetched [$processed/$total] elements");
       }
 
       # Limit export to specified maximum
       if ($max > 0 && $processed >= $max) {
-         $self->log->verbose("export_from_csv: max export reached [$processed]");
+         $self->log->info("export_from_csv: max export reached [$processed]");
          last;
       }
    }
@@ -1122,7 +1128,7 @@ sub import_from_csv {
 
    $self->open_bulk_mode($index, $type) or return;
 
-   $self->log->verbose("import_from_csv: importing to index [$index] with type [$type]");
+   $self->log->info("import_from_csv: importing to index [$index] with type [$type]");
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->separator(',');
@@ -1156,12 +1162,12 @@ sub import_from_csv {
 
       # Log a status sometimes.
       if (! (++$processed % 100_000)) {
-         $self->log->verbose("import_from_csv: processed [$processed] entries");
+         $self->log->info("import_from_csv: processed [$processed] entries");
       }
 
       # Limit import to specified maximum
       if ($max > 0 && $processed >= $max) {
-         $self->log->verbose("import_from_csv: max import reached [$processed]");
+         $self->log->info("import_from_csv: max import reached [$processed]");
          last;
       }
    }
@@ -1426,6 +1432,158 @@ sub flush_synced {
    }
 
    return $r;
+}
+
+#
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html
+#
+# run client::elasticsearch create_snapshot_repository myrepo 
+#      "{ type => 'fs', settings => { compress => 'false', location => '/path/' } }"
+#
+# You have to set path.repo in elasticsearch.yml like:
+# path.repo: ["/home/gomor/es-backups"]
+#
+sub create_snapshot_repository {
+   my $self = shift;
+   my ($name, $settings) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('create_snapshot_repository', $name) or return;
+   $self->brik_help_run_undef_arg('create_snapshot_repository', $settings) or return;
+
+   my %args = (
+      repository => $name,
+      body => $settings,
+   );
+
+   my $r;
+   eval {
+      $r = $elk->snapshot->create_repository(%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("create_snapshot_repository: failed: [$@]");
+   }
+
+   return $r;
+}
+
+sub get_snapshot_repositories {
+   my $self = shift;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+
+   my $r;
+   eval {
+      $r = $elk->snapshot->get_repository;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_snapshot_repositories: failed: [$@]");
+   }
+
+   return $r;
+}
+
+sub get_snapshot_status {
+   my $self = shift;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+
+   my $r;
+   eval {
+      $r = $elk->snapshot->status;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_snapshot_status: failed: [$@]");
+   }
+
+   return $r;
+}
+
+sub create_snapshot {
+   my $self = shift;
+   my ($repository_name, $snapshot_name) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('create_snapshot', $repository_name) or return;
+   $self->brik_help_run_undef_arg('create_snapshot', $snapshot_name) or return;
+
+   my $r;
+   eval {
+      $r = $elk->snapshot->create(
+         repository => $repository_name,
+         snapshot => $snapshot_name,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("create_snapshot: failed: [$@]");
+   }
+
+   return $r;
+
+}
+
+sub is_snapshot_finished {
+   my $self = shift;
+
+   my $status = $self->get_snapshot_status or return;
+
+   if (@{$status->{snapshots}} == 0) {
+      return 1;
+   }
+
+   return 0;
+}
+
+sub get_snapshot_state {
+   my $self = shift;
+
+   if ($self->is_snapshot_finished) {
+      return $self->log->info("get_snapshot_state: is already finished");
+   }
+
+   my $status = $self->get_snapshot_status or return;
+
+   my @indices_done = ();
+   my @indices_not_done = ();
+
+   my $list = $status->{snapshots};
+   for my $snapshot (@$list) {
+      my $indices = $snapshot->{indices};
+      for my $index (@$indices) {
+         my $done = $index->{shards_stats}{done};
+         if ($done) {
+            push @indices_done, $index;
+         }
+         else {
+            push @indices_not_done, $index;
+         }
+      }
+   }
+
+   return { done => \@indices_done, not_done => \@indices_not_done };
+}
+
+sub verify_snapshot_repository {
+}
+
+sub delete_snapshot_repository {
+}
+
+sub get_snapshot {
+}
+
+sub delete_snapshot {
+}
+
+sub restore_snapshot {
 }
 
 1;
