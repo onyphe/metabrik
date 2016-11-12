@@ -88,12 +88,12 @@ sub brik_properties {
          disable_shard_allocation => [ ],
          enable_shard_allocation => [ ],
          flush_synced => [ ],
-         create_snapshot_repository => [ qw(name body) ],
-         create_shared_fs_snapshot_repository => [ qw(location name|OPTIONAL) ],
+         create_snapshot_repository => [ qw(body repository_name|OPTIONAL) ],
+         create_shared_fs_snapshot_repository => [ qw(location repository_name|OPTIONAL) ],
          get_snapshot_repositories => [ ],
          get_snapshot_status => [ ],
          delete_snapshot_repository => [ qw(repository_name) ],
-         create_snapshot => [ qw(repository_name snapshot_name) ],
+         create_snapshot => [ qw(snapshot_name|OPTIONAL repository_name|OPTIONAL) ],
          is_snapshot_finished => [ ],
          get_snapshot_state => [ ],
       },
@@ -1447,12 +1447,13 @@ sub flush_synced {
 #
 sub create_snapshot_repository {
    my $self = shift;
-   my ($name, $body) = @_;
+   my ($body, $name) = @_;
 
    my $elk = $self->_elk;
    $self->brik_help_run_undef_arg('open', $elk) or return;
-   $self->brik_help_run_undef_arg('create_snapshot_repository', $name) or return;
    $self->brik_help_run_undef_arg('create_snapshot_repository', $body) or return;
+
+   $name ||= 'repository';
 
    my %args = (
       repository => $name,
@@ -1532,12 +1533,13 @@ sub get_snapshot_status {
 
 sub create_snapshot {
    my $self = shift;
-   my ($repository_name, $snapshot_name) = @_;
+   my ($snapshot_name, $repository_name) = @_;
 
    my $elk = $self->_elk;
    $self->brik_help_run_undef_arg('open', $elk) or return;
-   $self->brik_help_run_undef_arg('create_snapshot', $repository_name) or return;
-   $self->brik_help_run_undef_arg('create_snapshot', $snapshot_name) or return;
+
+   $snapshot_name ||= 'snapshot';
+   $repository_name ||= 'repository';
 
    my $r;
    eval {
