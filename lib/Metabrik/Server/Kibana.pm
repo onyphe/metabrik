@@ -193,7 +193,7 @@ sub stop {
    my $log_file = $self->conf_file;
    my $conf_file = $self->conf_file;
 
-   my $string = "cli -Q -l $log_file -c $conf_file";
+   my $string = "-c $conf_file";
    my $pid = $self->get_pid_from_string($string) or return;
 
    return $self->kill($pid);
@@ -205,7 +205,7 @@ sub status {
    my $log_file = $self->log_file;
    my $conf_file = $self->conf_file;
 
-   my $string = "cli -Q -l $log_file -c $conf_file";
+   my $string = "-c $conf_file";
    if ($self->is_running_from_string($string)) {
       $self->verbose_process_is_running;
       return 1;

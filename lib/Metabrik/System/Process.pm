@@ -474,7 +474,8 @@ sub error_process_is_not_running {
    return $self->log->error("process is NOT running");
 }
 
-sub brik_fini {
+# XXX: Broken.
+sub _brik_fini {
    my $self = shift;
 
    my $pidfile = $self->get_latest_pidfile;

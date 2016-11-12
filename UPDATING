@@ -1,3 +1,9 @@
+20161112
+   AFFECTS: client::elasticsearch
+
+   - client::elasticsearch get_cluster_health, get_process, get_stats_process now returns a HASH
+   - client::elasticsearch all Commands previously accepting a node as Argument do not anymore except for open* Commands
+
 20161029
    AFFECTS: database::mysql, database::sqlite
 

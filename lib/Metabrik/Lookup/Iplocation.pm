@@ -86,8 +86,15 @@ sub from_ipv4 {
    my $gi_asn = Geo::IP->open($self->datadir.'/GeoIPASNum.dat', Geo::IP::GEOIP_STANDARD())
       or return $self->log->error("from_ipv4: unable to open GeoIPASNum.dat");
 
-   my $record = $gi->record_by_addr($ipv4)
-      or return $self->log->error("from_ipv4: unable to find info for IPv4 [$ipv4]");
+   my $record;
+   eval {
+      $record = $gi->record_by_addr($ipv4);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("from_ipv4: unable to find info for IPv4 [$ipv4] ".
+         "with error [$@]");
+   }
 
    # Convert from blessed hashref to hashref
    my $h = { map { $_ => $record->{$_} } keys %$record };

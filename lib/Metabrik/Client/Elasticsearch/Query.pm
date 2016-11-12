@@ -238,15 +238,18 @@ sub range {
 
    my $ce = $self->create_client or return;
 
+   #
+   # http://stackoverflow.com/questions/40519806/no-query-registered-for-filtered
+   # https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filtered-query.html
+   # Compatible with ES 5.0
+   #
    my $q = {
       query => {
-         constant_score => {
-            filter => {
-               and => [
-                  { range => { $key_to => { gte => $value_to } } },
-                  { range => { $key_from => { lte => $value_from } } },
-               ],
-            },
+         bool => {
+            must => [
+               { range => { $key_to => { gte => $value_to } } },
+               { range => { $key_from => { lte => $value_from } } },
+            ],
          },
       },
    };
@@ -267,7 +270,7 @@ sub top {
    $self->brik_help_run_undef_arg('top', $index) or return;
    $self->brik_help_run_undef_arg('top', $type) or return;
 
-   if ($kv_count !~ /^\S+=\S+$/) {
+   if ($kv_count !~ /^\S+=\d+$/) {
       return $self->log->error("top: kv_count [$kv_count] must be in the form 'key=value'");
    }
    my ($key_count, $value_count) = split('=', $kv_count);

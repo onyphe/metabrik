@@ -49,18 +49,19 @@ sub brik_properties {
          get_from_id => [ qw(id index|OPTIONAL type|OPTIONAL) ],
          www_search => [ qw(query index|OPTIONAL) ],
          delete_index => [ qw(index_or_indices_list) ],
-         show_indices => [ qw(nodes_list|OPTIONAL) ],
-         show_nodes => [ qw(nodes_list|OPTIONAL) ],
-         show_health => [ qw(nodes_list|OPTIONAL) ],
-         list_indices => [ qw(nodes_list|OPTIONAL) ],
+         show_indices => [ ],
+         show_nodes => [ ],
+         show_health => [ ],
+         show_recovery => [ ],
+         list_indices => [ ],
          get_index => [ qw(index) ],
          get_aliases => [ qw(index) ],
          get_mappings => [ qw(index) ],
          create_index => [ qw(index) ],
          create_index_with_mappings => [ qw(index mappings) ],
-         info => [ qw(nodes_list|OPTIONAL) ],
-         get_templates => [ qw(nodes_list|OPTIONAL) ],
-         list_templates => [ qw(nodes_list|OPTIONAL) ],
+         info => [ ],
+         get_templates => [ ],
+         list_templates => [ ],
          get_template => [ qw(name) ],
          put_template => [ qw(name template) ],
          put_template_from_json_file => [ qw(file) ],
@@ -73,14 +74,20 @@ sub brik_properties {
          refresh_index => [ qw(index) ],
          export_as_csv => [ qw(index output_csv size) ],
          import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL) ],
-         get_stats_process => [ qw(nodes_list|OPTIONAL) ],
-         get_process => [ qw(nodes_list|OPTIONAL) ],
-         get_cluster_state => [ qw(nodes_list|OPTIONAL) ],
-         get_cluster_health => [ qw(nodes_list|OPTIONAL) ],
+         get_stats_process => [ ],
+         get_process => [ ],
+         get_cluster_state => [ ],
+         get_cluster_health => [ ],
+         get_cluster_settings => [ ],
+         put_cluster_settings => [ qw(settings) ],
          count_green_shards => [ ],
          count_yellow_shards => [ ],
          count_red_shards => [ ],
          list_datatypes => [ ],
+         get_hits_total => [ ],
+         disable_shard_allocation => [ ],
+         enable_shard_allocation => [ ],
+         flush_synced => [ ],
       },
       require_modules => {
          'Metabrik::String::Json' => [ ],
@@ -417,29 +424,25 @@ sub delete_index {
    return $r;
 }
 
+#
+# Search::Elasticsearch::Client::2_0::Direct::Cat
+#
 sub show_indices {
    my $self = shift;
-   my ($nodes) = @_;
 
-   $nodes ||= $self->nodes;
-   $self->brik_help_run_undef_arg('show_indices', $nodes) or return;
-   $self->brik_help_run_invalid_arg('show_indices', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('show_indices', $nodes) or return;
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
 
-   my $uri = $nodes->[0];
-
-   $self->log->verbose("show_indices: uri[$uri]");
-
-   my $get = $self->SUPER::get("$uri/_cat/indices") or return;
-   if ($self->code ne 200) {
-      return $self->log->error("show_indices: failed with content [".$get->{content}."]");
-   }
-   my $content = $get->{content};
-   if (! defined($content)) {
-      return;
+   my $r;
+   eval {
+      $r = $elk->cat->indices;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("show_indices: failed: [$@]");
    }
 
-   my @lines = split(/\n/, $content);
+   my @lines = split(/\n/, $r);
 
    if (@lines == 0) {
       $self->log->warning("show_indices: nothing returned, no index?");
@@ -448,27 +451,25 @@ sub show_indices {
    return \@lines;
 }
 
+#
+# Search::Elasticsearch::Client::2_0::Direct::Cat
+#
 sub show_nodes {
    my $self = shift;
-   my ($nodes) = @_;
 
-   $nodes ||= $self->nodes;
-   $self->brik_help_run_undef_arg('show_nodes', $nodes) or return;
-   $self->brik_help_run_invalid_arg('show_nodes', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('show_nodes', $nodes) or return;
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
 
-   my $uri = $nodes->[0];
-
-   my $get = $self->SUPER::get("$uri/_cat/nodes") or return;
-   if ($self->code ne 200) {
-      return $self->log->error("show_nodes: failed with content [".$get->{content}."]");
-   }
-   my $content = $get->{content};
-   if (! defined($content)) {
-      return;
+   my $r;
+   eval {
+      $r = $elk->cat->nodes;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("show_nodes: failed: [$@]");
    }
 
-   my @lines = split(/\n/, $content);
+   my @lines = split(/\n/, $r);
 
    if (@lines == 0) {
       $self->log->warning("show_nodes: nothing returned, no nodes?");
@@ -477,30 +478,55 @@ sub show_nodes {
    return \@lines;
 }
 
+#
+# Search::Elasticsearch::Client::2_0::Direct::Cat
+#
 sub show_health {
    my $self = shift;
-   my ($nodes) = @_;
 
-   $nodes ||= $self->nodes;
-   $self->brik_help_run_undef_arg('show_health', $nodes) or return;
-   $self->brik_help_run_invalid_arg('show_health', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('show_health', $nodes) or return;
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
 
-   my $uri = $nodes->[0];
-
-   my $get = $self->SUPER::get("$uri/_cat/health") or return;
-   if ($self->code ne 200) {
-      return $self->log->error("show_health: failed with content [".$get->{content}."]");
-   }
-   my $content = $get->{content};
-   if (! defined($content)) {
-      return;
+   my $r;
+   eval {
+      $r = $elk->cat->health;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("show_health: failed: [$@]");
    }
 
-   my @lines = split(/\n/, $content);
+   my @lines = split(/\n/, $r);
 
    if (@lines == 0) {
-      $self->log->warning("show_health: nothing returned, no health?");
+      $self->log->warning("show_health: nothing returned, no recovery?");
+   }
+
+   return \@lines;
+}
+
+#
+# Search::Elasticsearch::Client::2_0::Direct::Cat
+#
+sub show_recovery {
+   my $self = shift;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+
+   my $r;
+   eval {
+      $r = $elk->cat->recovery;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("show_recovery: failed: [$@]");
+   }
+
+   my @lines = split(/\n/, $r);
+
+   if (@lines == 0) {
+      $self->log->warning("show_recovery: nothing returned, no index?");
    }
 
    return \@lines;
@@ -508,12 +534,6 @@ sub show_health {
 
 sub list_indices {
    my $self = shift;
-   my ($nodes) = @_;
-
-   $nodes ||= $self->nodes;
-   $self->brik_help_run_undef_arg('list_indices', $nodes) or return;
-   $self->brik_help_run_invalid_arg('list_indices', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('list_indices', $nodes) or return;
 
    my $lines = $self->show_indices or return;
    if (@$lines == 0) {
@@ -673,34 +693,31 @@ sub info {
    return $self->content;
 }
 
-# GET http://localhost:9200/_template/
+#
+# Search::Elasticsearch::Client::2_0::Direct::Indices
+#
 sub get_templates {
    my $self = shift;
-   my ($nodes) = @_;
 
-   $nodes ||= $self->nodes;
-   $self->brik_help_run_undef_arg('get_templates', $nodes) or return;
-   $self->brik_help_run_invalid_arg('get_templates', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('get_templates', $nodes) or return;
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
 
-   my $first = $nodes->[0];
+   my $r;
+   eval {
+      $r = $elk->indices->get_template;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_templates: failed: [$@]");
+   }
 
-   $self->get($first.'/_template') or return;
-   my $content = $self->content or return;
-
-   return $content;
+   return $r;
 }
 
 sub list_templates {
    my $self = shift;
-   my ($nodes) = @_;
 
-   $nodes ||= $self->nodes;
-   $self->brik_help_run_undef_arg('list_templates', $nodes) or return;
-   $self->brik_help_run_invalid_arg('list_templates', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('list_templates', $nodes) or return;
-
-   my $content = $self->get_templates($nodes) or return;
+   my $content = $self->get_templates or return;
 
    return [ sort { $a cmp $b } keys %$content ];
 }
@@ -823,6 +840,8 @@ sub get_settings {
 # Example:
 #
 # run client::elasticsearch put_settings "{ index => { refresh_interval => -1 } }"
+#
+# XXX: should be renamed to put_index_settings
 #
 sub put_settings {
    my $self = shift;
@@ -1155,116 +1174,143 @@ sub import_from_csv {
 }
 
 # http://localhost:9200/_nodes/stats/process?pretty
+#
+# Search::Elasticsearch::Client::2_0::Direct::Nodes
+#
 sub get_stats_process {
    my $self = shift;
-   my ($nodes) = @_;
 
-   $nodes ||= $self->nodes;
-   $self->brik_help_run_undef_arg('get_stats_process', $nodes) or return;
-   $self->brik_help_run_invalid_arg('get_stats_process', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('get_stats_process', $nodes) or return;
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
 
-   my @content_list = ();
-   for my $node (@$nodes) {
-      my $r = $self->get($node.'/_nodes/stats/process');
-      if (! defined($r)) {
-         $self->log->warning("get_stats_process: unable to retrieve stats for node [$node]");
-         next;
-      }
-      my $content = $self->content;
-      if (! defined($content)) {
-         $self->log->warning("get_stats_process: unable to retrieve content for node [$node]");
-         next;
-      }
-      push @content_list, $content;
+   my $r;
+   eval {
+      $r = $elk->nodes->stats(
+         metric => [ qw(process) ],
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_stats_process: failed: [$@]");
    }
 
-   return \@content_list;
+   return $r;
 }
 
+#
 # curl http://localhost:9200/_nodes/process?pretty
+#
+# Search::Elasticsearch::Client::2_0::Direct::Nodes
+#
 sub get_process {
    my $self = shift;
-   my ($nodes) = @_;
 
-   $nodes ||= $self->nodes;
-   $self->brik_help_run_undef_arg('get_process', $nodes) or return;
-   $self->brik_help_run_invalid_arg('get_process', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('get_process', $nodes) or return;
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
 
-   my @content_list = ();
-   for my $node (@$nodes) {
-      my $r = $self->get($node.'/_nodes/process');
-      if (! defined($r)) {
-         $self->log->warning("get_process: unable to retrieve process for node [$node]");
-         next;
-      }
-      my $content = $self->content;
-      if (! defined($content)) {
-         $self->log->warning("get_process: unable to retrieve content for node [$node]");
-         next;
-      }
-      push @content_list, $content;
+   my $r;
+   eval {
+      $r = $elk->nodes->info(
+         metric => [ qw(process) ],
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_process: failed: [$@]");
    }
 
-   return \@content_list;
+   return $r;
 }
 
-# curl -XGET 'http://localhost:9200/_cluster/state?pretty'
+#
+# Search::Elasticsearch::Client::2_0::Direct::Cluster
+#
 sub get_cluster_state {
    my $self = shift;
-   my ($nodes) = @_;
 
-   $nodes ||= $self->nodes;
-   $self->brik_help_run_undef_arg('get_cluster_state', $nodes) or return;
-   $self->brik_help_run_invalid_arg('get_cluster_state', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('get_cluster_state', $nodes) or return;
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
 
-   my @content_list = ();
-   for my $node (@$nodes) {
-      my $r = $self->get($node.'/_cluster/state');
-      if (! defined($r)) {
-         $self->log->warning("get_cluster_state: unable to retrieve state for node [$node]");
-         next;
-      }
-      my $content = $self->content;
-      if (! defined($content)) {
-         $self->log->warning("get_cluster_state: unable to retrieve content for node [$node]");
-         next;
-      }
-      push @content_list, $content;
+   my $r;
+   eval {
+      $r = $elk->cluster->state;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_cluster_state: failed: [$@]");
    }
 
-   return \@content_list;
+   return $r;
 }
 
-# curl -XGET 'http://localhost:9200/_cluster/health?pretty'
+#
+# Search::Elasticsearch::Client::2_0::Direct::Cluster
+#
 sub get_cluster_health {
    my $self = shift;
-   my ($nodes) = @_;
 
-   $nodes ||= $self->nodes;
-   $self->brik_help_run_undef_arg('get_cluster_health', $nodes) or return;
-   $self->brik_help_run_invalid_arg('get_cluster_health', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('get_cluster_health', $nodes) or return;
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
 
-   my @content_list = ();
-   for my $node (@$nodes) {
-      my $r = $self->get($node.'/_cluster/health');
-      if (! defined($r)) {
-         $self->log->warning("get_cluster_health: unable to retrieve health for node [$node]");
-         next;
-      }
-      my $content = $self->content;
-      if (! defined($content)) {
-         $self->log->warning("get_cluster_health: unable to retrieve content for node [$node]");
-         next;
-      }
-      push @content_list, $content;
+   my $r;
+   eval {
+      $r = $elk->cluster->health;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_cluster_health: failed: [$@]");
    }
 
-   return \@content_list;
+   return $r;
+}
 
+#
+# Search::Elasticsearch::Client::2_0::Direct::Cluster
+#
+sub get_cluster_settings {
+   my $self = shift;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+
+   my $r;
+   eval {
+      $r = $elk->cluster->get_settings;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_cluster_settings: failed: [$@]");
+   }
+
+   return $r;
+}
+
+#
+# Search::Elasticsearch::Client::2_0::Direct::Cluster
+#
+sub put_cluster_settings {
+   my $self = shift;
+   my ($settings) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('put_cluster_settings', $settings) or return;
+   $self->brik_help_run_invalid_arg('put_cluster_settings', $settings, 'HASH') or return;
+
+   my %args = (
+      body => $settings,
+   );
+
+   my $r;
+   eval {
+      $r = $elk->cluster->put_settings(%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("put_cluster_settings: failed: [$@]");
+   }
+
+   return $r;
 }
 
 sub count_green_shards {
@@ -1321,6 +1367,65 @@ sub list_datatypes {
    return {
       core => [ qw(string long integer short byte double float data boolean binary) ],
    };
+}
+
+#
+# Return total hits for last www_search
+#
+sub get_hits_total {
+   my $self = shift;
+
+   # Retrieve data stored in the $RUN Variable from Context
+   my $run = $self->context->do('$RUN');
+   if (ref($run) eq 'HASH') {
+      if (exists($run->{hits}) && exists($run->{hits}{total})) {
+         return $run->{hits}{total};
+      }
+   }
+
+   return $self->log->error("get_hits_total: last Command not compatible");
+}
+
+sub disable_shard_allocation {
+   my $self = shift;
+
+   my $settings = {
+      persistent => {
+         'cluster.routing.allocation.enable' => 'none',
+      }
+   };
+
+   return $self->put_cluster_settings($settings);
+}
+
+sub enable_shard_allocation {
+   my $self = shift;
+
+   my $settings = {
+      persistent => { 
+         'cluster.routing.allocation.enable' => 'all',
+      }
+   };
+
+   return $self->put_cluster_settings($settings);
+}
+
+sub flush_synced {
+   my $self = shift;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+
+   my $r;
+   eval {
+      $r = $elk->indices->flush_synced;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("flush_synced: failed: [$@]");
+   }
+
+   return $r;
 }
 
 1;

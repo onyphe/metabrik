@@ -111,7 +111,6 @@ set core::log level 2
 
 use shell::command
 use shell::history
-use shell::rc
 use brik::tool
 use brik::search
 

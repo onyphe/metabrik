@@ -94,7 +94,7 @@ input {
       path => "/var/log/www/example.com-access.log*"
       add_field => { "site" => "www.example.com" }
       start_position => "beginning" # Start from beginning of every files
-      sincedb_path => "/dev/null"   # Read files entirely every times
+      sincedb_path => "/dev/null"   # Read files entirely every times
       ignore_older => "0"           # Process every file, even older than 24 hours
    }
 }
@@ -283,9 +283,7 @@ sub stop {
 
    my $conf_file = $self->conf_file;
 
-   my $binary = $self->get_binary or return;
-
-   my $string = "$binary -f $conf_file";
+   my $string = "-f $conf_file";
    my $pid = $self->get_pid_from_string($string) or return;
 
    return $self->kill($pid);
@@ -296,9 +294,7 @@ sub status {
 
    my $conf_file = $self->conf_file;
 
-   my $binary = $self->get_binary or return;
-
-   my $string = "$binary -f $conf_file";
+   my $string = "-f $conf_file";
    if ($self->is_running_from_string($string)) {
       $self->verbose_process_is_running;
       return 1;
