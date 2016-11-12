@@ -88,9 +88,11 @@ sub brik_properties {
          disable_shard_allocation => [ ],
          enable_shard_allocation => [ ],
          flush_synced => [ ],
-         create_snapshot_repository => [ qw(name settings) ],
+         create_snapshot_repository => [ qw(name body) ],
+         create_shared_fs_snapshot_repository => [ qw(location name|OPTIONAL) ],
          get_snapshot_repositories => [ ],
          get_snapshot_status => [ ],
+         delete_snapshot_repository => [ qw(repository_name) ],
          create_snapshot => [ qw(repository_name snapshot_name) ],
          is_snapshot_finished => [ ],
          get_snapshot_state => [ ],
@@ -1445,16 +1447,16 @@ sub flush_synced {
 #
 sub create_snapshot_repository {
    my $self = shift;
-   my ($name, $settings) = @_;
+   my ($name, $body) = @_;
 
    my $elk = $self->_elk;
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('create_snapshot_repository', $name) or return;
-   $self->brik_help_run_undef_arg('create_snapshot_repository', $settings) or return;
+   $self->brik_help_run_undef_arg('create_snapshot_repository', $body) or return;
 
    my %args = (
       repository => $name,
-      body => $settings,
+      body => $body,
    );
 
    my $r;
@@ -1467,6 +1469,29 @@ sub create_snapshot_repository {
    }
 
    return $r;
+}
+
+sub create_shared_fs_snapshot_repository {
+   my $self = shift;
+   my ($location, $name) = @_;
+
+   $name ||= 'repository';
+   $self->brik_help_run_undef_arg('create_shared_fs_snapshot_repository', $location) or return;
+
+   if ($location !~ m{^/}) {
+      return $self->log->error("create_shared_fs_snapshot_repository: you have to give ".
+         "a full directory path, this one is invalid [$location]");
+   }
+
+   my $body = {
+      type => 'fs',
+      settings => {
+         compress => 'false',
+         location => $location,
+      },
+   };
+
+   return $self->create_snapshot_repository($name, $body);
 }
 
 sub get_snapshot_repositories {
@@ -1527,7 +1552,6 @@ sub create_snapshot {
    }
 
    return $r;
-
 }
 
 sub is_snapshot_finished {
@@ -1575,6 +1599,25 @@ sub verify_snapshot_repository {
 }
 
 sub delete_snapshot_repository {
+   my $self = shift;
+   my ($repository_name) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('delete_snapshot_repository', $repository_name) or return;
+
+   my $r;
+   eval {
+      $r = $elk->snapshot->delete_repository(
+         repository => $repository_name,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("delete_snapshot_repository: failed: [$@]");
+   }
+
+   return $r;
 }
 
 sub get_snapshot {
