@@ -55,6 +55,8 @@ sub brik_properties {
          show_recovery => [ ],
          list_indices => [ ],
          get_index => [ qw(index) ],
+         open_index => [ qw(index|indices_list) ],
+         close_index => [ qw(index|indices_list) ],
          get_aliases => [ qw(index) ],
          get_mappings => [ qw(index) ],
          create_index => [ qw(index) ],
@@ -93,10 +95,13 @@ sub brik_properties {
          get_snapshot_repositories => [ ],
          get_snapshot_status => [ ],
          delete_snapshot_repository => [ qw(repository_name) ],
-         create_snapshot => [ qw(snapshot_name|OPTIONAL repository_name|OPTIONAL) ],
+         create_snapshot => [ qw(snapshot_name|OPTIONAL repository_name|OPTIONAL body|OPTIONAL) ],
+         create_snapshot_for_indices => [ qw(indices snapshot_name|OPTIONAL repository_name|OPTIONAL) ],
          is_snapshot_finished => [ ],
          get_snapshot_state => [ ],
-         #reindex_from_version => [ qw(version) ],
+         get_snapshot => [ qw(snapshot_name|OPTIONAL repository_name|OPTIONAL) ],
+         delete_snapshot => [ qw(snapshot_name repository_name) ],
+         restore_snapshot => [ qw(snapshot_name repository_name) ],
       },
       require_modules => {
          'Metabrik::String::Json' => [ ],
@@ -590,6 +595,52 @@ sub get_index {
    if ($@) {
       chomp($@);
       return $self->log->error("get_index: get failed for index [$index]: [$@]");
+   }
+
+   return $r;
+}
+
+sub open_index {
+   my $self = shift;
+   my ($index) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('open_index', $index) or return;
+   $self->brik_help_run_invalid_arg('open_index', $index, 'ARRAY', 'SCALAR') or return;
+
+   my $r;
+   eval {
+      $r = $elk->indices->open(
+         index => $index,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("open_index: failed: [$@]");
+   }
+
+   return $r;
+}
+
+sub close_index {
+   my $self = shift;
+   my ($index) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('close_index', $index) or return;
+   $self->brik_help_run_invalid_arg('close_index', $index, 'ARRAY', 'SCALAR') or return;
+
+   my $r;
+   eval {
+      $r = $elk->indices->close(
+         index => $index,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("close_index: failed: [$@]");
    }
 
    return $r;
@@ -1446,18 +1497,20 @@ sub flush_synced {
 # You have to set path.repo in elasticsearch.yml like:
 # path.repo: ["/home/gomor/es-backups"]
 #
+# Search::Elasticsearch::Client::2_0::Direct::Snapshot
+#
 sub create_snapshot_repository {
    my $self = shift;
-   my ($body, $name) = @_;
+   my ($body, $repository_name) = @_;
 
    my $elk = $self->_elk;
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('create_snapshot_repository', $body) or return;
 
-   $name ||= 'repository';
+   $repository_name ||= 'repository';
 
    my %args = (
-      repository => $name,
+      repository => $repository_name,
       body => $body,
    );
 
@@ -1475,9 +1528,9 @@ sub create_snapshot_repository {
 
 sub create_shared_fs_snapshot_repository {
    my $self = shift;
-   my ($location, $name) = @_;
+   my ($location, $repository_name) = @_;
 
-   $name ||= 'repository';
+   $repository_name ||= 'repository';
    $self->brik_help_run_undef_arg('create_shared_fs_snapshot_repository', $location) or return;
 
    if ($location !~ m{^/}) {
@@ -1493,9 +1546,12 @@ sub create_shared_fs_snapshot_repository {
       },
    };
 
-   return $self->create_snapshot_repository($name, $body);
+   return $self->create_snapshot_repository($body, $repository_name);
 }
 
+#
+# Search::Elasticsearch::Client::2_0::Direct::Snapshot
+#
 sub get_snapshot_repositories {
    my $self = shift;
 
@@ -1514,6 +1570,9 @@ sub get_snapshot_repositories {
    return $r;
 }
 
+#
+# Search::Elasticsearch::Client::2_0::Direct::Snapshot
+#
 sub get_snapshot_status {
    my $self = shift;
 
@@ -1532,9 +1591,12 @@ sub get_snapshot_status {
    return $r;
 }
 
+#
+# Search::Elasticsearch::Client::2_0::Direct::Snapshot
+#
 sub create_snapshot {
    my $self = shift;
-   my ($snapshot_name, $repository_name) = @_;
+   my ($snapshot_name, $repository_name, $body) = @_;
 
    my $elk = $self->_elk;
    $self->brik_help_run_undef_arg('open', $elk) or return;
@@ -1542,12 +1604,17 @@ sub create_snapshot {
    $snapshot_name ||= 'snapshot';
    $repository_name ||= 'repository';
 
+   my %args = (
+      repository => $repository_name,
+      snapshot => $snapshot_name,
+   );
+   if (defined($body)) {
+      $args{body} = $body;
+   }
+
    my $r;
    eval {
-      $r = $elk->snapshot->create(
-         repository => $repository_name,
-         snapshot => $snapshot_name,
-      );
+      $r = $elk->snapshot->create(%args);
    };
    if ($@) {
       chomp($@);
@@ -1555,6 +1622,24 @@ sub create_snapshot {
    }
 
    return $r;
+}
+
+sub create_snapshot_for_indices {
+   my $self = shift;
+   my ($indices, $snapshot_name, $repository_name) = @_;
+
+   $self->brik_help_run_undef_arg('indices', $indices) or return;
+   $self->brik_help_run_invalid_arg('indices', $indices, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('indices', $indices) or return;
+
+   $snapshot_name ||= 'snapshot';
+   $repository_name ||= 'repository';
+
+   my $body = {
+      indices => $indices,
+   };
+
+   return $self->create_snapshot($snapshot_name, $repository_name, $body);
 }
 
 sub is_snapshot_finished {
@@ -1624,12 +1709,79 @@ sub delete_snapshot_repository {
 }
 
 sub get_snapshot {
+   my $self = shift;
+   my ($snapshot_name, $repository_name) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+
+   $snapshot_name ||= 'snapshot';
+   $repository_name ||= 'repository';
+
+   my $r;
+   eval {
+      $r = $elk->snapshot->get(
+         repository => $repository_name,
+         snapshot => $snapshot_name,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_snapshot: failed: [$@]");
+   }
+
+   return $r;
 }
 
 sub delete_snapshot {
+   my $self = shift;
+   my ($snapshot_name, $repository_name) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('delete_snapshot', $snapshot_name) or return;
+   $self->brik_help_run_undef_arg('delete_snapshot', $repository_name) or return;
+
+   my $r;
+   eval {
+      $r = $elk->snapshot->delete(
+         repository => $repository_name,
+         snapshot => $snapshot_name,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("delete_snapshot: failed: [$@]");
+   }
+
+   return $r;
 }
 
+#
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html
+#
 sub restore_snapshot {
+   my $self = shift;
+   my ($snapshot_name, $repository_name) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('restore_snapshot', $snapshot_name) or return;
+   $self->brik_help_run_undef_arg('restore_snapshot', $repository_name) or return;
+
+   my $r;
+   eval {
+      $r = $elk->snapshot->restore(
+         repository => $repository_name,
+         snapshot => $snapshot_name,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("restore_snapshot: failed: [$@]");
+   }
+
+   return $r;
 }
 
 1;
