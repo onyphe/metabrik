@@ -107,7 +107,7 @@ my \$user = \$ENV{USER}
 set core::global ctimeout 5
 set core::global rtimeout 5
 set core::shell ps1 Meta
-set core::log level 2
+set core::log level 1
 
 use shell::command
 use shell::history

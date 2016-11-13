@@ -48,13 +48,14 @@ sub brik_properties {
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
          get_from_id => [ qw(id index|OPTIONAL type|OPTIONAL) ],
          www_search => [ qw(query index|OPTIONAL) ],
-         delete_index => [ qw(index_or_indices_list) ],
+         delete_index => [ qw(index|indices_list) ],
          show_indices => [ ],
          show_nodes => [ ],
          show_health => [ ],
          show_recovery => [ ],
          list_indices => [ ],
-         get_index => [ qw(index) ],
+         get_index => [ qw(index|indices_list) ],
+         list_indices_version => [ qw(index|indices_list) ],
          open_index => [ qw(index|indices_list) ],
          close_index => [ qw(index|indices_list) ],
          get_aliases => [ qw(index) ],
@@ -67,8 +68,8 @@ sub brik_properties {
          get_template => [ qw(name) ],
          put_template => [ qw(name template) ],
          put_template_from_json_file => [ qw(file) ],
-         get_settings => [ qw(index_or_indices_list|OPTIONAL name_or_names_list|OPTIONAL) ],
-         put_settings => [ qw(settings_hash index_or_indices_list|OPTIONAL) ],
+         get_settings => [ qw(index|indices_list|OPTIONAL name|names_list|OPTIONAL) ],
+         put_settings => [ qw(settings_hash index|indices_list|OPTIONAL) ],
          delete_template => [ qw(name) ],
          is_index_exists => [ qw(index) ],
          is_type_exists => [ qw(index type) ],
@@ -586,6 +587,7 @@ sub get_index {
    my $elk = $self->_elk;
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('get_index', $index) or return;
+   $self->brik_help_run_invalid_arg('get_index', $index, 'ARRAY', 'SCALAR') or return;
 
    my $r;
    eval {
@@ -599,6 +601,30 @@ sub get_index {
    }
 
    return $r;
+}
+
+sub list_indices_version {
+   my $self = shift;
+   my ($index) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('list_indices_version', $index) or return;
+   $self->brik_help_run_invalid_arg('list_indices_version', $index, 'ARRAY', 'SCALAR') or return;
+
+   my $r = $self->get_index($index) or return;
+
+   my @list = ();
+   for my $this (keys %$r) {
+      my $name = $this;
+      my $version = $r->{$this}{settings}{index}{version}{created};
+      push @list, {
+         index => $name,
+         version => $version,
+      };
+   }
+
+   return \@list;
 }
 
 sub open_index {
