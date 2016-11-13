@@ -96,6 +96,7 @@ sub brik_properties {
          create_snapshot => [ qw(snapshot_name|OPTIONAL repository_name|OPTIONAL) ],
          is_snapshot_finished => [ ],
          get_snapshot_state => [ ],
+         #reindex_from_version => [ qw(version) ],
       },
       require_modules => {
          'Metabrik::String::Json' => [ ],
@@ -1440,7 +1441,7 @@ sub flush_synced {
 # https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html
 #
 # run client::elasticsearch create_snapshot_repository myrepo 
-#      "{ type => 'fs', settings => { compress => 'false', location => '/path/' } }"
+#      "{ type => 'fs', settings => { compress => 'true', location => '/path/' } }"
 #
 # You have to set path.repo in elasticsearch.yml like:
 # path.repo: ["/home/gomor/es-backups"]
@@ -1487,7 +1488,7 @@ sub create_shared_fs_snapshot_repository {
    my $body = {
       type => 'fs',
       settings => {
-         compress => 'false',
+         compress => 'true',
          location => $location,
       },
    };
