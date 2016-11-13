@@ -101,7 +101,8 @@ sub brik_properties {
          get_snapshot_state => [ ],
          get_snapshot => [ qw(snapshot_name|OPTIONAL repository_name|OPTIONAL) ],
          delete_snapshot => [ qw(snapshot_name repository_name) ],
-         restore_snapshot => [ qw(snapshot_name repository_name) ],
+         restore_snapshot => [ qw(snapshot_name repository_name body|OPTIONAL) ],
+         restore_snapshot_for_indices => [ qw(indices snapshot_name repository_name) ],
       },
       require_modules => {
          'Metabrik::String::Json' => [ ],
@@ -1628,9 +1629,9 @@ sub create_snapshot_for_indices {
    my $self = shift;
    my ($indices, $snapshot_name, $repository_name) = @_;
 
-   $self->brik_help_run_undef_arg('indices', $indices) or return;
-   $self->brik_help_run_invalid_arg('indices', $indices, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('indices', $indices) or return;
+   $self->brik_help_run_undef_arg('create_snapshot_for_indices', $indices) or return;
+   $self->brik_help_run_invalid_arg('create_snapshot_for_indices', $indices, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('create_snapshot_for_indices', $indices) or return;
 
    $snapshot_name ||= 'snapshot';
    $repository_name ||= 'repository';
@@ -1762,19 +1763,24 @@ sub delete_snapshot {
 #
 sub restore_snapshot {
    my $self = shift;
-   my ($snapshot_name, $repository_name) = @_;
+   my ($snapshot_name, $repository_name, $body) = @_;
 
    my $elk = $self->_elk;
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('restore_snapshot', $snapshot_name) or return;
    $self->brik_help_run_undef_arg('restore_snapshot', $repository_name) or return;
 
+   my %args = (
+      repository => $repository_name,
+      snapshot => $snapshot_name,
+   );
+   if (defined($body)) {
+      $args{body} = $body;
+   }
+
    my $r;
    eval {
-      $r = $elk->snapshot->restore(
-         repository => $repository_name,
-         snapshot => $snapshot_name,
-      );
+      $r = $elk->snapshot->restore(%args);
    };
    if ($@) {
       chomp($@);
@@ -1782,6 +1788,24 @@ sub restore_snapshot {
    }
 
    return $r;
+}
+
+sub restore_snapshot_for_indices {
+   my $self = shift;
+   my ($indices, $snapshot_name, $repository_name) = @_;
+
+   $self->brik_help_run_undef_arg('restore_snapshot_for_indices', $indices) or return;
+   $self->brik_help_run_undef_arg('restore_snapshot_for_indices', $snapshot_name) or return;
+   $self->brik_help_run_undef_arg('restore_snapshot_for_indices', $repository_name) or return;
+   $self->brik_help_run_invalid_arg('restore_snapshot_for_indices', $indices, 'ARRAY')
+     or return;
+   $self->brik_help_run_empty_array_arg('restore_snapshot_for_indices', $indices) or return;
+
+   my $body = {
+      indices => $indices,
+   };
+
+   return $self->restore_snapshot($snapshot_name, $repository_name, $body);
 }
 
 1;
