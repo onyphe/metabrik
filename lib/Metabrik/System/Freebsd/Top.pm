@@ -60,6 +60,7 @@ sub stats {
    # 1: 272 processes: 2 running, 263 sleeping, 6 zombie, 1 waiting,
    # 2: 
    # 3: Mem: 4116M Active, 15G Inact, 11G Wired, 21M Cache, 958M Free
+   # 3: Mem: 5435M Active, 14G Inact, 11G Wired, 135M Cache, 1655M Buf, 326M Free
    # 4: ARC: 9086M Total, 3939M MFU, 1973M MRU, 1417K Anon, 102M Header, 3071M Other
    # 5: Swap: 16G Total, 8940K Used, 16G Free
 
@@ -98,7 +99,7 @@ sub stats {
          $info->{waiting_processes} = $f[5] || 0;
       }
       elsif ($row == 3) {
-         my @f = $line =~ m{^Mem: (?:(\S+) Active, )?(?:(\S+) Inact, )?(?:(\S+) Wired, )?(?:(\S+) Cache, )?(?:(\S+) Free)?$};
+         my @f = $line =~ m{^Mem: (?:(\S+) Active, )?(?:(\S+) Inact, )?(?:(\S+) Wired, )?(?:(\S+) Cache, )?(?:(\S+) Buf, )?(?:(\S+) Free)?$};
 
          $self->log->debug("@f");
 
