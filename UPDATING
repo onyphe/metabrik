@@ -1,3 +1,9 @@
+20161114
+   AFFECTS: file::csv
+
+   - file::csv append Attribute now defaults to 1
+   - file::csv overwrite Attribute now defaults to 0
+
 20161112
    AFFECTS: client::elasticsearch
 

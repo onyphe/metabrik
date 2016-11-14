@@ -21,6 +21,7 @@ sub brik_properties {
          process => [ qw(name) ],
          pid => [ qw(id) ],
          do_rfc3164 => [ qw(0|1) ],
+         timestamp => [ qw(timestamp) ],
       },
       attributes_default => {
          process => 'metabrik',
@@ -30,6 +31,7 @@ sub brik_properties {
       commands => {
          encode => [ qw($data hostname|OPTIONAL process|OPTIONAL pid|OPTIONAL) ],
          decode => [ qw($data) ],
+         date => [ qw(timestamp|OPTIONAL) ],
       },
    };
 }
@@ -52,11 +54,13 @@ sub encode {
    $process ||= $self->process;
    $pid ||= $self->pid;
    $self->brik_help_run_undef_arg('encode', $data) or return;
-   $self->brik_help_run_undef_arg('encode', $hostname) or return;
-   $self->brik_help_run_undef_arg('encode', $process) or return;
-   $self->brik_help_run_undef_arg('encode', $pid) or return;
+   $self->brik_help_set_undef_arg('hostname', $hostname) or return;
+   $self->brik_help_set_undef_arg('process', $process) or return;
+   $self->brik_help_set_undef_arg('pid', $pid) or return;
    my $ref = $self->brik_help_run_invalid_arg('encode', $data, 'HASH', 'SCALAR')
       or return;
+
+   my $timestamp = $self->timestamp;
 
    # Convert to key=value
    if ($ref eq 'HASH') {
@@ -73,24 +77,10 @@ sub encode {
       $data = $kv;
    }
 
-   my @month = qw{Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec};
-
-   # Courtesy of Net::Syslog
-   my @time = localtime();
-   my $timestamp =
-      $month[$time[4]].
-      ' '.
-      (($time[3] < 10) ? (' '.$time[3]) : $time[3]).
-      ' '.
-      (($time[2] < 10 ) ? ('0'.$time[2]) : $time[2]).
-      ':'.
-      (($time[1] < 10) ? ('0'.$time[1]) : $time[1]).
-      ':'.
-      (($time[0] < 10) ? ('0'.$time[0]) : $time[0]);
-
    my $message = '';
    if ($self->do_rfc3164) {
-      $message = "$timestamp $hostname $process\[$pid\]: $data";
+      my $date = $self->date($timestamp);
+      $message = "$date $hostname $process\[$pid\]: $data";
    }
    else {
       $message = "$process\[$pid\]: $data";
@@ -116,6 +106,28 @@ sub decode {
       pid => $pid,
       message => $message,
    };
+}
+
+sub date {
+   my $self = shift;
+   my ($timestamp) = @_;
+
+   my @month = qw{Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec};
+
+   # Courtesy of Net::Syslog
+   my @time = defined($timestamp) ? localtime($timestamp) : localtime();
+   my $date =
+      $month[$time[4]].
+      ' '.
+      (($time[3] < 10) ? (' '.$time[3]) : $time[3]).
+      ' '.
+      (($time[2] < 10 ) ? ('0'.$time[2]) : $time[2]).
+      ':'.
+      (($time[1] < 10) ? ('0'.$time[1]) : $time[1]).
+      ':'.
+      (($time[0] < 10) ? ('0'.$time[0]) : $time[0]);
+
+   return $date;
 }
 
 1;

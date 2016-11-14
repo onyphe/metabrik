@@ -90,7 +90,7 @@ sub from_ipv4 {
    eval {
       $record = $gi->record_by_addr($ipv4);
    };
-   if ($@) {
+   if ($@ || ! defined($record)) {
       chomp($@);
       return $self->log->error("from_ipv4: unable to find info for IPv4 [$ipv4] ".
          "with error [$@]");

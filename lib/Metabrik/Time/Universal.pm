@@ -29,17 +29,19 @@ sub brik_properties {
          localtime => [ qw(timezone|OPTIONAL) ],
          today => [ qw(separator|OPTIONAL) ],
          yesterday => [ qw(separator|OPTIONAL) ],
-         date => [ ],
-         gmdate => [ ],
+         date => [ qw(timestamp|OPTIONAL) ],
+         gmdate => [ qw(timestamp|OPTIONAL) ],
          month => [ qw(timezone|OPTIONAL) ],
          last_month => [ qw(timezone|OPTIONAL) ],
          is_timezone => [ qw(timezone) ],
          timestamp => [ ],
+         to_timestamp => [ qw(string) ],
       },
       require_modules => {
          'DateTime' => [ ],
          'DateTime::TimeZone' => [ ],
          'POSIX' => [ qw(strftime) ],
+         'Time::Local' => [ qw(timelocal) ],
       },
    };
 }
@@ -131,14 +133,24 @@ sub yesterday {
 
 sub date {
    my $self = shift;
+   my ($timestamp) = @_;
+
+   if (defined($timestamp)) {
+      return CORE::localtime($timestamp)."";
+   }
 
    return CORE::localtime()."";
 }
 
 sub gmdate {
    my $self = shift;
+   my ($timestamp) = @_;
 
    eval("use POSIX qw(strftime);");
+
+   if (defined($timestamp)) {
+      return strftime("%a %b %e %H:%M:%S %Y", CORE::gmtime($timestamp));
+   }
 
    return strftime("%a %b %e %H:%M:%S %Y", CORE::gmtime());
 }
@@ -190,6 +202,21 @@ sub timestamp {
    my $self = shift;
 
    return CORE::time();
+}
+
+sub to_timestamp {
+   my $self = shift;
+   my ($string) = @_;
+
+   my $timestamp = 0;
+   if ($string =~ m{^(\d{4})-(\d{2})-(\d{2})$}) {
+      $timestamp = Time::Local::timelocal(0, 0, 12, $3, $2-1, $1);
+   }
+   else {
+      return $self->log->error("to_timestamp: string [$string] not a valid date format");
+   }
+
+   return $timestamp;
 }
 
 1;
