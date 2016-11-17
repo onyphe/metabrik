@@ -320,6 +320,8 @@ provides:
     file: lib/Metabrik/Server/Logstash.pm
   Metabrik::Server::Logstash::Indexer:
     file: lib/Metabrik/Server/Logstash/Indexer.pm
+  Metabrik::Server::Logstash::Oneshot:
+    file: lib/Metabrik/Server/Logstash/Oneshot.pm
   Metabrik::Server::Redis:
     file: lib/Metabrik/Server/Redis.pm
   Metabrik::Server::Rest:
