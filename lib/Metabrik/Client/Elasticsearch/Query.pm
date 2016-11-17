@@ -30,15 +30,16 @@ sub brik_properties {
       commands => {
          create_client => [ ],
          reset_client => [ ],
-         get_query_result_total => [ qw($query_result) ],
-         get_query_result_hits => [ qw($query_result) ],
-         get_query_result_timed_out => [ qw($query_result) ],
-         get_query_result_took => [ qw($query_result) ],
+         get_query_result_total => [ qw($query_result|OPTIONAL) ],
+         get_query_result_hits => [ qw($query_result|OPTIONAL) ],
+         get_query_result_timed_out => [ qw($query_result|OPTIONAL) ],
+         get_query_result_took => [ qw($query_result|OPTIONAL) ],
          term => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
          wildcard => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
          range => [ qw(kv_from kv_to index|OPTIONAL type|OPTIONAL) ],
          top => [ qw(kv_count index|OPTIONAL type|OPTIONAL) ],
          top_match => [ qw(kv_count kv_match index|OPTIONAL type|OPTIONAL) ],
+         from_json_file => [ qw(json_file) ],
       },
    };
 }
@@ -58,13 +59,20 @@ sub create_client {
 sub reset_client {
    my $self = shift;
 
-   return $self->log->info("TODO");
+   my $ce = $self->client;
+   if (defined($ce)) {
+      $self->client(undef);
+   }
+
+   return 1;
 }
 
 sub get_query_result_total {
    my $self = shift;
    my ($query_result) = @_;
 
+   my $run = $self->context->do('$RUN');
+   $query_result ||= $run;
    $self->brik_help_run_undef_arg('get_query_result_total', $query_result) or return;
    $self->brik_help_run_invalid_arg('get_query_result_total', $query_result, 'HASH') or return;
 
@@ -82,6 +90,8 @@ sub get_query_result_hits {
    my $self = shift;
    my ($query_result) = @_;
 
+   my $run = $self->context->do('$RUN');
+   $query_result ||= $run;
    $self->brik_help_run_undef_arg('get_query_result_hits', $query_result) or return;
    $self->brik_help_run_invalid_arg('get_query_result_hits', $query_result, 'HASH') or return;
 
@@ -99,6 +109,8 @@ sub get_query_result_timed_out {
    my $self = shift;
    my ($query_result) = @_;
 
+   my $run = $self->context->do('$RUN');
+   $query_result ||= $run;
    $self->brik_help_run_undef_arg('get_query_result_timed_out', $query_result) or return;
    $self->brik_help_run_invalid_arg('get_query_result_timed_out', $query_result, 'HASH')
       or return;
@@ -115,6 +127,8 @@ sub get_query_result_took {
    my $self = shift;
    my ($query_result) = @_;
 
+   my $run = $self->context->do('$RUN');
+   $query_result ||= $run;
    $self->brik_help_run_undef_arg('get_query_result_took', $query_result) or return;
    $self->brik_help_run_invalid_arg('get_query_result_took', $query_result, 'HASH')
       or return;
@@ -153,8 +167,8 @@ sub term {
    $index ||= $self->index;
    $type ||= $self->type;
    $self->brik_help_run_undef_arg('term', $kv) or return;
-   $self->brik_help_run_undef_arg('term', $index) or return;
-   $self->brik_help_run_undef_arg('term', $type) or return;
+   $self->brik_help_set_undef_arg('term', $index) or return;
+   $self->brik_help_set_undef_arg('term', $type) or return;
 
    if ($kv !~ /^\S+=\S+$/) {
       return $self->log->error("term: kv must be in the form 'key=value'");
@@ -187,8 +201,8 @@ sub wildcard {
    $index ||= $self->index;
    $type ||= $self->type;
    $self->brik_help_run_undef_arg('wildcard', $kv) or return;
-   $self->brik_help_run_undef_arg('wildcard', $index) or return;
-   $self->brik_help_run_undef_arg('wildcard', $type) or return;
+   $self->brik_help_set_undef_arg('wildcard', $index) or return;
+   $self->brik_help_set_undef_arg('wildcard', $type) or return;
 
    if ($kv !~ /^\S+=\S+$/) {
       return $self->log->error("wildcard: kv must be in the form 'key=value'");
@@ -224,8 +238,8 @@ sub range {
    $type ||= $self->type;
    $self->brik_help_run_undef_arg('range', $kv_from) or return;
    $self->brik_help_run_undef_arg('range', $kv_to) or return;
-   $self->brik_help_run_undef_arg('range', $index) or return;
-   $self->brik_help_run_undef_arg('range', $type) or return;
+   $self->brik_help_set_undef_arg('range', $index) or return;
+   $self->brik_help_set_undef_arg('range', $type) or return;
 
    if ($kv_from !~ /^\S+=\S+$/) {
       return $self->log->error("range: kv_from [$kv_from] must be in the form 'key=value'");
@@ -267,8 +281,8 @@ sub top {
    $index ||= $self->index;
    $type ||= $self->type;
    $self->brik_help_run_undef_arg('top', $kv_count) or return;
-   $self->brik_help_run_undef_arg('top', $index) or return;
-   $self->brik_help_run_undef_arg('top', $type) or return;
+   $self->brik_help_set_undef_arg('top', $index) or return;
+   $self->brik_help_set_undef_arg('top', $type) or return;
 
    if ($kv_count !~ /^\S+=\d+$/) {
       return $self->log->error("top: kv_count [$kv_count] must be in the form 'key=value'");
@@ -293,6 +307,23 @@ sub top {
 }
 
 #
+# grep equivalent
+#
+# XXX: todo
+#
+sub match {
+
+   #my $q = {
+      #query => {
+         #match => {
+            #$key_match => $value_match,
+         #},
+      #},
+   #};
+
+}
+
+#
 # run client::elasticsearch::query top_match domain=10 host=*www*
 #
 sub top_match {
@@ -303,8 +334,8 @@ sub top_match {
    $type ||= $self->type;
    $self->brik_help_run_undef_arg('top_match', $kv_count) or return;
    $self->brik_help_run_undef_arg('top_match', $kv_match) or return;
-   $self->brik_help_run_undef_arg('top_match', $index) or return;
-   $self->brik_help_run_undef_arg('top_match', $type) or return;
+   $self->brik_help_set_undef_arg('top_match', $index) or return;
+   $self->brik_help_set_undef_arg('top_match', $type) or return;
 
    if ($kv_count !~ /^\S+=\S+$/) {
       return $self->log->error("top_match: kv_count [$kv_count] must be in the form 'key=value'");
@@ -336,6 +367,25 @@ sub top_match {
          },
       },
    };
+
+   return $self->_query($q, $index, $type);
+}
+
+sub from_json_file {
+   my $self = shift;
+   my ($file, $index, $type) = @_;
+
+   $index ||= $self->index;
+   $type ||= $self->type;
+   $self->brik_help_run_undef_arg('from_json_file', $file) or return;
+   $self->brik_help_run_file_not_found('from_json_file', $file) or return;
+   $self->brik_help_set_undef_arg('from_json_file', $index) or return;
+   $self->brik_help_set_undef_arg('from_json_file', $type) or return;
+
+   my $fj = Metabrik::File::Json->new_from_brik_init($self) or return;
+   my $q = $fj->read($file) or return;
+
+   my $ce = $self->create_client or return;
 
    return $self->_query($q, $index, $type);
 }
