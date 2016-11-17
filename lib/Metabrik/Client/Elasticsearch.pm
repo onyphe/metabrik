@@ -39,6 +39,7 @@ sub brik_properties {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
          open_bulk_mode => [ qw(index|OPTIONAL type|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
          open_scroll_scan_mode => [ qw(index|OPTIONAL size|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
+         open_scroll => [ qw(index|OPTIONAL size|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
          total_scroll => [ ],
          next_scroll => [ ],
          index_document => [ qw(document index|OPTIONAL type|OPTIONAL) ],
@@ -186,6 +187,11 @@ sub open_scroll_scan_mode {
    my $self = shift;
    my ($index, $size, $nodes, $cxn_pool) = @_;
 
+   if ($Search::Elasticsearch::VERSION >= 5) {
+      return $self->log->error("open_scroll_scan_mode: Command not supported for ES version ".
+         "$Search::Elasticsearch::VERSION, try open_scroll Command instead");
+   }
+
    $index ||= $self->index;
    $size ||= $self->size;
    $nodes ||= $self->nodes;
@@ -208,6 +214,45 @@ sub open_scroll_scan_mode {
    );
    if (! defined($scroll)) {
       return $self->log->error("open_scroll_scan_mode: failed");
+   }
+
+   $self->_scroll($scroll);
+
+   return $nodes;
+}
+
+sub open_scroll {
+   my $self = shift;
+   my ($index, $size, $nodes, $cxn_pool) = @_;
+
+   if ($Search::Elasticsearch::VERSION < 5) {
+      return $self->log->error("open_scroll: Command not supported for ES version ".
+         "$Search::Elasticsearch::VERSION, try open_scroll_scan_mode Command instead");
+   }
+
+   $index ||= $self->index;
+   $size ||= $self->size;
+   $nodes ||= $self->nodes;
+   $cxn_pool ||= $self->cxn_pool;
+   $self->brik_help_run_undef_arg('open_scroll', $index) or return;
+   $self->brik_help_run_undef_arg('open_scroll', $size) or return;
+   $self->brik_help_run_undef_arg('open_scroll', $nodes) or return;
+   $self->brik_help_run_undef_arg('open_scroll', $cxn_pool) or return;
+   $self->brik_help_run_invalid_arg('open_scroll', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('open_scroll', $nodes) or return;
+
+   $self->open($nodes, $cxn_pool) or return;
+
+   my $elk = $self->_elk;
+
+   my $scroll = $elk->scroll_helper(
+      index => $index,
+      body => {
+         size => $size,
+      },
+   );
+   if (! defined($scroll)) {
+      return $self->log->error("open_scroll: failed");
    }
 
    $self->_scroll($scroll);
@@ -1105,7 +1150,13 @@ sub export_as_csv {
 
    my $max = $self->max;
 
-   my $scroll = $self->open_scroll_scan_mode($index, $size) or return;
+   my $scroll;
+   if ($Search::Elasticsearch::VERSION < 5) {
+      $scroll = $self->open_scroll_scan_mode($index, $size) or return;
+   }
+   else {
+      $scroll = $self->open_scroll($index, $size) or return;
+   }
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->separator(',');
