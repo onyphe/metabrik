@@ -172,6 +172,7 @@ lib/Metabrik/String/Ascii.pm
 lib/Metabrik/String/Base64.pm
 lib/Metabrik/String/Compress.pm
 lib/Metabrik/String/Csv.pm
+lib/Metabrik/String/Dump.pm
 lib/Metabrik/String/Hash.pm
 lib/Metabrik/String/Hexa.pm
 lib/Metabrik/String/Hostname.pm

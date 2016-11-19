@@ -541,6 +541,9 @@
       "Metabrik::String::Csv" : {
          "file" : "lib/Metabrik/String/Csv.pm"
       },
+      "Metabrik::String::Dump" : {
+         "file" : "lib/Metabrik/String/Dump.pm"
+      },
       "Metabrik::String::Hash" : {
          "file" : "lib/Metabrik/String/Hash.pm"
       },
