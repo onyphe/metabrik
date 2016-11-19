@@ -36,6 +36,8 @@ sub brik_properties {
          is_timezone => [ qw(timezone) ],
          timestamp => [ ],
          to_timestamp => [ qw(string) ],
+         timestamp_to_tz_time => [ qw(timestamp) ],
+         timestamp_to_tz_gmtime => [ qw(timestamp) ],
       },
       require_modules => {
          'DateTime' => [ ],
@@ -155,6 +157,31 @@ sub gmdate {
    return strftime("%a %b %e %H:%M:%S %Y", CORE::gmtime());
 }
 
+#
+# timestamp => '2016-11-01T00:06:39.000Z'
+#
+sub timestamp_to_tz_time {
+   my $self = shift;
+   my ($timestamp) = @_;
+
+   $self->brik_help_run_undef_arg('timestamp_to_tztime', $timestamp) or return;
+
+   eval("use POSIX qw(strftime);");
+
+   return strftime("%Y-%m-%d".'T'."%H:%M:%S.000Z", CORE::localtime($timestamp));
+}
+
+sub timestamp_to_tz_gmtime {
+   my $self = shift;
+   my ($timestamp) = @_;
+
+   $self->brik_help_run_undef_arg('timestamp_to_tztime', $timestamp) or return;
+
+   eval("use POSIX qw(strftime);");
+
+   return strftime("%Y-%m-%d".'T'."%H:%M:%S.000Z", CORE::gmtime($timestamp));
+}
+
 sub month {
    my $self = shift;
    my ($sep) = @_;
@@ -208,9 +235,35 @@ sub to_timestamp {
    my $self = shift;
    my ($string) = @_;
 
+   my %month = (
+      Jan => 0,
+      Feb => 1,
+      Mar => 2,
+      Apr => 3,
+      May => 4,
+      Jun => 5,
+      Jul => 6,
+      Aug => 7,
+      Sep => 8,
+      Oct => 9,
+      Nov => 10,
+      Dec => 11,
+   );
+
    my $timestamp = 0;
+   # 2015-12-30
    if ($string =~ m{^(\d{4})-(\d{2})-(\d{2})$}) {
       $timestamp = Time::Local::timelocal(0, 0, 12, $3, $2-1, $1);
+   }
+   # Wed Nov  9 07:01:18 2016
+   elsif ($string =~ m{^\S+\s+(\S+)\s+(\d+)\s+(\d+):(\d+):(\d+)\s+(\d+)$}) {
+      my $mon = $1;
+      my $mday = $2;
+      my $hour = $3;
+      my $min = $4;
+      my $sec = $5;
+      my $year = $6;
+      $timestamp = Time::Local::timelocal($sec, $min, $hour, $mday, $month{$mon}, $year);
    }
    else {
       return $self->log->error("to_timestamp: string [$string] not a valid date format");

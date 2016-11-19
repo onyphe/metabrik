@@ -39,6 +39,8 @@ sub brik_properties {
          range => [ qw(kv_from kv_to index|OPTIONAL type|OPTIONAL) ],
          top => [ qw(kv_count index|OPTIONAL type|OPTIONAL) ],
          top_match => [ qw(kv_count kv_match index|OPTIONAL type|OPTIONAL) ],
+         match => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
+         match_phrase => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
          from_json_file => [ qw(json_file) ],
       },
    };
@@ -306,21 +308,64 @@ sub top {
    return $self->_query($q, $index, $type);
 }
 
-#
-# grep equivalent
-#
-# XXX: todo
-#
+sub match_phrase {
+   my $self = shift;
+   my ($kv, $index, $type) = @_;
+
+   $index ||= $self->index;
+   $type ||= $self->type;
+   $self->brik_help_run_undef_arg('match_phrase', $kv) or return;
+   $self->brik_help_set_undef_arg('match_phrase', $index) or return;
+   $self->brik_help_set_undef_arg('match_phrase', $type) or return;
+
+   if ($kv !~ /^\S+=\S+$/) {
+      return $self->log->error("match_phrase: kv must be in the form 'key=value'");
+   }
+   my ($key, $value) = split('=', $kv);
+
+   $self->debug && $self->log->debug("match_phrase: key[$key] value[$value]");
+
+   my $ce = $self->create_client or return;
+
+   my $q = {
+      query => {
+         match_phrase => {
+            $key => $value,
+         },
+      },
+   };
+
+   return $self->_query($q, $index, $type);
+}
+
 sub match {
+   my $self = shift;
+   my ($kv, $index, $type) = @_;
 
-   #my $q = {
-      #query => {
-         #match => {
-            #$key_match => $value_match,
-         #},
-      #},
-   #};
+   $index ||= $self->index;
+   $type ||= $self->type;
+   $self->brik_help_run_undef_arg('match', $kv) or return;
+   $self->brik_help_set_undef_arg('match', $index) or return;
+   $self->brik_help_set_undef_arg('match', $type) or return;
 
+   if ($kv !~ /^\S+=\S+$/) {
+      return $self->log->error("match: kv must be in the form 'key=value'");
+   }
+   my ($key, $value) = split('=', $kv);
+
+   $self->debug && $self->log->debug("match: key[$key] value[$value]");
+
+   my $ce = $self->create_client or return;
+
+   my $q = {
+      query => {
+         match => {
+            $key => $value,
+         },
+      },
+   };
+
+   return $self->_query($q, $index, $type);
 }
 
 #

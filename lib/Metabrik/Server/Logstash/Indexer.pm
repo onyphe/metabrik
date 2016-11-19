@@ -23,6 +23,7 @@ sub brik_properties {
          no_output => [ qw(0|1) ],
          redis_host => [ qw(host) ],
          es_nodes => [ qw(node_list) ],
+         binary => [ qw(binary_path) ],
       },
       attributes_default => {
          version => '5.0.0',

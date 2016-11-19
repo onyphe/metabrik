@@ -27,6 +27,7 @@ sub brik_properties {
          node_name => [ qw(name) ],
          db_dir => [ qw(directory) ],
          log_dir => [ qw(directory) ],
+         binary => [ qw(binary_path) ],
       },
       attributes_default => {
          listen => '127.0.0.1',
@@ -84,10 +85,13 @@ sub brik_use_properties {
 sub get_binary {
    my $self = shift;
 
-   my $datadir = $self->datadir;
-   my $version = $self->version;
+   my $binary = $self->binary;
+   if (! defined($binary)) {
+      my $datadir = $self->datadir;
+      my $version = $self->version;
+      $binary = $datadir.'/elasticsearch-'.$version.'/bin/elasticsearch';
+   }
 
-   my $binary = $datadir.'/elasticsearch-'.$version.'/bin/elasticsearch';
    $self->brik_help_run_file_not_found('get_binary', $binary) or return;
 
    $self->log->verbose("get_binary: found binary [$binary]");
@@ -168,12 +172,12 @@ sub install {
 sub start {
    my $self = shift;
 
+   if ($self->status) {
+      return $self->info_process_is_running;
+   }
+
    my $conf_file = $self->conf_file;
    $self->brik_help_run_file_not_found('start', $conf_file) or return;
-
-   if ($self->status) {
-      return $self->error_process_is_running;
-   }
 
    my $no_output = $self->no_output;
 

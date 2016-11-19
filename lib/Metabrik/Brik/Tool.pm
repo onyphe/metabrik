@@ -693,8 +693,13 @@ sub view_brik_source {
    $self->brik_help_run_undef_arg('view_brik_source', $brik) or return;
 
    my @toks = split(/::/, $brik);
-   if (@toks < 2) {
+   if (@toks < 2 && $brik ne 'metabrik') {
       return $self->log->error("view_brik_source: invalid Brik format for [$brik]");
+   }
+
+   # Handle special case for Metabrik.pm
+   if ($brik eq 'metabrik') {
+      @toks = ();
    }
 
    my $pager = $ENV{PAGER} || 'less';
@@ -706,8 +711,11 @@ sub view_brik_source {
    }
    $pm .= '.pm';
 
+   $self->log->debug("view_brik_source: pm [$pm]");
+
    my $cmd = '';
    for (@INC) {
+      $self->log->debug("view_brik_source: search [$_/$pm] file");
       if (-f "$_/$pm") {
          $cmd = "$pager $_/$pm";
          last;

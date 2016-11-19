@@ -17,6 +17,16 @@ sub brik_properties {
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          datadir => [ qw(datadir) ],
+         conf_file => [ qw(file) ],
+         log_file => [ qw(file) ],
+         version => [ qw(2.4.0|5.0.0) ],
+         no_output => [ qw(0|1) ],
+         binary => [ qw(binary_path) ],
+      },
+      attributes_default => {
+         version => '5.0.0',
+         no_output => 0,
+         log_file => 'logstash.log',
       },
       commands => {
          install => [ ],  # Inherited

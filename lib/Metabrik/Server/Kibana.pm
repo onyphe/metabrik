@@ -24,6 +24,7 @@ sub brik_properties {
          version => [ qw(4.6.2|5.0.0) ],
          no_output => [ qw(0|1) ],
          es_nodes => [ qw(node|node_list) ],
+         binary => [ qw(binary_path) ],
       },
       attributes_default => {
          listen => '127.0.0.1',
@@ -72,10 +73,13 @@ sub brik_use_properties {
 sub get_binary {
    my $self = shift;
 
-   my $datadir = $self->datadir;
-   my $version = $self->version;
+   my $binary = $self->binary;
+   if (! defined($binary)) {
+      my $datadir = $self->datadir;
+      my $version = $self->version;
+      $binary = $datadir.'/kibana-'.$version.'-linux-x86_64/bin/kibana';
+   }
 
-   my $binary = $datadir.'/kibana-'.$version.'-linux-x86_64/bin/kibana';
    $self->brik_help_run_file_not_found('get_binary', $binary) or return;
 
    $self->log->verbose("get_binary: found binary [$binary]");
@@ -148,14 +152,14 @@ sub start {
    my $self = shift;
    my ($conf_file) = @_;
 
+   if ($self->status) {
+      return $self->info_process_is_running;
+   }
+
    $conf_file ||= $self->conf_file;
 
    $self->brik_help_run_undef_arg('start', $conf_file) or return;
    $self->brik_help_run_file_not_found('start', $conf_file) or return;
-
-   if ($self->status) {
-      return $self->error_process_is_running;
-   }
 
    my $log_file = $self->log_file;
    my $no_output = $self->no_output;

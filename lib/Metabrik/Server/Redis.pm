@@ -167,12 +167,12 @@ sub start {
    my $self = shift;
    my ($port, $listen) = @_;
 
+   if ($self->status) {
+      return $self->info_process_is_running;
+   }
+
    $port ||= $self->port;
    $listen ||= $self->listen;
-
-   if ($self->status) {
-      return $self->error_process_is_running;
-   }
 
    my $conf_file = $self->conf_file;
    $self->brik_help_run_file_not_found('start', $conf_file) or return;

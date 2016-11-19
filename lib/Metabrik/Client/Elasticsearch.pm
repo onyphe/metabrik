@@ -63,7 +63,8 @@ sub brik_properties {
          get_mappings => [ qw(index) ],
          create_index => [ qw(index) ],
          create_index_with_mappings => [ qw(index mappings) ],
-         info => [ ],
+         info => [ qw(nodes_list|OPTIONAL) ],
+         version => [ qw(nodes_list|OPTIONAL) ],
          get_templates => [ ],
          list_templates => [ ],
          get_template => [ qw(name) ],
@@ -71,6 +72,7 @@ sub brik_properties {
          put_template_from_json_file => [ qw(file) ],
          get_settings => [ qw(index|indices_list|OPTIONAL name|names_list|OPTIONAL) ],
          put_settings => [ qw(settings_hash index|indices_list|OPTIONAL) ],
+         set_index_number_of_replicas => [ qw(index|indices_list number) ],
          delete_template => [ qw(name) ],
          is_index_exists => [ qw(index) ],
          is_type_exists => [ qw(index type) ],
@@ -115,6 +117,18 @@ sub brik_properties {
          'Search::Elasticsearch' => [ ],
       },
    };
+}
+
+sub brik_preinit {
+   my $self = shift;
+
+   eval("use Search::Elasticsearch;");
+   if ($Search::Elasticsearch::VERSION < 5) {
+      $self->log->error("brik_preinit: please upgrade Search::Elasticsearch module with: ".
+         "run perl::module install Search::Elasticsearch");
+   }
+
+   return $self->SUPER::brik_preinit;
 }
 
 sub open {
@@ -189,9 +203,10 @@ sub open_scroll_scan_mode {
    my $self = shift;
    my ($index, $size, $nodes, $cxn_pool) = @_;
 
-   if ($Search::Elasticsearch::VERSION >= 5) {
+   my $version = $self->version or return;
+   if ($version >= 5) {
       return $self->log->error("open_scroll_scan_mode: Command not supported for ES version ".
-         "$Search::Elasticsearch::VERSION, try open_scroll Command instead");
+         "$version, try open_scroll Command instead");
    }
 
    $index ||= $self->index;
@@ -227,9 +242,10 @@ sub open_scroll {
    my $self = shift;
    my ($index, $size, $nodes, $cxn_pool) = @_;
 
-   if ($Search::Elasticsearch::VERSION < 5) {
+   my $version = $self->version or return;
+   if ($version < 5) {
       return $self->log->error("open_scroll: Command not supported for ES version ".
-         "$Search::Elasticsearch::VERSION, try open_scroll_scan_mode Command instead");
+         "$version, try open_scroll_scan_mode Command instead");
    }
 
    $index ||= $self->index;
@@ -839,6 +855,23 @@ sub info {
    return $self->content;
 }
 
+sub version {
+   my $self = shift;
+   my ($nodes) = @_;
+
+   $nodes ||= $self->nodes;
+   $self->brik_help_run_undef_arg('version', $nodes) or return;
+   $self->brik_help_run_invalid_arg('version', $nodes, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('version', $nodes) or return;
+
+   my $first = $nodes->[0];
+
+   $self->get($first) or return;
+   my $content = $self->content or return;
+
+   return $content->{version}{number};
+}
+
 #
 # Search::Elasticsearch::Client::2_0::Direct::Indices
 #
@@ -1020,6 +1053,21 @@ sub put_settings {
    return $r;
 }
 
+sub set_index_number_of_replicas {
+   my $self = shift;
+   my ($indices, $number) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('set_index_number_of_replicas', $indices) or return;
+   $self->brik_help_run_invalid_arg('set_index_number_of_replicas', $indices, 'ARRAY', 'SCALAR')
+      or return;
+
+   my $settings = { number_of_replicas => $number };
+
+   return $self->put_settings($settings, $indices);
+}
+
 #
 # http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html
 #
@@ -1165,7 +1213,8 @@ sub export_as_csv {
    my $max = $self->max;
 
    my $scroll;
-   if ($Search::Elasticsearch::VERSION < 5) {
+   my $version = $self->version or return;
+   if ($version < 5) {
       $scroll = $self->open_scroll_scan_mode($index, $size) or return;
    }
    else {
