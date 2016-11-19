@@ -42,8 +42,8 @@ sub brik_properties {
          open_scroll => [ qw(index|OPTIONAL size|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
          total_scroll => [ ],
          next_scroll => [ ],
-         index_document => [ qw(document index|OPTIONAL type|OPTIONAL) ],
-         index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL) ],
+         index_document => [ qw(document index|OPTIONAL type|OPTIONAL id|OPTIONAL) ],
+         index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL id|OPTIONAL) ],
          bulk_flush => [ ],
          query => [ qw($query_hash index|OPTIONAL) ],
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
@@ -76,7 +76,7 @@ sub brik_properties {
          is_type_exists => [ qw(index type) ],
          is_document_exists => [ qw(index type document) ],
          refresh_index => [ qw(index) ],
-         export_as_csv => [ qw(index output_csv size) ],
+         export_as_csv => [ qw(index size|OPTIONAL) ],
          import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL) ],
          get_stats_process => [ ],
          get_process => [ ],
@@ -107,9 +107,11 @@ sub brik_properties {
          restore_snapshot_for_indices => [ qw(indices snapshot_name repository_name) ],
       },
       require_modules => {
+         'Metabrik::String::Base64' => [ ],
          'Metabrik::String::Json' => [ ],
          'Metabrik::File::Csv' => [ ],
          'Metabrik::File::Json' => [ ],
+         'Data::Dump' => [ ],
          'Search::Elasticsearch' => [ ],
       },
    };
@@ -280,24 +282,29 @@ sub next_scroll {
 
 sub index_document {
    my $self = shift;
-   my ($doc, $index, $type) = @_;
+   my ($doc, $index, $type, $id) = @_;
 
    my $elk = $self->_elk;
    $index ||= $self->index;
    $type ||= $self->type;
    $self->brik_help_run_undef_arg('open', $elk) or return;
-   $self->brik_help_run_undef_arg('index_document', $index) or return;
-   $self->brik_help_run_undef_arg('index_document', $type) or return;
    $self->brik_help_run_undef_arg('index_document', $doc) or return;
    $self->brik_help_run_invalid_arg('index_document', $doc, 'HASH') or return;
+   $self->brik_help_set_undef_arg('index', $index) or return;
+   $self->brik_help_set_undef_arg('type', $type) or return;
+
+   my %args = (
+      index => $index,
+      type => $type,
+      body => $doc,
+   );
+   if (defined($id)) {
+      $args{id} = $id;
+   }
 
    my $r;
    eval {
-      $r = $elk->index(
-         index => $index,
-         type => $type,
-         body => $doc,
-      );
+      $r = $elk->index(%args);
    };
    if ($@) {
       chomp($@);
@@ -309,17 +316,24 @@ sub index_document {
 
 sub index_bulk {
    my $self = shift;
-   my ($doc, $index, $type) = @_;
+   my ($doc, $index, $type, $id) = @_;
 
    my $bulk = $self->_bulk;
    $index ||= $self->index;
    $type ||= $self->type;
    $self->brik_help_run_undef_arg('open_bulk_mode', $bulk) or return;
    $self->brik_help_run_undef_arg('index_bulk', $doc) or return;
-   $self->brik_help_run_undef_arg('index_bulk', $index) or return;
-   $self->brik_help_run_undef_arg('index_bulk', $type) or return;
+   $self->brik_help_set_undef_arg('index', $index) or return;
+   $self->brik_help_set_undef_arg('type', $type) or return;
 
-   return $bulk->index({ source => $doc });
+   my %args = (
+      source => $doc,
+   );
+   if (defined($id)) {
+      $args{id} = $id;
+   }
+
+   return $bulk->index(\%args);
 }
 
 sub bulk_flush {
@@ -1142,10 +1156,10 @@ sub refresh_index {
 
 sub export_as_csv {
    my $self = shift;
-   my ($index, $output_csv, $size) = @_;
+   my ($index, $size) = @_;
 
+   $size ||= 10_000;
    $self->brik_help_run_undef_arg('export_as_csv', $index) or return;
-   $self->brik_help_run_undef_arg('export_as_csv', $output_csv) or return;
    $self->brik_help_run_undef_arg('export_as_csv', $size) or return;
 
    my $max = $self->max;
@@ -1158,6 +1172,8 @@ sub export_as_csv {
       $scroll = $self->open_scroll($index, $size) or return;
    }
 
+   my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
+
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->separator(',');
    $fc->append(1);
@@ -1168,67 +1184,42 @@ sub export_as_csv {
    my $total = $self->total_scroll;
    $self->log->info("export_as_csv: total [$total]");
 
-   my $first = $self->next_scroll;
-   if (! defined($first) || ! exists($first->{_source})) {
-      return $self->log->error("export_as_csv: nothing in index [$index]?");
-   }
+   local $Data::Dump::INDENT = "";    # No indentation shorten length
+   local $Data::Dump::TRY_BASE64 = 0; # Never encode in base64
 
-   my $doc = $first->{_source};
-
-   my @header = ();
-   for my $this (keys %$doc) {
-      if (ref($doc->{$this}) eq 'HASH') {
-         for my $k (sort { $a cmp $b } keys %{$doc->{$this}}) {
-            push @header, "$this.$k";  # Object field notation.
-         }
-      }
-      # For an ARRAY, we have nothing special todo.
-      else {
-         push @header, $this;
-      }
-   }
-   $fc->header(\@header);
-
-   # Handle this first entry now.
    my $h = {};
-   for my $this (keys %$doc) {
-      my $ref = ref($doc->{$this});
-      if ($ref eq 'HASH') {   # An object lies here.
-         for my $k (keys %{$doc->{$this}}) {
-            $h->{"$this.$k"} = $doc->{$this}{$k};
-         }
-      }
-      elsif ($ref eq 'ARRAY') {  # An ARRAY lies here.
-         $h->{$this} = join('|', @{$doc->{$this}});
-      }
-      else {
-         $h->{$this} = $doc->{$this};
-      }
-   }
-   $fc->write([ $h ], $output_csv) or return;
-
-   # And all other entries.
+   my %types = ();
    my $processed = 0;
    while (my $this = $self->next_scroll) {
+      my $id = $this->{_id};
       my $doc = $this->{_source};
+      my $type = $this->{_type};
+      if (! exists($types{$type})) {
+         $types{$type}{header} = [ '_id', sort { $a cmp $b } keys %$doc ];
+         $types{$type}{output} = "$index:$type.csv";
+         $self->log->info("export_as_csv: exporting to file [$index:$type.csv] ".
+            "for new type [$type]");
+      }
 
-      my $h = {};
-      for my $this (keys %$doc) {
-         my $ref = ref($doc->{$this});
-         if ($ref eq 'HASH') {   # An object lies here.
-            for my $k (keys %{$doc->{$this}}) {
-               $h->{"$this.$k"} = $doc->{$this}{$k};
-            }
-         }
-         elsif ($ref eq 'ARRAY') {  # An ARRAY lies here.
-            $h->{$this} = join('|', @{$doc->{$this}});
+      $h->{_id} = $id;
+
+      for my $k (keys %$doc) {
+         if (ref($doc->{$k})) {
+            my $s = Data::Dump::dump($doc->{$k});
+            $s =~ s{\n}{}g;
+            $h->{$k} = 'BASE64:'.$sb->encode($s);
          }
          else {
-            $h->{$this} = $doc->{$this};
+            $h->{$k} = $doc->{$k};
          }
       }
 
-      $fc->write([ $h ], $output_csv) or return;
+      $fc->header($types{$type}{header});
+      my $r = $fc->write([ $h ], $types{$type}{output});
+      if (!defined($r)) {
+         $self->log->warning("export_as_csv: unable to process entry, skipping");
+         next;
+      }
 
       # Log a status sometimes.
       if (! (++$processed % 100_000)) {
@@ -1237,30 +1228,44 @@ sub export_as_csv {
 
       # Limit export to specified maximum
       if ($max > 0 && $processed >= $max) {
-         $self->log->info("export_from_csv: max export reached [$processed]");
+         $self->log->info("export_as_csv: max export reached [$processed], stopping");
          last;
       }
    }
 
-   return $output_csv;
+   return $processed;
 }
 
 sub import_from_csv {
    my $self = shift;
    my ($input_csv, $index, $type) = @_;
 
-   $index ||= $self->index;
-   $type ||= $self->type;
    $self->brik_help_run_undef_arg('import_from_csv', $input_csv) or return;
    $self->brik_help_run_file_not_found('import_from_csv', $input_csv) or return;
-   $self->brik_help_run_undef_arg('import_from_csv', $index) or return;
-   $self->brik_help_run_undef_arg('import_from_csv', $type) or return;
+
+   # If index and/or types are not defined, we try to get them from input filename
+   if (! defined($index) || ! defined($type)) {
+      # Example: index-DATE:type.csv
+      ($index, $type) = $input_csv =~ m{^(.+):(.+)\.csv$};
+   }
+
+   $self->log->debug("input [$input_csv]");
+   $self->log->debug("index [$index]");
+   $self->log->debug("type [$type]");
+
+   # And default to Attributes if guess failed.
+   $index ||= $self->index;
+   $type ||= $self->type;
+   $self->brik_help_set_undef_arg('index', $index) or return;
+   $self->brik_help_set_undef_arg('type', $type) or return;
 
    my $max = $self->max;
 
    $self->open_bulk_mode($index, $type) or return;
 
    $self->log->info("import_from_csv: importing to index [$index] with type [$type]");
+
+   my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->separator(',');
@@ -1269,28 +1274,20 @@ sub import_from_csv {
    my $processed = 0;
    while (my $this = $fc->read_next($input_csv)) {
       my $h = {};
+      my $id = $this->{_id};
+      delete $this->{_id};
       for my $key (keys %$this) {
-         if ($key =~ m{^(\S+)\.(\S+)$}) {  # An OBJECT is waiting
-            my $k = $1;
-            my $v = $2;
-            if ($this->{$key} =~ m{\|}) { # An ARRAY is waiting
-               $h->{$k}{$v} = [ split('\|', $this->{$key}) ];
-            }
-            else {
-               $h->{$k}{$v} = $this->{$key};
-            }
+         my $value = $this->{$key};
+         if ($value =~ m{^BASE64:(.*)$}) {  # An OBJECT is waiting to be decoded
+            my $s = $sb->decode($1);
+            $h->{$key} = eval($s);
          }
-         else {
-            if ($this->{$key} =~ m{\|}) { # An ARRAY is waiting
-               $h->{$key} = [ split('\|', $this->{$key}) ];
-            }
-            else {
-               $h->{$key} = $this->{$key};
-            }
+         else {  # Non-encoded value
+            $h->{$key} = $value;
          }
       }
 
-      $self->index_bulk($h, $index, $type) or return;
+      $self->index_bulk($h, $index, $type, $id) or return;
 
       # Log a status sometimes.
       if (! (++$processed % 100_000)) {
@@ -1299,7 +1296,7 @@ sub import_from_csv {
 
       # Limit import to specified maximum
       if ($max > 0 && $processed >= $max) {
-         $self->log->info("import_from_csv: max import reached [$processed]");
+         $self->log->info("import_from_csv: max import reached [$processed], stopping");
          last;
       }
    }
@@ -1311,6 +1308,7 @@ sub import_from_csv {
    return $processed;
 }
 
+#
 # http://localhost:9200/_nodes/stats/process?pretty
 #
 # Search::Elasticsearch::Client::2_0::Direct::Nodes

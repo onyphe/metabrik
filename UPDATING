@@ -1,3 +1,8 @@
+20161119
+   AFFECTS: client::elasticsearch
+
+   - client::elasticsearch export_as_csv Command now takes only two Args: index and size
+
 20161114
    AFFECTS: file::csv
 

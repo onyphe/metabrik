@@ -31,7 +31,7 @@ sub encode {
 
    $self->brik_help_run_undef_arg('encode', $data) or return;
 
-   my $encoded = MIME::Base64::encode_base64($data);
+   my $encoded = MIME::Base64::encode_base64($data, '');
    chomp($encoded);
 
    return $encoded;
