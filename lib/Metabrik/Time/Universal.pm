@@ -265,6 +265,16 @@ sub to_timestamp {
       my $year = $6;
       $timestamp = Time::Local::timelocal($sec, $min, $hour, $mday, $month{$mon}, $year);
    }
+   # 2016-04-12T17:25:50.713Z
+   elsif ($string =~ m{^(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$}) {
+      my $mon = $2 - 1;
+      my $mday = $3;
+      my $hour = $4;
+      my $min = $5;
+      my $sec = $6;
+      my $year = $1;
+      $timestamp = Time::Local::timelocal($sec, $min, $hour, $mday, $mon, $year);
+   }
    else {
       return $self->log->error("to_timestamp: string [$string] not a valid date format");
    }
