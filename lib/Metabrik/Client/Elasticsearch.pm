@@ -51,7 +51,7 @@ sub brik_properties {
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
          get_from_id => [ qw(id index|OPTIONAL type|OPTIONAL) ],
          www_search => [ qw(query index|OPTIONAL type|OPTIONAL) ],
-         delete_index => [ qw(index|indices_list type|OPTIONAL) ],
+         delete_index => [ qw(index|indices_list) ],
          show_indices => [ ],
          show_nodes => [ ],
          show_health => [ ],
@@ -509,7 +509,7 @@ sub www_search {
 #
 sub delete_index {
    my $self = shift;
-   my ($index, $type) = @_;
+   my ($index) = @_;
 
    my $elk = $self->_elk;
    $self->brik_help_run_undef_arg('open', $elk) or return;
@@ -519,9 +519,6 @@ sub delete_index {
    my %args = (
       index => $index,
    );
-   if (defined($type) && $type ne '*') {
-      $args{type} = $type;
-   }
 
    my $r;
    eval {
