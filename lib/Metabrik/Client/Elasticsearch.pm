@@ -34,6 +34,8 @@ sub brik_properties {
          from => 0,
          size => 10,
          max => 0,
+         index => '*',
+         type => '*',
       },
       commands => {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
@@ -45,11 +47,11 @@ sub brik_properties {
          index_document => [ qw(document index|OPTIONAL type|OPTIONAL id|OPTIONAL) ],
          index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL id|OPTIONAL) ],
          bulk_flush => [ ],
-         query => [ qw($query_hash index|OPTIONAL) ],
+         query => [ qw($query_hash index|OPTIONAL type|OPTIONAL) ],
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
          get_from_id => [ qw(id index|OPTIONAL type|OPTIONAL) ],
-         www_search => [ qw(query index|OPTIONAL) ],
-         delete_index => [ qw(index|indices_list) ],
+         www_search => [ qw(query index|OPTIONAL type|OPTIONAL) ],
+         delete_index => [ qw(index|indices_list type|OPTIONAL) ],
          show_indices => [ ],
          show_nodes => [ ],
          show_health => [ ],
@@ -369,8 +371,8 @@ sub count {
    $index ||= $self->index;
    $type ||= $self->type;
    $self->brik_help_run_undef_arg('open', $elk) or return;
-   $self->brik_help_run_undef_arg('count', $index) or return;
-   $self->brik_help_run_undef_arg('count', $type) or return;
+   $self->brik_help_set_undef_arg('index', $index) or return;
+   $self->brik_help_set_undef_arg('type', $type) or return;
 
    my $r;
    eval {
@@ -401,24 +403,32 @@ sub count {
 #
 sub query {
    my $self = shift;
-   my ($query, $index) = @_;
+   my ($query, $index, $type) = @_;
 
    my $elk = $self->_elk;
    $index ||= $self->index;
+   $type ||= $self->type;
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('query', $query) or return;
-   $self->brik_help_run_undef_arg('query', $index) or return;
+   $self->brik_help_set_undef_arg('index', $index) or return;
+   $self->brik_help_set_undef_arg('type', $type) or return;
    $self->brik_help_run_invalid_arg('query', $query, 'HASH') or return;
+
+   my %args = (
+      index => $index,
+      from => $self->from,
+      size => $self->size,
+      body => $query,
+   );
+      #timeout => 60,  # XXX: to test
+
+   if ($type ne '*') {
+      $args{type} = $type;
+   }
 
    my $r;
    eval {
-      $r = $elk->search(
-         index => $index,
-         from => $self->from,
-         size => $self->size,
-         body => $query,
-         #timeout => 60,  # XXX: to test
-      );
+      $r = $elk->search(%args);
    };
    if ($@) {
       chomp($@);
@@ -437,8 +447,8 @@ sub get_from_id {
    $type ||= $self->type;
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('get_from_id', $id) or return;
-   $self->brik_help_run_undef_arg('get_from_id', $index) or return;
-   $self->brik_help_run_undef_arg('get_from_id', $type) or return;
+   $self->brik_help_set_undef_arg('index', $index) or return;
+   $self->brik_help_set_undef_arg('type', $type) or return;
 
    my $r;
    eval {
@@ -461,11 +471,13 @@ sub get_from_id {
 #
 sub www_search {
    my $self = shift;
-   my ($query, $index) = @_;
+   my ($query, $index, $type) = @_;
 
    $index ||= $self->index;
-   $self->brik_help_run_undef_arg('www_search', $index) or return;
+   $type ||= $self->type;
    $self->brik_help_run_undef_arg('www_search', $query) or return;
+   $self->brik_help_set_undef_arg('index', $index) or return;
+   $self->brik_help_set_undef_arg('type', $type) or return;
 
    my $from = $self->from;
    my $size = $self->size;
@@ -474,8 +486,12 @@ sub www_search {
 
    my $nodes = $self->nodes;
    for my $node (@$nodes) {
-      # http://localhost:9200/INDEX/_search/?size=SIZE&q=QUERY
-      my $url = "$node/$index/_search/?from=$from&size=$size&q=".$query;
+      # http://localhost:9200/INDEX/TYPE/_search/?size=SIZE&q=QUERY
+      my $url = "$node/$index";
+      if ($type ne '*') {
+         $url .= "/$type";
+      }
+      $url .= "/_search/?from=$from&size=$size&q=".$query;
 
       my $get = $self->SUPER::get($url) or next;
       my $body = $get->{content};
@@ -493,19 +509,23 @@ sub www_search {
 #
 sub delete_index {
    my $self = shift;
-   my ($index) = @_;
+   my ($index, $type) = @_;
 
    my $elk = $self->_elk;
-   $index ||= $self->index;
    $self->brik_help_run_undef_arg('open', $elk) or return;
    $self->brik_help_run_undef_arg('delete_index', $index) or return;
    $self->brik_help_run_invalid_arg('delete_index', $index, 'ARRAY', 'SCALAR') or return;
 
+   my %args = (
+      index => $index,
+   );
+   if (defined($type) && $type ne '*') {
+      $args{type} = $type;
+   }
+
    my $r;
    eval {
-      $r = $elk->indices->delete(
-         index => $index,
-      );
+      $r = $elk->indices->delete(%args);
    };
    if ($@) {
       chomp($@);
@@ -1295,7 +1315,7 @@ sub import_from_csv {
    # If index and/or types are not defined, we try to get them from input filename
    if (! defined($index) || ! defined($type)) {
       # Example: index-DATE:type.csv
-      ($index, $type) = $input_csv =~ m{^(.+):(.+)\.csv$};
+      ($index, $type) = $input_csv =~ m{^(.+):(.+)\.csv(?:.*)?$};
    }
 
    $self->log->debug("input [$input_csv]");
