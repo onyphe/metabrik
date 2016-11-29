@@ -76,6 +76,8 @@ sub brik_properties {
          put_settings => [ qw(settings_hash index|indices_list|OPTIONAL) ],
          set_index_number_of_replicas => [ qw(index|indices_list number) ],
          set_index_refresh_interval => [ qw(index|indices_list number) ],
+         get_index_number_of_replicas => [ qw(index|indices) ],
+         get_index_refresh_interval => [ qw(index|indices_list) ],
          delete_template => [ qw(name) ],
          is_index_exists => [ qw(index) ],
          is_type_exists => [ qw(index type) ],
@@ -1099,6 +1101,46 @@ sub set_index_refresh_interval {
    my $settings = { refresh_interval => $number };
 
    return $self->put_settings($settings, $indices);
+}
+
+sub get_index_number_of_replicas {
+   my $self = shift;
+   my ($indices) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('get_index_number_of_replicas', $indices) or return;
+   $self->brik_help_run_invalid_arg('get_index_number_of_replicas', $indices, 'ARRAY', 'SCALAR')
+      or return;
+
+   my $settings = $self->get_settings($indices);
+
+   my %indices = ();
+   for (keys %$settings) {
+      $indices{$_} = $settings->{$_}{settings}{index}{number_of_replicas};
+   }
+
+   return \%indices;
+}
+
+sub get_index_refresh_interval {
+   my $self = shift;
+   my ($indices, $number) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('get_index_refresh_interval', $indices) or return;
+   $self->brik_help_run_invalid_arg('get_index_refresh_interval', $indices, 'ARRAY', 'SCALAR')
+      or return;
+
+   my $settings = $self->get_settings($indices);
+
+   my %indices = ();
+   for (keys %$settings) {
+      $indices{$_} = $settings->{$_}{settings}{index}{refresh_interval};
+   }
+
+   return \%indices;
 }
 
 #
