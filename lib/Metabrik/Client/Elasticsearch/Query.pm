@@ -172,7 +172,7 @@ sub term {
    $self->brik_help_set_undef_arg('term', $index) or return;
    $self->brik_help_set_undef_arg('term', $type) or return;
 
-   if ($kv !~ /^\S+=\S+$/) {
+   if ($kv !~ /^\S+?=.+$/) {
       return $self->log->error("term: kv must be in the form 'key=value'");
    }
    my ($key, $value) = split('=', $kv);
@@ -193,6 +193,8 @@ sub term {
       },
    };
 
+   $self->log->verbose("term: keys [$key] value [$value] index [$index] type [$type]");
+
    return $self->_query($q, $index, $type);
 }
 
@@ -206,7 +208,7 @@ sub wildcard {
    $self->brik_help_set_undef_arg('wildcard', $index) or return;
    $self->brik_help_set_undef_arg('wildcard', $type) or return;
 
-   if ($kv !~ /^\S+=\S+$/) {
+   if ($kv !~ /^\S+?=.+$/) {
       return $self->log->error("wildcard: kv must be in the form 'key=value'");
    }
    my ($key, $value) = split('=', $kv);
@@ -225,8 +227,9 @@ sub wildcard {
       },
    };
 
-   return $self->_query($q, $index, $type);
+   $self->log->verbose("wildcard: keys [$key] value [$value] index [$index] type [$type]");
 
+   return $self->_query($q, $index, $type);
 }
 
 #
@@ -243,10 +246,10 @@ sub range {
    $self->brik_help_set_undef_arg('range', $index) or return;
    $self->brik_help_set_undef_arg('range', $type) or return;
 
-   if ($kv_from !~ /^\S+=\S+$/) {
+   if ($kv_from !~ /^\S+?=.+$/) {
       return $self->log->error("range: kv_from [$kv_from] must be in the form 'key=value'");
    }
-   if ($kv_to !~ /^\S+=\S+$/) {
+   if ($kv_to !~ /^\S+?=.+$/) {
       return $self->log->error("range: kv_to [$kv_to] must be in the form 'key=value'");
    }
    my ($key_from, $value_from) = split('=', $kv_from);
@@ -305,6 +308,8 @@ sub top {
       },
    };
 
+   $self->log->verbose("top: key [$key_count] value [$value_count] index [$index] type [$type]");
+
    return $self->_query($q, $index, $type);
 }
 
@@ -318,7 +323,7 @@ sub match_phrase {
    $self->brik_help_set_undef_arg('match_phrase', $index) or return;
    $self->brik_help_set_undef_arg('match_phrase', $type) or return;
 
-   if ($kv !~ /^\S+=\S+$/) {
+   if ($kv !~ /^\S+?=.+$/) {
       return $self->log->error("match_phrase: kv must be in the form 'key=value'");
    }
    my ($key, $value) = split('=', $kv);
@@ -348,7 +353,7 @@ sub match {
    $self->brik_help_set_undef_arg('match', $index) or return;
    $self->brik_help_set_undef_arg('match', $type) or return;
 
-   if ($kv !~ /^\S+=\S+$/) {
+   if ($kv !~ /^\S+?=.+$/) {
       return $self->log->error("match: kv must be in the form 'key=value'");
    }
    my ($key, $value) = split('=', $kv);
@@ -382,10 +387,10 @@ sub top_match {
    $self->brik_help_set_undef_arg('top_match', $index) or return;
    $self->brik_help_set_undef_arg('top_match', $type) or return;
 
-   if ($kv_count !~ /^\S+=\S+$/) {
+   if ($kv_count !~ /^\S+?=.+$/) {
       return $self->log->error("top_match: kv_count [$kv_count] must be in the form 'key=value'");
    }
-   if ($kv_match !~ /^\S+=\S+$/) {
+   if ($kv_match !~ /^\S+?=.+$/) {
       return $self->log->error("top_match: kv_match [$kv_match] must be in the form 'key=value'");
    }
    my ($key_count, $value_count) = split('=', $kv_count);
