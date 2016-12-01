@@ -78,6 +78,7 @@ sub brik_properties {
          set_index_refresh_interval => [ qw(index|indices_list number) ],
          get_index_number_of_replicas => [ qw(index|indices) ],
          get_index_refresh_interval => [ qw(index|indices_list) ],
+         get_index_number_of_shards => [ qw(index|indices_list) ],
          delete_template => [ qw(name) ],
          is_index_exists => [ qw(index) ],
          is_type_exists => [ qw(index type) ],
@@ -1143,6 +1144,26 @@ sub get_index_refresh_interval {
    return \%indices;
 }
 
+sub get_index_number_of_shards {
+   my $self = shift;
+   my ($indices, $number) = @_;
+
+   my $elk = $self->_elk;
+   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('get_index_number_of_shards', $indices) or return;
+   $self->brik_help_run_invalid_arg('get_index_number_of_shards', $indices, 'ARRAY', 'SCALAR')
+      or return;
+
+   my $settings = $self->get_settings($indices);
+
+   my %indices = ();
+   for (keys %$settings) {
+      $indices{$_} = $settings->{$_}{settings}{index}{number_of_shards};
+   }
+
+   return \%indices;
+}
+
 #
 # http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html
 #
@@ -1395,6 +1416,8 @@ sub import_from_csv {
    $fc->separator(',');
    $fc->first_line_is_header(1);
 
+   my $old_settings = {};
+   my $speed_settings = {};
    my $processed = 0;
    while (my $this = $fc->read_next($input_csv)) {
       my $h = {};
@@ -1418,6 +1441,18 @@ sub import_from_csv {
          $self->log->info("import_from_csv: processed [$processed] entries");
       }
 
+      # Gather index settings, and set values for speed.
+      # We don't do it earlier, cause we need index to be created,
+      # and it should have been done from index_bulk Command.
+      if ($processed == 0) {
+         $old_settings = $self->get_settings($index);
+         $speed_settings = {
+            number_of_replicas => 0,
+            refresh_interval => -1,
+         };
+         $self->put_settings($speed_settings, $index);
+      }
+
       # Limit import to specified maximum
       if ($max > 0 && $processed >= $max) {
          $self->log->info("import_from_csv: max import reached [$processed], stopping");
@@ -1428,6 +1463,9 @@ sub import_from_csv {
    $self->bulk_flush or return;
 
    $self->refresh_index($index) or return;
+
+   # Restore initial settings
+   $self->put_settings($old_settings, $index);
 
    return $processed;
 }

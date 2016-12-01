@@ -181,6 +181,19 @@ sub term {
 
    my $ce = $self->create_client or return;
 
+   # XXX: optimization, use filtered query:
+   # https://speakerdeck.com/polyfractal/elasticsearch-query-optimization
+#   my $q = {
+#      query => {
+#         filtered => {
+#            query => { match_all => {} },
+#            post_filter => {
+#               term => { $key => $value },
+#            },
+#         },
+#      },
+#   };
+
    my $q = {
       query => {
          constant_score => { 
