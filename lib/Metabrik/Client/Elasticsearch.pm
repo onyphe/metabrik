@@ -85,7 +85,7 @@ sub brik_properties {
          is_document_exists => [ qw(index type document) ],
          refresh_index => [ qw(index) ],
          export_as_csv => [ qw(index size|OPTIONAL) ],
-         import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL) ],
+         import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL size|OPTIONAL) ],
          get_stats_process => [ ],
          get_process => [ ],
          get_cluster_state => [ ],
@@ -1335,6 +1335,7 @@ sub export_as_csv {
    my $h = {};
    my %types = ();
    my $processed = 0;
+   my $start = time();
    while (my $this = $self->next_scroll) {
       my $id = $this->{_id};
       my $doc = $this->{_source};
@@ -1343,7 +1344,7 @@ sub export_as_csv {
          $types{$type}{header} = [ '_id', sort { $a cmp $b } keys %$doc ];
          $types{$type}{output} = "$index:$type.csv";
          $self->log->info("export_as_csv: exporting to file [$index:$type.csv] ".
-            "for new type [$type]");
+            "for new type [$type], using chunk size of [$size]");
       }
 
       $h->{_id} = $id;
@@ -1368,7 +1369,10 @@ sub export_as_csv {
 
       # Log a status sometimes.
       if (! (++$processed % 100_000)) {
-         $self->log->info("export_as_csv: fetched [$processed/$total] elements");
+         my $now = time();
+         $self->log->info("export_as_csv: fetched [$processed/$total] elements in ".
+            ($now - $start)." second(s)");
+         $start = time();
       }
 
       # Limit export to specified maximum
@@ -1383,8 +1387,9 @@ sub export_as_csv {
 
 sub import_from_csv {
    my $self = shift;
-   my ($input_csv, $index, $type) = @_;
+   my ($input_csv, $index, $type, $size) = @_;
 
+   $size ||= 10_000;
    $self->brik_help_run_undef_arg('import_from_csv', $input_csv) or return;
    $self->brik_help_run_file_not_found('import_from_csv', $input_csv) or return;
 
@@ -1408,7 +1413,9 @@ sub import_from_csv {
 
    $self->open_bulk_mode($index, $type) or return;
 
-   $self->log->info("import_from_csv: importing to index [$index] with type [$type]");
+   my $size = $self->size;
+   $self->log->info("import_from_csv: importing to index [$index] with type [$type], ".
+      "using chunk size of [$size]");
 
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
 
@@ -1416,9 +1423,11 @@ sub import_from_csv {
    $fc->separator(',');
    $fc->first_line_is_header(1);
 
+   my $start = time();
    my $old_settings = {};
    my $speed_settings = {};
    my $processed = 0;
+   my $first = 1;
    while (my $this = $fc->read_next($input_csv)) {
       my $h = {};
       my $id = $this->{_id};
@@ -1436,21 +1445,25 @@ sub import_from_csv {
 
       $self->index_bulk($h, $index, $type, $id) or return;
 
-      # Log a status sometimes.
-      if (! (++$processed % 100_000)) {
-         $self->log->info("import_from_csv: processed [$processed] entries");
-      }
-
       # Gather index settings, and set values for speed.
       # We don't do it earlier, cause we need index to be created,
       # and it should have been done from index_bulk Command.
-      if ($processed == 0) {
+      if ($self->is_index_exists($index) && $first) {
          $old_settings = $self->get_settings($index);
          $speed_settings = {
             number_of_replicas => 0,
             refresh_interval => -1,
          };
          $self->put_settings($speed_settings, $index);
+         $first = 0;
+      }
+
+      # Log a status sometimes.
+      if (! (++$processed % 100_000)) {
+         my $now = time();
+         $self->log->info("import_from_csv: processed [$processed] entries in ".
+            ($now - $start)." second(s)");
+         $start = time();
       }
 
       # Limit import to specified maximum
