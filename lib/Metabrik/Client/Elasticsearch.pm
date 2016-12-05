@@ -1413,7 +1413,6 @@ sub import_from_csv {
 
    $self->open_bulk_mode($index, $type) or return;
 
-   my $size = $self->size;
    $self->log->info("import_from_csv: importing to index [$index] with type [$type], ".
       "using chunk size of [$size]");
 
