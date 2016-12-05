@@ -119,6 +119,7 @@ sub brik_properties {
          'Metabrik::String::Json' => [ ],
          'Metabrik::File::Csv' => [ ],
          'Metabrik::File::Json' => [ ],
+         'Metabrik::System::File' => [ ],
          'Data::Dump' => [ ],
          'Search::Elasticsearch' => [ ],
       },
@@ -1403,6 +1404,13 @@ sub import_from_csv {
    $self->log->debug("index [$index]");
    $self->log->debug("type [$type]");
 
+   # Verify it has not been indexed yet
+   my $done = "$input_csv.imported";
+   if (-f $done) {
+      $self->log->info("import_from_csv: import already done for file [$input_csv]");
+      return 0;
+   }
+
    # And default to Attributes if guess failed.
    $index ||= $self->index;
    $type ||= $self->type;
@@ -1416,6 +1424,7 @@ sub import_from_csv {
    $self->log->info("import_from_csv: importing to index [$index] with type [$type], ".
       "using chunk size of [$size]");
 
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
@@ -1478,6 +1487,9 @@ sub import_from_csv {
 
    # Restore initial settings
    $self->put_settings($old_settings, $index);
+
+   # Say the file has been processed
+   $sf->touch($done) or return;
 
    return $processed;
 }
