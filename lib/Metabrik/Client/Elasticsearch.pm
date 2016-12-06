@@ -1432,7 +1432,6 @@ sub import_from_csv {
    $fc->first_line_is_header(1);
 
    my $start = time();
-   my $old_settings = {};
    my $speed_settings = {};
    my $processed = 0;
    my $first = 1;
@@ -1456,8 +1455,7 @@ sub import_from_csv {
       # Gather index settings, and set values for speed.
       # We don't do it earlier, cause we need index to be created,
       # and it should have been done from index_bulk Command.
-      if ($self->is_index_exists($index) && $first) {
-         $old_settings = $self->get_settings($index);
+      if ($first && $self->is_index_exists($index)) {
          $speed_settings = {
             number_of_replicas => 0,
             refresh_interval => -1,
@@ -1484,9 +1482,6 @@ sub import_from_csv {
    $self->bulk_flush or return;
 
    $self->refresh_index($index) or return;
-
-   # Restore initial settings
-   $self->put_settings($old_settings, $index);
 
    # Say the file has been processed
    $sf->touch($done) or return;
