@@ -95,6 +95,7 @@ sub brik_properties {
          count_green_shards => [ ],
          count_yellow_shards => [ ],
          count_red_shards => [ ],
+         count_shards => [ ],
          list_datatypes => [ ],
          get_hits_total => [ ],
          disable_shard_allocation => [ ],
@@ -1673,6 +1674,33 @@ sub count_red_shards {
    }
 
    return $count;
+}
+
+sub count_shards {
+   my $self = shift;
+
+   my $get = $self->show_indices or return;
+
+   my $count_red = 0;
+   my $count_yellow = 0;
+   my $count_green = 0;
+   for (@$get) {
+      if (/^\s*red\s+/) {
+         $count_red++;
+      }
+      elsif (/^\s*yellow\s+/) {
+         $count_yellow++;
+      }
+      elsif (/^\s*green\s+/) {
+         $count_green++;
+      }
+   }
+
+   return {
+      red => $count_red,
+      yellow => $count_yellow,
+      green => $count_green,
+   };
 }
 
 #
