@@ -45,6 +45,10 @@ sub brik_properties {
          backup => [ qw(tag|$tag_list) ],
          restore => [ qw(tag) ],
          tag_to_uuid => [ qw(tag) ],
+         get_snapshots => [ qw(tag|OPTIONAL) ],
+         snaplist => [ qw(tag|OPTIONAL) ],  # alias
+         delete_snapshot => [ qw(tag snapshot) ],
+         snapremove => [ qw(tag snapshot) ],  # alias
       },
       require_binaries => {
          iocage => [ ],
@@ -356,6 +360,77 @@ sub tag_to_uuid {
    }
 
    return 'undef';
+}
+
+sub get_snapshots {
+   my $self = shift;
+   my ($tag) = @_;
+
+   # If no tag is given, we will do it for all running iocages
+   my @tags;
+   if (! defined($tag)) {
+      my $list = $self->list or return;
+      for my $this (@$list) {
+         push @tags, $this->{tag};
+      }
+   }
+   else {
+      push @tags, $tag;
+   }
+
+   my @snapshots = ();
+   for my $tag (@tags) {
+      my $cmd = "iocage snaplist $tag";
+      my $lines = $self->sudo_capture($cmd) or return;
+
+      # NAME                                  CREATED                RSIZE   USED
+      # ioc-2016-12-06_16:22:47               Tue Dec  6 16:22 2016  96K    8K
+
+      my $header = 0;
+      for (@$lines) {
+         if (! $header) { # Skip first line, it is a header
+            $header++;
+            next;
+         }
+
+         if (/^(ioc\-\S+)\s+(\S+\s+\S+\s+\S+\s+\S+\s+\S+)\s+(\S+)\s+(\S+)$/) {
+            push @snapshots, {
+               tag => $tag,
+               name => $1,
+               created => $2,
+               rsize => $3,
+               used => $4,
+            };
+         }
+      }
+   }
+
+   return \@snapshots;
+}
+
+# alias
+sub snaplist {
+   my $self = shift;
+
+   return $self->get_snapshots(@_);
+}
+
+sub delete_snapshot {
+   my $self = shift;
+   my ($tag, $snapshot) = @_;
+
+   $self->brik_help_run_undef_arg('delete_snapshot', $tag) or return;
+   $self->brik_help_run_undef_arg('delete_snapshot', $snapshot) or return;
+
+   my $cmd = "iocage snapremove $tag\@$snapshot";
+   return $self->sudo_system($cmd);
+}
+
+# alias
+sub snapremove {
+   my $self = shift;
+
+   return $self->snapremove(@_);
 }
 
 1;
