@@ -35,13 +35,14 @@ sub brik_properties {
          get_query_result_timed_out => [ qw($query_result|OPTIONAL) ],
          get_query_result_took => [ qw($query_result|OPTIONAL) ],
          term => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
+         unique_term => [ qw(unique kv index|OPTIONAL type|OPTIONAL) ],
          wildcard => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
          range => [ qw(kv_from kv_to index|OPTIONAL type|OPTIONAL) ],
          top => [ qw(kv_count index|OPTIONAL type|OPTIONAL) ],
          top_match => [ qw(kv_count kv_match index|OPTIONAL type|OPTIONAL) ],
          match => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
          match_phrase => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
-         from_json_file => [ qw(json_file) ],
+         from_json_file => [ qw(json_file index|OPTIONAL type|OPTIONAL) ],
       },
    };
 }
@@ -181,23 +182,10 @@ sub term {
 
    my $ce = $self->create_client or return;
 
-   # XXX: optimization, use filtered query:
-   # https://speakerdeck.com/polyfractal/elasticsearch-query-optimization
-#   my $q = {
-#      query => {
-#         filtered => {
-#            query => { match_all => {} },
-#            post_filter => {
-#               term => { $key => $value },
-#            },
-#         },
-#      },
-#   };
-
    my $q = {
       query => {
-         constant_score => { 
-            filter => {
+         bool => {
+            must => {
                term => {
                   $key => $value,
                },
@@ -205,30 +193,56 @@ sub term {
          },
       },
    };
-#   my $q = {
-#      query => {
-#         bool => {
-#            must => {
-#               term => {
-#                  $key => $value,
-#               },
-#            },
-#         },
-#      },
-#   };
-#   my $q = {
-#      query => {
-#         filtered => {
-#            filter => {
-#               term => {
-#                  $key => $value,
-#               },
-#            }
-#         },
-#      },
-#   };
 
    $self->log->verbose("term: keys [$key] value [$value] index [$index] type [$type]");
+
+   return $self->_query($q, $index, $type);
+}
+
+#
+# run client::elasticsearch::query unique_term ip domain=example.com index1-*,index2-*
+#
+sub unique_term {
+   my $self = shift;
+   my ($unique, $kv, $index, $type) = @_;
+
+   $index ||= $self->index;
+   $type ||= $self->type;
+   $self->brik_help_run_undef_arg('term', $unique) or return;
+   $self->brik_help_run_undef_arg('term', $kv) or return;
+   $self->brik_help_set_undef_arg('term', $index) or return;
+   $self->brik_help_set_undef_arg('term', $type) or return;
+
+   if ($kv !~ /^\S+?=.+$/) {
+      return $self->log->error("unique_term: kv must be in the form 'key=value'");
+   }
+   my ($key, $value) = split('=', $kv);
+
+   $self->debug && $self->log->debug("unique_term: key[$key] value[$value]");
+
+   my $ce = $self->create_client or return;
+
+   my $q = {
+      query => {
+         bool => {
+            must => {
+               term => {
+                  $key => $value,
+               },
+            },
+         },
+      },
+      aggs => {
+         1 => {
+            cardinality => {
+               field => $unique,
+            },
+         },
+      },
+   };
+
+   $self->log->verbose("unique_term: unique [$unique] keys [$key] value [$value] ".
+      "index [$index] type [$type]");
 
    return $self->_query($q, $index, $type);
 }
