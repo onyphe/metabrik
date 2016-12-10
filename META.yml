@@ -446,6 +446,8 @@ provides:
     file: lib/Metabrik/System/Ubuntu/User.pm
   Metabrik::System::Virtualbox:
     file: lib/Metabrik/System/Virtualbox.pm
+  Metabrik::System::Zfs:
+    file: lib/Metabrik/System/Zfs.pm
   Metabrik::Terminal::Control:
     file: lib/Metabrik/Terminal/Control.pm
   Metabrik::Time::Universal:

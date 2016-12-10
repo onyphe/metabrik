@@ -802,11 +802,13 @@ sub get_mappings {
    $self->brik_help_run_undef_arg('get_mappings', $index) or return;
 
    my $r = $self->get_index($index) or return;
-   if (exists($r->{$index}) && exists($r->{$index}{mappings})) {
-      return $r->{$index}{mappings};
+   if ($index ne '*') {
+      if (exists($r->{$index}) && exists($r->{$index}{mappings})) {
+         return $r->{$index}{mappings};
+      }
    }
 
-   return $self->log->error("get_mappings: index or mappings not found");
+   return $r;
 }
 
 sub create_index {
@@ -1401,10 +1403,6 @@ sub import_from_csv {
       ($index, $type) = $input_csv =~ m{^(.+):(.+)\.csv(?:.*)?$};
    }
 
-   $self->log->debug("input [$input_csv]");
-   $self->log->debug("index [$index]");
-   $self->log->debug("type [$type]");
-
    # Verify it has not been indexed yet
    my $done = "$input_csv.imported";
    if (-f $done) {
@@ -1417,6 +1415,10 @@ sub import_from_csv {
    $type ||= $self->type;
    $self->brik_help_set_undef_arg('index', $index) or return;
    $self->brik_help_set_undef_arg('type', $type) or return;
+
+   $self->log->debug("input [$input_csv]");
+   $self->log->debug("index [$index]");
+   $self->log->debug("type [$type]");
 
    my $max = $self->max;
 

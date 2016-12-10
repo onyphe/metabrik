@@ -205,6 +205,28 @@ sub term {
          },
       },
    };
+#   my $q = {
+#      query => {
+#         bool => {
+#            must => {
+#               term => {
+#                  $key => $value,
+#               },
+#            },
+#         },
+#      },
+#   };
+#   my $q = {
+#      query => {
+#         filtered => {
+#            filter => {
+#               term => {
+#                  $key => $value,
+#               },
+#            }
+#         },
+#      },
+#   };
 
    $self->log->verbose("term: keys [$key] value [$value] index [$index] type [$type]");
 

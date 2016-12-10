@@ -682,6 +682,9 @@
       "Metabrik::System::Virtualbox" : {
          "file" : "lib/Metabrik/System/Virtualbox.pm"
       },
+      "Metabrik::System::Zfs" : {
+         "file" : "lib/Metabrik/System/Zfs.pm"
+      },
       "Metabrik::Terminal::Control" : {
          "file" : "lib/Metabrik/Terminal/Control.pm"
       },
