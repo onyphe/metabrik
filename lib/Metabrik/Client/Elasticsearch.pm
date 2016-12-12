@@ -811,9 +811,12 @@ sub get_mappings {
    return $r;
 }
 
+#
+# Search::Elasticsearch::Client::2_0::Direct::Indices
+#
 sub create_index {
    my $self = shift;
-   my ($index) = @_;
+   my ($index, $shards_count) = @_;
 
    my $elk = $self->_elk;
    $self->brik_help_run_undef_arg('open', $elk) or return;
@@ -1400,7 +1403,11 @@ sub import_from_csv {
    # If index and/or types are not defined, we try to get them from input filename
    if (! defined($index) || ! defined($type)) {
       # Example: index-DATE:type.csv
-      ($index, $type) = $input_csv =~ m{^(.+):(.+)\.csv(?:.*)?$};
+      if ($input_csv =~ m{^(.+):(.+)\.csv(?:.*)?$}) {
+         my ($this_index, $this_type) = $input_csv =~ m{^(.+):(.+)\.csv(?:.*)?$};
+         $index ||= $this_index;
+         $type ||= $this_type;
+      }
    }
 
    # Verify it has not been indexed yet
@@ -1426,6 +1433,8 @@ sub import_from_csv {
 
    $self->log->info("import_from_csv: importing to index [$index] with type [$type], ".
       "using chunk size of [$size]");
+
+   return 1;
 
    my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
