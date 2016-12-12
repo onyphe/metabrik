@@ -1434,8 +1434,6 @@ sub import_from_csv {
    $self->log->info("import_from_csv: importing to index [$index] with type [$type], ".
       "using chunk size of [$size]");
 
-   return 1;
-
    my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
 
