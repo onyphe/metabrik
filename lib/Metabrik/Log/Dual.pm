@@ -16,6 +16,7 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         datadir => [ qw(datadir) ],
          level => [ qw(0|1|2|3) ],
          output => [ qw(file) ],
          time_prefix => [ qw(0|1) ],
