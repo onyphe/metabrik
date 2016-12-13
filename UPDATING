@@ -1,3 +1,9 @@
+20161213
+   AFFECTS: client::elasticsearch
+
+   - client::elasticsearch import_from_csv now returns a HASH instead of a SCALAR.
+     This HASH has read and processed keys.
+
 20161119
    AFFECTS: client::elasticsearch
 

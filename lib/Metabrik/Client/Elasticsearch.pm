@@ -1445,7 +1445,10 @@ sub import_from_csv {
    my $speed_settings = {};
    my $processed = 0;
    my $first = 1;
+   my $read = 0;
    while (my $this = $fc->read_next($input_csv)) {
+      $read++;
+
       my $h = {};
       my $id = $this->{_id};
       delete $this->{_id};
@@ -1460,7 +1463,12 @@ sub import_from_csv {
          }
       }
 
-      $self->index_bulk($h, $index, $type, $id) or return;
+      my $r = $self->index_bulk($h, $index, $type, $id);
+      if (! defined($r)) {
+         $self->log->error("import_from_csv: bulk processing failed for index [$index] at ".
+            "read [$read], skipping");
+         next;
+      }
 
       # Gather index settings, and set values for speed.
       # We don't do it earlier, cause we need index to be created,
@@ -1496,7 +1504,10 @@ sub import_from_csv {
    # Say the file has been processed
    $sf->touch($done) or return;
 
-   return $processed;
+   return {
+      read => $read,
+      processed => $processed,
+   };
 }
 
 #
