@@ -57,6 +57,7 @@ sub brik_properties {
          show_health => [ ],
          show_recovery => [ ],
          list_indices => [ ],
+         get_indices => [ ],
          get_index => [ qw(index|indices_list) ],
          list_indices_version => [ qw(index|indices_list) ],
          open_index => [ qw(index|indices_list) ],
@@ -95,6 +96,9 @@ sub brik_properties {
          count_green_shards => [ ],
          count_yellow_shards => [ ],
          count_red_shards => [ ],
+         list_green_shards => [ ],
+         list_yellow_shards => [ ],
+         list_red_shards => [ ],
          count_shards => [ ],
          list_datatypes => [ ],
          get_hits_total => [ ],
@@ -695,33 +699,72 @@ sub show_recovery {
 sub list_indices {
    my $self = shift;
 
+   my $get = $self->get_indices or return;
+
+   my @indices = ();
+   for (@$get) {
+      push @indices, $_->{index};
+   }
+
+   return [ sort { $a cmp $b } @indices ];
+}
+
+sub get_indices {
+   my $self = shift;
+
    my $lines = $self->show_indices or return;
    if (@$lines == 0) {
-      $self->log->warning("list_indices: no index found");
+      $self->log->warning("get_indices: no index found");
       return [];
    }
 
    #
    # Format depends on ElasticSearch version. We try to detect the format.
    #
-   # 5.0.0: 
+   # 5.0.0:
    # "yellow open www-2016-08-14 BmNE9RaBRSCKqB5Oe8yZcw 5 1  146 0 251.8kb 251.8kb"
    #
    my @indices = ();
    for (@$lines) {
       my @t = split(/\s+/);
       if (@t == 10) {  # Version 5.0.0
-         push @indices, $t[2];
+         my $color = $t[0];
+         my $state = $t[1];
+         my $index = $t[2];
+         my $id = $t[3];
+         my $shards = $t[4];
+         my $replicas = $t[5];
+         my $count = $t[6];
+         my $count2 = $t[7];
+         my $total_size = $t[7];
+         my $size = $t[8];
+         push @indices, {
+            color => $color,
+            state => $state,
+            index => $index,
+            id => $id,
+            shards => $shards,
+            replicas => $replicas,
+            count => $count,
+            total_size => $total_size,
+            size => $size,
+         };
       }
       elsif (@t == 9) {
-         push @indices, $t[2];
+         my $index = $t[2];
+         push @indices, {
+            index => $index,
+         };
       }
       elsif (@t == 8) {
-         push @indices, $t[1];
+         my $index = $t[1];
+         push @indices, {
+            index => $index,
+         };
       }
    }
 
-   return [ sort { $a cmp $b } @indices ];
+   return \@indices;
 }
 
 sub get_index {
@@ -1473,15 +1516,18 @@ sub import_from_csv {
    $self->log->debug("index [$index]");
    $self->log->debug("type [$type]");
 
-   my $count_before = $self->count($index, $type) or return;
-   $self->log->info("import_from_csv: current index count is [$count_before]");
+   my $count_before = 0;
+   if ($self->is_index_exists($index)) {
+      $count_before = $self->count($index, $type) or return;
+      $self->log->info("import_from_csv: current index count is [$count_before]");
+   }
 
    my $max = $self->max;
 
    $self->open_bulk_mode($index, $type) or return;
 
-   $self->log->info("import_from_csv: importing to index [$index] with type [$type], ".
-      "using chunk size of [$size]");
+   $self->log->info("import_from_csv: importing file [$input_csv] to index [$index] ".
+      "with type [$type], using chunk size of [$size]");
 
    my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
@@ -1774,6 +1820,51 @@ sub count_shards {
       yellow => $count_yellow,
       green => $count_green,
    };
+}
+
+sub list_green_shards {
+   my $self = shift;
+
+   my $get = $self->get_indices or return;
+
+   my @indices = ();
+   for (@$get) {
+      if ($_->{color} eq 'green') {
+         push @indices, $_->{index};
+      }
+   }
+
+   return \@indices;
+}
+
+sub list_yellow_shards {
+   my $self = shift;
+
+   my $get = $self->get_indices or return;
+
+   my @indices = ();
+   for (@$get) {
+      if ($_->{color} eq 'yellow') {
+         push @indices, $_->{index};
+      }
+   }
+
+   return \@indices;
+}
+
+sub list_red_shards {
+   my $self = shift;
+
+   my $get = $self->get_indices or return;
+
+   my @indices = ();
+   for (@$get) {
+      if ($_->{color} eq 'red') {
+         push @indices, $_->{index};
+      }
+   }
+
+   return \@indices;
 }
 
 #
