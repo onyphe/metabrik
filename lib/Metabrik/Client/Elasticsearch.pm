@@ -212,7 +212,7 @@ sub open_scroll_scan_mode {
    my ($index, $size, $nodes, $cxn_pool) = @_;
 
    my $version = $self->version or return;
-   if ($version >= 5) {
+   if ($version >= 5.0.0) {
       return $self->log->error("open_scroll_scan_mode: Command not supported for ES version ".
          "$version, try open_scroll Command instead");
    }
@@ -251,7 +251,7 @@ sub open_scroll {
    my ($index, $size, $nodes, $cxn_pool) = @_;
 
    my $version = $self->version or return;
-   if ($version < 5) {
+   if ($version < 5.0.0) {
       return $self->log->error("open_scroll: Command not supported for ES version ".
          "$version, try open_scroll_scan_mode Command instead");
    }
@@ -357,7 +357,16 @@ sub index_bulk {
       $args{id} = $id;
    }
 
-   return $bulk->index(\%args);
+   my $r;
+   eval {
+      $r = $bulk->index(\%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("index_bulk: index failed for index [$index]: [$@]");
+   }
+
+   return $r;
 }
 
 sub bulk_flush {
@@ -366,9 +375,22 @@ sub bulk_flush {
    my $bulk = $self->_bulk;
    $self->brik_help_run_undef_arg('open_bulk_mode', $bulk) or return;
 
-   return $bulk->flush;
+   my $r;
+   eval {
+      $r = $bulk->flush;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("bulk_flush: flush failed: [$@]");
+   }
+
+   return $r;
 }
 
+#
+# Search::Elasticsearch::Client::2_0::Direct
+# Search::Elasticsearch::Client::5_0::Direct
+#
 sub count {
    my $self = shift;
    my ($index, $type) = @_;
@@ -377,25 +399,49 @@ sub count {
    $index ||= $self->index;
    $type ||= $self->type;
    $self->brik_help_run_undef_arg('open', $elk) or return;
-   $self->brik_help_set_undef_arg('index', $index) or return;
-   $self->brik_help_set_undef_arg('type', $type) or return;
+
+   my %args = ();
+   if (defined($index) && $index ne '*') {
+      $args{index} = $index;
+   }
+   if (defined($type) && $type ne '*') {
+      $args{type} = $type;
+   }
+
+   #$args{body} = {
+      #query => {
+         #match => { title => 'Elasticsearch clients' },
+      #},
+   #}
 
    my $r;
-   eval {
-      $r = $elk->search(
-         index => $index,
-         type => $type,
-         search_type => 'count',
-         body => {
-            query => {
-               match_all => {},
+   my $version = $self->version or return;
+   if ($version >= 5.0.0) {
+      eval {
+         $r = $elk->count(%args);
+      };
+   }
+   else {
+      eval {
+         $r = $elk->search(
+            index => $index,
+            type => $type,
+            search_type => 'count',
+            body => {
+               query => {
+                  match_all => {},
+               },
             },
-         },
-      );
-   };
+         );
+      };
+   }
    if ($@) {
       chomp($@);
-      return $self->log->error("count: search failed for index [$index]: [$@]");
+      return $self->log->error("count: count failed for index [$index]: [$@]");
+   }
+
+   if ($version >= 5.0.0) {
+      return $r->{count};
    }
 
    return $r->{hits}{total};
@@ -1317,7 +1363,7 @@ sub export_as_csv {
 
    my $scroll;
    my $version = $self->version or return;
-   if ($version < 5) {
+   if ($version < 5.0.0) {
       $scroll = $self->open_scroll_scan_mode($index, $size) or return;
    }
    else {
@@ -1427,6 +1473,9 @@ sub import_from_csv {
    $self->log->debug("index [$index]");
    $self->log->debug("type [$type]");
 
+   my $count_before = $self->count($index, $type) or return;
+   $self->log->info("import_from_csv: current index count is [$count_before]");
+
    my $max = $self->max;
 
    $self->open_bulk_mode($index, $type) or return;
@@ -1504,9 +1553,13 @@ sub import_from_csv {
    # Say the file has been processed
    $sf->touch($done) or return;
 
+   my $count_after = $self->count($index, $type) or return;
+   $self->log->info("import_from_csv: after index count is [$count_after]");
+
    return {
       read => $read,
       processed => $processed,
+      added => $count_after - $count_before,
    };
 }
 
