@@ -12,7 +12,7 @@ use base qw(Metabrik::Client::Rest);
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable elk) ],
+      tags => [ qw(unstable es es) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
@@ -24,7 +24,8 @@ sub brik_properties {
          from => [ qw(number) ],
          size => [ qw(count) ],
          max => [ qw(count) ],
-         _elk => [ qw(INTERNAL) ],
+         timeout => [ qw(seconds) ],
+         _es => [ qw(INTERNAL) ],
          _bulk => [ qw(INTERNAL) ],
          _scroll => [ qw(INTERNAL) ],
       },
@@ -36,6 +37,7 @@ sub brik_properties {
          max => 0,
          index => '*',
          type => '*',
+         timeout => '60',
       },
       commands => {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
@@ -160,21 +162,23 @@ sub open {
       }
    }
 
+   my $timeout = $self->timeout;
+
    my $nodes_str = join('|', @$nodes);
    $self->log->verbose("open: using nodes [$nodes_str]");
 
-   my $elk = Search::Elasticsearch->new(
+   my $es = Search::Elasticsearch->new(
       nodes => $nodes,
       cxn_pool => $cxn_pool,
-      timeout => 60,
+      timeout => $timeout,
       max_retries => 3,
       retry_on_timeout => 1,
    );
-   if (! defined($elk)) {
+   if (! defined($es)) {
       return $self->log->error("open: failed");
    }
 
-   $self->_elk($elk);
+   $self->_es($es);
 
    return $nodes;
 }
@@ -196,9 +200,9 @@ sub open_bulk_mode {
 
    $self->open($nodes, $cxn_pool) or return;
 
-   my $elk = $self->_elk;
+   my $es = $self->_es;
 
-   my $bulk = $elk->bulk_helper(
+   my $bulk = $es->bulk_helper(
       index => $index,
       type => $type,
    );
@@ -234,9 +238,9 @@ sub open_scroll_scan_mode {
 
    $self->open($nodes, $cxn_pool) or return;
 
-   my $elk = $self->_elk;
+   my $es = $self->_es;
 
-   my $scroll = $elk->scroll_helper(
+   my $scroll = $es->scroll_helper(
       index => $index,
       search_type => 'scan',
       size => $size,
@@ -273,9 +277,9 @@ sub open_scroll {
 
    $self->open($nodes, $cxn_pool) or return;
 
-   my $elk = $self->_elk;
+   my $es = $self->_es;
 
-   my $scroll = $elk->scroll_helper(
+   my $scroll = $es->scroll_helper(
       index => $index,
       body => {
          size => $size,
@@ -312,10 +316,10 @@ sub index_document {
    my $self = shift;
    my ($doc, $index, $type, $id) = @_;
 
-   my $elk = $self->_elk;
+   my $es = $self->_es;
    $index ||= $self->index;
    $type ||= $self->type;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('index_document', $doc) or return;
    $self->brik_help_run_invalid_arg('index_document', $doc, 'HASH') or return;
    $self->brik_help_set_undef_arg('index', $index) or return;
@@ -332,7 +336,7 @@ sub index_document {
 
    my $r;
    eval {
-      $r = $elk->index(%args);
+      $r = $es->index(%args);
    };
    if ($@) {
       chomp($@);
@@ -399,10 +403,10 @@ sub count {
    my $self = shift;
    my ($index, $type) = @_;
 
-   my $elk = $self->_elk;
+   my $es = $self->_es;
    $index ||= $self->index;
    $type ||= $self->type;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my %args = ();
    if (defined($index) && $index ne '*') {
@@ -422,12 +426,12 @@ sub count {
    my $version = $self->version or return;
    if ($version ge "5.0.0") {
       eval {
-         $r = $elk->count(%args);
+         $r = $es->count(%args);
       };
    }
    else {
       eval {
-         $r = $elk->search(
+         $r = $es->search(
             index => $index,
             type => $type,
             search_type => 'count',
@@ -466,22 +470,24 @@ sub query {
    my $self = shift;
    my ($query, $index, $type) = @_;
 
-   my $elk = $self->_elk;
+   my $es = $self->_es;
    $index ||= $self->index;
    $type ||= $self->type;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('query', $query) or return;
    $self->brik_help_set_undef_arg('index', $index) or return;
    $self->brik_help_set_undef_arg('type', $type) or return;
    $self->brik_help_run_invalid_arg('query', $query, 'HASH') or return;
+
+   my $timeout = $self->timeout;
 
    my %args = (
       index => $index,
       from => $self->from,
       size => $self->size,
       body => $query,
+      #timeout => $timeout, # XXX: does not work
    );
-      #timeout => 60,  # XXX: to test
 
    if ($type ne '*') {
       $args{type} = $type;
@@ -489,7 +495,7 @@ sub query {
 
    my $r;
    eval {
-      $r = $elk->search(%args);
+      $r = $es->search(%args);
    };
    if ($@) {
       chomp($@);
@@ -503,17 +509,17 @@ sub get_from_id {
    my $self = shift;
    my ($id, $index, $type) = @_;
 
-   my $elk = $self->_elk;
+   my $es = $self->_es;
    $index ||= $self->index;
    $type ||= $self->type;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('get_from_id', $id) or return;
    $self->brik_help_set_undef_arg('index', $index) or return;
    $self->brik_help_set_undef_arg('type', $type) or return;
 
    my $r;
    eval {
-      $r = $elk->get(
+      $r = $es->get(
          index => $index,
          type => $type,
          id => $id,
@@ -572,8 +578,8 @@ sub delete_index {
    my $self = shift;
    my ($index) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('delete_index', $index) or return;
    $self->brik_help_run_invalid_arg('delete_index', $index, 'ARRAY', 'SCALAR') or return;
 
@@ -583,7 +589,7 @@ sub delete_index {
 
    my $r;
    eval {
-      $r = $elk->indices->delete(%args);
+      $r = $es->indices->delete(%args);
    };
    if ($@) {
       chomp($@);
@@ -599,12 +605,12 @@ sub delete_index {
 sub show_indices {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->cat->indices;
+      $r = $es->cat->indices;
    };
    if ($@) {
       chomp($@);
@@ -626,12 +632,12 @@ sub show_indices {
 sub show_nodes {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->cat->nodes;
+      $r = $es->cat->nodes;
    };
    if ($@) {
       chomp($@);
@@ -653,12 +659,12 @@ sub show_nodes {
 sub show_health {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->cat->health;
+      $r = $es->cat->health;
    };
    if ($@) {
       chomp($@);
@@ -680,12 +686,12 @@ sub show_health {
 sub show_recovery {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->cat->recovery;
+      $r = $es->cat->recovery;
    };
    if ($@) {
       chomp($@);
@@ -776,14 +782,14 @@ sub get_index {
    my $self = shift;
    my ($index) = @_;
  
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('get_index', $index) or return;
    $self->brik_help_run_invalid_arg('get_index', $index, 'ARRAY', 'SCALAR') or return;
 
    my $r;
    eval {
-      $r = $elk->indices->get(
+      $r = $es->indices->get(
          index => $index,
       );
    };
@@ -799,8 +805,8 @@ sub list_indices_version {
    my $self = shift;
    my ($index) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('list_indices_version', $index) or return;
    $self->brik_help_run_invalid_arg('list_indices_version', $index, 'ARRAY', 'SCALAR') or return;
 
@@ -823,14 +829,14 @@ sub open_index {
    my $self = shift;
    my ($index) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('open_index', $index) or return;
    $self->brik_help_run_invalid_arg('open_index', $index, 'ARRAY', 'SCALAR') or return;
 
    my $r;
    eval {
-      $r = $elk->indices->open(
+      $r = $es->indices->open(
          index => $index,
       );
    };
@@ -846,14 +852,14 @@ sub close_index {
    my $self = shift;
    my ($index) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('close_index', $index) or return;
    $self->brik_help_run_invalid_arg('close_index', $index, 'ARRAY', 'SCALAR') or return;
 
    my $r;
    eval {
-      $r = $elk->indices->close(
+      $r = $es->indices->close(
          index => $index,
       );
    };
@@ -868,12 +874,12 @@ sub close_index {
 sub get_aliases {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->indices->get_aliases;
+      $r = $es->indices->get_aliases;
    };
    if ($@) {
       chomp($@);
@@ -912,13 +918,13 @@ sub create_index {
    my $self = shift;
    my ($index, $shards_count) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('create_index', $index) or return;
          
    my $r;
    eval {
-      $r = $elk->indices->create(
+      $r = $es->indices->create(
          index => $index,
       );
    };
@@ -937,15 +943,15 @@ sub create_index_with_mappings {
    my $self = shift;
    my ($index, $mappings) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('create_index_with_mappings', $index) or return;
    $self->brik_help_run_undef_arg('create_index_with_mappings', $mappings) or return;
    $self->brik_help_run_invalid_arg('create_index_with_mappings', $mappings, 'HASH') or return;
 
    my $r;
    eval {
-      $r = $elk->indices->create(
+      $r = $es->indices->create(
          index => $index,
          body => {
             mappings => $mappings,
@@ -1000,12 +1006,12 @@ sub version {
 sub get_templates {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->indices->get_template;
+      $r = $es->indices->get_template;
    };
    if ($@) {
       chomp($@);
@@ -1030,13 +1036,13 @@ sub get_template {
    my $self = shift;
    my ($template) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('get_template', $template) or return;
 
    my $r;
    eval {
-      $r = $elk->indices->get_template(
+      $r = $es->indices->get_template(
          name => $template,
       );
    };
@@ -1055,15 +1061,15 @@ sub put_template {
    my $self = shift;
    my ($name, $template) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('put_template', $name) or return;
    $self->brik_help_run_undef_arg('put_template', $template) or return;
    $self->brik_help_run_invalid_arg('put_template', $template, 'HASH') or return;
 
    my $r;
    eval {
-      $r = $elk->indices->put_template(
+      $r = $es->indices->put_template(
          name => $name,
          body => $template,
       );
@@ -1080,8 +1086,8 @@ sub put_template_from_json_file {
    my $self = shift;
    my ($json_file) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('put_template_from_json_file', $json_file) or return;
    $self->brik_help_run_file_not_found('put_template_from_json_file', $json_file) or return;
 
@@ -1105,8 +1111,8 @@ sub get_settings {
    my $self = shift;
    my ($indices, $names) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my %args = ();
    if (defined($indices)) {
@@ -1124,7 +1130,7 @@ sub get_settings {
 
    my $r;
    eval {
-      $r = $elk->indices->get_settings(%args);
+      $r = $es->indices->get_settings(%args);
    };
    if ($@) {
       chomp($@);
@@ -1148,8 +1154,8 @@ sub put_settings {
    my $self = shift;
    my ($settings, $indices) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('put_settings', $settings) or return;
    $self->brik_help_run_invalid_arg('put_settings', $settings, 'HASH') or return;
 
@@ -1165,7 +1171,7 @@ sub put_settings {
 
    my $r;
    eval {
-      $r = $elk->indices->put_settings(%args);
+      $r = $es->indices->put_settings(%args);
    };
    if ($@) {
       chomp($@);
@@ -1179,8 +1185,8 @@ sub set_index_number_of_replicas {
    my $self = shift;
    my ($indices, $number) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('set_index_number_of_replicas', $indices) or return;
    $self->brik_help_run_invalid_arg('set_index_number_of_replicas', $indices, 'ARRAY', 'SCALAR')
       or return;
@@ -1194,8 +1200,8 @@ sub set_index_refresh_interval {
    my $self = shift;
    my ($indices, $number) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('set_index_refresh_interval', $indices) or return;
    $self->brik_help_run_invalid_arg('set_index_refresh_interval', $indices, 'ARRAY', 'SCALAR')
       or return;
@@ -1209,8 +1215,8 @@ sub get_index_number_of_replicas {
    my $self = shift;
    my ($indices) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('get_index_number_of_replicas', $indices) or return;
    $self->brik_help_run_invalid_arg('get_index_number_of_replicas', $indices, 'ARRAY', 'SCALAR')
       or return;
@@ -1229,8 +1235,8 @@ sub get_index_refresh_interval {
    my $self = shift;
    my ($indices, $number) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('get_index_refresh_interval', $indices) or return;
    $self->brik_help_run_invalid_arg('get_index_refresh_interval', $indices, 'ARRAY', 'SCALAR')
       or return;
@@ -1249,8 +1255,8 @@ sub get_index_number_of_shards {
    my $self = shift;
    my ($indices, $number) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('get_index_number_of_shards', $indices) or return;
    $self->brik_help_run_invalid_arg('get_index_number_of_shards', $indices, 'ARRAY', 'SCALAR')
       or return;
@@ -1272,13 +1278,13 @@ sub delete_template {
    my $self = shift;
    my ($name) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('delete_template', $name) or return;
 
    my $r;
    eval {
-      $r = $elk->indices->delete_template(
+      $r = $es->indices->delete_template(
          name => $name,
       );
    };
@@ -1297,13 +1303,13 @@ sub is_index_exists {
    my $self = shift;
    my ($index) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('is_index_exists', $index) or return;
 
    my $r;
    eval {
-      $r = $elk->indices->exists(
+      $r = $es->indices->exists(
          index => $index,
       );
    };
@@ -1322,14 +1328,14 @@ sub is_type_exists {
    my $self = shift;
    my ($index, $type) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('is_type_exists', $index) or return;
    $self->brik_help_run_undef_arg('is_type_exists', $type) or return;
 
    my $r;
    eval {
-      $r = $elk->indices->exists_type(
+      $r = $es->indices->exists_type(
          index => $index,
          type => $type,
       );
@@ -1350,8 +1356,8 @@ sub is_document_exists {
    my $self = shift;
    my ($index, $type, $document) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('is_document_exists', $index) or return;
    $self->brik_help_run_undef_arg('is_document_exists', $type) or return;
    $self->brik_help_run_undef_arg('is_document_exists', $document) or return;
@@ -1359,7 +1365,7 @@ sub is_document_exists {
 
    my $r;
    eval {
-      $r = $elk->exists(
+      $r = $es->exists(
          index => $index,
          type => $type,
          %$document,
@@ -1381,13 +1387,13 @@ sub refresh_index {
    my $self = shift;
    my ($index) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('refresh_index', $index) or return;
 
    my $r;
    eval {
-      $r = $elk->indices->refresh(
+      $r = $es->indices->refresh(
          index => $index,
       );
    };
@@ -1517,6 +1523,13 @@ sub import_from_csv {
    $self->brik_help_set_undef_arg('index', $index) or return;
    $self->brik_help_set_undef_arg('type', $type) or return;
 
+   if ($index eq '*') {
+      return $self->log->error("import_from_csv: cannot import to invalid index [$index]");
+   }
+   if ($type eq '*') {
+      return $self->log->error("import_from_csv: cannot import to invalid type [$type]");
+   }
+
    $self->log->debug("input [$input_csv]");
    $self->log->debug("index [$index]");
    $self->log->debug("type [$type]");
@@ -1625,12 +1638,12 @@ sub import_from_csv {
 sub get_stats_process {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->nodes->stats(
+      $r = $es->nodes->stats(
          metric => [ qw(process) ],
       );
    };
@@ -1650,12 +1663,12 @@ sub get_stats_process {
 sub get_process {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->nodes->info(
+      $r = $es->nodes->info(
          metric => [ qw(process) ],
       );
    };
@@ -1673,12 +1686,12 @@ sub get_process {
 sub get_cluster_state {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->cluster->state;
+      $r = $es->cluster->state;
    };
    if ($@) {
       chomp($@);
@@ -1694,12 +1707,12 @@ sub get_cluster_state {
 sub get_cluster_health {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->cluster->health;
+      $r = $es->cluster->health;
    };
    if ($@) {
       chomp($@);
@@ -1715,12 +1728,12 @@ sub get_cluster_health {
 sub get_cluster_settings {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->cluster->get_settings;
+      $r = $es->cluster->get_settings;
    };
    if ($@) {
       chomp($@);
@@ -1737,8 +1750,8 @@ sub put_cluster_settings {
    my $self = shift;
    my ($settings) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('put_cluster_settings', $settings) or return;
    $self->brik_help_run_invalid_arg('put_cluster_settings', $settings, 'HASH') or return;
 
@@ -1748,7 +1761,7 @@ sub put_cluster_settings {
 
    my $r;
    eval {
-      $r = $elk->cluster->put_settings(%args);
+      $r = $es->cluster->put_settings(%args);
    };
    if ($@) {
       chomp($@);
@@ -1930,12 +1943,12 @@ sub enable_shard_allocation {
 sub flush_synced {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->indices->flush_synced;
+      $r = $es->indices->flush_synced;
    };
    if ($@) {
       chomp($@);
@@ -1960,8 +1973,8 @@ sub create_snapshot_repository {
    my $self = shift;
    my ($body, $repository_name) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('create_snapshot_repository', $body) or return;
 
    $repository_name ||= 'repository';
@@ -1973,7 +1986,7 @@ sub create_snapshot_repository {
 
    my $r;
    eval {
-      $r = $elk->snapshot->create_repository(%args);
+      $r = $es->snapshot->create_repository(%args);
    };
    if ($@) {
       chomp($@);
@@ -2012,12 +2025,12 @@ sub create_shared_fs_snapshot_repository {
 sub get_snapshot_repositories {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->snapshot->get_repository;
+      $r = $es->snapshot->get_repository;
    };
    if ($@) {
       chomp($@);
@@ -2033,12 +2046,12 @@ sub get_snapshot_repositories {
 sub get_snapshot_status {
    my $self = shift;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    my $r;
    eval {
-      $r = $elk->snapshot->status;
+      $r = $es->snapshot->status;
    };
    if ($@) {
       chomp($@);
@@ -2055,8 +2068,8 @@ sub create_snapshot {
    my $self = shift;
    my ($snapshot_name, $repository_name, $body) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    $snapshot_name ||= 'snapshot';
    $repository_name ||= 'repository';
@@ -2071,7 +2084,7 @@ sub create_snapshot {
 
    my $r;
    eval {
-      $r = $elk->snapshot->create(%args);
+      $r = $es->snapshot->create(%args);
    };
    if ($@) {
       chomp($@);
@@ -2147,13 +2160,13 @@ sub delete_snapshot_repository {
    my $self = shift;
    my ($repository_name) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('delete_snapshot_repository', $repository_name) or return;
 
    my $r;
    eval {
-      $r = $elk->snapshot->delete_repository(
+      $r = $es->snapshot->delete_repository(
          repository => $repository_name,
       );
    };
@@ -2169,15 +2182,15 @@ sub get_snapshot {
    my $self = shift;
    my ($snapshot_name, $repository_name) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
 
    $snapshot_name ||= 'snapshot';
    $repository_name ||= 'repository';
 
    my $r;
    eval {
-      $r = $elk->snapshot->get(
+      $r = $es->snapshot->get(
          repository => $repository_name,
          snapshot => $snapshot_name,
       );
@@ -2194,14 +2207,14 @@ sub delete_snapshot {
    my $self = shift;
    my ($snapshot_name, $repository_name) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('delete_snapshot', $snapshot_name) or return;
    $self->brik_help_run_undef_arg('delete_snapshot', $repository_name) or return;
 
    my $r;
    eval {
-      $r = $elk->snapshot->delete(
+      $r = $es->snapshot->delete(
          repository => $repository_name,
          snapshot => $snapshot_name,
       );
@@ -2221,8 +2234,8 @@ sub restore_snapshot {
    my $self = shift;
    my ($snapshot_name, $repository_name, $body) = @_;
 
-   my $elk = $self->_elk;
-   $self->brik_help_run_undef_arg('open', $elk) or return;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('restore_snapshot', $snapshot_name) or return;
    $self->brik_help_run_undef_arg('restore_snapshot', $repository_name) or return;
 
@@ -2236,7 +2249,7 @@ sub restore_snapshot {
 
    my $r;
    eval {
-      $r = $elk->snapshot->restore(%args);
+      $r = $es->snapshot->restore(%args);
    };
    if ($@) {
       chomp($@);

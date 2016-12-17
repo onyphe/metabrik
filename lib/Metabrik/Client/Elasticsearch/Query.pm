@@ -247,6 +247,20 @@ sub unique_term {
    return $self->_query($q, $index, $type);
 }
 
+#
+# 
+#
+#sub unique_values {
+#{
+   #"size": 0,
+   #"aggs": {
+      #"1" : {
+         #"terms" : { "field" : "ip" },
+      #}
+   #}
+#}
+#} 
+
 sub wildcard {
    my $self = shift;
    my ($kv, $index, $type) = @_;
