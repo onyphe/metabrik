@@ -216,7 +216,7 @@ sub open_scroll_scan_mode {
    my ($index, $size, $nodes, $cxn_pool) = @_;
 
    my $version = $self->version or return;
-   if ($version >= 5.0.0) {
+   if ($version ge "5.0.0") {
       return $self->log->error("open_scroll_scan_mode: Command not supported for ES version ".
          "$version, try open_scroll Command instead");
    }
@@ -255,7 +255,7 @@ sub open_scroll {
    my ($index, $size, $nodes, $cxn_pool) = @_;
 
    my $version = $self->version or return;
-   if ($version < 5.0.0) {
+   if ($version lt "5.0.0") {
       return $self->log->error("open_scroll: Command not supported for ES version ".
          "$version, try open_scroll_scan_mode Command instead");
    }
@@ -420,7 +420,7 @@ sub count {
 
    my $r;
    my $version = $self->version or return;
-   if ($version >= 5.0.0) {
+   if ($version ge "5.0.0") {
       eval {
          $r = $elk->count(%args);
       };
@@ -444,11 +444,16 @@ sub count {
       return $self->log->error("count: count failed for index [$index]: [$@]");
    }
 
-   if ($version >= 5.0.0) {
-      return $r->{count};
+   if ($version ge "5.0.0") {
+      if (exists($r->{count})) {
+         return $r->{count};
+      }
+   }
+   elsif (exists($r->{hits}) && exists($r->{hits}{total})) {
+      return $r->{hits}{total};
    }
 
-   return $r->{hits}{total};
+   return $self->log->error("count: nothing found");
 }
 
 #
@@ -1406,7 +1411,7 @@ sub export_as_csv {
 
    my $scroll;
    my $version = $self->version or return;
-   if ($version < 5.0.0) {
+   if ($version lt "5.0.0") {
       $scroll = $self->open_scroll_scan_mode($index, $size) or return;
    }
    else {
@@ -1518,7 +1523,10 @@ sub import_from_csv {
 
    my $count_before = 0;
    if ($self->is_index_exists($index)) {
-      $count_before = $self->count($index, $type) or return;
+      $count_before = $self->count($index, $type);
+      if (! defined($count_before)) {
+         return;
+      }
       $self->log->info("import_from_csv: current index count is [$count_before]");
    }
 
