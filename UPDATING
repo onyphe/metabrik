@@ -1,3 +1,8 @@
+20161218
+   AFFECTS: client::elasticsearch
+
+   - client::elasticsearch timeout Attribute renamed to rtimeout
+
 20161213
    AFFECTS: client::elasticsearch
 

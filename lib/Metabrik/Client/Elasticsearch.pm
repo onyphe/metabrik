@@ -24,7 +24,7 @@ sub brik_properties {
          from => [ qw(number) ],
          size => [ qw(count) ],
          max => [ qw(count) ],
-         timeout => [ qw(seconds) ],
+         rtimeout => [ qw(seconds) ],
          _es => [ qw(INTERNAL) ],
          _bulk => [ qw(INTERNAL) ],
          _scroll => [ qw(INTERNAL) ],
@@ -37,7 +37,7 @@ sub brik_properties {
          max => 0,
          index => '*',
          type => '*',
-         timeout => '60',
+         rtimeout => 60,
       },
       commands => {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
@@ -162,7 +162,7 @@ sub open {
       }
    }
 
-   my $timeout = $self->timeout;
+   my $timeout = $self->rtimeout;
 
    my $nodes_str = join('|', @$nodes);
    $self->log->verbose("open: using nodes [$nodes_str]");
@@ -254,6 +254,9 @@ sub open_scroll_scan_mode {
    return $nodes;
 }
 
+#
+# Search::Elasticsearch::Client::5_0::Scroll
+#
 sub open_scroll {
    my $self = shift;
    my ($index, $size, $nodes, $cxn_pool) = @_;
@@ -275,14 +278,20 @@ sub open_scroll {
    $self->brik_help_run_invalid_arg('open_scroll', $nodes, 'ARRAY') or return;
    $self->brik_help_run_empty_array_arg('open_scroll', $nodes) or return;
 
+   my $timeout = $self->rtimeout;
+
    $self->open($nodes, $cxn_pool) or return;
 
    my $es = $self->_es;
 
    my $scroll = $es->scroll_helper(
+      scroll => "${timeout}s",
       index => $index,
+      size => $size,
       body => {
-         size => $size,
+         query => {
+            match_all => {},
+         },
       },
    );
    if (! defined($scroll)) {
@@ -290,6 +299,8 @@ sub open_scroll {
    }
 
    $self->_scroll($scroll);
+
+   $self->log->info("open_scroll: opened with size [$size] and timeout [${timeout}s]");
 
    return $nodes;
 }
@@ -479,7 +490,7 @@ sub query {
    $self->brik_help_set_undef_arg('type', $type) or return;
    $self->brik_help_run_invalid_arg('query', $query, 'HASH') or return;
 
-   my $timeout = $self->timeout;
+   my $timeout = $self->rtimeout;
 
    my %args = (
       index => $index,
@@ -2203,6 +2214,9 @@ sub get_snapshot {
    return $r;
 }
 
+#
+# Search::Elasticsearch::Client::5_0::Direct::Snapshot
+#
 sub delete_snapshot {
    my $self = shift;
    my ($snapshot_name, $repository_name) = @_;
@@ -2212,11 +2226,14 @@ sub delete_snapshot {
    $self->brik_help_run_undef_arg('delete_snapshot', $snapshot_name) or return;
    $self->brik_help_run_undef_arg('delete_snapshot', $repository_name) or return;
 
+   my $timeout = $self->rtimeout;
+
    my $r;
    eval {
       $r = $es->snapshot->delete(
          repository => $repository_name,
          snapshot => $snapshot_name,
+         master_timeout => "${timeout}s",
       );
    };
    if ($@) {
