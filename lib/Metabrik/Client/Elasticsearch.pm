@@ -1495,6 +1495,7 @@ sub export_as_csv {
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->separator(',');
+   $fc->escape('\\');
    $fc->append(1);
    $fc->first_line_is_header(0);
    $fc->write_header(1);
@@ -1624,6 +1625,7 @@ sub import_from_csv {
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->separator(',');
+   $fc->escape('\\');
    $fc->first_line_is_header(1);
 
    my $start = time();
