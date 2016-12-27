@@ -1,3 +1,9 @@
+20161227
+   AFFECTS: client::elasticsearch
+
+   - client::elasticsearch import_from_csv returned HASH has processed key renamed 
+     to imported and added key removed
+
 20161218
    AFFECTS: client::elasticsearch
 

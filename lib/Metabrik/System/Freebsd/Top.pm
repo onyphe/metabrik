@@ -77,7 +77,7 @@ sub stats {
       if ($row == 0) {
          my @f = $line =~ m{^last pid:\s+(\d+);\s+load averages:\s+(\S+),\s+(\S+),\s+(\S+)\s+up (\S+)\s+(\S+)$};
 
-         $self->log->debug("@f");
+         #$self->log->debug("@f");
 
          $info->{last_pid} = $f[0];
          $info->{load_average_1m} = $f[1];
@@ -101,7 +101,7 @@ sub stats {
       elsif ($row == 3) {
          my @f = $line =~ m{^Mem: (?:(\S+) Active, )?(?:(\S+) Inact, )?(?:(\S+) Wired, )?(?:(\S+) Cache, )?(?:(\S+) Buf, )?(?:(\S+) Free)?$};
 
-         $self->log->debug("@f");
+         #$self->log->debug("@f");
 
          $info->{active_memory} = $self->_convert_size($f[0]) || 0;
          $info->{inactive_memory} = $self->_convert_size($f[1]) || 0;
@@ -112,7 +112,7 @@ sub stats {
       elsif ($row == 4) {
          my @f = $line =~ m{^ARC: (\S+) Total, (\S+) MFU, (\S+) MRU, (\S+) Anon, (\S+) Header, (\S+) Other$};
 
-         $self->log->debug("@f");
+         #$self->log->debug("@f");
 
          $info->{total_arc} = $self->_convert_size($f[0]) || 0;
          $info->{mfu_arc} = $self->_convert_size($f[1]) || 0;

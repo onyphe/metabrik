@@ -182,14 +182,12 @@ sub term {
 
    my $ce = $self->create_client or return;
 
+   # Optimized version on ES 5.0.0
    my $q = {
       query => {
          bool => {
-            must => {
-               term => {
-                  $key => $value,
-               },
-            },
+            filter => { term => { $key => $value } },
+            must => { term => { $key => $value } },
          },
       },
    };
@@ -222,14 +220,12 @@ sub unique_term {
 
    my $ce = $self->create_client or return;
 
+   # Optimized version on ES 5.0.0
    my $q = {
       query => {
          bool => {
-            must => {
-               term => {
-                  $key => $value,
-               },
-            },
+            filter => { term => { $key => $value } },
+            must => { term => { $key => $value } },
          },
       },
       aggs => {

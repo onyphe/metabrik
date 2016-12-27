@@ -25,6 +25,8 @@ sub brik_properties {
          size => [ qw(count) ],
          max => [ qw(count) ],
          rtimeout => [ qw(seconds) ],
+         sniff_rtimeout => [ qw(seconds) ],
+         try => [ qw(count) ],
          _es => [ qw(INTERNAL) ],
          _bulk => [ qw(INTERNAL) ],
          _scroll => [ qw(INTERNAL) ],
@@ -38,12 +40,15 @@ sub brik_properties {
          index => '*',
          type => '*',
          rtimeout => 60,
+         sniff_rtimeout => 3,
+         try => 3,
       },
       commands => {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
          open_bulk_mode => [ qw(index|OPTIONAL type|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
          open_scroll_scan_mode => [ qw(index|OPTIONAL size|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
          open_scroll => [ qw(index|OPTIONAL size|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
+         close_scroll => [ ],
          total_scroll => [ ],
          next_scroll => [ ],
          index_document => [ qw(document index|OPTIONAL type|OPTIONAL id|OPTIONAL) ],
@@ -126,7 +131,7 @@ sub brik_properties {
          'Metabrik::String::Json' => [ ],
          'Metabrik::File::Csv' => [ ],
          'Metabrik::File::Json' => [ ],
-         'Metabrik::System::File' => [ ],
+         'Metabrik::File::Raw' => [ ],
          'Data::Dump' => [ ],
          'Search::Elasticsearch' => [ ],
       },
@@ -167,13 +172,25 @@ sub open {
    my $nodes_str = join('|', @$nodes);
    $self->log->verbose("open: using nodes [$nodes_str]");
 
+   #
+   # Timeout description here:
+   #
+   # Search::Elasticsearch::Role::Cxn
+   #
+
    my $es = Search::Elasticsearch->new(
       nodes => $nodes,
       cxn_pool => $cxn_pool,
       timeout => $timeout,
-      max_retries => 3,
+      max_retries => $self->try,
       retry_on_timeout => 1,
+      sniff_timeout => $self->sniff_rtimeout,
    );
+      #request_timeout => 10,  # seconds
+      #ping_timeout => 5,  # seconds
+      #dead_timeout => 60,  # seconds
+      #max_dead_timeout => 3600,  # seconds
+      #sniff_request_timeout => 5, # seconds
    if (! defined($es)) {
       return $self->log->error("open: failed");
    }
@@ -183,6 +200,9 @@ sub open {
    return $nodes;
 }
 
+#
+# Search::Elasticsearch::Client::5_0::Bulk
+#
 sub open_bulk_mode {
    my $self = shift;
    my ($index, $type, $nodes, $cxn_pool) = @_;
@@ -284,14 +304,15 @@ sub open_scroll {
 
    my $es = $self->_es;
 
+   #
+   # https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html
+   #
    my $scroll = $es->scroll_helper(
       scroll => "${timeout}s",
       index => $index,
       size => $size,
       body => {
-         query => {
-            match_all => {},
-         },
+         sort => [ qw(_doc) ],
       },
    );
    if (! defined($scroll)) {
@@ -305,22 +326,57 @@ sub open_scroll {
    return $nodes;
 }
 
+#
+# Search::Elasticsearch::Client::5_0::Scroll
+#
+sub close_scroll {
+   my $self = shift;
+
+   my $scroll = $self->_scroll;
+   if (! defined($scroll)) {
+      return 1;
+   }
+
+   $scroll->finish;
+   $self->_scroll(undef);
+
+   return 1;
+}
+
 sub total_scroll {
    my $self = shift;
 
    my $scroll = $self->_scroll;
-   $self->brik_help_run_undef_arg('open_scroll_scan_mode', $scroll) or return;
+   $self->brik_help_run_undef_arg('open_scroll', $scroll) or return;
 
-   return $scroll->total;
+   my $total;
+   eval {
+      $total = $scroll->total;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("total_scroll: failed with: [$@]");
+   }
+
+   return $total;
 }
 
 sub next_scroll {
    my $self = shift;
 
    my $scroll = $self->_scroll;
-   $self->brik_help_run_undef_arg('open_scroll_scan_mode', $scroll) or return;
+   $self->brik_help_run_undef_arg('open_scroll', $scroll) or return;
 
-   return $scroll->next;
+   my $next;
+   eval {
+      $next = $scroll->next;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("next_scroll: failed with: [$@]");
+   }
+
+   return $next;
 }
 
 sub index_document {
@@ -1500,6 +1556,8 @@ sub export_as_csv {
       }
    }
 
+   $self->close_scroll;
+
    return $processed;
 }
 
@@ -1561,7 +1619,7 @@ sub import_from_csv {
    $self->log->info("import_from_csv: importing file [$input_csv] to index [$index] ".
       "with type [$type], using chunk size of [$size]");
 
-   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   my $fr = Metabrik::File::Raw->new_from_brik_init($self) or return;
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
@@ -1570,7 +1628,7 @@ sub import_from_csv {
 
    my $start = time();
    my $speed_settings = {};
-   my $processed = 0;
+   my $imported = 0;
    my $first = 1;
    my $read = 0;
    while (my $this = $fc->read_next($input_csv)) {
@@ -1610,16 +1668,16 @@ sub import_from_csv {
       }
 
       # Log a status sometimes.
-      if (! (++$processed % 100_000)) {
+      if (! (++$imported % 100_000)) {
          my $now = time();
-         $self->log->info("import_from_csv: processed [$processed] entries in ".
+         $self->log->info("import_from_csv: imported [$imported] entries in ".
             ($now - $start)." second(s)");
          $start = time();
       }
 
       # Limit import to specified maximum
-      if ($max > 0 && $processed >= $max) {
-         $self->log->info("import_from_csv: max import reached [$processed], stopping");
+      if ($max > 0 && $imported >= $max) {
+         $self->log->info("import_from_csv: max import reached [$imported], stopping");
          last;
       }
    }
@@ -1628,17 +1686,21 @@ sub import_from_csv {
 
    $self->refresh_index($index) or return;
 
-   # Say the file has been processed
-   $sf->touch($done) or return;
+   my $count_current = $self->count($index, $type) or return;
+   $self->log->info("import_from_csv: after index count is [$count_current]");
 
-   my $count_after = $self->count($index, $type) or return;
-   $self->log->info("import_from_csv: after index count is [$count_after]");
-
-   return {
+   my $result = {
       read => $read,
-      processed => $processed,
-      added => $count_after - $count_before,
+      imported => $imported,
+      skipped => $read - $imported,
+      previous_count => $count_before,
+      current_count => $count_current,
    };
+
+   # Say the file has been processed, and put resulting stats.
+   $fr->write($result, $done) or return;
+
+   return $result;
 }
 
 #

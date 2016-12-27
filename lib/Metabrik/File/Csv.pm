@@ -20,6 +20,7 @@ sub brik_properties {
          output => [ qw(file) ],
          first_line_is_header => [ qw(0|1) ],
          separator => [ qw(character) ],
+         escape => [ qw(character) ],
          header => [ qw($column_header_list) ],
          encoding => [ qw(utf8|ascii) ],
          overwrite => [ qw(0|1) ],
@@ -32,6 +33,7 @@ sub brik_properties {
       attributes_default => {
          first_line_is_header => 1,
          separator => ',',
+         escape => '"',
          encoding => 'utf8',
          overwrite => 0,
          append => 1,
@@ -65,6 +67,7 @@ sub read {
       sep_char => $self->separator,
       allow_loose_quotes => 1,
       allow_loose_escapes => 1,
+      escape_char => $self->escape,
    }) or return $self->log->error('read: Text::CSV_XS new failed');
 
    my $fr = Metabrik::File::Read->new_from_brik_init($self) or return;
@@ -262,6 +265,7 @@ sub read_next {
          sep_char => $self->separator,
          allow_loose_quotes => 1,
          allow_loose_escapes => 1,
+         escape_char => $self->escape,
       }) or return $self->log->error('read_next: Text::CSV_XS new failed');
       $self->_csv($csv);
 

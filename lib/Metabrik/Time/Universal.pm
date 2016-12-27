@@ -36,8 +36,8 @@ sub brik_properties {
          is_timezone => [ qw(timezone) ],
          timestamp => [ ],
          to_timestamp => [ qw(string) ],
-         timestamp_to_tz_time => [ qw(timestamp) ],
-         timestamp_to_tz_gmtime => [ qw(timestamp) ],
+         timestamp_to_tz_time => [ qw(timestamp|OPTIONAL) ],
+         timestamp_to_tz_gmtime => [ qw(timestamp|OPTIONAL) ],
       },
       require_modules => {
          'DateTime' => [ ],
@@ -164,7 +164,8 @@ sub timestamp_to_tz_time {
    my $self = shift;
    my ($timestamp) = @_;
 
-   $self->brik_help_run_undef_arg('timestamp_to_tztime', $timestamp) or return;
+   $timestamp ||= $self->timestamp;
+   $self->brik_help_run_undef_arg('timestamp_to_tz_time', $timestamp) or return;
 
    eval("use POSIX qw(strftime);");
 
@@ -175,7 +176,8 @@ sub timestamp_to_tz_gmtime {
    my $self = shift;
    my ($timestamp) = @_;
 
-   $self->brik_help_run_undef_arg('timestamp_to_tztime', $timestamp) or return;
+   $timestamp ||= $self->timestamp;
+   $self->brik_help_run_undef_arg('timestamp_to_tz_gmtime', $timestamp) or return;
 
    eval("use POSIX qw(strftime);");
 
