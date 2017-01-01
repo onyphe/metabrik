@@ -131,8 +131,9 @@ sub brik_properties {
          'Metabrik::String::Json' => [ ],
          'Metabrik::File::Csv' => [ ],
          'Metabrik::File::Json' => [ ],
-         'Metabrik::File::Raw' => [ ],
+         'Metabrik::File::Dump' => [ ],
          'Data::Dump' => [ ],
+         'Data::Dumper' => [ ],
          'Search::Elasticsearch' => [ ],
       },
    };
@@ -184,13 +185,13 @@ sub open {
       timeout => $timeout,
       max_retries => $self->try,
       retry_on_timeout => 1,
-      sniff_timeout => $self->sniff_rtimeout,
+      sniff_timeout => $self->sniff_rtimeout, # seconds, default 1
+      request_timeout => 10,  # seconds, default 30
+      ping_timeout => 5,  # seconds, default 2
+      dead_timeout => 60,  # seconds, detault 60
+      max_dead_timeout => 3600,  # seconds, default 3600
+      sniff_request_timeout => 15, # seconds, default 2
    );
-      #request_timeout => 10,  # seconds
-      #ping_timeout => 5,  # seconds
-      #dead_timeout => 60,  # seconds
-      #max_dead_timeout => 3600,  # seconds
-      #sniff_request_timeout => 5, # seconds
    if (! defined($es)) {
       return $self->log->error("open: failed");
    }
@@ -309,6 +310,8 @@ sub open_scroll {
    #
    my $scroll = $es->scroll_helper(
       scroll => "${timeout}s",
+      scroll_in_qs => 1,  # By default (0), pass scroll_id in request body. When 1, pass 
+                          # it in query string.
       index => $index,
       size => $size,
       body => {
@@ -1491,6 +1494,7 @@ sub export_as_csv {
       $scroll = $self->open_scroll($index, $size) or return;
    }
 
+   my $fd = Metabrik::File::Dump->new_from_brik_init($self) or return;
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
@@ -1509,15 +1513,27 @@ sub export_as_csv {
 
    my $h = {};
    my %types = ();
-   my $processed = 0;
+   my $read = 0;
+   my $skipped = 0;
+   my $exported = 0;
    my $start = time();
+   my $done = 'output.exported';
    while (my $this = $self->next_scroll) {
+      $read++;
       my $id = $this->{_id};
       my $doc = $this->{_source};
       my $type = $this->{_type};
       if (! exists($types{$type})) {
          $types{$type}{header} = [ '_id', sort { $a cmp $b } keys %$doc ];
          $types{$type}{output} = "$index:$type.csv";
+         $done = $types{$type}{output_exported} = "$index:$type.csv.exported";
+
+         # Verify it has not been exported yet
+         if (-f $types{$type}{output_exported}) {
+            return $self->log->error("export_as_csv: export already done for index ".
+               "[$index] with type [$type] and file [$index:$type.csv]");
+         }
+
          $self->log->info("export_as_csv: exporting to file [$index:$type.csv] ".
             "for new type [$type], using chunk size of [$size]");
       }
@@ -1539,27 +1555,39 @@ sub export_as_csv {
       my $r = $fc->write([ $h ], $types{$type}{output});
       if (!defined($r)) {
          $self->log->warning("export_as_csv: unable to process entry, skipping");
+         $skipped++;
          next;
       }
 
       # Log a status sometimes.
-      if (! (++$processed % 100_000)) {
+      if (! (++$exported % 100_000)) {
          my $now = time();
-         $self->log->info("export_as_csv: fetched [$processed/$total] elements in ".
+         $self->log->info("export_as_csv: fetched [$exported/$total] elements in ".
             ($now - $start)." second(s)");
          $start = time();
       }
 
       # Limit export to specified maximum
-      if ($max > 0 && $processed >= $max) {
-         $self->log->info("export_as_csv: max export reached [$processed], stopping");
+      if ($max > 0 && $exported >= $max) {
+         $self->log->info("export_as_csv: max export reached [$exported], stopping");
          last;
       }
    }
 
    $self->close_scroll;
 
-   return $processed;
+   my $result = {
+      read => $read,
+      exported => $exported,
+      skipped => $read - $exported,
+      total_count => $total,
+      complete => ($exported == $total) ? 1 : 0,
+   };
+
+   # Say the file has been processed, and put resulting stats.
+   $fd->write($result, $done) or return;
+
+   return $result;
 }
 
 sub import_from_csv {
@@ -1620,7 +1648,7 @@ sub import_from_csv {
    $self->log->info("import_from_csv: importing file [$input_csv] to index [$index] ".
       "with type [$type], using chunk size of [$size]");
 
-   my $fr = Metabrik::File::Raw->new_from_brik_init($self) or return;
+   my $fd = Metabrik::File::Dump->new_from_brik_init($self) or return;
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
@@ -1633,6 +1661,7 @@ sub import_from_csv {
    my $imported = 0;
    my $first = 1;
    my $read = 0;
+   my $skipped = 0;
    while (my $this = $fc->read_next($input_csv)) {
       $read++;
 
@@ -1652,8 +1681,9 @@ sub import_from_csv {
 
       my $r = $self->index_bulk($h, $index, $type, $id);
       if (! defined($r)) {
-         $self->log->error("import_from_csv: bulk processing failed for index [$index] at ".
-            "read [$read], skipping");
+         $self->log->error("import_from_csv: bulk processing failed for index [$index] ".
+            "at read [$read], skipping");
+         $skipped++;
          next;
       }
 
@@ -1697,10 +1727,11 @@ sub import_from_csv {
       skipped => $read - $imported,
       previous_count => $count_before,
       current_count => $count_current,
+      complete => (($count_current - $count_before) == $read) ? 1 : 0,
    };
 
    # Say the file has been processed, and put resulting stats.
-   $fr->write($result, $done) or return;
+   $fd->write($result, $done) or return;
 
    return $result;
 }

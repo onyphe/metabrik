@@ -30,6 +30,7 @@ sub brik_properties {
       commands => {
          create_client => [ ],
          reset_client => [ ],
+         query => [ qw(query index|OPTIONAL type|OPTIONAL) ],
          get_query_result_total => [ qw($query_result|OPTIONAL) ],
          get_query_result_hits => [ qw($query_result|OPTIONAL) ],
          get_query_result_timed_out => [ qw($query_result|OPTIONAL) ],
@@ -143,21 +144,27 @@ sub get_query_result_took {
    return $query_result->{took};
 }
 
-sub _query {
+sub query {
    my $self = shift;
    my ($q, $index, $type) = @_;
 
-   my $r = $self->query($q, $index, $type) or return;
+   $index ||= '*';
+   $type ||= '*';
+   $self->brik_help_run_undef_arg('query', $q) or return;
+
+   my $ce = $self->create_client or return;
+
+   my $r = $self->SUPER::query($q, $index, $type) or return;
    if (defined($r)) {
       if (exists($r->{hits}{total})) {
          return $r;
       }
       else {
-         return $self->log->error("_query: failed with [$r]");
+         return $self->log->error("query: failed with [$r]");
       }
    }
 
-   return $self->log->error("_query: failed");
+   return $self->log->error("query: failed");
 }
 
 #
@@ -180,8 +187,6 @@ sub term {
 
    $self->debug && $self->log->debug("term: key[$key] value[$value]");
 
-   my $ce = $self->create_client or return;
-
    # Optimized version on ES 5.0.0
    my $q = {
       query => {
@@ -194,7 +199,7 @@ sub term {
 
    $self->log->verbose("term: keys [$key] value [$value] index [$index] type [$type]");
 
-   return $self->_query($q, $index, $type);
+   return $self->query($q, $index, $type);
 }
 
 #
@@ -218,8 +223,6 @@ sub unique_term {
 
    $self->debug && $self->log->debug("unique_term: key[$key] value[$value]");
 
-   my $ce = $self->create_client or return;
-
    # Optimized version on ES 5.0.0
    my $q = {
       query => {
@@ -240,7 +243,7 @@ sub unique_term {
    $self->log->verbose("unique_term: unique [$unique] keys [$key] value [$value] ".
       "index [$index] type [$type]");
 
-   return $self->_query($q, $index, $type);
+   return $self->query($q, $index, $type);
 }
 
 #
@@ -272,8 +275,6 @@ sub wildcard {
    }
    my ($key, $value) = split('=', $kv);
 
-   my $ce = $self->create_client or return;
-
    my $q = {
       query => {
          #constant_score => {  # Does not like constant_score
@@ -288,7 +289,7 @@ sub wildcard {
 
    $self->log->verbose("wildcard: keys [$key] value [$value] index [$index] type [$type]");
 
-   return $self->_query($q, $index, $type);
+   return $self->query($q, $index, $type);
 }
 
 #
@@ -314,8 +315,6 @@ sub range {
    my ($key_from, $value_from) = split('=', $kv_from);
    my ($key_to, $value_to) = split('=', $kv_to);
 
-   my $ce = $self->create_client or return;
-
    #
    # http://stackoverflow.com/questions/40519806/no-query-registered-for-filtered
    # https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-filtered-query.html
@@ -332,7 +331,7 @@ sub range {
       },
    };
 
-   return $self->_query($q, $index, $type);
+   return $self->query($q, $index, $type);
 }
 
 #
@@ -353,8 +352,6 @@ sub top {
    }
    my ($key_count, $value_count) = split('=', $kv_count);
 
-   my $ce = $self->create_client or return;
-
    my $q = {
       aggs => {
          top_values => {
@@ -369,7 +366,7 @@ sub top {
 
    $self->log->verbose("top: key [$key_count] value [$value_count] index [$index] type [$type]");
 
-   return $self->_query($q, $index, $type);
+   return $self->query($q, $index, $type);
 }
 
 sub match_phrase {
@@ -389,8 +386,6 @@ sub match_phrase {
 
    $self->debug && $self->log->debug("match_phrase: key[$key] value[$value]");
 
-   my $ce = $self->create_client or return;
-
    my $q = {
       query => {
          match_phrase => {
@@ -399,7 +394,7 @@ sub match_phrase {
       },
    };
 
-   return $self->_query($q, $index, $type);
+   return $self->query($q, $index, $type);
 }
 
 sub match {
@@ -419,8 +414,6 @@ sub match {
 
    $self->debug && $self->log->debug("match: key[$key] value[$value]");
 
-   my $ce = $self->create_client or return;
-
    my $q = {
       query => {
          match => {
@@ -429,7 +422,7 @@ sub match {
       },
    };
 
-   return $self->_query($q, $index, $type);
+   return $self->query($q, $index, $type);
 }
 
 #
@@ -455,8 +448,6 @@ sub top_match {
    my ($key_count, $value_count) = split('=', $kv_count);
    my ($key_match, $value_match) = split('=', $kv_match);
 
-   my $ce = $self->create_client or return;
-
    my $q = {
       query => {
          #constant_score => {   # Does not like constant_score
@@ -477,7 +468,7 @@ sub top_match {
       },
    };
 
-   return $self->_query($q, $index, $type);
+   return $self->query($q, $index, $type);
 }
 
 sub from_json_file {
@@ -494,9 +485,7 @@ sub from_json_file {
    my $fj = Metabrik::File::Json->new_from_brik_init($self) or return;
    my $q = $fj->read($file) or return;
 
-   my $ce = $self->create_client or return;
-
-   return $self->_query($q, $index, $type);
+   return $self->query($q, $index, $type);
 }
 
 1;
