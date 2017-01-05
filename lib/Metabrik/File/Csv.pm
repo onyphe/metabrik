@@ -27,6 +27,8 @@ sub brik_properties {
          append => [ qw(0|1) ],
          write_header => [ qw(0|1) ],
          use_quoting => [ qw(0|1) ],
+         use_locking => [ qw(0|1) ],
+         unbuffered => [ qw(0|1) ],
          _csv => [ qw(INTERNAL) ],
          _fd => [ qw(INTERNAL) ],
       },
@@ -39,6 +41,8 @@ sub brik_properties {
          append => 1,
          write_header => 1,
          use_quoting => 0,
+         use_locking => 0,
+         unbuffered => 0,
       },
       commands => {
          read => [ qw(input_file|OPTIONAL) ],
@@ -135,6 +139,8 @@ sub write {
    $fw->encoding($self->encoding);
    $fw->overwrite($self->overwrite);
    $fw->append($self->append);
+   $fw->use_locking($self->use_locking);
+   $fw->unbuffered($self->unbuffered);
 
    #
    # Set header ordering
@@ -169,7 +175,10 @@ sub write {
    # Write header if this is a new file and user asked for it.
    if ($self->write_header && ($is_new_file || $self->overwrite)) {
       my $data = join($self->separator, @header)."\n";
-      print $fd $data;
+      my $r = $fw->write($data);
+      if (! defined($r)) {
+         return;
+      }
       $written .= $data;
    }
 

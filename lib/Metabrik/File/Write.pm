@@ -22,16 +22,23 @@ sub brik_properties {
          encoding => [ qw(utf8|ascii) ],
          fd => [ qw(file_descriptor) ],
          unbuffered => [ qw(0|1) ],
+         use_locking => [ qw(0|1) ],
       },
       attributes_default => {
          append => 1,
          overwrite => 0,
          unbuffered => 0,
+         use_locking => 0,
       },
       commands => {
          open => [ qw(file|OPTIONAL) ],
+         lock => [ ],
+         unlock => [ ],
          write => [ qw($data|$data_ref|$data_list) ],
          close => [ ],
+      },
+      require_modules => {
+         Fcntl => [ qw(:flock) ],
       },
    };
 }
@@ -100,6 +107,41 @@ sub close {
    return 1;
 }
 
+sub lock {
+   my $self = shift;
+
+   my $fd = $self->fd or return 1;
+
+   my $r = flock($fd, Fcntl::LOCK_EX());
+   if (! defined($r)) {
+      return $self->log->error("lock: flock: locking failed: $!");
+   }
+
+   $r = seek($fd, 0, Fcntl::SEEK_END());
+   if (! defined($r)) {
+      return $self->log->error("lock: seek: seeking failed: $!");
+   }
+
+   $self->log->debug("lock: locking fd");
+
+   return 1;
+}
+
+sub unlock {
+   my $self = shift;
+
+   my $fd = $self->fd or return 1;
+
+   my $r = flock($fd, Fcntl::LOCK_UN());
+   if (! defined($r)) {
+      return $self->log->error("lock: flock: unlocking failed: $!");
+   }
+
+   $self->log->debug("unlock: unlocking fd");
+
+   return 1;
+}
+
 sub write {
    my $self = shift;
    my ($data) = @_;
@@ -107,6 +149,10 @@ sub write {
    my $fd = $self->fd;
    $self->brik_help_run_undef_arg('open', $fd) or return;
    $self->brik_help_run_undef_arg('write', $data) or return;
+
+   if ($self->use_locking) {
+      $self->lock or return;
+   }
 
    $self->debug && $self->log->debug("write: data[$data]");
 
@@ -117,6 +163,10 @@ sub write {
    }
    else {
       ref($data) eq 'SCALAR' ? print $fd $$data : print $fd $data;
+   }
+
+   if ($self->use_locking) {
+      $self->unlock or return;
    }
 
    return $data;
