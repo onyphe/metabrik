@@ -1716,7 +1716,8 @@ sub import_from_csv {
 
    $self->bulk_flush or return;
 
-   $self->refresh_index($index) or return;
+   # Do not return on error
+   $self->refresh_index($index);
 
    my $count_current = $self->count($index, $type) or return;
    $self->log->info("import_from_csv: after index count is [$count_current]");
