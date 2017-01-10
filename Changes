@@ -5,6 +5,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: server::logstash::oneshot Brik
    - new: string::dump Brik
    - new: system::zfs Brik
+   - new: format::number Brik
 
 1.25.1 Fri  4 Nov 07:16:27 CET 2016
    - new: binjitsu::checksec Brik
