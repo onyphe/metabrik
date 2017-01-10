@@ -191,7 +191,6 @@ sub term {
    my $q = {
       query => {
          bool => {
-            filter => { term => { $key => $value } },
             must => { term => { $key => $value } },
          },
       },
@@ -225,9 +224,9 @@ sub unique_term {
 
    # Optimized version on ES 5.0.0
    my $q = {
+      size => 0,
       query => {
          bool => {
-            filter => { term => { $key => $value } },
             must => { term => { $key => $value } },
          },
       },

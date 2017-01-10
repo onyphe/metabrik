@@ -1,3 +1,15 @@
+20170110
+   AFFECTS: client::elasticsearch
+
+   - client::elasticsearch count_shards Command now returns the total number of shards instead 
+     of a HASH of indices status. Use list_indices_status if you want information about 
+     status of indices.
+   - client::elasticsearch open_bulk_mode, open_scroll_scan_mode and open_scroll Commands 
+     do not have a 3rd and 4th Argument anymore. And they require user to call open Command 
+     before being able to use them.
+   - client::elasticsearch count_*_shards renamed to count_*_indices
+   - client::elasticsearch import_from_csv do not take a 4th Argument anymore (size)
+
 20161227
    AFFECTS: client::elasticsearch
 

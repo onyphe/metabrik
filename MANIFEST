@@ -84,6 +84,7 @@ lib/Metabrik/Forensic/Dcfldd.pm
 lib/Metabrik/Forensic/Scalpel.pm
 lib/Metabrik/Forensic/Volatility.pm
 lib/Metabrik/Format/Latex.pm
+lib/Metabrik/Format/Number.pm
 lib/Metabrik/Hardware/Battery.pm
 lib/Metabrik/Hardware/Fan.pm
 lib/Metabrik/Hardware/Temperature.pm

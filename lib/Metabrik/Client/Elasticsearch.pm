@@ -24,9 +24,12 @@ sub brik_properties {
          from => [ qw(number) ],
          size => [ qw(count) ],
          max => [ qw(count) ],
+         max_flush_count => [ qw(count) ],
+         max_flush_size => [ qw(count) ],
          rtimeout => [ qw(seconds) ],
          sniff_rtimeout => [ qw(seconds) ],
          try => [ qw(count) ],
+         use_bulk_autoflush => [ qw(0|1) ],
          _es => [ qw(INTERNAL) ],
          _bulk => [ qw(INTERNAL) ],
          _scroll => [ qw(INTERNAL) ],
@@ -42,12 +45,15 @@ sub brik_properties {
          rtimeout => 60,
          sniff_rtimeout => 3,
          try => 3,
+         max_flush_count => 1_000,
+         max_flush_size => 1_000_000,
+         use_bulk_autoflush => 1,
       },
       commands => {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
-         open_bulk_mode => [ qw(index|OPTIONAL type|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
-         open_scroll_scan_mode => [ qw(index|OPTIONAL size|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
-         open_scroll => [ qw(index|OPTIONAL size|OPTIONAL nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
+         open_bulk_mode => [ qw(index|OPTIONAL type|OPTIONAL) ],
+         open_scroll_scan_mode => [ qw(index|OPTIONAL size|OPTIONAL) ],
+         open_scroll => [ qw(index|OPTIONAL size|OPTIONAL) ],
          close_scroll => [ ],
          total_scroll => [ ],
          next_scroll => [ ],
@@ -91,6 +97,7 @@ sub brik_properties {
          is_index_exists => [ qw(index) ],
          is_type_exists => [ qw(index type) ],
          is_document_exists => [ qw(index type document) ],
+         parse_error_string => [ qw(string) ],
          refresh_index => [ qw(index) ],
          export_as_csv => [ qw(index size|OPTIONAL) ],
          import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL size|OPTIONAL) ],
@@ -100,13 +107,18 @@ sub brik_properties {
          get_cluster_health => [ ],
          get_cluster_settings => [ ],
          put_cluster_settings => [ qw(settings) ],
-         count_green_shards => [ ],
-         count_yellow_shards => [ ],
-         count_red_shards => [ ],
-         list_green_shards => [ ],
-         list_yellow_shards => [ ],
-         list_red_shards => [ ],
+         count_green_indices => [ ],
+         count_yellow_indices => [ ],
+         count_red_indices => [ ],
+         list_green_indices => [ ],
+         list_yellow_indices => [ ],
+         list_red_indices => [ ],
+         count_indices => [ ],
+         list_indices_status => [ ],
          count_shards => [ ],
+         count_size => [ ],
+         count_total_size => [ ],
+         count_count => [ ],
          list_datatypes => [ ],
          get_hits_total => [ ],
          disable_shard_allocation => [ ],
@@ -132,6 +144,7 @@ sub brik_properties {
          'Metabrik::File::Csv' => [ ],
          'Metabrik::File::Json' => [ ],
          'Metabrik::File::Dump' => [ ],
+         'Metabrik::Format::Number' => [ ],
          'Data::Dump' => [ ],
          'Data::Dumper' => [ ],
          'Search::Elasticsearch' => [ ],
@@ -186,9 +199,9 @@ sub open {
       max_retries => $self->try,
       retry_on_timeout => 1,
       sniff_timeout => $self->sniff_rtimeout, # seconds, default 1
-      request_timeout => 10,  # seconds, default 30
+      request_timeout => 60,  # seconds, default 30
       ping_timeout => 5,  # seconds, default 2
-      dead_timeout => 60,  # seconds, detault 60
+      dead_timeout => 120,  # seconds, detault 60
       max_dead_timeout => 3600,  # seconds, default 3600
       sniff_request_timeout => 15, # seconds, default 2
    );
@@ -206,39 +219,56 @@ sub open {
 #
 sub open_bulk_mode {
    my $self = shift;
-   my ($index, $type, $nodes, $cxn_pool) = @_;
+   my ($index, $type) = @_;
 
    $index ||= $self->index;
    $type ||= $self->type;
-   $nodes ||= $self->nodes;
-   $cxn_pool ||= $self->cxn_pool;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('open_bulk_mode', $index) or return;
    $self->brik_help_run_undef_arg('open_bulk_mode', $type) or return;
-   $self->brik_help_run_undef_arg('open_bulk_mode', $nodes) or return;
-   $self->brik_help_run_undef_arg('open_bulk_mode', $cxn_pool) or return;
-   $self->brik_help_run_invalid_arg('open_bulk_mode', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('open_bulk_mode', $nodes) or return;
 
-   $self->open($nodes, $cxn_pool) or return;
-
-   my $es = $self->_es;
-
-   my $bulk = $es->bulk_helper(
+   my %args = (
       index => $index,
       type => $type,
    );
+
+   if ($self->use_bulk_autoflush) {
+      my $max_count = $self->max_flush_count || 1_000;
+      my $max_size = $self->max_flush_size || 1_000_000;
+
+      $args{max_count} = $max_count;
+      $args{max_size} = $max_size;
+      $args{max_time} = 0;
+
+      $self->log->info("open_bulk_mode: opening with max_flush_count [$max_count] and ".
+         "max_flush_size [$max_size]");
+   }
+   else {
+      $args{max_count} = 0;
+      $args{max_size} = 0;
+      $args{max_time} = 0;
+      $args{on_error} = undef;
+      #$args{on_success} = sub {
+         #my ($action, $response, $i) = @_;
+      #};
+
+      $self->log->info("open_bulk_mode: opening without automatic flushing");
+   }
+
+   my $bulk = $es->bulk_helper(%args);
    if (! defined($bulk)) {
       return $self->log->error("open_bulk_mode: failed");
    }
 
    $self->_bulk($bulk);
 
-   return $nodes;
+   return $self->nodes;
 }
 
 sub open_scroll_scan_mode {
    my $self = shift;
-   my ($index, $size, $nodes, $cxn_pool) = @_;
+   my ($index, $size) = @_;
 
    my $version = $self->version or return;
    if ($version ge "5.0.0") {
@@ -248,18 +278,10 @@ sub open_scroll_scan_mode {
 
    $index ||= $self->index;
    $size ||= $self->size;
-   $nodes ||= $self->nodes;
-   $cxn_pool ||= $self->cxn_pool;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('open_scroll_scan_mode', $index) or return;
    $self->brik_help_run_undef_arg('open_scroll_scan_mode', $size) or return;
-   $self->brik_help_run_undef_arg('open_scroll_scan_mode', $nodes) or return;
-   $self->brik_help_run_undef_arg('open_scroll_scan_mode', $cxn_pool) or return;
-   $self->brik_help_run_invalid_arg('open_scroll_scan_mode', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('open_scroll_scan_mode', $nodes) or return;
-
-   $self->open($nodes, $cxn_pool) or return;
-
-   my $es = $self->_es;
 
    my $scroll = $es->scroll_helper(
       index => $index,
@@ -272,7 +294,7 @@ sub open_scroll_scan_mode {
 
    $self->_scroll($scroll);
 
-   return $nodes;
+   return $self->nodes;
 }
 
 #
@@ -280,7 +302,7 @@ sub open_scroll_scan_mode {
 #
 sub open_scroll {
    my $self = shift;
-   my ($index, $size, $nodes, $cxn_pool) = @_;
+   my ($index, $size) = @_;
 
    my $version = $self->version or return;
    if ($version lt "5.0.0") {
@@ -290,20 +312,12 @@ sub open_scroll {
 
    $index ||= $self->index;
    $size ||= $self->size;
-   $nodes ||= $self->nodes;
-   $cxn_pool ||= $self->cxn_pool;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('open_scroll', $index) or return;
    $self->brik_help_run_undef_arg('open_scroll', $size) or return;
-   $self->brik_help_run_undef_arg('open_scroll', $nodes) or return;
-   $self->brik_help_run_undef_arg('open_scroll', $cxn_pool) or return;
-   $self->brik_help_run_invalid_arg('open_scroll', $nodes, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('open_scroll', $nodes) or return;
 
    my $timeout = $self->rtimeout;
-
-   $self->open($nodes, $cxn_pool) or return;
-
-   my $es = $self->_es;
 
    #
    # https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html
@@ -326,7 +340,7 @@ sub open_scroll {
 
    $self->log->info("open_scroll: opened with size [$size] and timeout [${timeout}s]");
 
-   return $nodes;
+   return $self->nodes;
 }
 
 #
@@ -386,9 +400,9 @@ sub index_document {
    my $self = shift;
    my ($doc, $index, $type, $id) = @_;
 
-   my $es = $self->_es;
    $index ||= $self->index;
    $type ||= $self->type;
+   my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('index_document', $doc) or return;
    $self->brik_help_run_invalid_arg('index_document', $doc, 'HASH') or return;
@@ -416,6 +430,9 @@ sub index_document {
    return $r;
 }
 
+#
+# Search::Elasticsearch::Client::5_0::Bulk
+#
 sub index_bulk {
    my $self = shift;
    my ($doc, $index, $type, $id) = @_;
@@ -437,11 +454,22 @@ sub index_bulk {
 
    my $r;
    eval {
-      $r = $bulk->index(\%args);
+      #$r = $bulk->index(\%args);
+      $r = $bulk->add_action(index => \%args);
    };
    if ($@) {
       chomp($@);
-      return $self->log->error("index_bulk: index failed for index [$index]: [$@]");
+      my $p = $self->parse_error_string($@);
+      if (defined($p) && exists($p->{class})) {
+         my $class = $p->{class};
+         my $code = $p->{code};
+         my $node = $p->{node};
+         return $self->log->error("index_bulk: failed for index [$index] with error ".
+            "[$class] code [$code] for node [$node]");
+      }
+      else {
+         return $self->log->error("index_bulk: index failed for index [$index]: [$@]");
+      }
    }
 
    return $r;
@@ -453,13 +481,31 @@ sub bulk_flush {
    my $bulk = $self->_bulk;
    $self->brik_help_run_undef_arg('open_bulk_mode', $bulk) or return;
 
+   my $try = $self->try;
+
+RETRY:
+
    my $r;
    eval {
       $r = $bulk->flush;
    };
    if ($@) {
-      chomp($@);
-      return $self->log->error("bulk_flush: flush failed: [$@]");
+      if (--$try == 0) {
+         chomp($@);
+         my $p = $self->parse_error_string($@);
+         if (defined($p) && exists($p->{class})) {
+            my $class = $p->{class};
+            my $code = $p->{code};
+            my $node = $p->{node};
+            return $self->log->error("bulk_flush: failed after [$try] tries with error ".
+               "[$class] code [$code] for node [$node]");
+         }
+         else {
+            return $self->log->error("bulk_flush: failed after [$try]: [$@]");
+         }
+      }
+      sleep 60;
+      goto RETRY;
    }
 
    return $r;
@@ -473,9 +519,9 @@ sub count {
    my $self = shift;
    my ($index, $type) = @_;
 
-   my $es = $self->_es;
    $index ||= $self->index;
    $type ||= $self->type;
+   my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
 
    my %args = ();
@@ -540,9 +586,9 @@ sub query {
    my $self = shift;
    my ($query, $index, $type) = @_;
 
-   my $es = $self->_es;
    $index ||= $self->index;
    $type ||= $self->type;
+   my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('query', $query) or return;
    $self->brik_help_set_undef_arg('index', $index) or return;
@@ -553,10 +599,7 @@ sub query {
 
    my %args = (
       index => $index,
-      from => $self->from,
-      size => $self->size,
       body => $query,
-      #timeout => $timeout, # XXX: does not work
    );
 
    if ($type ne '*') {
@@ -579,9 +622,9 @@ sub get_from_id {
    my $self = shift;
    my ($id, $index, $type) = @_;
 
-   my $es = $self->_es;
    $index ||= $self->index;
    $type ||= $self->type;
+   my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('get_from_id', $id) or return;
    $self->brik_help_set_undef_arg('index', $index) or return;
@@ -817,8 +860,8 @@ sub get_indices {
          my $replicas = $t[5];
          my $count = $t[6];
          my $count2 = $t[7];
-         my $total_size = $t[7];
-         my $size = $t[8];
+         my $total_size = $t[8];
+         my $size = $t[9];
          push @indices, {
             color => $color,
             state => $state,
@@ -1450,8 +1493,44 @@ sub is_document_exists {
    return $r ? 1 : 0;
 }
 
+sub parse_error_string {
+   my $self = shift;
+   my ($string) = @_;
+
+   $self->brik_help_run_undef_arg('parse_error_string', $string) or return;
+
+   # [Timeout] ** [http://X.Y.Z.1:9200]-[599] Timed out while waiting for socket to become ready for reading, called from sub Search::Elasticsearch::Role::Client::Direct::__ANON__ at /usr/local/lib/perl5/site_perl/Metabrik/Client/Elasticsearch.pm line 1466. With vars: {'status_code' => 599,'request' => {'body' => undef,'qs' => {},'ignore' => [],'serialize' => 'std','path' => '/index-thing/_refresh','method' => 'POST'}}
+
+   my ($class, $node, $code, $message, $dump) = $string =~
+      m{^\[([^]]+)\] \*\* \[([^]]+)\]\-\[(\d+)\] (.+)\. With vars: (.+)$};
+
+   if (defined($dump) && length($dump)) {
+      my $sd = Metabrik::String::Dump->new_from_brik_init($self) or return;
+      $dump = $sd->decode($dump);
+   }
+
+   # Sanity check
+   if ($node =~ m{^http} && $code =~ m{^\d+$} && defined($dump) && ref($dump) eq 'HASH') {
+      return {
+         class => $class,
+         node => $node,
+         code => $code,
+         message => $message,
+         dump => $dump,
+      };
+   }
+
+   # Were not able to decode, we return as-is.
+   return {
+      message => $string,
+   };
+}
+
 #
 # Refresh an index to receive latest additions
+#
+# Search::Elasticsearch::Client::5_0::Direct::Indices
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-refresh.html
 #
 sub refresh_index {
    my $self = shift;
@@ -1461,6 +1540,10 @@ sub refresh_index {
    $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('refresh_index', $index) or return;
 
+   my $try = $self->try;
+
+RETRY:
+
    my $r;
    eval {
       $r = $es->indices->refresh(
@@ -1468,8 +1551,23 @@ sub refresh_index {
       );
    };
    if ($@) {
-      chomp($@);
-      return $self->log->error("refresh_index: failed for index [$index]: [$@]");
+      if (--$try == 0) {
+         chomp($@);
+         my $p = $self->parse_error_string($@);
+         if (defined($p) && exists($p->{class})) {
+            my $class = $p->{class};
+            my $code = $p->{code};
+            my $node = $p->{node};
+            return $self->log->error("refresh_index: failed for index [$index] ".
+               "after [$try] tries with error [$class] code [$code] for node [$node]");
+         }
+         else {
+            return $self->log->error("refresh_index: failed for index [$index] ".
+               "after [$try]: [$@]");
+         }
+      }
+      sleep 60;
+      goto RETRY;
    }
 
    return $r;
@@ -1480,6 +1578,8 @@ sub export_as_csv {
    my ($index, $size) = @_;
 
    $size ||= 10_000;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('export_as_csv', $index) or return;
    $self->brik_help_run_undef_arg('export_as_csv', $size) or return;
 
@@ -1518,6 +1618,7 @@ sub export_as_csv {
    my $exported = 0;
    my $start = time();
    my $done = 'output.exported';
+   my $start_time = time();
    while (my $this = $self->next_scroll) {
       $read++;
       my $id = $this->{_id};
@@ -1576,12 +1677,18 @@ sub export_as_csv {
 
    $self->close_scroll;
 
+   my $stop_time = time();
+   my $duration = $stop_time - $start_time;
+   my $eps = $exported / $duration;
+
    my $result = {
       read => $read,
       exported => $exported,
       skipped => $read - $exported,
       total_count => $total,
       complete => ($exported == $total) ? 1 : 0,
+      duration => $duration,
+      eps => $eps, 
    };
 
    # Say the file has been processed, and put resulting stats.
@@ -1592,9 +1699,10 @@ sub export_as_csv {
 
 sub import_from_csv {
    my $self = shift;
-   my ($input_csv, $index, $type, $size) = @_;
+   my ($input_csv, $index, $type) = @_;
 
-   $size ||= 10_000;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('import_from_csv', $input_csv) or return;
    $self->brik_help_run_file_not_found('import_from_csv', $input_csv) or return;
 
@@ -1646,7 +1754,7 @@ sub import_from_csv {
    $self->open_bulk_mode($index, $type) or return;
 
    $self->log->info("import_from_csv: importing file [$input_csv] to index [$index] ".
-      "with type [$type], using chunk size of [$size]");
+      "with type [$type]");
 
    my $fd = Metabrik::File::Dump->new_from_brik_init($self) or return;
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
@@ -1661,7 +1769,8 @@ sub import_from_csv {
    my $imported = 0;
    my $first = 1;
    my $read = 0;
-   my $skipped = 0;
+   my $skipped_chunks = 0;
+   my $start_time = time();
    while (my $this = $fc->read_next($input_csv)) {
       $read++;
 
@@ -1682,8 +1791,8 @@ sub import_from_csv {
       my $r = $self->index_bulk($h, $index, $type, $id);
       if (! defined($r)) {
          $self->log->error("import_from_csv: bulk processing failed for index [$index] ".
-            "at read [$read], skipping");
-         $skipped++;
+            "at read [$read], skipping chunk");
+         $skipped_chunks++;
          next;
       }
 
@@ -1714,21 +1823,35 @@ sub import_from_csv {
       }
    }
 
-   $self->bulk_flush or return;
+   $self->bulk_flush;
 
-   # Do not return on error
+   my $stop_time = time();
+   my $duration = $stop_time - $start_time;
+   my $eps = $imported / $duration;
+
    $self->refresh_index($index);
 
    my $count_current = $self->count($index, $type) or return;
    $self->log->info("import_from_csv: after index count is [$count_current]");
 
+   my $skipped = 0;
+   my $complete = (($count_current - $count_before) == $read) ? 1 : 0;
+   if ($complete) {  # If complete, import has been retried, and everything is now ok.
+      $imported = $read;
+   }
+   else {
+      $skipped = $read - ($count_current - $count_before);
+   }
+
    my $result = {
       read => $read,
       imported => $imported,
-      skipped => $read - $imported,
+      skipped => $skipped,
       previous_count => $count_before,
       current_count => $count_current,
-      complete => (($count_current - $count_before) == $read) ? 1 : 0,
+      complete => $complete,
+      duration => $duration,
+      eps => $eps,
    };
 
    # Say the file has been processed, and put resulting stats.
@@ -1878,7 +2001,7 @@ sub put_cluster_settings {
    return $r;
 }
 
-sub count_green_shards {
+sub count_green_indices {
    my $self = shift;
 
    my $get = $self->show_indices or return;
@@ -1893,7 +2016,7 @@ sub count_green_shards {
    return $count;
 }
 
-sub count_yellow_shards {
+sub count_yellow_indices {
    my $self = shift;
 
    my $get = $self->show_indices or return;
@@ -1908,7 +2031,7 @@ sub count_yellow_shards {
    return $count;
 }
 
-sub count_red_shards {
+sub count_red_indices {
    my $self = shift;
 
    my $get = $self->show_indices or return;
@@ -1923,7 +2046,15 @@ sub count_red_shards {
    return $count;
 }
 
-sub count_shards {
+sub count_indices {
+   my $self = shift;
+
+   my $get = $self->show_indices or return;
+
+   return scalar @$get;
+}
+
+sub list_indices_status {
    my $self = shift;
 
    my $get = $self->show_indices or return;
@@ -1950,7 +2081,80 @@ sub count_shards {
    };
 }
 
-sub list_green_shards {
+sub count_shards {
+   my $self = shift;
+
+   my $indices = $self->get_indices or return;
+
+   my $count = 0;
+   for (@$indices) {
+      $count += $_->{shards};
+   }
+
+   return $count;
+}
+
+sub count_size {
+   my $self = shift;
+
+   my $indices = $self->get_indices or return;
+
+   my $fn = Metabrik::Format::Number->new_from_brik_init($self) or return;
+   $fn->kibi_suffix("kb");
+   $fn->mebi_suffix("mb");
+   $fn->gibi_suffix("gb");
+   $fn->kilo_suffix("KB");
+   $fn->mega_suffix("MB");
+   $fn->giga_suffix("GB");
+
+   my $size = 0;
+   for (@$indices) {
+      $size += $fn->to_number($_->{size});
+   }
+
+   return $fn->from_number($size);
+}
+
+sub count_total_size {
+   my $self = shift;
+
+   my $indices = $self->get_indices or return;
+
+   my $fn = Metabrik::Format::Number->new_from_brik_init($self) or return;
+   $fn->kibi_suffix("kb");
+   $fn->mebi_suffix("mb");
+   $fn->gibi_suffix("gb");
+   $fn->kilo_suffix("KB");
+   $fn->mega_suffix("MB");
+   $fn->giga_suffix("GB");
+
+   my $size = 0;
+   for (@$indices) {
+      $size += $fn->to_number($_->{total_size});
+   }
+
+   return $fn->from_number($size);
+}
+
+sub count_count {
+   my $self = shift;
+
+   my $indices = $self->get_indices or return;
+
+   my $fn = Metabrik::Format::Number->new_from_brik_init($self) or return;
+   $fn->kilo_suffix('k');
+   $fn->mega_suffix('m');
+   $fn->giga_suffix('M');
+
+   my $count = 0;
+   for (@$indices) {
+      $count += $_->{count};
+   }
+
+   return $fn->from_number($count);
+}
+
+sub list_green_indices {
    my $self = shift;
 
    my $get = $self->get_indices or return;
@@ -1965,7 +2169,7 @@ sub list_green_shards {
    return \@indices;
 }
 
-sub list_yellow_shards {
+sub list_yellow_indices {
    my $self = shift;
 
    my $get = $self->get_indices or return;
@@ -1980,7 +2184,7 @@ sub list_yellow_shards {
    return \@indices;
 }
 
-sub list_red_shards {
+sub list_red_indices {
    my $self = shift;
 
    my $get = $self->get_indices or return;

@@ -175,6 +175,8 @@ provides:
     file: lib/Metabrik/Forensic/Volatility.pm
   Metabrik::Format::Latex:
     file: lib/Metabrik/Format/Latex.pm
+  Metabrik::Format::Number:
+    file: lib/Metabrik/Format/Number.pm
   Metabrik::Hardware::Battery:
     file: lib/Metabrik/Hardware/Battery.pm
   Metabrik::Hardware::Fan:
