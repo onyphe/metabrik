@@ -368,6 +368,12 @@ sub ipv4_to_integer {
 
    $self->brik_help_run_undef_arg('ipv4_to_integer', $ipv4_address) or return;
 
+   if (! $self->is_ipv4($ipv4_address)) {
+      return $self->log->error("ipv4_to_integer: invalid IPv4 address [$ipv4_address]");
+   }
+
+   ($ipv4_address) =~ s/\/\d+$//;  # Remove /CIDR if any
+
    return CORE::unpack('N', Socket::inet_aton($ipv4_address));
 }
 
