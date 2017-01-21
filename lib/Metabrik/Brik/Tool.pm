@@ -47,6 +47,15 @@ sub brik_properties {
          clone => [ qw(Brik Repository|OPTIONAL) ],
          get_require_binaries => [ qw(Brik|OPTIONAL) ],
       },
+      # We can't activate that, because we would have a chicken-and-egg problem.
+      #need_packages => {
+         #ubuntu => [ qw(mercurial) ],
+         #debian => [ qw(mercurial) ],
+         #freebsd => [ qw(mercurial) ],
+      #},
+      #require_binaries => {
+         #hg => [ ],
+      #},
       require_modules => {
          'Metabrik::Devel::Mercurial' => [ ],
          'Metabrik::File::Find' => [ ],

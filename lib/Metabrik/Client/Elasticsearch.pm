@@ -30,6 +30,7 @@ sub brik_properties {
          sniff_rtimeout => [ qw(seconds) ],
          try => [ qw(count) ],
          use_bulk_autoflush => [ qw(0|1) ],
+         use_indexing_optimizations => [ qw(0|1) ],
          _es => [ qw(INTERNAL) ],
          _bulk => [ qw(INTERNAL) ],
          _scroll => [ qw(INTERNAL) ],
@@ -48,6 +49,7 @@ sub brik_properties {
          max_flush_count => 1_000,
          max_flush_size => 1_000_000,
          use_bulk_autoflush => 1,
+         use_indexing_optimizations => 0,
       },
       commands => {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
@@ -65,6 +67,7 @@ sub brik_properties {
          get_from_id => [ qw(id index|OPTIONAL type|OPTIONAL) ],
          www_search => [ qw(query index|OPTIONAL type|OPTIONAL) ],
          delete_index => [ qw(index|indices_list) ],
+         delete_document => [ qw(index type id) ],
          show_indices => [ ],
          show_nodes => [ ],
          show_health => [ ],
@@ -713,6 +716,37 @@ sub delete_index {
 }
 
 #
+# Search::Elasticsearch::Client::2_0::Direct::Indices
+#
+sub delete_document {
+   my $self = shift;
+   my ($index, $type, $id) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('delete_document', $index) or return;
+   $self->brik_help_run_undef_arg('delete_document', $type) or return;
+   $self->brik_help_run_undef_arg('delete_document', $id) or return;
+
+   my %args = (
+      index => $index,
+      type => $type,
+      id => $id,
+   );
+
+   my $r;
+   eval {
+      $r = $es->delete(%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("delete_document: delete failed for index [$index]: [$@]");
+   }
+
+   return $r;
+}
+
+#
 # Search::Elasticsearch::Client::2_0::Direct::Cat
 #
 sub show_indices {
@@ -1319,6 +1353,12 @@ sub set_index_refresh_interval {
    $self->brik_help_run_invalid_arg('set_index_refresh_interval', $indices, 'ARRAY', 'SCALAR')
       or return;
 
+   # If there is a meaningful value not postfixed with a unity,
+   # we default to add a `s' for a number of seconds.
+   if ($number =~ /^\d+$/ && $number > 0) {
+      $number .= 's';
+   }
+
    my $settings = { refresh_interval => $number };
 
    return $self->put_settings($settings, $indices);
@@ -1606,7 +1646,7 @@ sub export_as_csv {
    $fc->use_quoting(1);
 
    my $total = $self->total_scroll;
-   $self->log->info("export_as_csv: total [$total]");
+   $self->log->info("export_as_csv: total [$total] for index [$index]");
 
    local $Data::Dump::INDENT = "";    # No indentation shorten length
    local $Data::Dump::TRY_BASE64 = 0; # Never encode in base64
@@ -1664,13 +1704,14 @@ sub export_as_csv {
       if (! (++$exported % 100_000)) {
          my $now = time();
          $self->log->info("export_as_csv: fetched [$exported/$total] elements in ".
-            ($now - $start)." second(s)");
+            ($now - $start)." second(s) from index [$index]");
          $start = time();
       }
 
       # Limit export to specified maximum
       if ($max > 0 && $exported >= $max) {
-         $self->log->info("export_as_csv: max export reached [$exported], stopping");
+         $self->log->info("export_as_csv: max export reached [$exported] for index ".
+            "[$index], stopping");
          last;
       }
    }
@@ -1697,6 +1738,10 @@ sub export_as_csv {
    return $result;
 }
 
+#
+# Optimization instructions:
+# https://www.elastic.co/guide/en/elasticsearch/reference/master/tune-for-indexing-speed.html
+#
 sub import_from_csv {
    my $self = shift;
    my ($input_csv, $index, $type) = @_;
@@ -1746,7 +1791,8 @@ sub import_from_csv {
       if (! defined($count_before)) {
          return;
       }
-      $self->log->info("import_from_csv: current index count is [$count_before]");
+      $self->log->info("import_from_csv: current index [$index] count is ".
+         "[$count_before]");
    }
 
    my $max = $self->max;
@@ -1764,6 +1810,8 @@ sub import_from_csv {
    $fc->escape('\\');
    $fc->first_line_is_header(1);
 
+   my $refresh_interval;
+   my $number_of_replicas;
    my $start = time();
    my $speed_settings = {};
    my $imported = 0;
@@ -1800,11 +1848,16 @@ sub import_from_csv {
       # We don't do it earlier, cause we need index to be created,
       # and it should have been done from index_bulk Command.
       if ($first && $self->is_index_exists($index)) {
-         $speed_settings = {
-            number_of_replicas => 0,
-            refresh_interval => -1,
-         };
-         $self->put_settings($speed_settings, $index);
+         # Save current values so we can restore them at the end of Command.
+         # We ignore errors here, this is non-blocking for indexing.
+         $refresh_interval = $self->get_index_refresh_interval($index);
+         $refresh_interval = $refresh_interval->{$index};
+         $number_of_replicas = $self->get_index_number_of_replicas($index);
+         $number_of_replicas = $number_of_replicas->{$index};
+         if ($self->use_indexing_optimizations) {
+            $self->set_index_number_of_replicas($index, 0);
+         }
+         $self->set_index_refresh_interval($index, -1);
          $first = 0;
       }
 
@@ -1812,13 +1865,14 @@ sub import_from_csv {
       if (! (++$imported % 100_000)) {
          my $now = time();
          $self->log->info("import_from_csv: imported [$imported] entries in ".
-            ($now - $start)." second(s)");
+            ($now - $start)." second(s) to index [$index]");
          $start = time();
       }
 
       # Limit import to specified maximum
       if ($max > 0 && $imported >= $max) {
-         $self->log->info("import_from_csv: max import reached [$imported], stopping");
+         $self->log->info("import_from_csv: max import reached [$imported] for ".
+            "index [$index], stopping");
          last;
       }
    }
@@ -1827,12 +1881,12 @@ sub import_from_csv {
 
    my $stop_time = time();
    my $duration = $stop_time - $start_time;
-   my $eps = $imported / $duration;
+   my $eps = $imported / ($duration || 1);  # Avoid divide by zero error.
 
    $self->refresh_index($index);
 
    my $count_current = $self->count($index, $type) or return;
-   $self->log->info("import_from_csv: after index count is [$count_current]");
+   $self->log->info("import_from_csv: after index [$index] count is [$count_current]");
 
    my $skipped = 0;
    my $complete = (($count_current - $count_before) == $read) ? 1 : 0;
@@ -1856,6 +1910,14 @@ sub import_from_csv {
 
    # Say the file has been processed, and put resulting stats.
    $fd->write($result, $done) or return;
+
+   # Restore previous settings, if any
+   if (defined($refresh_interval)) {
+      $self->set_index_refresh_interval($index, $refresh_interval);
+   }
+   if (defined($number_of_replicas) && $self->use_indexing_optimizations) {
+      $self->set_index_number_of_replicas($index, $number_of_replicas);
+   }
 
    return $result;
 }

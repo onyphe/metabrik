@@ -60,7 +60,7 @@ sub brik_init {
    my $self = shift;
 
    my $output = $self->output;
-   open(my $fd, '>', $output)
+   open(my $fd, '>>', $output)
       or return $self->log->error("brik_init: can't open output file [$output]: $!");
 
    # Makes the file handle unbuffered
