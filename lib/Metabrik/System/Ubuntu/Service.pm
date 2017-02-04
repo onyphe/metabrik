@@ -26,10 +26,10 @@ sub brik_properties {
       require_binaries => {
          'update-rc.d' => [ ],
       },
-      need_packages => {
-         ubuntu => [ qw(sysv-rc) ],
-         debian => [ qw(sysv-rc) ],
-      },
+      #need_packages => {
+         #ubuntu => [ qw() ],
+         #debian => [ qw() ],
+      #},
    };
 }
 

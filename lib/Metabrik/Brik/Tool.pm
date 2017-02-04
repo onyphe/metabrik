@@ -403,7 +403,7 @@ sub install {
       $module .= '::'.ucfirst($_);
    }
 
-   my $new = $module->new_from_brik_init($self) or return;
+   my $new = $module->new_from_brik_no_checks($self) or return;
    if ($new->can('install')) {
       $new->install or return;
    }

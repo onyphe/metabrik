@@ -76,6 +76,10 @@ sub install {
    # cd wmi-$version/Samba/source
    # ./autogen.sh
    # ./configure
+   # On Ubuntu 16.10, we have to comment line 583 from wmi-1.3.14/Samba/source/pidl/pidl
+   #   Error message was:
+   #   Can't use 'defined(@array)' (Maybe you should just omit the defined()?) at ./pidl/pidl line 583.
+   #   Makefile:28886: recipe for target 'idl' failed
    # make "CPP=gcc -E -ffreestanding"
    # make proto bin/wmic
    # make proto bin/winexe
