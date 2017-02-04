@@ -1,8 +1,6 @@
 Revision history for Perl extension Metabrik::Repository.
 
-1.26.0
-
-1.25.2 Sat  4 Feb 17:32:40 CET 2017
+1.26.0 Sat  4 Feb 17:41:44 CET 2017
    - new: server::logstash::indexer Brik
    - new: server::logstash::oneshot Brik
    - new: string::dump Brik
