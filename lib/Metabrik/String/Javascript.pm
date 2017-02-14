@@ -25,7 +25,7 @@ sub brik_properties {
       },
       need_packages => {
          ubuntu => [ qw(libv8-dev) ],
-         debien => [ qw(libv8-dev) ],
+         debian => [ qw(libv8-dev) ],
       },
    };
 }
