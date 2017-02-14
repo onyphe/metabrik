@@ -36,22 +36,18 @@ sub eval {
 
    $self->brik_help_run_undef_arg('eval', $js) or return;
 
-   my $context;
-   eval {
-      $context = JavaScript::V8::Context->new();
-   };
-   if ($@) {
+   $@ = undef;
+
+   my $context = JavaScript::V8::Context->new;
+   if (defined($@) && ! defined($context)) {
       chomp($@);
-      return $self->log->error("eval: cannot init V8 context: $!");
+      return $self->log->error("eval: cannot init V8 context: $@");
    }
 
-   my $r;
-   eval {
-      $r = $context->eval($js);
-   };
-   if (@$) {
+   my $r = $context->eval($js);
+   if (defined($@) && ! defined($r)) {
       chomp($@);
-      return $self->log->error("eval: cannot eval JS: $!");
+      return $self->log->error("eval: cannot eval JS: $@");
    }
 
    return $r;
@@ -63,25 +59,21 @@ sub deobfuscate {
 
    $self->brik_help_run_undef_arg('deobfuscate', $js) or return;
 
-   my $buf = '';
+   $@ = undef;
 
-   my $context;
-   eval {
-      $context = JavaScript::V8::Context->new();
-      $context->bind_function(eval => sub { $buf .= join(' ', @_); });
-   };
-   if ($@) {
+   my $context = JavaScript::V8::Context->new;
+   if (defined($@) && ! defined($context)) {
       chomp($@);
-      return $self->log->error("deobfuscate: cannot init V8 context: $!");
+      return $self->log->error("deobfuscate: cannot init V8 context: $@");
    }
 
-   my $r;
-   eval {
-      $r = $context->eval($js);
-   };
-   if (@$) {
+   my $buf = '';
+   $context->bind_function(eval => sub { $buf .= join(' ', @_); });
+
+   my $r = $context->eval($js);
+   if (defined($@) && ! defined($r)) {
       chomp($@);
-      return $self->log->error("deobfuscate: cannot eval JS: $!");
+      return $self->log->error("deobfuscate: cannot eval JS: $@");
    }
 
    my $b = JavaScript::Beautifier::js_beautify($buf, {
