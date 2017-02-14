@@ -366,6 +366,8 @@ provides:
     file: lib/Metabrik/String/Html.pm
   Metabrik::String::Ini:
     file: lib/Metabrik/String/Ini.pm
+  Metabrik::String::Javascript:
+    file: lib/Metabrik/String/Javascript.pm
   Metabrik::String::Json:
     file: lib/Metabrik/String/Json.pm
   Metabrik::String::Parse:
