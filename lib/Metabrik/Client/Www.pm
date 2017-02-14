@@ -27,6 +27,7 @@ sub brik_properties {
          rtimeout => [ qw(timeout) ],
          add_headers => [ qw(http_headers_hash) ],
          do_javascript => [ qw(0|1) ],
+         do_redirects => [ qw(0|1) ],
          _client => [ qw(object|INTERNAL) ],
          _last => [ qw(object|INTERNAL) ],
       },
@@ -37,6 +38,7 @@ sub brik_properties {
          rtimeout => 10,
          add_headers => {},
          do_javascript => 0,
+         do_redirects => 1,
       },
       commands => {
          install => [ ], # Inherited
@@ -124,6 +126,15 @@ sub create_user_agent {
 
    $ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = 'Net::SSL';
 
+   my %args = (
+      autocheck => 0,  # Do not throw on error by checking HTTP code. Let us do it.
+      timeout => $self->rtimeout,
+      ssl_opts => {
+         verify_hostname => 0,
+         SSL_ca_file => Mozilla::CA::SSL_ca_file(),
+      },
+   );
+
    my $mechanize = 'WWW::Mechanize';
    if ($self->do_javascript) {
       if ($self->brik_has_module('WWW::Mechanize::PhantomJS')
@@ -134,15 +145,15 @@ sub create_user_agent {
          return $self->log->error("create_user_agent: module [WWW::Mechanize::PhantomJS] not found, cannot do_javascript");
       }
    }
+   if ((! $self->do_redirects) && $mechanize eq 'WWW::Mechanize::PhantomJS') {
+      $self->log->warning("create_user_agent: module [WWW::Mechanize::PhantomJS] does ".
+         "not support do_redirects, won't use it.");
+   }
+   else {
+      $args{max_redirect} = 0;
+   }
 
-   my $mech = $mechanize->new(
-      autocheck => 0,  # Do not throw on error by checking HTTP code. Let us do it.
-      timeout => $self->rtimeout,
-      ssl_opts => {
-         verify_hostname => 0,
-         SSL_ca_file => Mozilla::CA::SSL_ca_file(),
-      },
-   );
+   my $mech = $mechanize->new(%args);
    if (! defined($mech)) {
       return $self->log->error("create_user_agent: unable to create WWW::Mechanize object");
    }
@@ -507,22 +518,8 @@ sub trace_redirect {
    $uri ||= $self->uri;
    $self->brik_help_run_undef_arg('trace_redirect', $uri) or return;
 
-   my %args = ();
-   if (! $self->ssl_verify) {
-      $args{ssl_opts} = { SSL_verify_mode => 'SSL_VERIFY_NONE'};
-   }
-
-   my $lwp = LWP::UserAgent->new(%args);
-   $lwp->timeout($self->rtimeout);
-   $lwp->agent('Mozilla/5.0');
-   $lwp->max_redirect(0);
-   $lwp->env_proxy;
-
-   $username ||= $self->username;
-   $password ||= $self->password;
-   if (defined($username) && defined($password)) {
-      $lwp->credentials($username, $password);
-   }
+   my $prev = $self->do_redirects;
+   $self->do_redirects(0);
 
    my @results = ();
 
@@ -533,7 +530,7 @@ sub trace_redirect {
 
       my $response;
       eval {
-         $response = $lwp->get($location);
+         $response = $self->get($location);
       };
       if ($@) {
          chomp($@);
@@ -542,7 +539,7 @@ sub trace_redirect {
 
       my $this = {
          uri => $location,
-         code => $response->code,
+         code => $self->code,
       };
       push @results, $this;
 
@@ -550,8 +547,10 @@ sub trace_redirect {
          last;
       }
 
-      $location = $this->{location} = $response->headers->{location};
+      $location = $this->{location} = $self->headers->{location};
    }
+
+   $self->do_redirects($prev);
 
    return \@results;
 }

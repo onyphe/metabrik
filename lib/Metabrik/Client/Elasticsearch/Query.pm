@@ -44,6 +44,11 @@ sub brik_properties {
          match => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
          match_phrase => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
          from_json_file => [ qw(json_file index|OPTIONAL type|OPTIONAL) ],
+         from_dump_file => [ qw(dump_file index|OPTIONAL type|OPTIONAL) ],
+      },
+      require_modules => {
+         'Metabrik::File::Json' => [ ],
+         'Metabrik::File::Dump' => [ ],
       },
    };
 }
@@ -484,7 +489,33 @@ sub from_json_file {
    my $fj = Metabrik::File::Json->new_from_brik_init($self) or return;
    my $q = $fj->read($file) or return;
 
-   return $self->query($q, $index, $type);
+   if (defined($q) && length($q)) {
+      return $self->query($q, $index, $type);
+   }
+
+   return $self->log->error("from_json_file: nothing to read from this file [$file]");
+}
+
+sub from_dump_file {
+   my $self = shift;
+   my ($file, $index, $type) = @_;
+
+   $index ||= $self->index;
+   $type ||= $self->type;
+   $self->brik_help_run_undef_arg('from_dump_file', $file) or return;
+   $self->brik_help_run_file_not_found('from_dump_file', $file) or return;
+   $self->brik_help_set_undef_arg('from_dump_file', $index) or return;
+   $self->brik_help_set_undef_arg('from_dump_file', $type) or return;
+
+   my $fd = Metabrik::File::Dump->new_from_brik_init($self) or return;
+   my $q = $fd->read($file) or return;
+
+   my $first = $q->[0];
+   if (defined($first)) {
+      return $self->query($first, $index, $type);
+   }
+
+   return $self->log->error("from_dump_file: nothing to read from this file [$file]");
 }
 
 1;

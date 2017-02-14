@@ -27,6 +27,7 @@ sub brik_properties {
       commands => {
          read => [ qw(input_file|OPTIONAL) ],
          write => [ qw($json_hash output_file|OPTIONAL) ],
+         is_valid => [ qw(input_file|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::File::Write' => [ ],
@@ -74,6 +75,19 @@ sub write {
    $self->SUPER::write($data, $output) or return;
 
    return $output;
+}
+
+sub is_valid {
+   my $self = shift;
+   my ($input) = @_;
+
+   $input ||= $self->input;
+   $self->brik_help_run_undef_arg('is_valid', $input) or return;
+
+   my $data = $self->SUPER::read($input) or return;
+
+   my $sj = Metabrik::String::Json->new_from_brik_init($self) or return;
+   return $sj->is_valid($data);
 }
 
 1;

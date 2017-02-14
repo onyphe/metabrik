@@ -332,12 +332,13 @@ sub tcp_syn_start_receiver {
    my ($port_list) = @_;
 
    if (defined($port_list)) {
-      $self->brik_help_run_invalid_arg('tcp_syn_start_receiver', $port_list, 'ARRAY') or return;
-      $self->brik_help_run_empty_array_arg('tcp_syn_start_receiver', $port_list) or return;
+      $self->brik_help_run_invalid_arg('tcp_syn_start_receiver', $port_list, 'ARRAY')
+         or return;
+      $self->brik_help_run_empty_array_arg('tcp_syn_start_receiver', $port_list)
+         or return;
    }
 
    my $nr = Metabrik::Network::Read->new_from_brik_init($self) or return;
-   #$nr->debug($self->debug); # Apply debug to this Brik also.
 
    my $ip = '';
    if ($self->use_ipv6) {
@@ -348,7 +349,8 @@ sub tcp_syn_start_receiver {
    }
 
    if (defined($port_list)) {
-      $self->log->verbose("tcp_syn_start_receiver: scanning for ".scalar(@$port_list)." port(s)");
+      $self->log->verbose("tcp_syn_start_receiver: scanning for ".scalar(@$port_list).
+         " port(s)");
    }
     
    # Create a filter if not provided by user

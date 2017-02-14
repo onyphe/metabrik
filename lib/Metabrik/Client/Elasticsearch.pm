@@ -31,6 +31,7 @@ sub brik_properties {
          try => [ qw(count) ],
          use_bulk_autoflush => [ qw(0|1) ],
          use_indexing_optimizations => [ qw(0|1) ],
+         csv_encoded_fields => [ qw(fields) ],
          _es => [ qw(INTERNAL) ],
          _bulk => [ qw(INTERNAL) ],
          _scroll => [ qw(INTERNAL) ],
@@ -79,6 +80,8 @@ sub brik_properties {
          open_index => [ qw(index|indices_list) ],
          close_index => [ qw(index|indices_list) ],
          get_aliases => [ qw(index) ],
+         put_alias => [ qw(index alias) ],
+         delete_alias => [ qw(index alias) ],
          get_mappings => [ qw(index) ],
          create_index => [ qw(index) ],
          create_index_with_mappings => [ qw(index mappings) ],
@@ -148,6 +151,7 @@ sub brik_properties {
          'Metabrik::File::Json' => [ ],
          'Metabrik::File::Dump' => [ ],
          'Metabrik::Format::Number' => [ ],
+         'Metabrik::String::Compress' => [ ],
          'Data::Dump' => [ ],
          'Data::Dumper' => [ ],
          'Search::Elasticsearch' => [ ],
@@ -1018,19 +1022,91 @@ sub close_index {
    return $r;
 }
 
+#
+# Search::Elasticsearch::Client::5_0::Direct::Indices
+#
 sub get_aliases {
    my $self = shift;
+   my ($index) = @_;
 
+   $index ||= $self->index;
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
 
+   my %args = (
+      index => $index,
+   );
+
    my $r;
    eval {
-      $r = $es->indices->get_aliases;
+      $r = $es->indices->get(%args);
    };
    if ($@) {
       chomp($@);
       return $self->log->error("get_aliases: get_aliases failed: [$@]");
+   }
+
+   my %aliases = ();
+   for my $this (keys %$r) {
+      $aliases{$this} = $r->{$this}{aliases};
+   }
+
+   return \%aliases;
+}
+
+#
+# Search::Elasticsearch::Client::5_0::Direct::Indices
+#
+sub put_alias {
+   my $self = shift;
+   my ($index, $alias) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('put_alias', $index) or return;
+   $self->brik_help_run_undef_arg('put_alias', $alias) or return;
+
+   my %args = (
+      index => $index,
+      name => $alias,
+   );
+
+   my $r;
+   eval {
+      $r = $es->indices->put_alias(%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("put_alias: put_alias failed: [$@]");
+   }
+
+   return $r;
+}
+
+#
+# Search::Elasticsearch::Client::5_0::Direct::Indices
+#
+sub delete_alias {
+   my $self = shift;
+   my ($index, $alias) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('delete_alias', $index) or return;
+   $self->brik_help_run_undef_arg('delete_alias', $alias) or return;
+
+   my %args = (
+      index => $index,
+      name => $alias,
+   );
+
+   my $r;
+   eval {
+      $r = $es->indices->delete_alias(%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("delete_alias: delete_alias failed: [$@]");
    }
 
    return $r;
@@ -1636,6 +1712,7 @@ sub export_as_csv {
 
    my $fd = Metabrik::File::Dump->new_from_brik_init($self) or return;
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
+   my $sc = Metabrik::String::Compress->new_from_brik_init($self) or return;
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->separator(',');
@@ -1650,6 +1727,18 @@ sub export_as_csv {
 
    local $Data::Dump::INDENT = "";    # No indentation shorten length
    local $Data::Dump::TRY_BASE64 = 0; # Never encode in base64
+
+   # When some content is too complex to be stored as a standard CSV cell, 
+   # we should encode them as base64.
+   my $encoded_fields = $self->csv_encoded_fields;
+   if (defined($encoded_fields)) {
+      my $str = join(',', @$encoded_fields);
+      $encoded_fields = { map { $_ => 1 } @$encoded_fields };
+      $self->log->info("export_as_csv: will encode field(s) [$str] in base64");
+   }
+   else {
+      $encoded_fields = {};
+   }
 
    my $h = {};
    my %types = ();
@@ -1682,7 +1771,11 @@ sub export_as_csv {
       $h->{_id} = $id;
 
       for my $k (keys %$doc) {
-         if (ref($doc->{$k})) {
+         if (exists($encoded_fields->{$k})) {
+            my $gzipped = $sc->gzip($doc->{$k}) or next;
+            $h->{$k} = $sb->encode($$gzipped) or next;
+         }
+         elsif (ref($doc->{$k})) {
             my $s = Data::Dump::dump($doc->{$k});
             $s =~ s{\n}{}g;
             $h->{$k} = 'BASE64:'.$sb->encode($s);
@@ -1804,11 +1897,24 @@ sub import_from_csv {
 
    my $fd = Metabrik::File::Dump->new_from_brik_init($self) or return;
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
+   my $sc = Metabrik::String::Compress->new_from_brik_init($self) or return;
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->separator(',');
    $fc->escape('\\');
    $fc->first_line_is_header(1);
+
+   # When some content is too complex to be stored as a standard CSV cell,
+   # we should encode them as base64.
+   my $encoded_fields = $self->csv_encoded_fields;
+   if (defined($encoded_fields)) {
+      my $str = join(',', @$encoded_fields);
+      $encoded_fields = { map { $_ => 1 } @$encoded_fields };
+      $self->log->info("import_from_csv: will decode field(s) [$str] from base64");
+   }
+   else {
+      $encoded_fields = {};
+   }
 
    my $refresh_interval;
    my $number_of_replicas;
@@ -1825,14 +1931,21 @@ sub import_from_csv {
       my $h = {};
       my $id = $this->{_id};
       delete $this->{_id};
-      for my $key (keys %$this) {
-         my $value = $this->{$key};
-         if ($value =~ m{^BASE64:(.*)$}) {  # An OBJECT is waiting to be decoded
-            my $s = $sb->decode($1);
-            $h->{$key} = eval($s);
+      for my $k (keys %$this) {
+         my $value = $this->{$k};
+         if (! defined($value)) {
+         }
+         elsif (exists($encoded_fields->{$k})) {
+            my $decoded = $sb->decode($value) or next;
+            my $gunzipped = $sc->gunzip($decoded) or next;
+            $h->{$k} = $$gunzipped;
+         }
+         elsif ($value =~ m{^BASE64:(.*)$}) {  # An OBJECT is waiting to be decoded
+            my $s = $sb->decode($1) or next;
+            $h->{$k} = eval($s);
          }
          else {  # Non-encoded value
-            $h->{$key} = $value;
+            $h->{$k} = $value;
          }
       }
 
