@@ -45,6 +45,7 @@ sub brik_properties {
          create_user_agent => [ ],
          reset_user_agent => [ ],
          get => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         cat => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
          post => [ qw(content_hash uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
          patch => [ qw(content_hash uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
          put => [ qw(content_hash uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
@@ -276,6 +277,14 @@ sub get {
    my ($uri, $username, $password) = @_;
 
    return $self->_method($uri, $username, $password, 'get');
+}
+
+sub cat {
+   my $self = shift;
+   my ($uri, $username, $password) = @_;
+
+   $self->_method($uri, $username, $password, 'get') or return;
+   return $self->content;
 }
 
 sub post {
