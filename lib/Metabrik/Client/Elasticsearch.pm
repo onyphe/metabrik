@@ -68,6 +68,7 @@ sub brik_properties {
          get_from_id => [ qw(id index|OPTIONAL type|OPTIONAL) ],
          www_search => [ qw(query index|OPTIONAL type|OPTIONAL) ],
          delete_index => [ qw(index|indices_list) ],
+         update_alias => [ qw(new_index alias) ],
          delete_document => [ qw(index type id) ],
          show_indices => [ ],
          show_nodes => [ ],
@@ -1110,6 +1111,36 @@ sub delete_alias {
    }
 
    return $r;
+}
+
+sub update_alias {
+   my $self = shift;
+   my ($new_index, $alias) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('update_alias', $new_index) or return;
+   $self->brik_help_run_undef_arg('update_alias', $alias) or return;
+
+   # Search for previous index with that alias, if any.
+   my $prev_index;
+   my $aliases = $self->get_aliases or return;
+   while (my ($k, $v) = each %$aliases) {
+      for my $this (keys %$v) {
+         if ($this eq $alias) {
+            $prev_index = $k;
+            last;
+         }
+      }
+      last if $prev_index;
+   }
+
+   # Delete previous alias if it exists.
+   if (defined($prev_index)) {
+      $self->delete_alias($prev_index, $alias) or return;
+   }
+
+   return $self->put_alias($new_index, $alias);
 }
 
 #

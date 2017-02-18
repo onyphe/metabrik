@@ -37,6 +37,7 @@ sub brik_properties {
          get_query_result_took => [ qw($query_result|OPTIONAL) ],
          term => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
          unique_term => [ qw(unique kv index|OPTIONAL type|OPTIONAL) ],
+         unique_values => [ qw(field index|OPTIONAL type|OPTIONAL) ],
          wildcard => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
          range => [ qw(kv_from kv_to index|OPTIONAL type|OPTIONAL) ],
          top => [ qw(kv_count index|OPTIONAL type|OPTIONAL) ],
@@ -215,13 +216,14 @@ sub unique_term {
 
    $index ||= $self->index;
    $type ||= $self->type;
-   $self->brik_help_run_undef_arg('term', $unique) or return;
-   $self->brik_help_run_undef_arg('term', $kv) or return;
-   $self->brik_help_set_undef_arg('term', $index) or return;
-   $self->brik_help_set_undef_arg('term', $type) or return;
+   $self->brik_help_run_undef_arg('unique_term', $unique) or return;
+   $self->brik_help_run_undef_arg('unique_term', $kv) or return;
+   $self->brik_help_set_undef_arg('unique_term', $index) or return;
+   $self->brik_help_set_undef_arg('unique_term', $type) or return;
 
-   if ($kv !~ /^\S+?=.+$/) {
-      return $self->log->error("unique_term: kv must be in the form 'key=value'");
+   if ($kv !~ m{^.+?=.+$}) {
+      return $self->log->error("unique_term: kv [$kv] must be in the form ".
+         "'key=value'");
    }
    my ($key, $value) = split('=', $kv);
 
@@ -253,16 +255,36 @@ sub unique_term {
 #
 # 
 #
-#sub unique_values {
-#{
-   #"size": 0,
-   #"aggs": {
-      #"1" : {
-         #"terms" : { "field" : "ip" },
-      #}
-   #}
-#}
-#} 
+sub unique_values {
+   my $self = shift;
+   my ($field, $index, $type) = @_;
+
+   $index ||= $self->index;
+   $type ||= $self->type;
+   $self->brik_help_run_undef_arg('unique_values', $field) or return;
+   $self->brik_help_set_undef_arg('unique_values', $index) or return;
+   $self->brik_help_set_undef_arg('unique_values', $type) or return;
+
+   my $size = $self->size * 10;
+
+   # Will return 10*100000=1_000_000 unique values.
+   my $q = {
+      aggs => {
+         1 => {
+            terms => {
+               field => $field,
+               include => { num_partitions => 10, partition => 0 },
+               size => $size,
+            },
+         },
+      },
+      size => 0,
+   };
+
+   $self->log->verbose("unique_values: unique [$field] index [$index] type [$type]");
+
+   return $self->query($q, $index, $type);
+}
 
 sub wildcard {
    my $self = shift;
