@@ -270,6 +270,9 @@
       "Metabrik::Forensic::Scalpel" : {
          "file" : "lib/Metabrik/Forensic/Scalpel.pm"
       },
+      "Metabrik::Forensic::Sysmon" : {
+         "file" : "lib/Metabrik/Forensic/Sysmon.pm"
+      },
       "Metabrik::Forensic::Volatility" : {
          "file" : "lib/Metabrik/Forensic/Volatility.pm"
       },

@@ -82,6 +82,7 @@ lib/Metabrik/File/Write.pm
 lib/Metabrik/File/Xml.pm
 lib/Metabrik/Forensic/Dcfldd.pm
 lib/Metabrik/Forensic/Scalpel.pm
+lib/Metabrik/Forensic/Sysmon.pm
 lib/Metabrik/Forensic/Volatility.pm
 lib/Metabrik/Format/Latex.pm
 lib/Metabrik/Format/Number.pm
