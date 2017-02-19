@@ -77,13 +77,15 @@ sub brik_properties {
          list_indices => [ ],
          get_indices => [ ],
          get_index => [ qw(index|indices_list) ],
+         list_index_types => [ qw(index) ],
+         list_index_fields => [ qw(index) ],
          list_indices_version => [ qw(index|indices_list) ],
          open_index => [ qw(index|indices_list) ],
          close_index => [ qw(index|indices_list) ],
          get_aliases => [ qw(index) ],
          put_alias => [ qw(index alias) ],
          delete_alias => [ qw(index alias) ],
-         get_mappings => [ qw(index) ],
+         get_mappings => [ qw(index type|OPTIONAL) ],
          create_index => [ qw(index) ],
          create_index_with_mappings => [ qw(index mappings) ],
          info => [ qw(nodes_list|OPTIONAL) ],
@@ -132,12 +134,15 @@ sub brik_properties {
          enable_shard_allocation => [ ],
          flush_synced => [ ],
          create_snapshot_repository => [ qw(body repository_name|OPTIONAL) ],
-         create_shared_fs_snapshot_repository => [ qw(location repository_name|OPTIONAL) ],
+         create_shared_fs_snapshot_repository => [ qw(location
+            repository_name|OPTIONAL) ],
          get_snapshot_repositories => [ ],
          get_snapshot_status => [ ],
          delete_snapshot_repository => [ qw(repository_name) ],
-         create_snapshot => [ qw(snapshot_name|OPTIONAL repository_name|OPTIONAL body|OPTIONAL) ],
-         create_snapshot_for_indices => [ qw(indices snapshot_name|OPTIONAL repository_name|OPTIONAL) ],
+         create_snapshot => [ qw(snapshot_name|OPTIONAL repository_name|OPTIONAL 
+            body|OPTIONAL) ],
+         create_snapshot_for_indices => [ qw(indices snapshot_name|OPTIONAL
+            repository_name|OPTIONAL) ],
          is_snapshot_finished => [ ],
          get_snapshot_state => [ ],
          get_snapshot => [ qw(snapshot_name|OPTIONAL repository_name|OPTIONAL) ],
@@ -152,7 +157,6 @@ sub brik_properties {
          'Metabrik::File::Json' => [ ],
          'Metabrik::File::Dump' => [ ],
          'Metabrik::Format::Number' => [ ],
-         'Metabrik::String::Compress' => [ ],
          'Data::Dump' => [ ],
          'Data::Dumper' => [ ],
          'Search::Elasticsearch' => [ ],
@@ -165,8 +169,8 @@ sub brik_preinit {
 
    eval("use Search::Elasticsearch;");
    if ($Search::Elasticsearch::VERSION < 5) {
-      $self->log->error("brik_preinit: please upgrade Search::Elasticsearch module with: ".
-         "run perl::module install Search::Elasticsearch");
+      $self->log->error("brik_preinit: please upgrade Search::Elasticsearch module ".
+         "with: run perl::module install Search::Elasticsearch");
    }
 
    return $self->SUPER::brik_preinit;
@@ -930,6 +934,9 @@ sub get_indices {
    return \@indices;
 }
 
+#
+# Search::Elasticsearch::Client::5_0::Direct::Indices
+#
 sub get_index {
    my $self = shift;
    my ($index) = @_;
@@ -939,11 +946,13 @@ sub get_index {
    $self->brik_help_run_undef_arg('get_index', $index) or return;
    $self->brik_help_run_invalid_arg('get_index', $index, 'ARRAY', 'SCALAR') or return;
 
+   my %args = (
+      index => $index,
+   );
+
    my $r;
    eval {
-      $r = $es->indices->get(
-         index => $index,
-      );
+      $r = $es->indices->get(%args);
    };
    if ($@) {
       chomp($@);
@@ -953,6 +962,81 @@ sub get_index {
    return $r;
 }
 
+sub list_index_types {
+   my $self = shift;
+   my ($index) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('list_index_types', $index) or return;
+   $self->brik_help_run_invalid_arg('list_index_types', $index, 'SCALAR') or return;
+
+   my $r = $self->get_mappings($index) or return;
+   if (keys %$r > 1) {
+      return $self->log->error("list_index_types: multiple indices found, choose one");
+   }
+
+   my @types = ();
+   for my $this_index (keys %$r) {
+      my $mappings = $r->{$this_index}{mappings};
+      push @types, keys %$mappings;
+   }
+
+   my %uniq = map { $_ => 1 } @types;
+
+   return [ sort { $a cmp $b } keys %uniq ];
+}
+
+#
+# By default, if you provide only one index and no type,
+# all types will be merged (including _default_)
+# If you specify one type (other than _default_), _default_ will be merged to it.
+#
+sub list_index_fields {
+   my $self = shift;
+   my ($index, $type) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('list_index_fields', $index) or return;
+   $self->brik_help_run_invalid_arg('list_index_fields', $index, 'SCALAR') or return;
+
+   my $r;
+   if (defined($type)) {
+      $r = $self->get_mappings($index, $type) or return;
+      if (keys %$r > 1) {
+         return $self->log->error("list_index_fields: multiple indices found, ".
+            "choose one");
+      }
+      my $r2 = $self->get_mappings($index, '_default_') or return;
+      # Merge
+      for my $this_index (keys %$r2) {
+         my $default = $r2->{$this_index}{mappings}{'_default_'};
+         $r->{$this_index}{mappings}{_default_} = $default;
+      }
+   }
+   else {
+      $r = $self->get_mappings($index) or return;
+      if (keys %$r > 1) {
+         return $self->log->error("list_index_fields: multiple indices found, ".
+            "choose one");
+      }
+   }
+
+   my @fields = ();
+   for my $this_index (keys %$r) {
+      my $mappings = $r->{$this_index}{mappings};
+      for my $this_type (keys %$mappings) {
+         my $properties = $mappings->{$this_type}{properties};
+         push @fields, keys %$properties;
+      }
+   }
+
+   my %uniq = map { $_ => 1 } @fields;
+
+   return [ sort { $a cmp $b } keys %uniq ];
+}
+
 sub list_indices_version {
    my $self = shift;
    my ($index) = @_;
@@ -960,7 +1044,8 @@ sub list_indices_version {
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('list_indices_version', $index) or return;
-   $self->brik_help_run_invalid_arg('list_indices_version', $index, 'ARRAY', 'SCALAR') or return;
+   $self->brik_help_run_invalid_arg('list_indices_version', $index, 'ARRAY', 'SCALAR')
+      or return;
 
    my $r = $self->get_index($index) or return;
 
@@ -1144,22 +1229,30 @@ sub update_alias {
 }
 
 #
-# https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html
-#
-# GET http://192.168.0.IP:9200/INDEX/_mapping/DOCUMENT
+# Search::Elasticsearch::Client::2_0::Direct::Indices
 #
 sub get_mappings {
    my $self = shift;
-   my ($index) = @_;
+   my ($index, $type) = @_;
 
-   $index ||= $self->index;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('get_mappings', $index) or return;
+   $self->brik_help_run_invalid_arg('get_mappings', $index, 'ARRAY', 'SCALAR') or return;
 
-   my $r = $self->get_index($index) or return;
-   if ($index ne '*') {
-      if (exists($r->{$index}) && exists($r->{$index}{mappings})) {
-         return $r->{$index}{mappings};
-      }
+   my %args = (
+      index => $index,
+      type => $type,
+   );
+
+   my $r;
+   eval {
+      $r = $es->indices->get_mapping(%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_mappings: get_mapping failed for index [$index]: ".
+         "[$@]");
    }
 
    return $r;
@@ -1743,7 +1836,6 @@ sub export_as_csv {
 
    my $fd = Metabrik::File::Dump->new_from_brik_init($self) or return;
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
-   my $sc = Metabrik::String::Compress->new_from_brik_init($self) or return;
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->separator(',');
@@ -1752,24 +1844,13 @@ sub export_as_csv {
    $fc->first_line_is_header(0);
    $fc->write_header(1);
    $fc->use_quoting(1);
+   $fc->encoded_fields($self->csv_encoded_fields);
 
    my $total = $self->total_scroll;
    $self->log->info("export_as_csv: total [$total] for index [$index]");
 
    local $Data::Dump::INDENT = "";    # No indentation shorten length
    local $Data::Dump::TRY_BASE64 = 0; # Never encode in base64
-
-   # When some content is too complex to be stored as a standard CSV cell, 
-   # we should encode them as base64.
-   my $encoded_fields = $self->csv_encoded_fields;
-   if (defined($encoded_fields)) {
-      my $str = join(',', @$encoded_fields);
-      $encoded_fields = { map { $_ => 1 } @$encoded_fields };
-      $self->log->info("export_as_csv: will encode field(s) [$str] in base64");
-   }
-   else {
-      $encoded_fields = {};
-   }
 
    my $h = {};
    my %types = ();
@@ -1785,7 +1866,9 @@ sub export_as_csv {
       my $doc = $this->{_source};
       my $type = $this->{_type};
       if (! exists($types{$type})) {
-         $types{$type}{header} = [ '_id', sort { $a cmp $b } keys %$doc ];
+         my $fields = $self->list_index_fields($index, $type) or return;
+         #$types{$type}{header} = [ '_id', sort { $a cmp $b } keys %$doc ];
+         $types{$type}{header} = [ '_id', @$fields ];
          $types{$type}{output} = "$index:$type.csv";
          $done = $types{$type}{output_exported} = "$index:$type.csv.exported";
 
@@ -1802,14 +1885,10 @@ sub export_as_csv {
       $h->{_id} = $id;
 
       for my $k (keys %$doc) {
-         if (exists($encoded_fields->{$k})) {
-            my $gzipped = $sc->gzip($doc->{$k}) or next;
-            $h->{$k} = $sb->encode($$gzipped) or next;
-         }
-         elsif (ref($doc->{$k})) {
+         if (ref($doc->{$k})) {
             my $s = Data::Dump::dump($doc->{$k});
             $s =~ s{\n}{}g;
-            $h->{$k} = 'BASE64:'.$sb->encode($s);
+            $h->{$k} = 'OBJECT:'.$sb->encode($s);
          }
          else {
             $h->{$k} = $doc->{$k};
@@ -1928,24 +2007,12 @@ sub import_from_csv {
 
    my $fd = Metabrik::File::Dump->new_from_brik_init($self) or return;
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
-   my $sc = Metabrik::String::Compress->new_from_brik_init($self) or return;
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->separator(',');
    $fc->escape('\\');
    $fc->first_line_is_header(1);
-
-   # When some content is too complex to be stored as a standard CSV cell,
-   # we should encode them as base64.
-   my $encoded_fields = $self->csv_encoded_fields;
-   if (defined($encoded_fields)) {
-      my $str = join(',', @$encoded_fields);
-      $encoded_fields = { map { $_ => 1 } @$encoded_fields };
-      $self->log->info("import_from_csv: will decode field(s) [$str] from base64");
-   }
-   else {
-      $encoded_fields = {};
-   }
+   $fc->encoded_fields($self->csv_encoded_fields);
 
    my $refresh_interval;
    my $number_of_replicas;
@@ -1964,15 +2031,17 @@ sub import_from_csv {
       delete $this->{_id};
       for my $k (keys %$this) {
          my $value = $this->{$k};
-         if (! defined($value)) {
+         if (! defined($value) || ! length($value)) {
          }
-         elsif (exists($encoded_fields->{$k})) {
-            my $decoded = $sb->decode($value) or next;
-            my $gunzipped = $sc->gunzip($decoded) or next;
-            $h->{$k} = $$gunzipped;
-         }
-         elsif ($value =~ m{^BASE64:(.*)$}) {  # An OBJECT is waiting to be decoded
-            my $s = $sb->decode($1) or next;
+         elsif ($value =~ m{^OBJECT:(.*)$}     # An OBJECT is waiting to be decoded
+            ||  $value =~ m{^BASE64:(.*)$}) {  # An OBJECT is waiting to be decoded
+            my $s = $sb->decode($1);
+            if (! defined($s)) {
+               $self->log->error("import_from_csv: decode failed for index [$index] ".
+                  "at read [$read], skipping chunk");
+               $skipped_chunks++;
+               next;
+            }
             $h->{$k} = eval($s);
          }
          else {  # Non-encoded value

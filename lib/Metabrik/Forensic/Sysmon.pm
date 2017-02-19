@@ -19,8 +19,9 @@ sub brik_properties {
          nodes => [ qw(node_list) ], # Inherited
          index => [ qw(index) ],     # Inherited
          type => [ qw(type) ],       # Inherited
-         from => [ qw(number) ],     # Inherited
-         size => [ qw(count) ],      # Inherited
+         filter_user => [ qw(user) ],
+         filter_session => [ qw(session) ],
+         filter_computer_name => [ qw(name) ],
       },
       attributes_default => {
          index => 'winlogbeat-*',
@@ -45,7 +46,10 @@ sub brik_properties {
          get_registry_object_added_or_deleted => [ ],
          get_registry_value_set => [ ],
          get_sysmon_config_state_changed => [ ],
+         ps => [ ],
+         ps_tree => [ ],
          ps_image_loaded => [ ],
+         ps_driver_loaded => [ ],
          ps_parent_image => [ ],
          ps_target_filename_created => [ ],
          ps_target_filename_changed => [ ],
@@ -53,6 +57,11 @@ sub brik_properties {
          ps_network_connections => [ ],
          ps_registry_object_added_or_deleted => [ ],
          ps_registry_value_set => [ ],
+         ps_target_process_accessed => [ ],
+         list_users => [ ],
+         list_sessions => [ ],
+         list_computer_names => [ ],
+         list_domains => [ ],
       },
       require_modules => {
       },
@@ -93,8 +102,15 @@ sub get_event_id {
    $type ||= $self->type;
    $self->brik_help_run_undef_arg('get_event_id', $event_id) or return;
 
+   my $user = $self->filter_user;
+   my $name = $self->filter_computer_name;
+   my $session = $self->filter_session;
+
+   my $from = 0;
+   my $size = 10_000;
    my $q = {
-      size => 100,
+      from => $from,
+      size => $size,
       sort => [
          { '@timestamp' => { order => "desc" } },
       ],
@@ -107,6 +123,17 @@ sub get_event_id {
          }
       }
    };
+
+   if (defined($user)) {
+      push @{$q->{query}{bool}{must}}, { term => { 'event_data.User' => $user } };
+   }
+   if (defined($name)) {
+      push @{$q->{query}{bool}{must}}, { term => { 'computer_name' => $name } };
+   }
+   if (defined($session)) {
+      push @{$q->{query}{bool}{must}},
+         { term => { 'event_data.LogonGuid' => $session } };
+   }
 
    my $r = $self->query($q, $index, $type);
    my $hits = $self->get_query_result_hits($r);
@@ -275,20 +302,93 @@ sub get_sysmon_config_state_changed {
    return $self->get_event_id(16, $index, $type);
 }
 
-sub _dedup_values {
+sub _read_hashes {
    my $self = shift;
-   my ($h) = @_;
+   my ($hashes) = @_;
 
-   for my $this (keys %$h) {
-      my $this_h = $h->{$this};
-      for my $k (keys %$this_h) {
-         my $ary = $this_h->{$k};
-         my %uniq = map { $_ => 1 } @$ary;
-         $this_h->{$k} = [ sort { $a cmp $b } keys %uniq ];
+   # SHA1=99052FD84F00B5279E304798F5C2675A1C201146,
+   # MD5=70C298C6990F5A0BBF60F5C035BAA0B9,
+   # SHA256=D4E8D0DCAF077A4FECA5C974EA430A2AD1FE3118F14512D662B26D8D09CD3A08,
+   # IMPHASH=089C9EDE118FC9F36EEBA769ACA5EA16
+   my $h = {};
+   my @hash_list = split(/,/, $hashes);
+   for (@hash_list) {
+      if (m{^.+=.+$}) {
+         my ($k, $v) = split(/=/, $_);
+         if (defined($k) && defined($v)) {
+            $h->{lc($k)} = lc($v);
+         }
       }
    }
 
    return $h;
+}
+
+sub ps {
+   my $self = shift;
+
+   my $r = $self->get_process_create or return;
+
+   my @ps = ();
+   for my $this (@$r) {
+      my $process_id = $this->{event_data}{ProcessId};
+      my $image = $this->{event_data}{Image};
+      my $command_line = $this->{event_data}{CommandLine};
+      my $parent_process_id = $this->{event_data}{ParentProcessId};
+      my $parent_image = $this->{event_data}{ParentImage};
+      my $parent_command_line = $this->{event_data}{ParentCommandLine};
+
+      my $new = {
+         process_id => $process_id,
+         image => $image,
+         command_line => $command_line,
+         parent_process_id => $parent_process_id,
+         parent_image => $parent_image,
+         parent_command_line => $parent_command_line,
+      };
+
+      my $hashes = $this->{event_data}{Hashes};
+      my $h = $self->_read_hashes($hashes);
+      for my $k (keys %$h) {
+         $new->{$k} = $h->{$k};
+      }
+
+      push @ps, $new;
+   }
+
+   return \@ps;
+}
+
+sub ps_tree {
+   my $self = shift;
+
+   my $ps = $self->ps or return;
+
+   my @ps = ();
+
+   return \@ps;
+}
+
+sub _dedup_values {
+   my $self = shift;
+   my ($data) = @_;
+
+   for my $k1 (keys %$data) {
+      for my $k2 (keys %{$data->{$k1}}) {
+         my $ary = $data->{$k1}{$k2};
+         if (ref($ary) eq 'ARRAY') {
+            my %uniq = map { $_ => 1 } @$ary;
+            $data->{$k1}{$k2} = [ sort { $a cmp $b } keys %uniq ];
+         }
+      }
+   }
+
+   my @list = ();
+   for my $k1 (keys %$data) {
+      push @list, { image => $k1, %{$data->{$k1}} };
+   }
+
+   return \@list;
 }
 
 sub ps_image_loaded {
@@ -298,13 +398,39 @@ sub ps_image_loaded {
 
    my %ps = ();
    for my $this (@$r) {
-      my $process_id = $this->{event_data}{ProcessId};
-      my $image = $this->{event_data}{Image};
-      my $image_loaded = $this->{event_data}{ImageLoaded};
-      push @{$ps{$process_id}{$image}}, $image_loaded;
+      #my $process_id = $this->{event_data}{ProcessId};
+      my $image = lc($this->{event_data}{Image});
+      my $image_loaded = lc($this->{event_data}{ImageLoaded});
+
+      #push @{$ps{$image}{process_id}}, $process_id;
+      push @{$ps{$image}{image_loaded}}, $image_loaded;
    }
 
    return $self->_dedup_values(\%ps);
+}
+
+sub ps_driver_loaded {
+   my $self = shift;
+
+   my $r = $self->get_driver_loaded or return;
+
+   my %ps = ();
+   for my $this (@$r) {
+      #my $process_id = $this->{event_data}{ProcessId};
+      my $hashes = $this->{event_data}{Hashes};
+      my $image_loaded = lc($this->{event_data}{ImageLoaded});
+
+      #push @{$ps{$image}{process_id}}, $process_id;
+      push @{$ps{$image_loaded}{hashes}}, $hashes;
+   }
+
+   return $self->_dedup_values(\%ps);
+   #my $deduped = $self->_dedup_values(\%ps);
+   #for my $this (@$deduped) {
+      #$this->{hashes} = $self->_read_hashes($this->{hashes}[0]);
+   #}
+
+   #return $deduped;
 }
 
 sub ps_parent_image {
@@ -314,10 +440,12 @@ sub ps_parent_image {
 
    my %ps = ();
    for my $this (@$r) {
-      my $process_id = $this->{event_data}{ProcessId};
-      my $image = $this->{event_data}{Image};
+      #my $process_id = $this->{event_data}{ProcessId};
+      my $image = lc($this->{event_data}{Image});
       my $parent_image = $this->{event_data}{ParentImage};
-      push @{$ps{$process_id}{$image}}, $parent_image;
+
+      #push @{$ps{$image}{process_id}}, $process_id;
+      push @{$ps{$image}{parent_image}}, $parent_image;
    }
 
    return $self->_dedup_values(\%ps);
@@ -330,10 +458,12 @@ sub ps_target_filename_created {
 
    my %ps = ();
    for my $this (@$r) {
-      my $process_id = $this->{event_data}{ProcessId};
-      my $image = $this->{event_data}{Image};
+      #my $process_id = $this->{event_data}{ProcessId};
+      my $image = lc($this->{event_data}{Image});
       my $target_filename = $this->{event_data}{TargetFilename};
-      push @{$ps{$process_id}{$image}}, $target_filename;
+
+      #push @{$ps{$image}{process_id}}, $process_id;
+      push @{$ps{$image}{target_filename}}, $target_filename;
    }
 
    return $self->_dedup_values(\%ps);
@@ -346,10 +476,12 @@ sub ps_target_filename_changed {
 
    my %ps = ();
    for my $this (@$r) {
-      my $process_id = $this->{event_data}{ProcessId};
-      my $image = $this->{event_data}{Image};
+      #my $process_id = $this->{event_data}{ProcessId};
+      my $image = lc($this->{event_data}{Image});
       my $target_filename = $this->{event_data}{TargetFilename};
-      push @{$ps{$process_id}{$image}}, $target_filename;
+
+      #push @{$ps{$image}{process_id}}, $process_id;
+      push @{$ps{$image}{target_filename}}, $target_filename;
    }
 
    return $self->_dedup_values(\%ps);
@@ -362,10 +494,12 @@ sub ps_target_image {
 
    my %ps = ();
    for my $this (@$r) {
-      my $process_id = $this->{event_data}{SourceProcessId};
-      my $image = $this->{event_data}{SourceImage};
+      #my $process_id = $this->{event_data}{SourceProcessId};
+      my $image = lc($this->{event_data}{SourceImage});
       my $target_image = $this->{event_data}{TargetImage};
-      push @{$ps{$process_id}{$image}}, $target_image;
+
+      #push @{$ps{$image}{process_id}}, $process_id;
+      push @{$ps{$image}{target_image}}, $target_image;
    }
 
    return $self->_dedup_values(\%ps);
@@ -378,8 +512,8 @@ sub ps_network_connections {
 
    my %ps = ();
    for my $this (@$r) {
-      my $process_id = $this->{event_data}{ProcessId};
-      my $image = $this->{event_data}{Image};
+      #my $process_id = $this->{event_data}{ProcessId};
+      my $image = lc($this->{event_data}{Image});
       my $src_ip = $this->{event_data}{SourceIp};
       my $src_hostname = $this->{event_data}{SourceHostname} || '';
       my $dest_ip = $this->{event_data}{DestinationIp};
@@ -396,7 +530,8 @@ sub ps_network_connections {
          dest_port => $dest_port,
          protocol => $protocol,
       };
-      push @{$ps{$process_id}{$image}}, $connection;
+      #push @{$ps{$process_id}{$image}}, $connection;
+      push @{$ps{$image}{connections}}, $connection;
    }
 
    return \%ps;
@@ -409,10 +544,11 @@ sub ps_registry_object_added_or_deleted {
 
    my %ps = ();
    for my $this (@$r) {
-      my $process_id = $this->{event_data}{ProcessId};
-      my $image = $this->{event_data}{Image};
+      #my $process_id = $this->{event_data}{ProcessId};
+      my $image = lc($this->{event_data}{Image});
       my $target_object = $this->{event_data}{TargetObject};
-      push @{$ps{$process_id}{$image}}, $target_object;
+
+      push @{$ps{$image}{target_object}}, $target_object;
    }
 
    return $self->_dedup_values(\%ps);
@@ -425,13 +561,103 @@ sub ps_registry_value_set {
 
    my %ps = ();
    for my $this (@$r) {
-      my $process_id = $this->{event_data}{ProcessId};
-      my $image = $this->{event_data}{Image};
+      #my $process_id = $this->{event_data}{ProcessId};
+      my $image = lc($this->{event_data}{Image});
       my $target_object = $this->{event_data}{TargetObject};
-      push @{$ps{$process_id}{$image}}, $target_object;
+
+      push @{$ps{$image}{target_object}}, $target_object;
    }
 
    return $self->_dedup_values(\%ps);
+}
+
+sub ps_target_process_accessed {
+   my $self = shift;
+
+   my $r = $self->get_process_accessed or return;
+
+   my %ps = ();
+   for my $this (@$r) {
+      #my $process_id = $this->{event_data}{SourceProcessId};
+      my $image = lc($this->{event_data}{SourceImage});
+      my $target_image = $this->{event_data}{TargetImage};
+
+      push @{$ps{$image}{target_image}}, $target_image;
+   }
+
+   return $self->_dedup_values(\%ps);
+}
+
+sub list_users {
+   my $self = shift;
+
+   my $r = $self->unique_values('event_data.User') or return;
+
+   my %h = ();
+   if (exists($r->{aggregations})
+   &&  exists($r->{aggregations}{1})
+   &&  exists($r->{aggregations}{1}{buckets})) {
+      my $buckets = $r->{aggregations}{1}{buckets};
+      for (@$buckets) {
+         $h{$_->{key}}++;
+      }
+   }
+
+   return [ sort { $a cmp $b} keys %h ];
+}
+
+sub list_sessions {
+   my $self = shift;
+
+   my $r = $self->unique_values('event_data.LogonGuid') or return;
+
+   my %h = ();
+   if (exists($r->{aggregations})
+   &&  exists($r->{aggregations}{1})
+   &&  exists($r->{aggregations}{1}{buckets})) {
+      my $buckets = $r->{aggregations}{1}{buckets};
+      for (@$buckets) {
+         $h{$_->{key}}++;
+      }
+   }
+
+   return [ sort { $a cmp $b} keys %h ];
+}
+
+sub list_computer_names {
+   my $self = shift;
+
+   my $r = $self->unique_values('computer_name') or return;
+
+   my %h = ();
+   if (exists($r->{aggregations})
+   &&  exists($r->{aggregations}{1})
+   &&  exists($r->{aggregations}{1}{buckets})) {
+      my $buckets = $r->{aggregations}{1}{buckets};
+      for (@$buckets) {
+         $h{$_->{key}}++;
+      }
+   }
+
+   return [ sort { $a cmp $b} keys %h ];
+}
+
+sub list_domains {
+   my $self = shift;
+
+   my $r = $self->unique_values('user.domain') or return;
+
+   my %h = ();
+   if (exists($r->{aggregations})
+   &&  exists($r->{aggregations}{1})
+   &&  exists($r->{aggregations}{1}{buckets})) {
+      my $buckets = $r->{aggregations}{1}{buckets};
+      for (@$buckets) {
+         $h{$_->{key}}++;
+      }
+   }
+
+   return [ sort { $a cmp $b} keys %h ];
 }
 
 1;
