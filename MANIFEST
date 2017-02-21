@@ -62,6 +62,7 @@ lib/Metabrik/Email/Imap.pm
 lib/Metabrik/Email/Mbox.pm
 lib/Metabrik/Email/Message.pm
 lib/Metabrik/Email/Send.pm
+lib/Metabrik/File/Base64.pm
 lib/Metabrik/File/Compress.pm
 lib/Metabrik/File/Csv.pm
 lib/Metabrik/File/Dump.pm

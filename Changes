@@ -3,6 +3,7 @@ Revision history for Perl extension Metabrik::Repository.
 1.26.1 
    - new: string::javascript Brik
    - new: forensic::sysmon Brik
+   - new: file::base64 Brik
 
 1.26.0 Sat  4 Feb 17:41:44 CET 2017
    - new: server::logstash::indexer Brik

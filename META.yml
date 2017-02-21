@@ -131,6 +131,8 @@ provides:
     file: lib/Metabrik/Email/Message.pm
   Metabrik::Email::Send:
     file: lib/Metabrik/Email/Send.pm
+  Metabrik::File::Base64:
+    file: lib/Metabrik/File/Base64.pm
   Metabrik::File::Compress:
     file: lib/Metabrik/File/Compress.pm
   Metabrik::File::Csv:

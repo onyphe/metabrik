@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan(tests => 18) }
+BEGIN { plan(tests => 19) }
 
 ok(sub { eval("use Metabrik::File::Compress"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::File::Csv"); $@ ? 0 : 1 }, 1, $@);
@@ -19,3 +19,4 @@ ok(sub { eval("use Metabrik::File::Tsv"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::File::Type"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::File::Write"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::File::Xml"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::File::Base64"); $@ ? 0 : 1 }, 1, $@);
