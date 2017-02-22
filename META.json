@@ -480,6 +480,9 @@
       "Metabrik::Remote::Winexe" : {
          "file" : "lib/Metabrik/Remote/Winexe.pm"
       },
+      "Metabrik::Remote::Winsvc" : {
+         "file" : "lib/Metabrik/Remote/Winsvc.pm"
+      },
       "Metabrik::Remote::Wmi" : {
          "file" : "lib/Metabrik/Remote/Wmi.pm"
       },

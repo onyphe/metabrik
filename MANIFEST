@@ -152,6 +152,7 @@ lib/Metabrik/Remote/Tcpdump.pm
 lib/Metabrik/Remote/Windiff.pm
 lib/Metabrik/Remote/Windows.pm
 lib/Metabrik/Remote/Winexe.pm
+lib/Metabrik/Remote/Winsvc.pm
 lib/Metabrik/Remote/Wmi.pm
 lib/Metabrik/Repository.pm
 lib/Metabrik/Server/Dns.pm
