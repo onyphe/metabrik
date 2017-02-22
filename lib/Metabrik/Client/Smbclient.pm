@@ -84,8 +84,9 @@ sub upload {
       return \@files;
    }
    else {
+      my ($this_file) = $files =~ m{^(?:.*/)?(.*)$};
       my $cmd = "smbclient -U $domain/$username%$password //$host/$share -c ".
-         "'put \"$files\" $remote_path\\$files'";
+         "'put \"$files\" $remote_path\\$this_file'";
 
       (my $cmd_hidden = $cmd) =~ s{$password}{XXX};
       $self->log->verbose("upload: cmd[$cmd_hidden]");
@@ -95,7 +96,7 @@ sub upload {
       $self->system($cmd) or return;
       $self->log->level($level);
 
-      return "$remote_path\\$files";
+      return "$remote_path\\$this_file";
    }
 
    return $self->log->error("upload: unhandled exception");
