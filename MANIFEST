@@ -147,6 +147,7 @@ lib/Metabrik/Proxy/Http.pm
 lib/Metabrik/Proxy/Ssh2tcp.pm
 lib/Metabrik/Remote/Msoffice.pm
 lib/Metabrik/Remote/Ssh.pm
+lib/Metabrik/Remote/Sysmon.pm
 lib/Metabrik/Remote/Tcpdump.pm
 lib/Metabrik/Remote/Windiff.pm
 lib/Metabrik/Remote/Windows.pm

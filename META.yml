@@ -301,6 +301,8 @@ provides:
     file: lib/Metabrik/Remote/Msoffice.pm
   Metabrik::Remote::Ssh:
     file: lib/Metabrik/Remote/Ssh.pm
+  Metabrik::Remote::Sysmon:
+    file: lib/Metabrik/Remote/Sysmon.pm
   Metabrik::Remote::Tcpdump:
     file: lib/Metabrik/Remote/Tcpdump.pm
   Metabrik::Remote::Windiff:
