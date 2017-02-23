@@ -93,6 +93,9 @@
       "Metabrik::Client::Elasticsearch::Query" : {
          "file" : "lib/Metabrik/Client/Elasticsearch/Query.pm"
       },
+      "Metabrik::Client::Imap" : {
+         "file" : "lib/Metabrik/Client/Imap.pm"
+      },
       "Metabrik::Client::Mongodb" : {
          "file" : "lib/Metabrik/Client/Mongodb.pm"
       },
@@ -197,9 +200,6 @@
       },
       "Metabrik::Devel::Subversion" : {
          "file" : "lib/Metabrik/Devel/Subversion.pm"
-      },
-      "Metabrik::Email::Imap" : {
-         "file" : "lib/Metabrik/Email/Imap.pm"
       },
       "Metabrik::Email::Mbox" : {
          "file" : "lib/Metabrik/Email/Mbox.pm"

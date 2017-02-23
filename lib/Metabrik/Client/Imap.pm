@@ -17,7 +17,14 @@ sub brik_properties {
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          input => [ qw(imap_uri) ],
+         as_array => [ qw(0|1) ],
+         strip_crlf => [ qw(0|1) ],
          _imap => [ qw(INTERNAL) ],
+         _id => [ qw(INTERNAL) ],
+      },
+      attributes_default => {
+         as_array => 0,
+         strip_crlf => 1,
       },
       commands => {
          open => [ qw(imap_uri|OPTIONAL) ],
@@ -43,6 +50,8 @@ sub open {
    my $port = $parsed->{port};
    my $user = $parsed->{user};
    my $password = $parsed->{password};
+   my $path = $parsed->{path} || 'INBOX';
+   $path =~ s{^/*}{};
 
    if (! defined($user) || ! defined($password) || ! defined($host)) {
       return $self->log->error("open: invalid uri [$input] ".
@@ -56,7 +65,39 @@ sub open {
       return $self->log->error("open: can't connect to IMAP: $Net::IMAP::Simple::errstr");
    }
 
+   my $r = $imap->login($user, $password);
+   if (! defined($r)) {
+      return $self->log->error("open: login failed [".$imap->errstr."]");
+   }
+
+   my $count = $imap->select($path);
+   $self->_id($count);
+
    return $self->_imap($imap);
+}
+
+sub read_next {
+   my $self = shift;
+
+   my $imap = $self->_imap;
+   $self->brik_help_run_undef_arg('open', $imap) or return;
+
+   my $current = $self->_id;
+
+   my $lines = $imap->get($current--);
+
+   $self->_id($current);
+
+   if ($self->as_array) {
+      if ($self->strip_crlf) {
+         for (@$lines) {
+            s{[\r\n]*$}{};
+         }
+      }
+      return [ @$lines ];  # unbless it
+   }
+
+   return join('', @$lines);
 }
 
 1;

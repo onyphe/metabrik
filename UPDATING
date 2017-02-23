@@ -1,3 +1,8 @@
+20170223
+   AFFECTS: email::imap
+
+   - email::imap Brik renamed to client::imap
+
 20170110
    AFFECTS: client::elasticsearch
 

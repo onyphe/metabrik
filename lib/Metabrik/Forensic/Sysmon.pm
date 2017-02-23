@@ -62,8 +62,15 @@ sub brik_properties {
          list_sessions => [ ],
          list_computer_names => [ ],
          list_domains => [ ],
+         build_list => [ qw(ps_data) ],
+         write_list => [ qw(list_data output_csv) ],
+         read_list => [ qw(input_csv) ],
+         clean_ps_from_list => [ qw(ps_data input_csv) ],
+         save_state => [ qw(ps_type|OPTIONAL) ],
+         diff_current_state => [ qw(ps_type|OPTIONAL) ],
       },
       require_modules => {
+         'Metabrik::File::Csv' => [ ],
       },
       require_binaries => {
       },
@@ -332,19 +339,19 @@ sub ps {
    my @ps = ();
    for my $this (@$r) {
       my $process_id = $this->{event_data}{ProcessId};
-      my $image = $this->{event_data}{Image};
-      my $command_line = $this->{event_data}{CommandLine};
+      my $image = lc($this->{event_data}{Image});
+      my $command_line = lc($this->{event_data}{CommandLine});
       my $parent_process_id = $this->{event_data}{ParentProcessId};
-      my $parent_image = $this->{event_data}{ParentImage};
-      my $parent_command_line = $this->{event_data}{ParentCommandLine};
+      my $parent_image = lc($this->{event_data}{ParentImage});
+      my $parent_command_line = lc($this->{event_data}{ParentCommandLine});
 
       my $new = {
-         process_id => $process_id,
-         image => $image,
-         command_line => $command_line,
-         parent_process_id => $parent_process_id,
-         parent_image => $parent_image,
-         parent_command_line => $parent_command_line,
+         #process_id => $process_id,
+         image => $self->_fix_path(lc($image)),
+         #command_line => $self->_fix_path(lc($command_line)),
+         #parent_process_id => $parent_process_id,
+         parent_image => $self->_fix_path(lc($parent_image)),
+         #parent_command_line => $self->_fix_path(lc($parent_command_line)),
       };
 
       my $hashes = $this->{event_data}{Hashes};
@@ -391,6 +398,15 @@ sub _dedup_values {
    return \@list;
 }
 
+sub _fix_path {
+   my $self = shift;
+   my ($path) = @_;
+
+   $path =~ s{\\}{/}g;
+
+   return $path;
+}
+
 sub ps_image_loaded {
    my $self = shift;
 
@@ -399,8 +415,8 @@ sub ps_image_loaded {
    my %ps = ();
    for my $this (@$r) {
       #my $process_id = $this->{event_data}{ProcessId};
-      my $image = lc($this->{event_data}{Image});
-      my $image_loaded = lc($this->{event_data}{ImageLoaded});
+      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $image_loaded = $self->_fix_path(lc($this->{event_data}{ImageLoaded}));
 
       #push @{$ps{$image}{process_id}}, $process_id;
       push @{$ps{$image}{image_loaded}}, $image_loaded;
@@ -418,7 +434,7 @@ sub ps_driver_loaded {
    for my $this (@$r) {
       #my $process_id = $this->{event_data}{ProcessId};
       my $hashes = $this->{event_data}{Hashes};
-      my $image_loaded = lc($this->{event_data}{ImageLoaded});
+      my $image_loaded = $self->_fix_path(lc($this->{event_data}{ImageLoaded}));
 
       #push @{$ps{$image}{process_id}}, $process_id;
       push @{$ps{$image_loaded}{hashes}}, $hashes;
@@ -441,8 +457,8 @@ sub ps_parent_image {
    my %ps = ();
    for my $this (@$r) {
       #my $process_id = $this->{event_data}{ProcessId};
-      my $image = lc($this->{event_data}{Image});
-      my $parent_image = $this->{event_data}{ParentImage};
+      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $parent_image = $self->_fix_path(lc($this->{event_data}{ParentImage}));
 
       #push @{$ps{$image}{process_id}}, $process_id;
       push @{$ps{$image}{parent_image}}, $parent_image;
@@ -459,8 +475,8 @@ sub ps_target_filename_created {
    my %ps = ();
    for my $this (@$r) {
       #my $process_id = $this->{event_data}{ProcessId};
-      my $image = lc($this->{event_data}{Image});
-      my $target_filename = $this->{event_data}{TargetFilename};
+      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $target_filename = $self->_fix_path(lc($this->{event_data}{TargetFilename}));
 
       #push @{$ps{$image}{process_id}}, $process_id;
       push @{$ps{$image}{target_filename}}, $target_filename;
@@ -477,8 +493,8 @@ sub ps_target_filename_changed {
    my %ps = ();
    for my $this (@$r) {
       #my $process_id = $this->{event_data}{ProcessId};
-      my $image = lc($this->{event_data}{Image});
-      my $target_filename = $this->{event_data}{TargetFilename};
+      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $target_filename = $self->_fix_path(lc($this->{event_data}{TargetFilename}));
 
       #push @{$ps{$image}{process_id}}, $process_id;
       push @{$ps{$image}{target_filename}}, $target_filename;
@@ -495,8 +511,8 @@ sub ps_target_image {
    my %ps = ();
    for my $this (@$r) {
       #my $process_id = $this->{event_data}{SourceProcessId};
-      my $image = lc($this->{event_data}{SourceImage});
-      my $target_image = $this->{event_data}{TargetImage};
+      my $image = $self->_fix_path(lc($this->{event_data}{SourceImage}));
+      my $target_image = $self->_fix_path(lc($this->{event_data}{TargetImage}));
 
       #push @{$ps{$image}{process_id}}, $process_id;
       push @{$ps{$image}{target_image}}, $target_image;
@@ -513,28 +529,22 @@ sub ps_network_connections {
    my %ps = ();
    for my $this (@$r) {
       #my $process_id = $this->{event_data}{ProcessId};
-      my $image = lc($this->{event_data}{Image});
+      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
       my $src_ip = $this->{event_data}{SourceIp};
       my $src_hostname = $this->{event_data}{SourceHostname} || '';
       my $dest_ip = $this->{event_data}{DestinationIp};
       my $dest_hostname = $this->{event_data}{DestinationHostname} || '';
       my $src_port = $this->{event_data}{SourcePort};
       my $dest_port = $this->{event_data}{DestinationPort};
-      my $protocol = $this->{event_data}{Protocol};
-      my $connection = {
-         src_ip => $src_ip,
-         src_hostname => $src_hostname,
-         dest_ip => $dest_ip,
-         dest_hostname => $dest_hostname,
-         src_port => $src_port,
-         dest_port => $dest_port,
-         protocol => $protocol,
-      };
-      #push @{$ps{$process_id}{$image}}, $connection;
+      my $protocol = lc($this->{event_data}{Protocol});
+
+      my $connection = "$protocol|[$src_ip]:src_port:$src_hostname>".
+         "[$dest_ip]:dest_port:$dest_hostname";
+
       push @{$ps{$image}{connections}}, $connection;
    }
 
-   return \%ps;
+   return $self->_dedup_values(\%ps);
 }
 
 sub ps_registry_object_added_or_deleted {
@@ -545,8 +555,8 @@ sub ps_registry_object_added_or_deleted {
    my %ps = ();
    for my $this (@$r) {
       #my $process_id = $this->{event_data}{ProcessId};
-      my $image = lc($this->{event_data}{Image});
-      my $target_object = $this->{event_data}{TargetObject};
+      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $target_object = $self->_fix_path($this->{event_data}{TargetObject});
 
       push @{$ps{$image}{target_object}}, $target_object;
    }
@@ -562,8 +572,8 @@ sub ps_registry_value_set {
    my %ps = ();
    for my $this (@$r) {
       #my $process_id = $this->{event_data}{ProcessId};
-      my $image = lc($this->{event_data}{Image});
-      my $target_object = $this->{event_data}{TargetObject};
+      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $target_object = $self->_fix_path($this->{event_data}{TargetObject});
 
       push @{$ps{$image}{target_object}}, $target_object;
    }
@@ -579,8 +589,8 @@ sub ps_target_process_accessed {
    my %ps = ();
    for my $this (@$r) {
       #my $process_id = $this->{event_data}{SourceProcessId};
-      my $image = lc($this->{event_data}{SourceImage});
-      my $target_image = $this->{event_data}{TargetImage};
+      my $image = $self->_fix_path(lc($this->{event_data}{SourceImage}));
+      my $target_image = $self->_fix_path(lc($this->{event_data}{TargetImage}));
 
       push @{$ps{$image}{target_image}}, $target_image;
    }
@@ -658,6 +668,237 @@ sub list_domains {
    }
 
    return [ sort { $a cmp $b} keys %h ];
+}
+
+sub build_list {
+   my $self = shift;
+   my ($data) = @_;
+
+   $self->brik_help_run_undef_arg('build_list', $data) or return;
+   $self->brik_help_run_invalid_arg('build_list', $data, 'ARRAY') or return;
+
+   # First, search which keys are multi-valued
+   my %a_keys = ();
+   my %s_keys = ();
+   for my $this (@$data) {
+      for my $k (keys %$this) {
+         if (ref($this->{$k}) eq 'ARRAY') {
+            $a_keys{$k}++;
+         }
+         elsif (ref($this->{$k}) eq 'HASH') {
+            $self->log->warning("build_list: uncaught data, skipping");
+         }
+         elsif (ref($this->{$k}) eq '') {
+            $s_keys{$k}++;
+         }
+      }
+   }
+
+   # More than one key with multi-valued, case not handled yet.
+   if (keys %a_keys > 1) {
+      return $self->log->error("build_list: unable to process data");
+   }
+
+   my @list = ();
+   for my $this (@$data) {
+      my $new = {};
+      for my $s (keys %s_keys) {
+         $new->{$s} = $this->{$s};
+      }
+      if (keys %a_keys > 0) {
+         my $sav = { %$new };
+         for my $a (keys %a_keys) {
+            for (@{$this->{$a}}) {
+               $new->{$a} = $_;
+               push @list, $new;
+               $new = { %$sav };
+            }
+         }
+      }
+      else {
+         push @list, $new;
+      }
+   }
+
+   return \@list;
+}
+
+sub write_list {
+   my $self = shift;
+   my ($data, $output) = @_;
+
+   $self->brik_help_run_undef_arg('write_list', $data) or return;
+   $self->brik_help_run_invalid_arg('write_list', $data, 'ARRAY') or return;
+   $self->brik_help_run_undef_arg('write_list', $output) or return;
+
+   my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
+   $fc->use_quoting(1);
+   $fc->overwrite(1);
+   $fc->append(0);
+
+   # Replace unwanted char so we can use regexes
+   for my $this (@$data) {
+      for my $k (keys %$this) {
+         $this->{$k} =~ s{[\?\(\)\[\]\*\{\}]}{.}g;
+      }
+   }
+
+   $fc->write($data, $output) or return;
+
+   return $output;
+}
+
+sub read_list {
+   my $self = shift;
+   my ($input) = @_;
+
+   $self->brik_help_run_undef_arg('read_list', $input) or return;
+   $self->brik_help_run_file_not_found('read_list', $input) or return;
+
+   my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
+   $fc->use_quoting(1);
+
+   return $fc->read($input);
+}
+
+sub clean_ps_from_list {
+   my $self = shift;
+   my ($data, $input) = @_;
+
+   $self->brik_help_run_undef_arg('clean_ps_from_list', $data) or return;
+   $self->brik_help_run_invalid_arg('clean_ps_from_list', $data, 'ARRAY') or return;
+   $self->brik_help_run_undef_arg('clean_ps_from_list', $input) or return;
+   $self->brik_help_run_file_not_found('clean_ps_from_list', $input) or return;
+
+   my $csv_list = $self->read_list($input) or return;
+   my $data_list = $self->build_list($data) or return;
+
+   my $first = $csv_list->[0];
+   if (! defined($first)) {
+      return $self->log->error("clean_ps_from_list: empty [$input] file?");
+   }
+   my @keys = keys %$first;
+   my $count = scalar @keys;
+
+   my @clean = ();
+   for my $ps (@$data_list) {
+      my $whitelisted = 0;
+      for my $csv (@$csv_list) {
+         my $this_count = 0;
+         for my $k (@keys) {
+            my $v = $ps->{$k};
+            my $wl = $csv->{$k};
+            if ($v =~ m{^$wl$}) {
+            #if ($v eq $wl) {
+               #print "v[$v] wl[$wl]\n";
+               $this_count++;
+            }
+         }
+         if ($this_count == $count) {  # Whitelist matched
+            $whitelisted = 1;
+            #print "Whitelisted\n";
+            last;
+         }
+      }
+      if (! $whitelisted) {
+         push @clean, $ps;
+      }
+   }
+
+   return \@clean;
+}
+
+sub save_state {
+   my $self = shift;
+   my ($type) = @_;
+
+   my @ps = qw(
+      ps
+      ps_driver_loaded
+      ps_image_loaded
+      ps_network_connections
+      ps_parent_image
+      ps_registry_object_added_or_deleted
+      ps_registry_value_set
+      ps_target_filename_changed
+      ps_target_filename_created
+      ps_target_image
+      ps_target_process_accessed
+   );
+
+   # Process only one type
+   if (defined($type)) {
+      @ps = ( $type );
+   }
+
+   for my $this (@ps) {
+      $self->log->info("save_state: saving state for type [$this] to [$this.csv]...");
+
+      my $ps = $self->$this;
+      if (! defined($ps)) {
+         $self->log->error("save_state: failed [$this], skipping");
+         next;
+      }
+
+      my $list = $self->build_list($ps);
+      if (! defined($list)) {
+         $self->log->error("save_state: failed build_list, skipping");
+         next;
+      }
+
+      my $r = $self->write_list($list, "$this.csv");
+      if (! defined($r)) {
+         $self->log->error("save_state: failed write_list, skipping");
+         next;
+      }
+   }
+
+   return 1;
+}
+
+sub diff_current_state {
+   my $self = shift;
+   my ($type) = @_;
+
+   my @ps = qw(
+      ps
+      ps_driver_loaded
+      ps_image_loaded
+      ps_network_connections
+      ps_parent_image
+      ps_registry_object_added_or_deleted
+      ps_target_filename_changed
+      ps_target_filename_created
+      ps_target_image
+      ps_target_process_accessed
+   );
+      #ps_registry_value_set
+
+   # Process only one type
+   if (defined($type)) {
+      @ps = ( $type );
+   }
+
+   my %diff = ();
+   for my $this (@ps) {
+      my $ps = $self->$this;
+      if (! defined($ps)) {
+         $self->log->error("diff_current_state: failed [$this], skipping");
+         next;
+      }
+
+      $self->log->info("diff_current_state: processing [$this] against [$this.csv]...");
+
+      my $diff = $self->clean_ps_from_list($ps, "$this.csv");
+      if (! defined($ps)) {
+         $self->log->error("diff_current_state: failed clean_ps_from_list, skipping");
+         next;
+      }
+
+      $diff{$this} = $diff;
+   }
+
+   return \%diff;
 }
 
 1;

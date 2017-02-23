@@ -41,6 +41,8 @@ sub decode {
    my $decoded = $sb->decode($string) or return;
 
    my $ft_out = Metabrik::File::Text->new_from_brik_init($self) or return;
+   $ft_out->overwrite(1);
+   $ft_out->append(0);
    $ft_out->write($decoded, $output) or return;
 
    return $output;
@@ -61,6 +63,8 @@ sub encode {
    my $encoded = $sb->encode($string) or return;
 
    my $ft_out = Metabrik::File::Text->new_from_brik_init($self) or return;
+   $ft_out->overwrite(1);
+   $ft_out->append(0);
    $ft_out->write($encoded, $output) or return;
 
    return $output;

@@ -29,9 +29,11 @@ sub brik_properties {
       },
       commands => {
          create => [ qw(content) ],
+         parse => [ qw(string) ],
       },
       require_modules => {
          'Email::Simple' => [ ],
+         'Email::MIME' => [ ],
       },
    };
 }
@@ -56,6 +58,55 @@ sub create {
    );
 
    return $email;
+}
+
+sub parse {
+   my $self = shift;
+   my ($message) = @_;
+
+   my $parsed = Email::MIME->new($message);
+   if (! defined($parsed)) {
+      return $self->log->error("parse: MIME failed for message");
+   }
+
+   my @parts = $parsed->parts;
+
+   my @list = ();
+   for (@parts) {
+      my $this = { %$_ };  # unbless it.
+
+      my $filename = $_->filename;
+      my $file_content = $_->body_raw;
+      if (defined($filename) && defined($file_content)) {
+         $this->{filename} = $filename;
+         $file_content =~ s{[\r\n]*$}{};
+         $this->{file_content} = $file_content;
+      }
+
+      if (exists($this->{header}) && exists($this->{header}{headers})) {
+         my $headers = $this->{header}{headers};
+         my $new_headers = {};
+         my $name;
+         my $value;
+         for (@$headers) {
+            if (ref($_) eq '') { # This is a name
+               $name = $_;
+            }
+            elsif (ref($_) eq 'ARRAY') {  # This is a value
+               $value = $_->[0];
+            }
+            if (defined($name) && defined($value)) {
+               $new_headers->{$name} = $value;
+               $name = undef;
+               $value = undef;
+            }
+         }
+         $this->{header} = $new_headers;
+      }
+      push @list, $this;
+   }
+
+   return \@list;
 }
 
 1;
