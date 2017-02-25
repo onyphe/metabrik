@@ -6,6 +6,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: file::base64 Brik
    - new: remote::sysmon Brik
    - new: remote::winsvc Brik
+   - new: forensic::pcap Brik
 
 1.26.0 Sat  4 Feb 17:41:44 CET 2017
    - new: server::logstash::indexer Brik

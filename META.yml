@@ -171,6 +171,8 @@ provides:
     file: lib/Metabrik/File/Xml.pm
   Metabrik::Forensic::Dcfldd:
     file: lib/Metabrik/Forensic/Dcfldd.pm
+  Metabrik::Forensic::Pcap:
+    file: lib/Metabrik/Forensic/Pcap.pm
   Metabrik::Forensic::Scalpel:
     file: lib/Metabrik/Forensic/Scalpel.pm
   Metabrik::Forensic::Sysmon:
