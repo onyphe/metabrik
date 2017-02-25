@@ -100,6 +100,19 @@ sub read_next {
    return join('', @$lines);
 }
 
+sub close {
+   my $self = shift;
+
+   my $imap = $self->_imap;
+   if (defined($imap)) {
+      $imap->quit;
+      $self->_imap(undef);
+      $self->_id(undef);
+   }
+
+   return 1;
+}
+
 1;
 
 __END__

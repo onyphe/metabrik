@@ -29,6 +29,7 @@ sub brik_properties {
          localtime => [ qw(timezone|OPTIONAL) ],
          today => [ qw(separator|OPTIONAL) ],
          yesterday => [ qw(separator|OPTIONAL) ],
+         day => [ qw(timestamp|OPTIONAL) ],
          date => [ qw(timestamp|OPTIONAL) ],
          gmdate => [ qw(timestamp|OPTIONAL) ],
          month => [ qw(timezone|OPTIONAL) ],
@@ -131,6 +132,19 @@ sub yesterday {
    my $d = $a[3];
 
    return sprintf("%04d$sep%02d$sep%02d", $y, $m, $d);
+}
+
+sub day {
+   my $self = shift;
+   my ($timestamp) = @_;
+
+   my @t = defined($timestamp) ? CORE::localtime($timestamp) : CORE::localtime();
+
+   my $year = $t[5] + 1900;
+   my $month = $t[4] + 1;
+   my $day = $t[3];
+
+   return sprintf("%04d-%02d-%02d", $year, $month, $day);
 }
 
 sub date {
