@@ -43,11 +43,11 @@ sub brik_properties {
          get_raw_access_read_detected => [ ],
          get_process_accessed => [ ],
          get_file_created => [ ],
+         list_file_created_processes => [ ],
          get_registry_object_added_or_deleted => [ ],
          get_registry_value_set => [ ],
          get_sysmon_config_state_changed => [ ],
          ps => [ ],
-         ps_tree => [ ],
          ps_image_loaded => [ ],
          ps_driver_loaded => [ ],
          ps_parent_image => [ ],
@@ -276,6 +276,21 @@ sub get_file_created {
    return $self->get_event_id(11, $index, $type);
 }
 
+sub list_file_created_processes {
+   my $self = shift;
+   my ($index, $type) = @_;
+
+   my $r = $self->get_file_created or return;
+
+   my %list = ();
+   for my $this (@$r) {
+      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
+      $list{$image}++;
+   }
+
+   return [ sort { $a cmp $b } keys %list ];
+}
+
 sub get_registry_object_added_or_deleted {
    my $self = shift;
    my ($index, $type) = @_;
@@ -331,7 +346,7 @@ sub _read_hashes {
    return $h;
 }
 
-sub ps {
+sub _ps {
    my $self = shift;
 
    my $r = $self->get_process_create or return;
@@ -366,19 +381,11 @@ sub ps {
    return \@ps;
 }
 
-sub ps_tree {
-   my $self = shift;
-
-   my $ps = $self->ps or return;
-
-   my @ps = ();
-
-   return \@ps;
-}
-
 sub _dedup_values {
    my $self = shift;
-   my ($data) = @_;
+   my ($data, $value) = @_;
+
+   $value ||= 'image';
 
    for my $k1 (keys %$data) {
       for my $k2 (keys %{$data->{$k1}}) {
@@ -392,7 +399,7 @@ sub _dedup_values {
 
    my @list = ();
    for my $k1 (keys %$data) {
-      push @list, { image => $k1, %{$data->{$k1}} };
+      push @list, { $value => $k1, %{$data->{$k1}} };
    }
 
    return \@list;
@@ -405,6 +412,28 @@ sub _fix_path {
    $path =~ s{\\}{/}g;
 
    return $path;
+}
+
+sub ps {
+   my $self = shift;
+
+   my $r = $self->get_process_create or return;
+
+   my %ps = ();
+   for my $this (@$r) {
+      #my $image = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $image_loaded = $self->_fix_path(lc($this->{event_data}{Image}));
+      #my $command_line = lc($this->{event_data}{CommandLine});
+      #my $parent_image = $self->_fix_path(lc($this->{event_data}{ParentImage}));
+      my $image = $self->_fix_path(lc($this->{event_data}{ParentImage}));
+      #my $parent_command_line = lc($this->{event_data}{ParentCommandLine});
+
+      #push @{$ps{$image}{parent_image}}, $parent_image;
+      #push @{$ps{$parent_image}{image}}, $image;
+      push @{$ps{$image}{image_loaded}}, $image_loaded;
+   }
+
+   return $self->_dedup_values(\%ps);
 }
 
 sub ps_image_loaded {
@@ -441,12 +470,6 @@ sub ps_driver_loaded {
    }
 
    return $self->_dedup_values(\%ps);
-   #my $deduped = $self->_dedup_values(\%ps);
-   #for my $this (@$deduped) {
-      #$this->{hashes} = $self->_read_hashes($this->{hashes}[0]);
-   #}
-
-   #return $deduped;
 }
 
 sub ps_parent_image {
@@ -898,7 +921,32 @@ sub diff_current_state {
       $diff{$this} = $diff;
    }
 
-   return \%diff;
+   # Regroup by similarity
+   my %grouped = ();
+   for my $k (keys %diff) {
+      my $list = $diff{$k};
+      my $group_by = 'image';
+      my $value = 'image_loaded';
+      if ($k eq 'ps') {
+         $group_by = 'image';
+         $value = 'image_loaded';
+      }
+      elsif ($k eq 'ps_image_loaded') {
+         $group_by = 'image';
+         $value = 'image_loaded';
+      }
+      elsif ($k eq 'ps_target_filename_created') {
+         $group_by = 'image';
+         $value = 'target_filename';
+      }
+      # XXX: do for others
+      for my $this (@$list) {
+         push @{$grouped{$k}{$this->{$group_by}}}, $this->{$value};
+         #${$grouped{$k}{$this->{$group_by}}}{$this->{$value}}++;
+      }
+   }
+
+   return \%grouped;
 }
 
 1;
