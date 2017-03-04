@@ -69,6 +69,7 @@ lib/Metabrik/File/Dump.pm
 lib/Metabrik/File/Find.pm
 lib/Metabrik/File/Hash.pm
 lib/Metabrik/File/Ini.pm
+lib/Metabrik/File/Javascript.pm
 lib/Metabrik/File/Json.pm
 lib/Metabrik/File/Ole.pm
 lib/Metabrik/File/Pcap.pm
@@ -147,9 +148,11 @@ lib/Metabrik/Perl/Module.pm
 lib/Metabrik/Proxy/Http.pm
 lib/Metabrik/Proxy/Ssh2tcp.pm
 lib/Metabrik/Remote/Msoffice.pm
+lib/Metabrik/Remote/Sandbox.pm
 lib/Metabrik/Remote/Ssh.pm
 lib/Metabrik/Remote/Sysmon.pm
 lib/Metabrik/Remote/Tcpdump.pm
+lib/Metabrik/Remote/Windefend.pm
 lib/Metabrik/Remote/Windiff.pm
 lib/Metabrik/Remote/Windows.pm
 lib/Metabrik/Remote/Winexe.pm

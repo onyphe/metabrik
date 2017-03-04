@@ -231,6 +231,9 @@
       "Metabrik::File::Ini" : {
          "file" : "lib/Metabrik/File/Ini.pm"
       },
+      "Metabrik::File::Javascript" : {
+         "file" : "lib/Metabrik/File/Javascript.pm"
+      },
       "Metabrik::File::Json" : {
          "file" : "lib/Metabrik/File/Json.pm"
       },
@@ -465,6 +468,9 @@
       "Metabrik::Remote::Msoffice" : {
          "file" : "lib/Metabrik/Remote/Msoffice.pm"
       },
+      "Metabrik::Remote::Sandbox" : {
+         "file" : "lib/Metabrik/Remote/Sandbox.pm"
+      },
       "Metabrik::Remote::Ssh" : {
          "file" : "lib/Metabrik/Remote/Ssh.pm"
       },
@@ -473,6 +479,9 @@
       },
       "Metabrik::Remote::Tcpdump" : {
          "file" : "lib/Metabrik/Remote/Tcpdump.pm"
+      },
+      "Metabrik::Remote::Windefend" : {
+         "file" : "lib/Metabrik/Remote/Windefend.pm"
       },
       "Metabrik::Remote::Windiff" : {
          "file" : "lib/Metabrik/Remote/Windiff.pm"
