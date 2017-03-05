@@ -34,6 +34,7 @@ sub brik_properties {
          get_sysmon_exe => [ ],
          deploy => [ qw(host|OPTIONAL user|OPTIONAL password|OPTIONAL) ],
          undeploy => [ ],
+         redeploy => [ ],
          generate_conf => [ ],
          update_conf => [ ],
       },
@@ -209,6 +210,13 @@ sub update_conf {
    my $cmd = "\"cmd.exe /c $remote_path\\$sysmon_exe -c $remote_path\\$base_conf_file\"";
 
    return $self->execute($cmd);
+}
+
+sub redeploy {
+   my $self = shift;
+
+   $self->undeploy;
+   return $self->deploy;
 }
 
 1;

@@ -15,12 +15,20 @@ sub brik_properties {
       tags => [ qw(unstable) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
+      attributes => {
+         encoding => [ qw(utf8|ascii) ],
+      },
+      attributes_default => {
+         encoding => 'ascii',
+      },
       commands => {
          decode => [ qw(input output) ],
+         decode_from_string => [ qw(input_string output) ],
          encode => [ qw(input output) ],
+         encode_from_string => [ qw(input_string output) ],
       },
       require_modules => {
-         'Metabrik::File::Text' => [ ],
+         'Metabrik::File::Raw' => [ ],
          'Metabrik::String::Base64' => [ ],
       },
    };
@@ -34,16 +42,37 @@ sub decode {
    $self->brik_help_run_file_not_found('decode', $input) or return;
    $self->brik_help_run_undef_arg('decode', $output) or return;
 
-   my $ft_in = Metabrik::File::Text->new_from_brik_init($self) or return;
-   my $string = $ft_in->read($input) or return;
+   my $fr_in = Metabrik::File::Raw->new_from_brik_init($self) or return;
+   $fr_in->encoding($self->encoding);
+   my $string = $fr_in->read($input) or return;
 
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
    my $decoded = $sb->decode($string) or return;
 
-   my $ft_out = Metabrik::File::Text->new_from_brik_init($self) or return;
-   $ft_out->overwrite(1);
-   $ft_out->append(0);
-   $ft_out->write($decoded, $output) or return;
+   my $fr_out = Metabrik::File::Raw->new_from_brik_init($self) or return;
+   $fr_out->encoding($self->encoding);
+   $fr_out->overwrite(1);
+   $fr_out->append(0);
+   $fr_out->write($decoded, $output) or return;
+
+   return $output;
+}
+
+sub decode_from_string {
+   my $self = shift;
+   my ($input_string, $output) = @_;
+
+   $self->brik_help_run_undef_arg('decode_from_string', $input_string,) or return;
+   $self->brik_help_run_undef_arg('decode_from_string', $output) or return;
+
+   my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
+   my $decoded = $sb->decode($input_string) or return;
+
+   my $fr = Metabrik::File::Raw->new_from_brik_init($self) or return;
+   $fr->encoding($self->encoding);
+   $fr->overwrite(1);
+   $fr->append(0);
+   $fr->write($decoded, $output) or return;
 
    return $output;
 }
@@ -56,16 +85,38 @@ sub encode {
    $self->brik_help_run_file_not_found('encode', $input) or return;
    $self->brik_help_run_undef_arg('encode', $output) or return;
 
-   my $ft_in = Metabrik::File::Text->new_from_brik_init($self) or return;
-   my $string = $ft_in->read($input) or return;
+   my $fr_in = Metabrik::File::Raw->new_from_brik_init($self) or return;
+   $fr_in->encoding($self->encoding);
+   my $string = $fr_in->read($input) or return;
 
    my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
    my $encoded = $sb->encode($string) or return;
 
-   my $ft_out = Metabrik::File::Text->new_from_brik_init($self) or return;
-   $ft_out->overwrite(1);
-   $ft_out->append(0);
-   $ft_out->write($encoded, $output) or return;
+   my $fr_out = Metabrik::File::Raw->new_from_brik_init($self) or return;
+   $fr_out->encoding($self->encoding);
+   $fr_out->overwrite(1);
+   $fr_out->append(0);
+   $fr_out->write($encoded, $output) or return;
+
+   return $output;
+}
+
+sub encode_from_string {
+   my $self = shift;
+   my ($input_string, $output) = @_;
+
+   $self->brik_help_run_undef_arg('encode_from_string', $input_string) or return;
+   $self->brik_help_run_file_not_found('encode_from_string', $input_string) or return;
+   $self->brik_help_run_undef_arg('encode_from_string', $output) or return;
+
+   my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
+   my $encoded = $sb->encode($input_string) or return;
+
+   my $fr = Metabrik::File::Raw->new_from_brik_init($self) or return;
+   $fr->encoding($self->encoding);
+   $fr->overwrite(1);
+   $fr->append(0);
+   $fr->write($encoded, $output) or return;
 
    return $output;
 }

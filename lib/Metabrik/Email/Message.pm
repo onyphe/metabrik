@@ -69,9 +69,24 @@ sub parse {
       return $self->log->error("parse: MIME failed for message");
    }
 
-   my @parts = $parsed->parts;
+   my $simple = Email::Simple->new($message);
+
+   my @headers = $simple->headers;
+   my %header = ();
+   for my $this (@headers) {
+      my @values = $simple->header($this);
+      if (@values == 1) {
+         $header{$this} = $values[0];
+      }
+      else {
+         $header{$this} = \@values;
+      }
+   }
 
    my @list = ();
+   push @list, \%header;
+
+   my @parts = $parsed->parts;
    for (@parts) {
       my $this = { %$_ };  # unbless it.
 
@@ -93,7 +108,7 @@ sub parse {
                $name = $_;
             }
             elsif (ref($_) eq 'ARRAY') {  # This is a value
-               $value = $_->[0];
+               $value = $_->[0];  # 0: has the header value, 1 has the header + value
             }
             if (defined($name) && defined($value)) {
                $new_headers->{$name} = $value;

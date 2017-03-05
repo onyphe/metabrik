@@ -21,6 +21,7 @@ sub brik_properties {
          strip_crlf => [ qw(0|1) ],
          _imap => [ qw(INTERNAL) ],
          _id => [ qw(INTERNAL) ],
+         _count => [ qw(INTERNAL) ],
       },
       attributes_default => {
          as_array => 0,
@@ -28,12 +29,16 @@ sub brik_properties {
       },
       commands => {
          open => [ qw(imap_uri|OPTIONAL) ],
+         total => [ ],
          read => [ ],
          read_next => [ ],
+         read_next_with_subject => [ qw(subject) ],
+         parse => [ qw(message) ],
          close => [ ],
       },
       require_modules => {
          'Net::IMAP::Simple' => [ ],
+         'Metabrik::Email::Message' => [ ],
       },
    };
 }
@@ -45,7 +50,7 @@ sub open {
    $input ||= $self->input;
    $self->brik_help_set_undef_arg('input', $input) or return;
 
-   my $parsed = $self->parse($input) or return;
+   my $parsed = $self->SUPER::parse($input) or return;
    my $host = $parsed->{host};
    my $port = $parsed->{port};
    my $user = $parsed->{user};
@@ -71,9 +76,19 @@ sub open {
    }
 
    my $count = $imap->select($path);
+   $self->_count($count);
    $self->_id($count);
 
    return $self->_imap($imap);
+}
+
+sub total {
+   my $self = shift;
+
+   my $imap = $self->_imap;
+   $self->brik_help_run_undef_arg('open', $imap) or return;
+
+   return $self->_count;
 }
 
 sub read_next {
@@ -98,6 +113,40 @@ sub read_next {
    }
 
    return join('', @$lines);
+}
+
+sub read_next_with_subject {
+   my $self = shift;
+   my ($subject) = @_;
+
+   my $imap = $self->_imap;
+   $self->brik_help_run_undef_arg('open', $imap) or return;
+   $self->brik_help_run_undef_arg('read_next_with_subject', $subject) or return;
+
+   my $total = $self->total;
+
+   for (1..$total) {
+      my $next = $self->read_next or return;
+      my $message = $self->parse($next) or return;
+      my $headers = $message->[0];
+      if ($headers->{Subject} =~ m{$subject}i) {
+         return $next;
+      }
+   }
+
+   return $self->log->error("read_next_with_subject: no message found with that subject ".
+      "in last $total messages.");
+}
+
+sub parse {
+   my $self = shift;
+   my ($message) = @_;
+
+   $self->brik_help_run_undef_arg('parse', $message) or return;
+
+   my $em = Metabrik::Email::Message->new_from_brik_init($self) or return;
+
+   return $em->parse($message);
 }
 
 sub close {

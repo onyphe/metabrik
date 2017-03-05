@@ -84,12 +84,30 @@ sub pcap_to_elasticsearch {
    my $tu = Metabrik::Time::Universal->new_from_brik_init($self) or return;
    my $today = $tu->today;
 
+   my $index = "forensicpcap-$today";
+   my $type = "pcap";
+
    $self->create_client or return;
 
-   $self->open_bulk_mode("forensicpcap-$today", "pcap") or return;
+   my $count_before = 0;
+   if ($self->is_index_exists($index)) {
+      $count_before = $self->count($index, $type);
+      if (! defined($count_before)) {
+         return;
+      }
+      $self->log->info("pcap_to_elasticsearch: current index [$index] count is ".
+         "[$count_before]");
+   }
+
+   $self->open_bulk_mode($index, $type) or return;
+
+   $self->log->info("pcap_to_elasticsearch: importing file [$file] to index ".
+      "[$index] with type [$type]");
 
    my $print_re = qr/^[[:print:]]{5,}/;
 
+   my $read = 0;
+   my $imported = 0;
    while (1) {
       my $h = $fp->read_next(10); # We read 10 by 10
       if (! defined($h)) {
@@ -98,6 +116,8 @@ sub pcap_to_elasticsearch {
       }
 
       last if @$h == 0; # Eof
+
+      $read += @$h;
 
       for my $this (@$h) {
          my $simple = $fp->from_read($this);
@@ -154,11 +174,40 @@ sub pcap_to_elasticsearch {
             $new->{$this_layer} = \%h;
          }
 
-         $self->index_bulk($new);
+         my $r = $self->index_bulk($new);
+         if (! defined($r)) {
+            $self->log->error("pcap_to_elasticsearch: bulk index failed for index ".
+               "[$index] at read [$read], skipping chunk");
+            next;
+         }
+
+         $imported++;
       }
    }
 
    $self->bulk_flush;
+
+   $self->refresh_index($index);
+
+   my $count_current = $self->count($index, $type) or return;
+   $self->log->info("pcap_to_elasticsearch: after index [$index] count is ".
+      "[$count_current]");
+
+   my $skipped = 0;
+   my $complete = (($count_current - $count_before) == $read) ? 1 : 0;
+   if ($complete) {  # If complete, import has been retried, and everything is now ok.
+      $imported = $read;
+   }
+   else {
+      $skipped = $read - ($count_current - $count_before);
+   }
+
+   if (! $complete) {
+      $self->log->warning("pcap_to_elasticsearch: import incomplete");
+   }
+   else {
+      $self->log->info("pcap_to_elasticsearch: successfully imported [$read] frames");
+   }
 
    return 1;
 }

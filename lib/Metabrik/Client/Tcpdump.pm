@@ -16,6 +16,7 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         datadir => [ qw(datadir) ],
          output => [ qw(output) ],
          device => [ qw(device) ], # Inherited
          layer => [ qw(2|3|4) ], # Inherited
@@ -98,7 +99,12 @@ sub capture_in_background {
    $count ||= $self->count;
    $self->brik_help_run_undef_arg('capture_in_background', $output) or return;
 
-   my $sp = Metabrik::System::Process->new_from_brik($self) or return;
+   my $datadir = $self->datadir;
+   $output = $datadir.'/'.$output;
+
+   $self->log->info("capture_in_background: writing to output [$output]");
+
+   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
    $sp->close_output_on_start(0);
 
    my $pidfile = $sp->start_with_pidfile(sub {

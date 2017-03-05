@@ -20,6 +20,7 @@ sub brik_properties {
          output => [ qw(file) ],
          as_array => [ qw(0|1) ],
          strip_crlf => [ qw(0|1) ],
+         encoding => [ qw(utf8|ascii) ],  # Inherited
          _fr => [ qw(INTERNAL) ],
       },
       # encoding: see `perldoc Encode::Supported' for other types

@@ -69,6 +69,8 @@ sub deobfuscate {
 
    my $buf = '';
    $context->bind_function(eval => sub { $buf .= join(' ', @_); });
+   $context->bind_function(alert => sub { $buf .= join(' ', @_); });
+   $context->bind_function(ActiveXObject => sub { $buf .= join(' ', @_); });
 
    my $r = $context->eval($js);
    if (defined($@) && ! defined($r)) {

@@ -70,7 +70,7 @@ sub brik_properties {
          delete_index => [ qw(index|indices_list) ],
          update_alias => [ qw(new_index alias) ],
          delete_document => [ qw(index type id) ],
-         show_indices => [ ],
+         show_indices => [ qw(string_filter|OPTIONAL) ],
          show_nodes => [ ],
          show_health => [ ],
          show_recovery => [ ],
@@ -760,6 +760,7 @@ sub delete_document {
 #
 sub show_indices {
    my $self = shift;
+   my ($string) = @_;
 
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
@@ -777,6 +778,16 @@ sub show_indices {
 
    if (@lines == 0) {
       $self->log->warning("show_indices: nothing returned, no index?");
+   }
+
+   my @filtered = ();
+   if (defined($string)) {
+      for (@lines) {
+         if (m{$string}) {
+            push @filtered, $_;
+         }
+      }
+      @lines = @filtered;
    }
 
    return \@lines;
@@ -2014,6 +2025,9 @@ sub import_from_csv {
    $fc->first_line_is_header(1);
    $fc->encoded_fields($self->csv_encoded_fields);
 
+   my $object_re = qr/^OBJECT:(.*)$/;
+   my $base64_re = qr/^BASE64:(.*)$/;
+
    my $refresh_interval;
    my $number_of_replicas;
    my $start = time();
@@ -2033,8 +2047,8 @@ sub import_from_csv {
          my $value = $this->{$k};
          if (! defined($value) || ! length($value)) {
          }
-         elsif ($value =~ m{^OBJECT:(.*)$}     # An OBJECT is waiting to be decoded
-            ||  $value =~ m{^BASE64:(.*)$}) {  # An OBJECT is waiting to be decoded
+         elsif ($value =~ $object_re     # An OBJECT is waiting to be decoded
+            ||  $value =~ $base64_re) {  # An OBJECT is waiting to be decoded
             my $s = $sb->decode($1);
             if (! defined($s)) {
                $self->log->error("import_from_csv: decode failed for index [$index] ".
@@ -2648,7 +2662,7 @@ sub get_snapshot_status {
 }
 
 #
-# Search::Elasticsearch::Client::2_0::Direct::Snapshot
+# Search::Elasticsearch::Client::5_0::Direct::Snapshot
 #
 sub create_snapshot {
    my $self = shift;
@@ -2685,8 +2699,6 @@ sub create_snapshot_for_indices {
    my ($indices, $snapshot_name, $repository_name) = @_;
 
    $self->brik_help_run_undef_arg('create_snapshot_for_indices', $indices) or return;
-   $self->brik_help_run_invalid_arg('create_snapshot_for_indices', $indices, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('create_snapshot_for_indices', $indices) or return;
 
    $snapshot_name ||= 'snapshot';
    $repository_name ||= 'repository';
@@ -2827,6 +2839,8 @@ sub restore_snapshot {
    my ($snapshot_name, $repository_name, $body) = @_;
 
    my $es = $self->_es;
+   $snapshot_name ||= 'snapshot';
+   $repository_name ||= 'repository';
    $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('restore_snapshot', $snapshot_name) or return;
    $self->brik_help_run_undef_arg('restore_snapshot', $repository_name) or return;
@@ -2855,12 +2869,11 @@ sub restore_snapshot_for_indices {
    my $self = shift;
    my ($indices, $snapshot_name, $repository_name) = @_;
 
+   $snapshot_name ||= 'snapshot';
+   $repository_name ||= 'repository';
    $self->brik_help_run_undef_arg('restore_snapshot_for_indices', $indices) or return;
    $self->brik_help_run_undef_arg('restore_snapshot_for_indices', $snapshot_name) or return;
    $self->brik_help_run_undef_arg('restore_snapshot_for_indices', $repository_name) or return;
-   $self->brik_help_run_invalid_arg('restore_snapshot_for_indices', $indices, 'ARRAY')
-     or return;
-   $self->brik_help_run_empty_array_arg('restore_snapshot_for_indices', $indices) or return;
 
    my $body = {
       indices => $indices,

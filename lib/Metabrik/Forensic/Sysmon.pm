@@ -43,10 +43,10 @@ sub brik_properties {
          get_raw_access_read_detected => [ ],
          get_process_accessed => [ ],
          get_file_created => [ ],
-         list_file_created_processes => [ ],
          get_registry_object_added_or_deleted => [ ],
          get_registry_value_set => [ ],
          get_sysmon_config_state_changed => [ ],
+         list_file_created_processes => [ ],
          ps => [ ],
          ps_image_loaded => [ ],
          ps_driver_loaded => [ ],
@@ -276,21 +276,6 @@ sub get_file_created {
    return $self->get_event_id(11, $index, $type);
 }
 
-sub list_file_created_processes {
-   my $self = shift;
-   my ($index, $type) = @_;
-
-   my $r = $self->get_file_created or return;
-
-   my %list = ();
-   for my $this (@$r) {
-      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
-      $list{$image}++;
-   }
-
-   return [ sort { $a cmp $b } keys %list ];
-}
-
 sub get_registry_object_added_or_deleted {
    my $self = shift;
    my ($index, $type) = @_;
@@ -385,7 +370,7 @@ sub _dedup_values {
    my $self = shift;
    my ($data, $value) = @_;
 
-   $value ||= 'image';
+   $value ||= 'source';
 
    for my $k1 (keys %$data) {
       for my $k2 (keys %{$data->{$k1}}) {
@@ -414,6 +399,21 @@ sub _fix_path {
    return $path;
 }
 
+sub list_file_created_processes {
+   my $self = shift;
+   my ($index, $type) = @_;
+
+   my $r = $self->get_file_created or return;
+
+   my %list = ();
+   for my $this (@$r) {
+      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
+      $list{$image}++;
+   }
+
+   return [ sort { $a cmp $b } keys %list ];
+}
+
 sub ps {
    my $self = shift;
 
@@ -421,16 +421,10 @@ sub ps {
 
    my %ps = ();
    for my $this (@$r) {
-      #my $image = $self->_fix_path(lc($this->{event_data}{Image}));
-      my $image_loaded = $self->_fix_path(lc($this->{event_data}{Image}));
-      #my $command_line = lc($this->{event_data}{CommandLine});
-      #my $parent_image = $self->_fix_path(lc($this->{event_data}{ParentImage}));
-      my $image = $self->_fix_path(lc($this->{event_data}{ParentImage}));
-      #my $parent_command_line = lc($this->{event_data}{ParentCommandLine});
+      my $source = $self->_fix_path(lc($this->{event_data}{ParentImage}));
+      my $target = $self->_fix_path(lc($this->{event_data}{Image}));
 
-      #push @{$ps{$image}{parent_image}}, $parent_image;
-      #push @{$ps{$parent_image}{image}}, $image;
-      push @{$ps{$image}{image_loaded}}, $image_loaded;
+      push @{$ps{$source}{targets}}, $target;
    }
 
    return $self->_dedup_values(\%ps);
@@ -443,12 +437,10 @@ sub ps_image_loaded {
 
    my %ps = ();
    for my $this (@$r) {
-      #my $process_id = $this->{event_data}{ProcessId};
-      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
-      my $image_loaded = $self->_fix_path(lc($this->{event_data}{ImageLoaded}));
+      my $source = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $target = $self->_fix_path(lc($this->{event_data}{ImageLoaded}));
 
-      #push @{$ps{$image}{process_id}}, $process_id;
-      push @{$ps{$image}{image_loaded}}, $image_loaded;
+      push @{$ps{$source}{targets}}, $target;
    }
 
    return $self->_dedup_values(\%ps);
@@ -461,12 +453,10 @@ sub ps_driver_loaded {
 
    my %ps = ();
    for my $this (@$r) {
-      #my $process_id = $this->{event_data}{ProcessId};
-      my $hashes = $this->{event_data}{Hashes};
-      my $image_loaded = $self->_fix_path(lc($this->{event_data}{ImageLoaded}));
+      my $source = $self->_fix_path(lc($this->{event_data}{ImageLoaded}));
+      my $target = $this->{event_data}{Hashes};
 
-      #push @{$ps{$image}{process_id}}, $process_id;
-      push @{$ps{$image_loaded}{hashes}}, $hashes;
+      push @{$ps{$source}{targets}}, $target;
    }
 
    return $self->_dedup_values(\%ps);
@@ -479,12 +469,10 @@ sub ps_parent_image {
 
    my %ps = ();
    for my $this (@$r) {
-      #my $process_id = $this->{event_data}{ProcessId};
-      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
-      my $parent_image = $self->_fix_path(lc($this->{event_data}{ParentImage}));
+      my $source = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $target = $self->_fix_path(lc($this->{event_data}{ParentImage}));
 
-      #push @{$ps{$image}{process_id}}, $process_id;
-      push @{$ps{$image}{parent_image}}, $parent_image;
+      push @{$ps{$source}{targets}}, $target;
    }
 
    return $self->_dedup_values(\%ps);
@@ -497,12 +485,10 @@ sub ps_target_filename_created {
 
    my %ps = ();
    for my $this (@$r) {
-      #my $process_id = $this->{event_data}{ProcessId};
-      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
-      my $target_filename = $self->_fix_path(lc($this->{event_data}{TargetFilename}));
+      my $source = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $target = $self->_fix_path(lc($this->{event_data}{TargetFilename}));
 
-      #push @{$ps{$image}{process_id}}, $process_id;
-      push @{$ps{$image}{target_filename}}, $target_filename;
+      push @{$ps{$source}{targets}}, $target;
    }
 
    return $self->_dedup_values(\%ps);
@@ -515,12 +501,10 @@ sub ps_target_filename_changed {
 
    my %ps = ();
    for my $this (@$r) {
-      #my $process_id = $this->{event_data}{ProcessId};
-      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
-      my $target_filename = $self->_fix_path(lc($this->{event_data}{TargetFilename}));
+      my $source = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $target = $self->_fix_path(lc($this->{event_data}{TargetFilename}));
 
-      #push @{$ps{$image}{process_id}}, $process_id;
-      push @{$ps{$image}{target_filename}}, $target_filename;
+      push @{$ps{$source}{targets}}, $target;
    }
 
    return $self->_dedup_values(\%ps);
@@ -533,12 +517,10 @@ sub ps_target_image {
 
    my %ps = ();
    for my $this (@$r) {
-      #my $process_id = $this->{event_data}{SourceProcessId};
-      my $image = $self->_fix_path(lc($this->{event_data}{SourceImage}));
-      my $target_image = $self->_fix_path(lc($this->{event_data}{TargetImage}));
+      my $source = $self->_fix_path(lc($this->{event_data}{SourceImage}));
+      my $target = $self->_fix_path(lc($this->{event_data}{TargetImage}));
 
-      #push @{$ps{$image}{process_id}}, $process_id;
-      push @{$ps{$image}{target_image}}, $target_image;
+      push @{$ps{$source}{targets}}, $target;
    }
 
    return $self->_dedup_values(\%ps);
@@ -551,8 +533,7 @@ sub ps_network_connections {
 
    my %ps = ();
    for my $this (@$r) {
-      #my $process_id = $this->{event_data}{ProcessId};
-      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $source = $self->_fix_path(lc($this->{event_data}{Image}));
       my $src_ip = $this->{event_data}{SourceIp};
       my $src_hostname = $this->{event_data}{SourceHostname} || '';
       my $dest_ip = $this->{event_data}{DestinationIp};
@@ -561,10 +542,10 @@ sub ps_network_connections {
       my $dest_port = $this->{event_data}{DestinationPort};
       my $protocol = lc($this->{event_data}{Protocol});
 
-      my $connection = "$protocol|[$src_ip]:src_port:$src_hostname>".
-         "[$dest_ip]:dest_port:$dest_hostname";
+      my $target = "$protocol|[$src_ip]:$src_port:$src_hostname>".
+         "[$dest_ip]:$dest_port:$dest_hostname";
 
-      push @{$ps{$image}{connections}}, $connection;
+      push @{$ps{$source}{targets}}, $target;
    }
 
    return $self->_dedup_values(\%ps);
@@ -577,11 +558,10 @@ sub ps_registry_object_added_or_deleted {
 
    my %ps = ();
    for my $this (@$r) {
-      #my $process_id = $this->{event_data}{ProcessId};
-      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
-      my $target_object = $self->_fix_path($this->{event_data}{TargetObject});
+      my $source = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $target = $self->_fix_path($this->{event_data}{TargetObject});
 
-      push @{$ps{$image}{target_object}}, $target_object;
+      push @{$ps{$source}{targets}}, $target;
    }
 
    return $self->_dedup_values(\%ps);
@@ -594,11 +574,10 @@ sub ps_registry_value_set {
 
    my %ps = ();
    for my $this (@$r) {
-      #my $process_id = $this->{event_data}{ProcessId};
-      my $image = $self->_fix_path(lc($this->{event_data}{Image}));
-      my $target_object = $self->_fix_path($this->{event_data}{TargetObject});
+      my $source = $self->_fix_path(lc($this->{event_data}{Image}));
+      my $target = $self->_fix_path($this->{event_data}{TargetObject});
 
-      push @{$ps{$image}{target_object}}, $target_object;
+      push @{$ps{$source}{targets}}, $target;
    }
 
    return $self->_dedup_values(\%ps);
@@ -611,11 +590,10 @@ sub ps_target_process_accessed {
 
    my %ps = ();
    for my $this (@$r) {
-      #my $process_id = $this->{event_data}{SourceProcessId};
-      my $image = $self->_fix_path(lc($this->{event_data}{SourceImage}));
-      my $target_image = $self->_fix_path(lc($this->{event_data}{TargetImage}));
+      my $source = $self->_fix_path(lc($this->{event_data}{SourceImage}));
+      my $target = $self->_fix_path(lc($this->{event_data}{TargetImage}));
 
-      push @{$ps{$image}{target_image}}, $target_image;
+      push @{$ps{$source}{targets}}, $target;
    }
 
    return $self->_dedup_values(\%ps);
@@ -759,10 +737,20 @@ sub write_list {
    $fc->overwrite(1);
    $fc->append(0);
 
-   # Replace unwanted char so we can use regexes
+   # Escape some chars so we can use regexes
    for my $this (@$data) {
       for my $k (keys %$this) {
-         $this->{$k} =~ s{[\?\(\)\[\]\*\{\}]}{.}g;
+         $this->{$k} =~ s{\.}{\\.}g;
+         $this->{$k} =~ s{\?}{\\?}g;
+         $this->{$k} =~ s{\(}{\\(}g;
+         $this->{$k} =~ s{\)}{\\)}g;
+         $this->{$k} =~ s{\*}{\\*}g;
+         $this->{$k} =~ s{\[}{\\[}g;
+         $this->{$k} =~ s{\]}{\\]}g;
+         $this->{$k} =~ s/{/\\{/g;
+         $this->{$k} =~ s/}/\\}/g;
+         $this->{$k} =~ s{^}{\^};
+         $this->{$k} =~ s{$}{\$};
       }
    }
 
@@ -890,12 +878,12 @@ sub diff_current_state {
       ps_network_connections
       ps_parent_image
       ps_registry_object_added_or_deleted
+      ps_registry_value_set
       ps_target_filename_changed
       ps_target_filename_created
       ps_target_image
       ps_target_process_accessed
    );
-      #ps_registry_value_set
 
    # Process only one type
    if (defined($type)) {
@@ -925,24 +913,10 @@ sub diff_current_state {
    my %grouped = ();
    for my $k (keys %diff) {
       my $list = $diff{$k};
-      my $group_by = 'image';
-      my $value = 'image_loaded';
-      if ($k eq 'ps') {
-         $group_by = 'image';
-         $value = 'image_loaded';
-      }
-      elsif ($k eq 'ps_image_loaded') {
-         $group_by = 'image';
-         $value = 'image_loaded';
-      }
-      elsif ($k eq 'ps_target_filename_created') {
-         $group_by = 'image';
-         $value = 'target_filename';
-      }
-      # XXX: do for others
+      my $group_by = 'source';
+      my $value = 'targets';
       for my $this (@$list) {
          push @{$grouped{$k}{$this->{$group_by}}}, $this->{$value};
-         #${$grouped{$k}{$this->{$group_by}}}{$this->{$value}}++;
       }
    }
 

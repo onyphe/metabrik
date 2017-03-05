@@ -42,11 +42,11 @@ sub update {
 
    my $datadir = $self->datadir;
 
-   my $cmd = "freshclam --datadir=$datadir --log=$datadir/freshclam.log";
+   my $cmd = "freshclam";
 
    $self->log->verbose($cmd);
 
-   return $self->system($cmd);
+   return $self->sudo_system($cmd);
 }
 
 sub scan {

@@ -18,6 +18,7 @@ sub brik_properties {
       attributes => {
          input => [ qw(file) ],
          output => [ qw(file) ],
+         encoding => [ qw(utf8|ascii) ],  # Inherited
       },
       attributes_default => {
          encoding => 'ascii',
