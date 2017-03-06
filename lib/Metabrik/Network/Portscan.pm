@@ -132,7 +132,7 @@ sub brik_properties {
          estimate_bandwidth => [ qw(pps|OPTIONAL size|OPTIONAL) ],
          estimate_pps => [ qw(bandwidth|OPTIONAL size|OPTIONAL) ],
          tcp_syn_sender => [ qw($ip_list $port_list|OPTIONAL pps|OPTIONAL try|OPTIONAL) ],
-         tcp_syn_start_receiver => [ qw($port_list|OPTIONAL) ],
+         tcp_syn_start_receiver => [ qw($port_list|OPTIONAL filter|OPTIONAL) ],
          tcp_syn_stop_receiver => [ ],
          tcp_syn_scan => [ qw($ip_list $port_list|OPTIONAL pps|OPTIONAL try|OPTIONAL) ],
          tcp_syn_receive_until_sender_exit => [ qw(pid pps|OPTIONAL wait|OPTIONAL use_ipv6|OPTIONAL) ],
@@ -329,7 +329,7 @@ sub tcp_syn_sender {
 
 sub tcp_syn_start_receiver {
    my $self = shift;
-   my ($port_list) = @_;
+   my ($port_list, $filter) = @_;
 
    if (defined($port_list)) {
       $self->brik_help_run_invalid_arg('tcp_syn_start_receiver', $port_list, 'ARRAY')
@@ -354,19 +354,21 @@ sub tcp_syn_start_receiver {
    }
     
    # Create a filter if not provided by user
-   my $filter = $self->use_ipv6
-      ? 'tcp and (ip6 and dst host '.$ip.')'
-      : 'tcp and (((tcp[13] & 2 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.')'.
-        ' or '.
-        '((tcp[13] & 4 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.'))';
+   if (! defined($filter)) {
+      $filter = $self->use_ipv6
+         ? 'tcp and (ip6 and dst host '.$ip.')'
+         : 'tcp and (((tcp[13] & 2 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.')'.
+           ' or '.
+           '((tcp[13] & 4 != 0) and (tcp[13] & 16 != 0) and dst host '.$ip.'))';
 
-   # If only a few ports specified, we use that in the filter
-   if (defined($port_list) && @$port_list <= 10) {
-      $filter .= " and (";
-      for (@$port_list) {
-         $filter .= "src port $_ or ";
+      # If only a few ports specified, we use that in the filter
+      if (defined($port_list) && @$port_list <= 10) {
+         $filter .= " and (";
+         for (@$port_list) {
+            $filter .= "src port $_ or ";
+         }
+         $filter =~ s/ or $/)/;
       }
-      $filter =~ s/ or $/)/;
    }
 
    $self->log->verbose("tcp_syn_start_receiver: using filter [$filter]");

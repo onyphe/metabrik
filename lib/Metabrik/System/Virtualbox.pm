@@ -357,7 +357,7 @@ sub is_started {
 
    my $info = $self->info($name) or return;
    my $state = $info->{state} || 'undef';
-   if ($state !~ m{powered off}) {
+   if ($state =~ m{running}) {
       return 1;
    }
 
