@@ -18,10 +18,12 @@ sub brik_properties {
       attributes => {
          timezone => [ qw(string) ],
          separator => [ qw(character) ],
+         use_hires => [ qw(0|1) ],
       },
       attributes_default => {
          timezone => [ 'Europe/Paris' ],
          separator => '-',
+         use_hires => 0,
       },
       commands => {
          list_timezones => [ ],
@@ -45,6 +47,7 @@ sub brik_properties {
          'DateTime::TimeZone' => [ ],
          'POSIX' => [ qw(strftime) ],
          'Time::Local' => [ qw(timelocal) ],
+         'Time::HiRes' => [ qw(time) ],
       },
    };
 }
@@ -138,7 +141,9 @@ sub day {
    my $self = shift;
    my ($timestamp) = @_;
 
-   my @t = defined($timestamp) ? CORE::localtime($timestamp) : CORE::localtime();
+   $timestamp ||= $self->timestamp;
+
+   my @t = CORE::localtime($timestamp);
 
    my $year = $t[5] + 1900;
    my $month = $t[4] + 1;
@@ -151,24 +156,18 @@ sub date {
    my $self = shift;
    my ($timestamp) = @_;
 
-   if (defined($timestamp)) {
-      return CORE::localtime($timestamp)."";
-   }
+   $timestamp ||= $self->timestamp;
 
-   return CORE::localtime()."";
+   return CORE::localtime($timestamp)."";
 }
 
 sub gmdate {
    my $self = shift;
    my ($timestamp) = @_;
 
-   eval("use POSIX qw(strftime);");
+   $timestamp ||= $self->timestamp;
 
-   if (defined($timestamp)) {
-      return strftime("%a %b %e %H:%M:%S %Y", CORE::gmtime($timestamp));
-   }
-
-   return strftime("%a %b %e %H:%M:%S %Y", CORE::gmtime());
+   return POSIX::strftime("%a %b %e %H:%M:%S %Y", CORE::gmtime($timestamp));
 }
 
 #
@@ -181,9 +180,15 @@ sub timestamp_to_tz_time {
    $timestamp ||= $self->timestamp;
    $self->brik_help_run_undef_arg('timestamp_to_tz_time', $timestamp) or return;
 
-   eval("use POSIX qw(strftime);");
+   if ($self->use_hires) {
+      my $t = $timestamp || Time::HiRes::time();
+      my $date = POSIX::strftime("%Y-%m-%d".'T'."%H:%M:%S", CORE::localtime($t));
+      $date .= sprintf(".%03dZ", ($t-int($t))*1000); # without rounding
 
-   return strftime("%Y-%m-%d".'T'."%H:%M:%S.000Z", CORE::localtime($timestamp));
+      return $date;
+   }
+
+   return POSIX::strftime("%Y-%m-%d".'T'."%H:%M:%S.000Z", CORE::localtime($timestamp));
 }
 
 sub timestamp_to_tz_gmtime {
@@ -193,9 +198,15 @@ sub timestamp_to_tz_gmtime {
    $timestamp ||= $self->timestamp;
    $self->brik_help_run_undef_arg('timestamp_to_tz_gmtime', $timestamp) or return;
 
-   eval("use POSIX qw(strftime);");
+   if ($self->use_hires) {
+      my $t = $timestamp || Time::HiRes::time();
+      my $date = POSIX::strftime("%Y-%m-%d".'T'."%H:%M:%S", CORE::gmtime($t));
+      $date .= sprintf(".%03dZ", ($t-int($t))*1000); # without rounding
 
-   return strftime("%Y-%m-%d".'T'."%H:%M:%S.000Z", CORE::gmtime($timestamp));
+      return $date;
+   }
+
+   return POSIX::strftime("%Y-%m-%d".'T'."%H:%M:%S.000Z", CORE::gmtime($timestamp));
 }
 
 sub month {
@@ -244,6 +255,10 @@ sub is_timezone {
 sub timestamp {
    my $self = shift;
 
+   if ($self->use_hires) {
+      return Time::HiRes::time();
+   }
+
    return CORE::time();
 }
 
@@ -270,6 +285,10 @@ sub to_timestamp {
    # 2015-12-30
    if ($string =~ m{^(\d{4})-(\d{2})-(\d{2})$}) {
       $timestamp = Time::Local::timelocal(0, 0, 12, $3, $2-1, $1);
+      if ($self->use_hires) {
+         my $msec = 0;
+         $timestamp .= sprintf(".%03d", $msec);
+      }
    }
    # Wed Nov  9 07:01:18 2016
    elsif ($string =~ m{^\S+\s+(\S+)\s+(\d+)\s+(\d+):(\d+):(\d+)\s+(\d+)$}) {
@@ -279,7 +298,11 @@ sub to_timestamp {
       my $min = $4;
       my $sec = $5;
       my $year = $6;
+      my $msec = $7;
       $timestamp = Time::Local::timelocal($sec, $min, $hour, $mday, $month{$mon}, $year);
+      if ($self->use_hires) {
+         $timestamp .= sprintf(".%03d", $msec);
+      }
    }
    # 2016-04-12T17:25:50.713Z
    elsif ($string =~ m{^(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$}) {
@@ -289,7 +312,11 @@ sub to_timestamp {
       my $min = $5;
       my $sec = $6;
       my $year = $1;
+      my $msec = $7;
       $timestamp = Time::Local::timelocal($sec, $min, $hour, $mday, $mon, $year);
+      if ($self->use_hires) {
+         $timestamp .= sprintf(".%03d", $msec);
+      }
    }
    else {
       return $self->log->error("to_timestamp: string [$string] not a valid date format");
