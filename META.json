@@ -583,6 +583,9 @@
       "Metabrik::String::Html" : {
          "file" : "lib/Metabrik/String/Html.pm"
       },
+      "Metabrik::String::Http" : {
+         "file" : "lib/Metabrik/String/Http.pm"
+      },
       "Metabrik::String::Ini" : {
          "file" : "lib/Metabrik/String/Ini.pm"
       },

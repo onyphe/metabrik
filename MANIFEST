@@ -186,6 +186,7 @@ lib/Metabrik/String/Hash.pm
 lib/Metabrik/String/Hexa.pm
 lib/Metabrik/String/Hostname.pm
 lib/Metabrik/String/Html.pm
+lib/Metabrik/String/Http.pm
 lib/Metabrik/String/Ini.pm
 lib/Metabrik/String/Javascript.pm
 lib/Metabrik/String/Json.pm
