@@ -295,6 +295,8 @@ provides:
     file: lib/Metabrik/Network/Zmap.pm
   Metabrik::Password::Mirai:
     file: lib/Metabrik/Password/Mirai.pm
+  Metabrik::Password::Rockyou:
+    file: lib/Metabrik/Password/Rockyou.pm
   Metabrik::Perl::Module:
     file: lib/Metabrik/Perl/Module.pm
   Metabrik::Proxy::Http:
