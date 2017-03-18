@@ -41,7 +41,7 @@ sub disable {
 
    my $cmd = '"powershell.exe Set-MpPreference -DisableRealtimeMonitoring \$true"';
 
-   return $self->execute($cmd);
+   return $self->execute_in_background($cmd);
 }
 
 sub enable {
@@ -57,7 +57,7 @@ sub enable {
 
    my $cmd = '"powershell.exe Set-MpPreference -DisableRealtimeMonitoring \$false"';
 
-   return $self->execute($cmd);
+   return $self->execute_in_background($cmd);
 }
 
 1;
