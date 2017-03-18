@@ -71,6 +71,10 @@ sub deobfuscate {
    $context->bind_function(eval => sub { $buf .= join(' ', @_); });
    $context->bind_function(alert => sub { $buf .= join(' ', @_); });
    $context->bind_function(ActiveXObject => sub { $buf .= join(' ', @_); });
+   $context->bind_function(WScript => sub { $buf .= join(' ', @_); });
+   # Google V8 has no XMLHttpRequest nor network related functions.
+   # We should replace it by NodeJS at some point.
+   $context->bind_function(XMLHttpRequest => sub { $buf .= join(' ', @_); });
 
    my $r = $context->eval($js);
    if (defined($@) && ! defined($r)) {

@@ -31,6 +31,7 @@ sub brik_properties {
          from_json_file => [ qw(json_file index|OPTIONAL type|OPTIONAL) ], # Inherited
          from_dump_file => [ qw(dump_file index|OPTIONAL type|OPTIONAL) ], # Inherited
          pcap_to_elasticsearch => [ qw(file filter|OPTIONAL) ],
+         show_sessions => [ qw(ip_address port protocol) ],
       },
       require_modules => {
          'Metabrik::File::Pcap' => [ ],
@@ -207,6 +208,83 @@ sub pcap_to_elasticsearch {
    }
    else {
       $self->log->info("pcap_to_elasticsearch: successfully imported [$read] frames");
+   }
+
+   return 1;
+}
+
+sub show_sessions {
+   my $self = shift;
+   my ($ip_address, $port, $protocol) = @_;
+
+   $protocol ||= 'TCP';
+   $self->brik_help_run_undef_arg('show_sessions', $ip_address) or return;
+   $self->brik_help_run_undef_arg('show_sessions', $port) or return;
+
+   if ($protocol ne 'TCP' && $protocol ne 'UDP') {
+      return $self->log->error("show_sessions: protocol must be TCP or UDP");
+   }
+
+   #
+   # TCP query
+   #
+   # (TCP.flags:16 OR TCP.flags:24)
+   # AND (IPv4.src:$ip OR IPv4.dst:$ip)
+   # AND (TCP.dst:$port OR TCP.src:$port)
+   #
+   my @should1 = ();
+   my @should2 = (
+      { term => { 'IPv4.src' => $ip_address } },
+      { term => { 'IPv4.dst' => $ip_address } },
+   );
+   my @should3 = ();
+
+   if ($protocol eq 'TCP') {
+      push @should1, { term => { 'TCP.flags' => 16 } };  # ACK+PSH
+      push @should1, { term => { 'TCP.flags' => 24 } };  # ACK+PSH
+      push @should3, { term => { 'TCP.dst' => $port } };
+      push @should3, { term => { 'TCP.src' => $port } };
+   }
+   else {
+      push @should3, { term => { 'UDP.dst' => $port } };
+      push @should3, { term => { 'UDP.src' => $port } };
+   }
+
+   # IPv4.dst:37.247.10.18 OR IPv4.src:37.247.10.18
+
+   my $q = {
+      size => 1000,
+      sort => [
+         { '_uid' => { order => "asc" } },
+         { '@timestamp' => { order => "asc" } },
+      ],
+      query => {
+         bool => {
+            must => [
+               { bool => { should => \@should1, }, },
+               { bool => { should => \@should2, }, },
+               { bool => { should => \@should3, }, },
+            ],
+         }
+      },
+   };
+
+   my $r = $self->query($q) or return;
+   my $hits = $self->get_query_result_hits($r) or return;
+
+   use Data::Dumper;
+
+   for my $this (@$hits) {
+      #print Dumper($this)."\n"; last;
+      $this = $this->{_source};
+      my $timestamp = $this->{'@timestamp'};
+      my $ip_src = $this->{IPv4}{src};
+      my $ip_dst = $this->{IPv4}{dst};
+      my $src = $this->{TCP}{src} || $this->{UDP}{src};
+      my $dst = $this->{TCP}{dst} || $this->{UDP}{dst};
+      my $payload = $this->{TCP}{payload} || $this->{UDP}{payload} || '';
+
+      print "$timestamp: [$ip_src]:$src > [$ip_dst]:$dst [$payload]\n";
    }
 
    return 1;

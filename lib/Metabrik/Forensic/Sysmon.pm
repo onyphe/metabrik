@@ -22,10 +22,12 @@ sub brik_properties {
          filter_user => [ qw(user) ],
          filter_session => [ qw(session) ],
          filter_computer_name => [ qw(name) ],
+         use_regex_match => [ qw(0|1) ],
       },
       attributes_default => {
          index => 'winlogbeat-*',
          type => 'wineventlog',
+         use_regex_match => 0,
       },
       commands => {
          create_client => [ ],
@@ -65,9 +67,9 @@ sub brik_properties {
          build_list => [ qw(ps_data) ],
          write_list => [ qw(list_data output_csv) ],
          read_list => [ qw(input_csv) ],
-         clean_ps_from_list => [ qw(ps_data input_csv) ],
+         clean_ps_from_list => [ qw(ps_data input_csv sources|OPTIONAL) ],
          save_state => [ qw(ps_type|OPTIONAL) ],
-         diff_current_state => [ qw(ps_type|OPTIONAL) ],
+         diff_current_state => [ qw(ps_type|OPTIONAL sources|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::File::Csv' => [ ],
@@ -740,6 +742,7 @@ sub write_list {
    # Escape some chars so we can use regexes
    for my $this (@$data) {
       for my $k (keys %$this) {
+         $this->{$k} =~ s{\|}{\\|}g;
          $this->{$k} =~ s{\.}{\\.}g;
          $this->{$k} =~ s{\?}{\\?}g;
          $this->{$k} =~ s{\(}{\\(}g;
@@ -774,12 +777,17 @@ sub read_list {
 
 sub clean_ps_from_list {
    my $self = shift;
-   my ($data, $input) = @_;
+   my ($data, $input, $sources) = @_;
 
    $self->brik_help_run_undef_arg('clean_ps_from_list', $data) or return;
    $self->brik_help_run_invalid_arg('clean_ps_from_list', $data, 'ARRAY') or return;
    $self->brik_help_run_undef_arg('clean_ps_from_list', $input) or return;
    $self->brik_help_run_file_not_found('clean_ps_from_list', $input) or return;
+
+   if (defined($sources)) {
+      $self->brik_help_run_invalid_arg('clean_ps_from_list', $sources, 'ARRAY')
+         or return;
+   }
 
    my $csv_list = $self->read_list($input) or return;
    my $data_list = $self->build_list($data) or return;
@@ -791,18 +799,47 @@ sub clean_ps_from_list {
    my @keys = keys %$first;
    my $count = scalar @keys;
 
+   #my $wl_remove = qr/(?:\\|^\^|\$$)/;
+   my $wl_remove_start = qr/^\^/;
+   my $wl_remove_end = qr/\$$/;
+   my $wl_remove_pipe = qr/\\|$/;
+
    my @clean = ();
    for my $ps (@$data_list) {
+      if (defined($sources)) {
+         my $skip = 1;
+         for (@$sources) {
+            if ($ps->{source} eq $_) {
+               $skip = 0;
+               last;
+            }
+         }
+         next if $skip;
+      }
       my $whitelisted = 0;
       for my $csv (@$csv_list) {
          my $this_count = 0;
          for my $k (@keys) {
             my $v = $ps->{$k};
             my $wl = $csv->{$k};
-            if ($v =~ m{^$wl$}) {
-            #if ($v eq $wl) {
-               #print "v[$v] wl[$wl]\n";
-               $this_count++;
+            if ($self->use_regex_match) {
+               if ($v =~ m{^$wl$}) {
+                  $this_count++;
+               }
+            }
+            else {
+               # We have to remove escape chars.
+               #$wl =~ s{$wl_remove}{}g;
+               #$wl =~ s{\\|)}{}g;
+               #$wl =~ s{^\^}{}g;
+               #$wl =~ s{\$$}{}g;
+               $wl =~ s{$wl_remove_start}{}g;
+               $wl =~ s{$wl_remove_end}{}g;
+               $wl =~ s{$wl_remove_pipe}{}g;
+               #print "compare [$v] vs [$wl]\n";
+               if ($v eq $wl) {
+                  $this_count++;
+               }
             }
          }
          if ($this_count == $count) {  # Whitelist matched
@@ -869,7 +906,12 @@ sub save_state {
 
 sub diff_current_state {
    my $self = shift;
-   my ($type) = @_;
+   my ($type, $sources) = @_;
+
+   if (defined($sources)) {
+      $self->brik_help_run_invalid_arg('diff_current_state', $sources, 'ARRAY')
+         or return;
+   }
 
    my @ps = qw(
       ps
@@ -892,6 +934,10 @@ sub diff_current_state {
 
    my %diff = ();
    for my $this (@ps) {
+      if (! $self->can($this)) {
+         $self->log->error("diff_current_state: state [$this] unknown, skipping");
+         next;
+      }
       my $ps = $self->$this;
       if (! defined($ps)) {
          $self->log->error("diff_current_state: failed [$this], skipping");
@@ -900,7 +946,7 @@ sub diff_current_state {
 
       $self->log->info("diff_current_state: processing [$this] against [$this.csv]...");
 
-      my $diff = $self->clean_ps_from_list($ps, "$this.csv");
+      my $diff = $self->clean_ps_from_list($ps, "$this.csv", $sources);
       if (! defined($ps)) {
          $self->log->error("diff_current_state: failed clean_ps_from_list, skipping");
          next;

@@ -332,6 +332,16 @@ sub set_first_output_resolution {
    return $self->capture("xrandr --output $output --mode $resolution");
 }
 
+#
+# Alias to set_first_output_resolution
+#
+sub set_output_resolution {
+   my $self = shift;
+
+   return $self->set_first_output_resolution(@_);
+}
+
+
 sub set_first_output_max_resolution {
    my $self = shift;
 

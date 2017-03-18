@@ -241,6 +241,7 @@ sub unique_term {
          1 => {
             cardinality => {
                field => $unique,
+               precision_threshold => 40000,
             },
          },
       },

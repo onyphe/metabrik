@@ -45,7 +45,8 @@ sub record_desktop {
    $resolution ||= $self->resolution;
    $self->brik_help_run_undef_arg('record_desktop', $output) or return;
 
-   my $cmd = 'ffmpeg';
+   # Give 1 second to switch window if needed.
+   my $cmd = 'sleep 1 && ffmpeg';
    if ($self->use_micro) {
       $cmd .= " -f alsa -i pulse -f x11grab -r 25 -s $resolution -i :0.0 ".
          "-acodec pcm_s16le -vcodec libx264 -preset ultrafast -crf 0 -threads 0";

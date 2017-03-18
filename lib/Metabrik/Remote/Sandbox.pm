@@ -17,7 +17,6 @@ sub brik_properties {
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          datadir => [ qw(datadir) ],
-         imap_uri => [ qw(uri) ],
          es_nodes => [ qw(nodes) ],
          es_indices => [ qw(indices) ],
          win_host => [ qw(host) ],
@@ -25,6 +24,7 @@ sub brik_properties {
          win_password => [ qw(password) ],
          vm_id => [ qw(id) ],
          vm_snapshot_name => [ qw(name) ],
+         use_regex_match => [ qw(0|1) ],
          _client => [ qw(INTERNAL) ],
          _ci => [ qw(INTERNAL) ],
          _em => [ qw(INTERNAL) ],
@@ -43,24 +43,23 @@ sub brik_properties {
          es_nodes => [ qw(http://localhost:9200) ],
          es_indices => 'winlogbeat-*',
          vm_snapshot_name => '666_before_malware',
+         use_regex_match => 0,
       },
       commands => {
          create_client => [ ],
-         create_imap_client => [ qw(imap_uri|OPTIONAL) ],
-         reset_imap_client => [ qw(imap_uri|OPTIONAL) ],
-         get_next_email_attachment => [ qw(imap_uri|OPTIONAL) ],
-         save_elasticsearch_state => [ ],
+         save_elasticsearch_state => [ qw(name|OPTIONAL) ],
          restore_elasticsearch_state => [ ],
          restart_sysmon_collector => [ ],
          upload_and_execute => [ qw(file) ],
-         diff_ps_state => [ ],
-         diff_ps_network_connections => [ ],
+         diff_ps_state => [ qw(processes|OPTIONAL) ],
+         diff_ps_network_connections => [ qw(processes|OPTIONAL) ],
+         diff_ps_target_filename_created => [ qw(processes|OPTIONAL) ],
+         loop_and_download_created_files => [ qw(processes|OPTIONAL) ],
+         memdump_as_volatility => [ qw(output|OPTIONAL) ],
+         stop_vm => [ ],
+         restore_vm => [ ],
       },
       require_modules => {
-         'Metabrik::Client::Imap' => [ ],
-         'Metabrik::Email::Message' => [ ],
-         'Metabrik::File::Base64' => [ ],
-         'Metabrik::File::Raw' => [ ],
          'Metabrik::System::File' => [ ],
          'Metabrik::String::Password' => [ ],
          'Metabrik::Client::Smbclient' => [ ],
@@ -155,9 +154,10 @@ sub create_client {
    $rwd->password($win_password);
 
    my $sv = Metabrik::System::Virtualbox->new_from_brik_init($self) or return;
-   $sv->type('headless');
+   $sv->type('gui');
 
    my $fs = Metabrik::Forensic::Sysmon->new_from_brik_init($self) or return;
+   $fs->use_regex_match($self->use_regex_match);
 
    $self->_cs($cs);
    $self->_ce($ce);
@@ -170,97 +170,16 @@ sub create_client {
    return $self->_client(1);
 }
 
-sub create_imap_client {
-   my $self = shift;
-   my ($imap_uri) = @_;
-
-   $imap_uri ||= $self->imap_uri;
-   $self->brik_help_set_undef_arg('create_imap_client', $imap_uri) or return;
-
-   my $ci = $self->_ci;
-   if (! defined($ci)) {
-      $ci = Metabrik::Client::Imap->new_from_brik_init($self) or return;
-      $ci->open($imap_uri) or return;
-      $self->_ci($ci);
-
-      my $em = Metabrik::Email::Message->new_from_brik_init($self) or return;
-      $self->_em($em);
-
-      my $fb = Metabrik::File::Base64->new_from_brik_init($self) or return;
-      $self->_fb($fb);
-
-      my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
-      $self->_sf($sf);
-
-      my $fr = Metabrik::File::Raw->new_from_brik_init($self) or return;
-      $fr->encoding('ascii');
-      $self->_fr($fr);
-   }
-
-   return $ci;
-}
-
-sub reset_imap_client {
-   my $self = shift;
-
-   my $ci = $self->_ci;
-   if (defined($ci)) {
-      $ci->close;
-      $self->_ci(undef);
-   }
-
-   return 1;
-}
-
-sub get_next_email_attachment {
-   my $self = shift;
-   my ($imap_uri) = @_;
-
-   $imap_uri ||= $self->imap_uri;
-   $self->brik_help_set_undef_arg('get_next_email_attachment', $imap_uri) or return;
-
-   my $ci = $self->create_imap_client($imap_uri);
-   my $em = $self->_em;
-   my $fb = $self->_fb;
-   my $sf = $self->_sf;
-   my $fr = $self->_fr;
-
-   my $total = $ci->total;
-   for (1..$total) {
-      my $next = $ci->read_next or return;
-      my $message = $em->parse($next) or return;
-      my $headers = $message->[0];
-      my @files = ();
-      for my $part (@$message) {
-         if (exists($part->{filename}) && length($part->{filename})) {
-            my $from = $headers->{From};
-            my $to = $headers->{To};
-            my $subject = $headers->{Subject};
-            my $filename = $sf->basefile($part->{filename});
-            $filename =~ s{\s+}{_}g; # I hate spaces in filenames.
-            my $output = $fb->decode_from_string(
-               $part->{file_content}, $self->datadir."/$filename"
-            );
-            push @files, {
-               headers => $headers,
-               file => $output,
-            };
-         }
-      }
-      return \@files if @files > 0;
-   }
-
-   return $self->log->error("get_next_email_attachment: no message ".
-      "with an attachment has been found");
-}
-
 sub save_elasticsearch_state {
    my $self = shift;
+   my ($name) = @_;
+
+   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
 
    my $ce = $self->_ce;
    my $indices = $self->es_indices;
 
-   return $ce->create_snapshot_for_indices($indices);
+   return $ce->create_snapshot_for_indices($indices, $name);
 }
 
 sub restore_elasticsearch_state {
@@ -341,6 +260,8 @@ sub upload_and_execute {
       $self->log->info("upload_and_execute: done.");
    }
 
+   sleep(5);  # Waiting for VM to start.
+
    $self->log->info("upload_and_execute: disabling Windows Defender...");
    $rwd->disable or return;
    $self->log->info("upload_and_execute: done.");
@@ -362,22 +283,126 @@ sub upload_and_execute {
 
 sub diff_ps_state {
    my $self = shift;
+   my ($processes) = @_;
+
+   if (defined($processes)) {
+      $self->brik_help_run_invalid_arg('diff_ps_state',
+         $processes, 'ARRAY') or return;
+   }
 
    $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
 
    my $fs = $self->_fs;
 
-   return $fs->diff_current_state('ps');
+   return $fs->diff_current_state('ps', $processes);
 }
 
 sub diff_ps_network_connections {
    my $self = shift;
+   my ($processes) = @_;
+
+   if (defined($processes)) {
+      $self->brik_help_run_invalid_arg('diff_ps_network_connections',
+         $processes, 'ARRAY') or return;
+   }
 
    $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
 
    my $fs = $self->_fs;
 
-   return $fs->diff_current_state('ps_network_connections');
+   return $fs->diff_current_state('ps_network_connections', $processes);
+}
+
+sub diff_ps_target_filename_created {
+   my $self = shift;
+   my ($processes) = @_;
+
+   if (defined($processes)) {
+      $self->brik_help_run_invalid_arg('diff_ps_target_filename_created',
+         $processes, 'ARRAY') or return;
+   }
+
+   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
+
+   my $fs = $self->_fs;
+
+   return $fs->diff_current_state('ps_target_filename_created', $processes);
+}
+
+sub loop_and_download_created_files {
+   my $self = shift;
+   my ($processes, $output_dir) = @_;
+
+   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
+
+   $processes ||= '';
+   $output_dir ||= $self->shell->full_pwd;
+   $self->brik_help_run_undef_arg('loop_and_download_created_files', $processes)
+      or return;
+   $self->brik_help_run_invalid_arg('loop_and_download_created_files', $processes,
+      'ARRAY', 'SCALAR') or return;
+
+   my $cs = $self->_cs;
+   my $fs = $self->_fs;
+
+   $output_dir .= "/download";
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   $sf->mkdir($output_dir) or return;
+
+   while (1) {
+      my $diff = $fs->diff_current_state('ps_target_filename_created', $processes)
+         or return;
+
+      if (exists($diff->{ps_target_filename_created})) {
+         my $created = $diff->{ps_target_filename_created};
+         for my $process (keys %$created) {
+            for my $file (@{$created->{$process}}) {
+               $self->log->info("loop_and_download_created_files: ".
+                  "downloading file [$file]");
+               $cs->download_in_background($file, $output_dir);
+            }
+         }
+      }
+   }
+
+   return 1;
+}
+
+sub memdump_as_volatility {
+   my $self = shift;
+
+   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
+
+   my $vm_id = $self->vm_id;
+   my $sv = $self->_sv;
+
+   my $output = $sv->dumpvmcore($vm_id) or return;
+
+   return $sv->extract_memdump_from_dumpguestcore($output);
+}
+
+sub stop_vm {
+   my $self = shift;
+
+   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
+
+   my $vm_id = $self->vm_id;
+   my $sv = $self->_sv;
+
+   return $sv->stop($vm_id);
+}
+
+sub restore_vm {
+   my $self = shift;
+
+   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
+
+   my $vm_id = $self->vm_id;
+   my $sv = $self->_sv;
+
+   $sv->stop($vm_id);
+
+   return $sv->snapshot_restore($self->vm_id, $self->vm_snapshot_name);
 }
 
 sub brik_fini {

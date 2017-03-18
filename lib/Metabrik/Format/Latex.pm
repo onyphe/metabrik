@@ -102,10 +102,15 @@ sub make_pdf {
    my $self = shift;
    my ($input, $style) = @_;
 
-   $style ||= $self->style;
+   my $datadir = $self->datadir;
+
+   $style ||= $datadir.'/'.$self->style;
    $self->brik_help_run_undef_arg('make_pdf', $input) or return;
    $self->brik_help_run_file_not_found('make_pdf', $input) or return;
    $self->brik_help_run_file_not_found('make_pdf', $style) or return;
+
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   $sf->copy($style, ".") or return;
 
    my $cmd = "pdflatex \"$input\"";
 

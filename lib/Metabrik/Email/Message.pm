@@ -16,6 +16,7 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         datadir => [ qw(datadir) ],
          input => [ qw(file) ],
          output => [ qw(file) ],
          subject => [ qw(subject|OPTIONAL) ],
@@ -30,8 +31,11 @@ sub brik_properties {
       commands => {
          create => [ qw(content) ],
          parse => [ qw(string) ],
+         save_attachments => [ qw(string) ],
       },
       require_modules => {
+         'Metabrik::System::File' => [ ],
+         'Metabrik::File::Base64' => [ ],
          'Email::Simple' => [ ],
          'Email::MIME' => [ ],
       },
@@ -63,6 +67,8 @@ sub create {
 sub parse {
    my $self = shift;
    my ($message) = @_;
+
+   $self->brik_help_run_undef_arg('parse', $message) or return;
 
    my $parsed = Email::MIME->new($message);
    if (! defined($parsed)) {
@@ -122,6 +128,40 @@ sub parse {
    }
 
    return \@list;
+}
+
+sub save_attachments {
+   my $self = shift;
+   my ($string) = @_;
+
+   $self->brik_help_run_undef_arg('parse', $string) or return;
+
+   my $datadir = $self->datadir;
+   my $message = $self->parse($string) or return;
+   my $headers = $message->[0];
+
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   my $fb = Metabrik::File::Base64->new_from_brik_init($self) or return;
+
+   my @files = ();
+   for my $part (@$message) {
+      if (exists($part->{filename}) && length($part->{filename})) {
+         my $from = $headers->{From};
+         my $to = $headers->{To};
+         my $subject = $headers->{Subject};
+         my $filename = $sf->basefile($part->{filename});
+         $filename =~ s{\s+}{_}g; # I hate spaces in filenames.
+         my $output = $fb->decode_from_string(
+            $part->{file_content}, $datadir."/$filename"
+         );
+         push @files, {
+            headers => $headers,
+            file => $output,
+         };
+      }
+   }
+
+   return \@files;
 }
 
 1;

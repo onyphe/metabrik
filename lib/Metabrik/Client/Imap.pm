@@ -16,6 +16,7 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         datadir => [ qw(datadir) ],
          input => [ qw(imap_uri) ],
          as_array => [ qw(0|1) ],
          strip_crlf => [ qw(0|1) ],
@@ -29,16 +30,19 @@ sub brik_properties {
       },
       commands => {
          open => [ qw(imap_uri|OPTIONAL) ],
+         reset_current => [ ],
          total => [ ],
          read => [ ],
          read_next => [ ],
          read_next_with_subject => [ qw(subject) ],
+         read_next_with_an_attachment => [ qw(regex|OPTIONAL) ],
          parse => [ qw(message) ],
+         save_attachments => [ qw(message) ],
          close => [ ],
       },
       require_modules => {
-         'Net::IMAP::Simple' => [ ],
          'Metabrik::Email::Message' => [ ],
+         'Net::IMAP::Simple' => [ ],
       },
    };
 }
@@ -80,6 +84,14 @@ sub open {
    $self->_id($count);
 
    return $self->_imap($imap);
+}
+
+sub reset_current {
+   my $self = shift;
+
+   $self->_id($self->_count);
+
+   return 1;
 }
 
 sub total {
@@ -129,6 +141,7 @@ sub read_next_with_subject {
       my $next = $self->read_next or return;
       my $message = $self->parse($next) or return;
       my $headers = $message->[0];
+
       if ($headers->{Subject} =~ m{$subject}i) {
          return $next;
       }
@@ -136,6 +149,33 @@ sub read_next_with_subject {
 
    return $self->log->error("read_next_with_subject: no message found with that subject ".
       "in last $total messages.");
+}
+
+sub read_next_with_an_attachment {
+   my $self = shift;
+   my ($regex) = @_;
+
+   my $imap = $self->_imap;
+   $self->brik_help_run_undef_arg('open', $imap) or return;
+   $regex ||= qr/^.*$/;
+
+   my $total = $self->total;
+
+   for (1..$total) {
+      my $next = $self->read_next or return;
+      my $message = $self->parse($next) or return;
+      my $headers = $message->[0];
+
+      for my $part (@$message) {
+         if (exists($part->{filename}) && length($part->{filename})
+         &&  $part->{filename} =~ $regex) {
+            return $next;
+         }
+      }
+   }
+
+   return $self->log->error("read_next_with_an_attachment: no message found with ".
+      "an attachment in last $total messages.");
 }
 
 sub parse {
@@ -147,6 +187,18 @@ sub parse {
    my $em = Metabrik::Email::Message->new_from_brik_init($self) or return;
 
    return $em->parse($message);
+}
+
+sub save_attachments {
+   my $self = shift;
+   my ($message) = @_;
+
+   $self->brik_help_run_undef_arg('save_attachments', $message) or return;
+
+   my $em = Metabrik::Email::Message->new_from_brik_init($self) or return;
+   $em->datadir($self->datadir);
+
+   return $em->save_attachments($message);
 }
 
 sub close {
