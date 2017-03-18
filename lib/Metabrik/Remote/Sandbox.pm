@@ -54,6 +54,9 @@ sub brik_properties {
          diff_ps_state => [ qw(processes|OPTIONAL) ],
          diff_ps_network_connections => [ qw(processes|OPTIONAL) ],
          diff_ps_target_filename_created => [ qw(processes|OPTIONAL) ],
+         diff_ps_registry_value_set => [ qw(processes|OPTIONAL) ],
+         diff_ps_registry_object_added_or_deleted => [ qw(processes|OPTIONAL) ],
+         diff_ps_target_process_accessed => [ qw(processes|OPTIONAL) ],
          loop_and_download_created_files => [ qw(processes|OPTIONAL) ],
          memdump_as_volatility => [ qw(output|OPTIONAL) ],
          stop_vm => [ ],
@@ -285,12 +288,12 @@ sub diff_ps_state {
    my $self = shift;
    my ($processes) = @_;
 
+   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
+
    if (defined($processes)) {
       $self->brik_help_run_invalid_arg('diff_ps_state',
          $processes, 'ARRAY') or return;
    }
-
-   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
 
    my $fs = $self->_fs;
 
@@ -301,12 +304,12 @@ sub diff_ps_network_connections {
    my $self = shift;
    my ($processes) = @_;
 
+   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
+
    if (defined($processes)) {
       $self->brik_help_run_invalid_arg('diff_ps_network_connections',
          $processes, 'ARRAY') or return;
    }
-
-   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
 
    my $fs = $self->_fs;
 
@@ -317,16 +320,64 @@ sub diff_ps_target_filename_created {
    my $self = shift;
    my ($processes) = @_;
 
+   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
+
    if (defined($processes)) {
       $self->brik_help_run_invalid_arg('diff_ps_target_filename_created',
          $processes, 'ARRAY') or return;
    }
 
-   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
-
    my $fs = $self->_fs;
 
    return $fs->diff_current_state('ps_target_filename_created', $processes);
+}
+
+sub diff_ps_registry_value_set {
+   my $self = shift;
+   my ($processes) = @_;
+
+   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
+
+   if (defined($processes)) {
+      $self->brik_help_run_invalid_arg('diff_ps_registry_value_set',
+         $processes, 'ARRAY') or return;
+   }
+
+   my $fs = $self->_fs;
+
+   return $fs->diff_current_state('ps_registry_value_set', $processes);
+}
+
+sub diff_ps_registry_object_added_or_deleted {
+   my $self = shift;
+   my ($processes) = @_;
+
+   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
+
+   if (defined($processes)) {
+      $self->brik_help_run_invalid_arg('diff_ps_registry_object_added_or_deleted',
+         $processes, 'ARRAY') or return;
+   }
+
+   my $fs = $self->_fs;
+
+   return $fs->diff_current_state('ps_registry_object_added_or_deleted', $processes);
+}
+
+sub diff_ps_target_process_accessed {
+   my $self = shift;
+   my ($processes) = @_;
+
+   $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
+
+   if (defined($processes)) {
+      $self->brik_help_run_invalid_arg('diff_ps_target_process_accessed',
+         $processes, 'ARRAY') or return;
+   }
+
+   my $fs = $self->_fs;
+
+   return $fs->diff_current_state('ps_target_process_accessed', $processes);
 }
 
 sub loop_and_download_created_files {

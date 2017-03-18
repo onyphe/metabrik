@@ -104,8 +104,12 @@ sub check {
    ) or return;
 
    my $r = $self->content('json');
+   # We always want an ARRAY to be returned, we convert here if that's not the case.
+   if (ref($r) ne 'ARRAY') {
+      $r = [ $r ];
+   }
 
-   my $categories = $self->get_categories;
+   my $categories = $self->get_categories or return;
 
    for my $this (@$r) {
       my @new_categories = ();
