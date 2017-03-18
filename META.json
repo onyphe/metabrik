@@ -39,6 +39,9 @@
       "Metabrik::Antivirus::Clamav" : {
          "file" : "lib/Metabrik/Antivirus/Clamav.pm"
       },
+      "Metabrik::Api::Abuseipdb" : {
+         "file" : "lib/Metabrik/Api/Abuseipdb.pm"
+      },
       "Metabrik::Api::Bluecoat" : {
          "file" : "lib/Metabrik/Api/Bluecoat.pm"
       },

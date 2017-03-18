@@ -5,6 +5,7 @@ examples/iplocation-script.meta
 examples/iplocation-standalone-brik.pl
 lib/Metabrik/Address/Generate.pm
 lib/Metabrik/Antivirus/Clamav.pm
+lib/Metabrik/Api/Abuseipdb.pm
 lib/Metabrik/Api/Bluecoat.pm
 lib/Metabrik/Api/Cvesearch.pm
 lib/Metabrik/Api/Shodan.pm

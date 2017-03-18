@@ -12,6 +12,7 @@ Revision history for Perl extension Metabrik::Repository.
    - new: remote::windefend Brik
    - new: string::http Brik
    - new: password::rockyou Brik
+   - new: api::abuseipdb Brik
 
 1.26.0 Sat  4 Feb 17:41:44 CET 2017
    - new: server::logstash::indexer Brik
