@@ -386,12 +386,14 @@ sub loop_and_download_created_files {
 
    $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
 
-   $processes ||= '';
    $output_dir ||= $self->shell->full_pwd;
-   $self->brik_help_run_undef_arg('loop_and_download_created_files', $processes)
-      or return;
-   $self->brik_help_run_invalid_arg('loop_and_download_created_files', $processes,
-      'ARRAY', 'SCALAR') or return;
+
+   if (defined($processes)) {
+      $self->brik_help_run_undef_arg('loop_and_download_created_files', $processes)
+         or return;
+      $self->brik_help_run_invalid_arg('loop_and_download_created_files', $processes,
+         'ARRAY', 'SCALAR') or return;
+   }
 
    my $cs = $self->_cs;
    my $fs = $self->_fs;

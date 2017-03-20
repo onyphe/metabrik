@@ -32,6 +32,7 @@ sub brik_properties {
       },
       require_modules => {
          'Metabrik::File::Pcap' => [ ],
+         'Metabrik::System::File' => [ ],
          'Metabrik::System::Process' => [ ],
       },
    };
@@ -99,8 +100,13 @@ sub capture_in_background {
    $count ||= $self->count;
    $self->brik_help_run_undef_arg('capture_in_background', $output) or return;
 
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+
    my $datadir = $self->datadir;
-   $output = $datadir.'/'.$output;
+   if ($sf->is_relative($output)) {
+      my $basefile = $sf->basefile($output) or return;
+      $output = $datadir.'/'.$basefile;
+   }
 
    $self->log->info("capture_in_background: writing to output [$output]");
 

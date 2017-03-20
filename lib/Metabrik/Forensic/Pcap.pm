@@ -217,12 +217,13 @@ sub show_sessions {
    my $self = shift;
    my ($ip_address, $port, $protocol) = @_;
 
-   $protocol ||= 'TCP';
+   $protocol ||= 'tcp';
    $self->brik_help_run_undef_arg('show_sessions', $ip_address) or return;
    $self->brik_help_run_undef_arg('show_sessions', $port) or return;
 
-   if ($protocol ne 'TCP' && $protocol ne 'UDP') {
-      return $self->log->error("show_sessions: protocol must be TCP or UDP");
+   $protocol = lc($protocol);
+   if ($protocol ne 'tcp' && $protocol ne 'udp') {
+      return $self->log->error("show_sessions: protocol must be tcp or udp");
    }
 
    #
@@ -239,9 +240,9 @@ sub show_sessions {
    );
    my @should3 = ();
 
-   if ($protocol eq 'TCP') {
-      push @should1, { term => { 'TCP.flags' => 16 } };  # ACK+PSH
-      push @should1, { term => { 'TCP.flags' => 24 } };  # ACK+PSH
+   if ($protocol eq 'tcp') {
+      push @should1, { term => { 'TCP.flags' => 16 } };
+      push @should1, { term => { 'TCP.flags' => 24 } };
       push @should3, { term => { 'TCP.dst' => $port } };
       push @should3, { term => { 'TCP.src' => $port } };
    }
