@@ -262,7 +262,7 @@ t/08-use-briks-forensic.t
 t/09-use-briks-file.t
 t/10-use-briks-password.t
 t/11-use-briks-identify.t
-t/12-use-briks-netbios.t
+t/12-use-briks-audio.t
 t/13-use-briks-network.t
 t/14-use-briks-remote.t
 t/15-use-briks-scanner.t

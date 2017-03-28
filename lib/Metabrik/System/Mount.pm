@@ -12,7 +12,7 @@ use base qw(Metabrik::Shell::Command Metabrik::System::Package Metabrik::File::T
 sub brik_properties {
    return {
       revision => '$Revision$',
-      tags => [ qw(unstable mtab fstab) ],
+      tags => [ qw(unstable mtab fstab mount umount system filesystem) ],
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       commands => {
