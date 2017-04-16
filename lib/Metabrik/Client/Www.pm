@@ -28,6 +28,7 @@ sub brik_properties {
          add_headers => [ qw(http_headers_hash) ],
          do_javascript => [ qw(0|1) ],
          do_redirects => [ qw(0|1) ],
+         src_ip => [ qw(ip_address) ],
          _client => [ qw(object|INTERNAL) ],
          _last => [ qw(object|INTERNAL) ],
       },
@@ -85,6 +86,7 @@ sub brik_properties {
          'Metabrik::File::Write' => [ ],
          'Metabrik::Client::Ssl' => [ ],
          'Metabrik::System::File' => [ ],
+         'Metabrik::Network::Address' => [ ],
       },
       optional_modules => {
          'WWW::Mechanize::PhantomJS' => [ ],
@@ -152,6 +154,15 @@ sub create_user_agent {
    }
    else {
       $args{max_redirect} = 0;
+   }
+
+   my $src_ip = $self->src_ip;
+   if (defined($src_ip)) {
+      my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
+      if (! $na->is_ip($src_ip)) {
+         return $self->log->error("create_user_agent: src_ip [$src_ip] is invalid");
+      }
+      $args{local_address} = $src_ip;
    }
 
    my $mech = $mechanize->new(%args);

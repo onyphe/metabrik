@@ -1934,7 +1934,10 @@ sub export_as_csv {
 
    my $stop_time = time();
    my $duration = $stop_time - $start_time;
-   my $eps = $exported / $duration;
+   my $eps = $exported;
+   if ($duration > 0) {
+      $eps = $exported / $duration;
+   }
 
    my $result = {
       read => $read,
