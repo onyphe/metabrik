@@ -43,6 +43,10 @@ sub gunzip {
 
    $self->brik_help_run_undef_arg('gunzip', $data) or return;
 
+   if (! length($data)) {
+      return $self->log->error("gunzip: empty data, nothing to decompress");
+   }
+
    $self->debug && $self->log->debug("gunzip: length[".length($data)."]");
 
    $self->debug && $self->log->debug("gunzip: starting");
@@ -62,6 +66,10 @@ sub gzip {
    my ($data) = @_;
 
    $self->brik_help_run_undef_arg('gzip', $data) or return;
+
+   if (! length($data)) {
+      return $self->log->error("gzip: empty data, nothing to compress");
+   }
 
    my $gzipped = Gzip::Faster::gzip($data)
       or return $self->log->error("gzip: error");

@@ -131,15 +131,18 @@ sub read {
                my $k = $headers->[$_];
                my $v = $row->[$_];
                next unless defined($v);
-               if (exists($encoded_fields->{$k})) {
+               # Decode only if it has been asked and the value is not empty.
+               if (exists($encoded_fields->{$k}) && length($v)) {
                   my $decoded = $sb->decode($v);
                   if (! defined($decoded)) {
-                     $self->log->error("read: decode failed, skipping");
+                     $self->log->error("read: decode failed, skipping data with ".
+                        "with length [".length($v)."]");
                      next;
                   }
                   my $gunzipped = $sc->gunzip($decoded);
                   if (! defined($gunzipped)) {
-                     $self->log->error("read: gunzip failed, skipping");
+                     $self->log->error("read: gunzip failed, skipping ".
+                        "decoded data with length [".length($decoded)."]");
                      next;
                   }
                   $v = $$gunzipped;
@@ -267,7 +270,8 @@ sub write {
             my $k = $key;
             my $v = $this->{$key};
             next unless defined($v);
-            if (exists($encoded_fields->{$k})) {
+            # Encode only if it has been asked and the value is not empty.
+            if (exists($encoded_fields->{$k}) && length($v)) {
                # Gzip to handle UTF-like encodings, cause Base64 does not like that.
                my $gzipped = $sc->gzip($v);
                if (! defined($gzipped)) {
@@ -418,15 +422,18 @@ sub read_next {
             my $k = $_;
             my $v = $row->[$i++];
             next unless defined($v);
-            if (exists($encoded_fields->{$k})) {
+            # Decode only if it has been asked and the value is not empty.
+            if (exists($encoded_fields->{$k}) && length($v)) {
                my $decoded = $sb->decode($v);
                if (! defined($decoded)) {
-                  $self->log->error("read_next: decode failed, skipping");
+                  $self->log->error("read_next: decode failed, skipping data with ".
+                     "with length [".length($v)."]");
                   next;
                }
                my $gunzipped = $sc->gunzip($decoded);
                if (! defined($gunzipped)) {
-                  $self->log->error("read_next: gunzip failed, skipping");
+                  $self->log->error("read_next: gunzip failed, skipping ".
+                     "decoded data with length [".length($decoded)."]");
                   next;
                }
                $v = $$gunzipped;
