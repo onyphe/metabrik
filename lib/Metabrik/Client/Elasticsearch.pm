@@ -32,6 +32,7 @@ sub brik_properties {
          use_bulk_autoflush => [ qw(0|1) ],
          use_indexing_optimizations => [ qw(0|1) ],
          csv_encoded_fields => [ qw(fields) ],
+         csv_object_fields => [ qw(fields) ],
          _es => [ qw(INTERNAL) ],
          _bulk => [ qw(INTERNAL) ],
          _scroll => [ qw(INTERNAL) ],
@@ -151,14 +152,11 @@ sub brik_properties {
          restore_snapshot_for_indices => [ qw(indices snapshot_name repository_name) ],
       },
       require_modules => {
-         'Metabrik::String::Base64' => [ ],
          'Metabrik::String::Json' => [ ],
          'Metabrik::File::Csv' => [ ],
          'Metabrik::File::Json' => [ ],
          'Metabrik::File::Dump' => [ ],
          'Metabrik::Format::Number' => [ ],
-         'Data::Dump' => [ ],
-         'Data::Dumper' => [ ],
          'Search::Elasticsearch' => [ ],
       },
    };
@@ -1846,7 +1844,6 @@ sub export_as_csv {
    }
 
    my $fd = Metabrik::File::Dump->new_from_brik_init($self) or return;
-   my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->separator(',');
@@ -1856,12 +1853,10 @@ sub export_as_csv {
    $fc->write_header(1);
    $fc->use_quoting(1);
    $fc->encoded_fields($self->csv_encoded_fields);
+   $fc->object_fields($self->csv_object_fields);
 
    my $total = $self->total_scroll;
    $self->log->info("export_as_csv: total [$total] for index [$index]");
-
-   local $Data::Dump::INDENT = "";    # No indentation shorten length
-   local $Data::Dump::TRY_BASE64 = 0; # Never encode in base64
 
    my $h = {};
    my %types = ();
@@ -1896,14 +1891,7 @@ sub export_as_csv {
       $h->{_id} = $id;
 
       for my $k (keys %$doc) {
-         if (ref($doc->{$k})) {
-            my $s = Data::Dump::dump($doc->{$k});
-            $s =~ s{\n}{}g;
-            $h->{$k} = 'OBJECT:'.$sb->encode($s);
-         }
-         else {
-            $h->{$k} = $doc->{$k};
-         }
+         $h->{$k} = $doc->{$k};
       }
 
       $fc->header($types{$type}{header});
@@ -2020,16 +2008,13 @@ sub import_from_csv {
       "with type [$type]");
 
    my $fd = Metabrik::File::Dump->new_from_brik_init($self) or return;
-   my $sb = Metabrik::String::Base64->new_from_brik_init($self) or return;
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
    $fc->separator(',');
    $fc->escape('\\');
    $fc->first_line_is_header(1);
    $fc->encoded_fields($self->csv_encoded_fields);
-
-   my $object_re = qr/^OBJECT:(.*)$/;
-   my $base64_re = qr/^BASE64:(.*)$/;
+   $fc->object_fields($self->csv_object_fields);
 
    my $refresh_interval;
    my $number_of_replicas;
@@ -2048,20 +2033,9 @@ sub import_from_csv {
       delete $this->{_id};
       for my $k (keys %$this) {
          my $value = $this->{$k};
-         if (! defined($value) || ! length($value)) {
-         }
-         elsif ($value =~ $object_re     # An OBJECT is waiting to be decoded
-            ||  $value =~ $base64_re) {  # An OBJECT is waiting to be decoded
-            my $s = $sb->decode($1);
-            if (! defined($s)) {
-               $self->log->error("import_from_csv: decode failed for index [$index] ".
-                  "at read [$read], skipping chunk");
-               $skipped_chunks++;
-               next;
-            }
-            $h->{$k} = eval($s);
-         }
-         else {  # Non-encoded value
+         # We keep only fields when they have a value.
+         # No need to index data that is empty.
+         if (defined($value) && length($value)) {
             $h->{$k} = $value;
          }
       }
