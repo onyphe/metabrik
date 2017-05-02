@@ -32,6 +32,8 @@ sub brik_properties {
          restore => [ qw(name type|OPTIONAL) ], # Alias for start
          stop => [ qw(name) ],
          save => [ qw(name) ],
+         pause => [ qw(name) ],
+         resume => [ qw(resume) ],
          snapshot_list => [ qw(name) ],
          snapshot_live => [ qw(name snapshot_name description|OPTIONAL) ],
          snapshot_delete => [ qw(name snapshot_name) ],
@@ -125,6 +127,24 @@ sub save {
    $self->brik_help_run_undef_arg('save', $name) or return;
 
    return $self->command("controlvm \"$name\" savestate");
+}
+
+sub pause {
+   my $self = shift;
+   my ($name) = @_;
+
+   $self->brik_help_run_undef_arg('pause', $name) or return;
+
+   return $self->command("controlvm \"$name\" pause");
+}
+
+sub resume {
+   my $self = shift;
+   my ($name) = @_;
+
+   $self->brik_help_run_undef_arg('resume', $name) or return;
+
+   return $self->command("controlvm \"$name\" resume");
 }
 
 sub snapshot_list {

@@ -60,7 +60,7 @@ sub brik_init {
    open(my $fd, '>>', $output)
       or return $self->log->error("brik_init: can't open output file [$output]: $!");
 
-   $self->log->info("brik_init: now logging to file [$output]");
+   $self->log->verbose("brik_init: now logging to file [$output]");
 
    # Makes the file handle unbuffered
    my $current = select;
