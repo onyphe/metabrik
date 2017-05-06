@@ -71,6 +71,7 @@ sub brik_properties {
          delete_index => [ qw(index|indices_list) ],
          update_alias => [ qw(new_index alias) ],
          delete_document => [ qw(index type id) ],
+         delete_by_query => [ qw($query_hash index type) ],
          show_indices => [ qw(string_filter|OPTIONAL) ],
          show_nodes => [ ],
          show_health => [ ],
@@ -749,6 +750,45 @@ sub delete_document {
       chomp($@);
       return $self->log->error("delete_document: delete failed for index [$index]: [$@]");
    }
+
+   return $r;
+}
+
+#
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html
+#
+# Example: my $q = { query => { term => { ip => "192.168.57.19" } } }
+#
+sub delete_by_query {
+   my $self = shift;
+   my ($query, $index, $type) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('delete_by_query', $query) or return;
+   $self->brik_help_run_undef_arg('index', $index) or return;
+   $self->brik_help_run_undef_arg('type', $type) or return;
+   $self->brik_help_run_invalid_arg('delete_by_query', $query, 'HASH') or return;
+
+   my $timeout = $self->rtimeout;
+
+   my %args = (
+      index => $index,
+      type => $type,
+      body => $query,
+   );
+
+   my $r;
+   eval {
+      $r = $es->delete_by_query(%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("delete_by_query: failed for index [$index]: [$@]");
+   }
+
+   # This may fail, we ignore it.
+   $self->refresh_index($index);
 
    return $r;
 }
