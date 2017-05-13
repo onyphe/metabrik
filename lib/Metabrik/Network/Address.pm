@@ -37,6 +37,11 @@ sub brik_properties {
          merge_cidr => [ qw($cidr_list) ],
          ipv4_to_integer => [ qw(ipv4_address) ],
          integer_to_ipv4 => [ qw(integer) ],
+         ipv4_reserved_subnets => [ ],
+         ipv6_reserved_subnets => [ ],
+         is_ipv4_reserved => [ qw(ipv4_address) ],
+         is_ipv6_reserved => [ qw(ipv6_address) ],
+         is_ip_reserved => [ qw(ip_address) ],
       },
       require_modules => {
          'Net::Netmask' => [ ],
@@ -384,6 +389,125 @@ sub integer_to_ipv4 {
    $self->brik_help_run_undef_arg('integer_to_ipv4', $integer) or return;
 
    return Socket::inet_ntoa(pack('N', $integer));
+}
+
+#
+# https://metacpan.org/source/MAXMIND/MaxMind-DB-Writer-0.202000/lib/MaxMind/DB/Writer/Tree.pm
+#
+sub ipv4_reserved_subnets {
+   my $self = shift;
+
+   return [ qw(
+      0.0.0.0/8
+      10.0.0.0/8
+      100.64.0.0/10
+      127.0.0.0/8
+      169.254.0.0/16
+      172.16.0.0/12
+      192.0.0.0/29
+      192.0.2.0/24
+      192.88.99.0/24
+      192.168.0.0/16
+      198.18.0.0/15
+      198.51.100.0/24
+      203.0.113.0/24
+      224.0.0.0/4
+      240.0.0.0/4
+   ) ];
+}
+
+sub ipv6_reserved_subnets {
+   my $self = shift;
+
+   return [ qw(
+      100::/64
+      2001:1::/32
+      2001:2::/31
+      2001:4::/30
+      2001:8::/29
+      2001:10::/28
+      2001:20::/27
+      2001:40::/26
+      2001:80::/25
+      2001:100::/24
+      2001:db8::/32
+      fc00::/7
+      fe80::/10
+      ff00::/8
+   ) ];
+}
+
+sub is_ipv4_reserved {
+   my $self = shift;
+   my ($ip) = @_;
+
+   $self->brik_help_run_undef_arg('is_ipv4_reserved', $ip) or return;
+
+   if (! $self->is_ipv4($ip)) {
+      return $self->log->error("is_ipv4_reserved: ip[$ip] is not IPv4");
+   }
+
+   my $list = $self->ipv4_reserved_subnets;
+   my $is_reserved = 0;
+   for (@$list) {
+      if ($self->match($ip, $_)) {
+         $is_reserved = 1;
+         last;
+      }
+   }
+
+   return $is_reserved;
+}
+
+sub is_ipv6_reserved {
+   my $self = shift;
+   my ($ip) = @_;
+
+   $self->brik_help_run_undef_arg('is_ipv6_reserved', $ip) or return;
+
+   if (! $self->is_ipv6($ip)) {
+      return $self->log->error("is_ipv6_reserved: ip[$ip] is not IPv6");
+   }
+
+   my $list = $self->ipv6_reserved_subnets;
+   my $is_reserved = 0;
+   for (@$list) {
+      if ($self->match($ip, $_)) {
+         $is_reserved = 1;
+         last;
+      }
+   }
+
+   return $is_reserved;
+}
+
+sub is_ip_reserved {
+   my $self = shift;
+   my ($ip) = @_;
+
+   $self->brik_help_run_undef_arg('is_ip_reserved', $ip) or return;
+
+   if (! $self->is_ip($ip)) {
+      return $self->log->error("is_ip_reserved: ip[$ip] is not IPv4 nor IPv6");
+   }
+
+   my $list;
+   if ($self->is_ipv4($ip)) {
+      $list = $self->ipv4_reserved_subnets;
+   }
+   else {
+      $list = $self->ipv6_reserved_subnets;
+   }
+
+   my $is_reserved = 0;
+   for (@$list) {
+      if ($self->match($ip, $_)) {
+         $is_reserved = 1;
+         last;
+      }
+   }
+
+   return $is_reserved;
 }
 
 1;

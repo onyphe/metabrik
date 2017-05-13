@@ -49,6 +49,7 @@ sub brik_properties {
          get_current_snapshot_id => [ qw(name) ],
       },
       require_modules => {
+         'Data::Dumper' => [ ],
          'Metabrik::File::Raw' => [ ],
          'Metabrik::File::Read' => [ ],
          'Metabrik::File::Readelf' => [ ],
@@ -155,6 +156,15 @@ sub snapshot_list {
 
    my $lines = $self->command("snapshot \"$name\" list");
 
+   if ($self->log->level > 1) {
+      print Dumper($lines)."\n";
+   }
+
+   # No snapshot: error code 256
+   if ($? != 0) {
+      return $self->log->error("snapshot_list: no snapshot found?");
+   }
+
    my @list = ();
    for my $line (@$lines) {
       if ($line =~ m{^\s*Name:}) {
@@ -185,7 +195,17 @@ sub snapshot_live {
    $self->brik_help_run_undef_arg('snapshot_live', $name) or return;
    $self->brik_help_run_undef_arg('snapshot_live', $snapshot_name) or return;
 
-   return $self->command("snapshot \"$name\" take \"$snapshot_name\" --description \"$description\" --live");
+   my $lines = $self->command("snapshot \"$name\" take \"$snapshot_name\" --description \"$description\" --live");
+
+   if ($self->log->level > 1) {
+      print Dumper($lines)."\n";
+   }
+
+   if ($? != 0) {
+      return $self->log->error("snapshot_live: snapshot failed");
+   }
+
+   return $self->log->info("snapshot_live: snapshot complete");
 }
 
 sub snapshot_delete {
@@ -195,7 +215,14 @@ sub snapshot_delete {
    $self->brik_help_run_undef_arg('snapshot_delete', $name) or return;
    $self->brik_help_run_undef_arg('snapshot_delete', $snapshot_name) or return;
 
-   return $self->command("snapshot \"$name\" delete \"$snapshot_name\"");
+   my $lines = $self->command("snapshot \"$name\" delete \"$snapshot_name\"");
+
+   # code 256: This machine does not have any snapshots
+   if ($? != 0) {
+      return $self->log->error("snapshot_delete: unable to delete snapshot [$snapshot_name] for vm [$name]");
+   }
+
+   return $self->log->info("snapshot_delete: snapshot [$snapshot_name] deleted successfully for vm [$name]");
 }
 
 sub snapshot_restore {

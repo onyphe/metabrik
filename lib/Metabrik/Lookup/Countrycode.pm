@@ -211,8 +211,8 @@ sub from_tld {
 
    my $data = $self->_load_by_tld or return;
 
-   if (exists($data->{$tld})) {
-      return $data->{$tld};
+   if (exists($data->{lc($tld)})) {
+      return $data->{lc($tld)};
    }
 
    return 0;
