@@ -304,6 +304,21 @@ sub to_timestamp {
          $timestamp .= sprintf(".%03d", $msec);
       }
    }
+   # May 17 18:23:47
+   elsif ($string =~ m{^(\S+)\s+(\d+)\s+(\d+):(\d+):(\d+)$}) {
+      my $mon = $1;
+      my $mday = $2;
+      my $hour = $3;
+      my $min = $4;
+      my $sec = $5;
+      my $msec = 0;
+      my @time = CORE::localtime();
+      my $year = $time[5] + 1900;
+      $timestamp = Time::Local::timelocal($sec, $min, $hour, $mday, $mon, $year);
+      if ($self->use_hires) {
+         $timestamp .= sprintf(".%03d", $msec);
+      }
+   }
    # 2016-04-12T17:25:50.713Z
    elsif ($string =~ m{^(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$}) {
       my $mon = $2 - 1;
