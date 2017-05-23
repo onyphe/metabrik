@@ -98,14 +98,20 @@ sub decode {
 
    my ($timestamp, $hostname, $process, $pid, $message);
    #  May 17 18:18:06
-   if (! $self->do_rfc3164) {
-      ($timestamp, $hostname, $process, $pid, $message) =
-         $data =~ m{^(\S+\s+\d+\s+\S+)\s+(\S+)\s+(\S+)\[(\d+)\]:\s+(.*)$};
+   if ($data =~ m{^(\S+\s+\d+\s+\S+)\s+(\S+)\s+(\S+)\[(\d+)\]:\s+(.*)$}) {
+      $timestamp = $1;
+      $hostname = $2;
+      $process = $3;
+      $pid = $4;
+      $message = $5;
    }
    # Wed May 17 18:18:06 2017
-   else {
-      ($timestamp, $hostname, $process, $pid, $message) =
-         $data =~ m{^(\S+\s+\S+\s+\d+\s+\S+\s+\S+)\s+(\S+)\s+(\S+)\[(\d+)\]:\s+(.*)$};
+   elsif ($data =~ m{^(\S+\s+\S+\s+\d+\s+\S+\s+\S+)\s+(\S+)\s+(\S+)\[(\d+)\]:\s+(.*)$}) {
+      $timestamp = $1;
+      $hostname = $2;
+      $process = $3;
+      $pid = $4;
+      $message = $5;
    }
 
    if (! defined($timestamp)) {
