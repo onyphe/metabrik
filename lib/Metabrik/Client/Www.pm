@@ -127,7 +127,10 @@ sub create_user_agent {
       }
    }
 
-   $ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = 'Net::SSL';
+   # Net::SSL doesn't support timeouts on HTTPS(?)
+   # We have to use IO::Socket::SSL which supports it.
+   #$ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = 'Net::SSL';
+   $ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = 'IO::Socket::SSL';
 
    my %args = (
       autocheck => 0,  # Do not throw on error by checking HTTP code. Let us do it.
@@ -274,6 +277,18 @@ sub _method {
       else {
          $response{content} = $response->decoded_content;
       }
+   }
+
+   # Error messages seen from IO::Socket::SSL module.
+   if ($response{content} =~ /^Can't connect to .+Connection timed out at /is) {
+      $self->timeout(1);
+      return $self->log->error("$method: $uri: connection timed out");
+   }
+   elsif ($response{content} =~ /^Can't connect to .+?\n\n(.+?) at /is) {
+      return $self->log->error("$method: $uri: ".lcfirst($1));
+   }
+   elsif ($response{content} =~ /^Connect failed: connect: Interrupted system call/i) {
+      return $self->log->error("$method: $uri: connection interrupted by syscall");
    }
 
    my $headers = $response->headers;
