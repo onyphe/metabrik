@@ -133,6 +133,8 @@ sub create_user_agent {
    $ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = 'IO::Socket::SSL';
 
    my %args = (
+      stack_depth => 0,  # Default is infinite, and will eat-up whole memory.
+                         # 0 means completely turn off the feature.
       autocheck => 0,  # Do not throw on error by checking HTTP code. Let us do it.
       timeout => $self->rtimeout,
       ssl_opts => {
@@ -266,36 +268,36 @@ sub _method {
 
    $self->_last($response);
 
-   my %response = ();
-   $response{code} = $response->code;
+   my %r = ();
+   $r{code} = $response->code;
    if (! $self->ignore_content) {
       if ($self->do_javascript) {
          # decoded_content method is available in WWW::Mechanize::PhantomJS
          # but is available in HTTP::Request response otherwise.
-         $response{content} = $client->decoded_content;
+         $r{content} = $client->decoded_content;
       }
       else {
-         $response{content} = $response->decoded_content;
+         $r{content} = $response->decoded_content;
       }
    }
 
    # Error messages seen from IO::Socket::SSL module.
-   if ($response{content} =~ /^Can't connect to .+Connection timed out at /is) {
+   if ($r{content} =~ /^Can't connect to .+Connection timed out at /is) {
       $self->timeout(1);
       return $self->log->error("$method: $uri: connection timed out");
    }
-   elsif ($response{content} =~ /^Can't connect to .+?\n\n(.+?) at /is) {
+   elsif ($r{content} =~ /^Can't connect to .+?\n\n(.+?) at /is) {
       return $self->log->error("$method: $uri: ".lcfirst($1));
    }
-   elsif ($response{content} =~ /^Connect failed: connect: Interrupted system call/i) {
+   elsif ($r{content} =~ /^Connect failed: connect: Interrupted system call/i) {
       return $self->log->error("$method: $uri: connection interrupted by syscall");
    }
 
    my $headers = $response->headers;
-   $response{headers} = { map { $_ => $headers->{$_} } keys %$headers };
-   delete $response{headers}->{'::std_case'};
+   $r{headers} = { map { $_ => $headers->{$_} } keys %$headers };
+   delete $r{headers}->{'::std_case'};
 
-   return \%response;
+   return \%r;
 }
 
 sub get {
