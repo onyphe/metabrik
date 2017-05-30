@@ -450,6 +450,10 @@ provides:
     file: lib/Metabrik/System/Gphotofs.pm
   Metabrik::System::Libvirt:
     file: lib/Metabrik/System/Libvirt.pm
+  Metabrik::System::Linux::Cpuinfo:
+    file: lib/Metabrik/System/Linux/Cpuinfo.pm
+  Metabrik::System::Linux::Pps:
+    file: lib/Metabrik/System/Linux/Pps.pm
   Metabrik::System::Mount:
     file: lib/Metabrik/System/Mount.pm
   Metabrik::System::Netstat:
