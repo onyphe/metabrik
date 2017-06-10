@@ -195,6 +195,7 @@ sub term {
 
    # Optimized version on ES 5.0.0
    my $q = {
+      size => $self->size,
       query => {
          bool => {
             must => { term => { $key => $value } },
@@ -303,6 +304,7 @@ sub wildcard {
    my ($key, $value) = split('=', $kv);
 
    my $q = {
+      size => $self->size,
       query => {
          #constant_score => {  # Does not like constant_score
             #filter => {
@@ -348,6 +350,7 @@ sub range {
    # Compatible with ES 5.0
    #
    my $q = {
+      size => $self->size,
       query => {
          bool => {
             must => [
@@ -414,6 +417,7 @@ sub match_phrase {
    $self->debug && $self->log->debug("match_phrase: key[$key] value[$value]");
 
    my $q = {
+      size => $self->size,
       query => {
          match_phrase => {
             $key => $value,
@@ -442,6 +446,7 @@ sub match {
    $self->debug && $self->log->debug("match: key[$key] value[$value]");
 
    my $q = {
+      size => $self->size,
       query => {
          match => {
             $key => $value,
@@ -476,6 +481,7 @@ sub top_match {
    my ($key_match, $value_match) = split('=', $kv_match);
 
    my $q = {
+      size => $self->size,
       query => {
          #constant_score => {   # Does not like constant_score
             #filter => {

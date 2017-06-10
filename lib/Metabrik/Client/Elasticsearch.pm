@@ -766,8 +766,8 @@ sub delete_by_query {
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('delete_by_query', $query) or return;
-   $self->brik_help_run_undef_arg('index', $index) or return;
-   $self->brik_help_run_undef_arg('type', $type) or return;
+   $self->brik_help_run_undef_arg('delete_by_query', $index) or return;
+   $self->brik_help_run_undef_arg('delete_by_query', $type) or return;
    $self->brik_help_run_invalid_arg('delete_by_query', $query, 'HASH') or return;
 
    my $timeout = $self->rtimeout;

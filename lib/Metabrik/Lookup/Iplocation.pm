@@ -92,8 +92,7 @@ sub from_ipv4 {
    };
    if ($@ || ! defined($record)) {
       chomp($@);
-      return $self->log->error("from_ipv4: unable to find info for IPv4 [$ipv4] ".
-         "with error [$@]");
+      return $self->log->error("from_ipv4: unable to find info for IPv4 [$ipv4]");
    }
 
    # Convert from blessed hashref to hashref
