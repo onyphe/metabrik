@@ -26,6 +26,7 @@ sub brik_properties {
          bandwidth => [ qw(bandwidth) ],
          wait => [ qw(seconds) ],
          use_ipv6 => [ qw(0|1) ],
+         src_ip => [ qw(ip_address) ],
          _nr => [ qw(INTERNAL) ],
       },
       attributes_default => { 
@@ -251,16 +252,17 @@ sub tcp_syn_sender {
    my $device = $self->device;
    my $use_ipv6 = $self->use_ipv6;
 
+   # Set source IP address.
    my $ip4;
    my $ip6;
    if ($use_ipv6) {
-      $ip6 = $self->my_ipv6;
+      $ip6 = defined($self->src_ip) ? $self->src_ip : $self->my_ipv6;
       if (! defined($ip6)) {
          return $self->log->error("tcp_syn_sender: IPv6 not found for device [$device]");
       }
    }
    else {
-      $ip4 = $self->my_ipv4;
+      $ip4 = defined($self->src_ip) ? $self->src_ip : $self->my_ipv4;
       if (! defined($ip4)) {
          return $self->log->error("tcp_syn_sender: IPv4 not found for device [$device]");
       }

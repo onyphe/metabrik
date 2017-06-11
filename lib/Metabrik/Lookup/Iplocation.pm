@@ -34,6 +34,11 @@ sub brik_properties {
          'Metabrik::File::Compress' => [ ],
          'Metabrik::Network::Address' => [ ],
       },
+      need_packages => {
+         ubuntu => [ qw(libgeoip-dev) ],
+         debian => [ qw(libgeoip-dev) ],
+         freebsd => [ qw(net/GeoIP) ],
+      },
    };
 }
 
@@ -95,9 +100,20 @@ sub from_ipv4 {
       return $self->log->error("from_ipv4: unable to find info for IPv4 [$ipv4]");
    }
 
-   # Convert from blessed hashref to hashref
-   my $h = { map { $_ => $record->{$_} } keys %$record };
-   $h->{timezone} = $record->time_zone;
+   my $h = {};
+   $h->{country_code} = $record->country_code;
+   $h->{country_code3} = $record->country_code3;
+   $h->{country_name} = $record->country_name;
+   $h->{region} = $record->region;
+   $h->{region_name} = $record->region_name;
+   $h->{city} = $record->city;
+   $h->{postal_code} = $record->postal_code;
+   $h->{latitude} = $record->latitude;
+   $h->{longitude} = $record->longitude;
+   $h->{time_zone} = $record->time_zone;
+   $h->{area_code} = $record->area_code;
+   $h->{continent_code} = $record->continent_code;
+   $h->{metro_code} = $record->metro_code;
 
    my $asn = '';
    my $organization = '';
