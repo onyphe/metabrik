@@ -17,6 +17,7 @@ sub brik_properties {
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          device => [ qw(device) ],
+         listen_device => [ qw(device) ],
          ports => [ qw(port_array) ],
          top10 => [ qw(top10_port_array) ],
          top100 => [ qw(top100_port_array) ],
@@ -133,7 +134,7 @@ sub brik_properties {
          estimate_bandwidth => [ qw(pps|OPTIONAL size|OPTIONAL) ],
          estimate_pps => [ qw(bandwidth|OPTIONAL size|OPTIONAL) ],
          tcp_syn_sender => [ qw($ip_list $port_list|OPTIONAL pps|OPTIONAL try|OPTIONAL) ],
-         tcp_syn_start_receiver => [ qw($port_list|OPTIONAL filter|OPTIONAL) ],
+         tcp_syn_start_receiver => [ qw($port_list|OPTIONAL filter|OPTIONAL listen_device|OPTIONAL) ],
          tcp_syn_stop_receiver => [ ],
          tcp_syn_scan => [ qw($ip_list $port_list|OPTIONAL pps|OPTIONAL try|OPTIONAL) ],
          tcp_syn_receive_until_sender_exit => [ qw(pid pps|OPTIONAL wait|OPTIONAL use_ipv6|OPTIONAL) ],
@@ -155,6 +156,7 @@ sub brik_use_properties {
    return {
       attributes_default => {
          device => $self->global->device,
+         listen_device => $self->global->device,
       },
    };
 }
@@ -331,7 +333,7 @@ sub tcp_syn_sender {
 
 sub tcp_syn_start_receiver {
    my $self = shift;
-   my ($port_list, $filter) = @_;
+   my ($port_list, $filter, $listen_device) = @_;
 
    if (defined($port_list)) {
       $self->brik_help_run_invalid_arg('tcp_syn_start_receiver', $port_list, 'ARRAY')
@@ -340,14 +342,16 @@ sub tcp_syn_start_receiver {
          or return;
    }
 
+   $listen_device ||= $self->listen_device;
+
    my $nr = Metabrik::Network::Read->new_from_brik_init($self) or return;
 
    my $ip = '';
    if ($self->use_ipv6) {
-      $ip = $self->my_ipv6 or return;
+      $ip = (defined($self->src_ip) ? $self->src_ip : $self->my_ipv6) or return;
    }
    else {
-      $ip = $self->my_ipv4 or return;
+      $ip = (defined($self->src_ip) ? $self->src_ip : $self->my_ipv4) or return;
    }
 
    if (defined($port_list)) {
@@ -376,6 +380,7 @@ sub tcp_syn_start_receiver {
    $self->log->verbose("tcp_syn_start_receiver: using filter [$filter]");
 
    $nr->filter($filter);
+   $nr->device($listen_device);
 
    $nr->open or return;
  
