@@ -30,6 +30,7 @@ sub brik_properties {
          install => [ ], # Inherited
          clone => [ qw(repository directory|OPTIONAL) ],
          update => [ qw(repository directory|OPTIONAL) ],
+         update_or_clone => [ qw(repository directory|OPTIONAL) ],
       },
       require_binaries => {
          git => [ ],
@@ -81,6 +82,19 @@ sub update {
    $self->execute($cmd) or return;
 
    return $directory;
+}
+
+sub update_or_clone {
+   my $self = shift;
+   my ($repository, $directory) = @_;
+
+   $self->brik_help_run_undef_arg('update_or_clone', $repository) or return;
+
+   if (-d $directory) {
+      return $self->update($repository, $directory);
+   }
+
+   return $self->clone($repository, $directory);
 }
 
 1;

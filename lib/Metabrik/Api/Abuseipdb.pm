@@ -21,6 +21,7 @@ sub brik_properties {
       commands => {
          get_categories => [ ],
          check => [ qw(ip days|OPTIONAL) ],
+         check_from_hostname => [ qw(hostname days|OPTIONAL) ],
          report => [ qw(ip category comment|OPTIONAL) ],
       },
    };
@@ -120,6 +121,26 @@ sub check {
    }
 
    return $r;
+}
+
+sub check_from_hostname {
+   my $self = shift;
+   my ($hostname, $days) = @_;
+
+   $days ||= 30;
+   my $api_key = $self->api_key;
+   $self->brik_help_set_undef_arg('api_key', $api_key) or return;
+   $self->brik_help_run_undef_arg('check_from_hostname', $hostname) or return;
+
+   my $cd = Metabrik::Client::Dns->new_from_brik_init($self) or return;
+   my $a = $cd->a_lookup($hostname) or return;
+
+   my %list = ();
+   for (@$a) {
+      $list{$_} = $self->check($_);
+   }
+
+   return \%list;
 }
 
 #

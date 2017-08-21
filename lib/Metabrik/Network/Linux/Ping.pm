@@ -49,7 +49,7 @@ sub is_alive {
    $timeout ||= $self->timeout;
    $self->brik_help_run_undef_arg('is_alive', $host) or return;
 
-   my $cmd = "ping -c $try -w $timeout $host > /dev/null 2>&1";
+   my $cmd = "ping -c $try -W $timeout $host > /dev/null 2>&1";
 
    my $r = $self->system($cmd) or return;
    if ($r == 1) {
