@@ -16,6 +16,8 @@ Revision history for Perl extension Metabrik::Repository.
    - new: audio::soundconverter Brik
    - new: system::linux::pps Brik
    - new: system::linux::cpuinfo Brik
+   - new: client::kafka Brik
+   - new: server::kafka Brik
 
 1.26.0 Sat  4 Feb 17:41:44 CET 2017
    - new: server::logstash::indexer Brik
