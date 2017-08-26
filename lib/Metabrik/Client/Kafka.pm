@@ -7,7 +7,7 @@ package Metabrik::Client::Kafka;
 use strict;
 use warnings;
 
-use base qw(Metabrik);
+use base qw(Metabrik::Shell::Command);
 
 sub brik_properties {
    return {
@@ -16,18 +16,27 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         host => [ qw(host_list) ],
+         host_zookeeper => [ qw(host) ],
          _kc => [ qw(INTERNAL) ],
          _kcli => [ qw(INTERNAL) ],
       },
       attributes_default => {
+         host => [ qw(localhost:9092) ],
+         host_zookeeper => 'localhost',
       },
       commands => {
-         create_connection => [ ],
+         create_connection => [ qw(host|OPTIONAL) ],
          create_producer => [ ],
          create_consumer => [ ],
          send => [ qw(topic partition messages) ],
-         loop_consumer_fetch => [ ],
+         loop_consumer_fetch => [ qw(topic partition|OPTIONAL) ],
          close => [ ],
+         create_topic => [ qw(topic replication_factor|OPTIONAL partitions|OPTIONAL) ],
+         list_topics => [ ],
+         describe_topic => [ qw(topic) ],
+         run_console_producer => [ qw(topic) ],
+         run_console_consumer => [ qw(topic) ],
       },
       require_modules => {
          'Kafka' => [ ],
@@ -48,11 +57,14 @@ sub create_connection {
    my $self = shift;
    my ($host) = @_;
 
-   $host ||= 'localhost';
+   $host ||= $self->host;
+   $self->brik_help_run_undef_arg('create_connection', $host) or return;
+   $self->brik_help_run_invalid_arg('create_connection', $host, 'ARRAY') or return;
 
    my $kc;
    eval {
-      $kc = Kafka::Connection->new(host => $host);
+      #$kc = Kafka::Connection->new(host => $host);
+      $kc = Kafka::Connection->new(broker_list => $host);
    };
    if ($@) {
       chomp($@);
@@ -112,7 +124,7 @@ sub send {
 
    my $r;
    eval {
-      $kcli->send($topic, $partition, $messages);
+      $r = $kcli->send($topic, $partition, $messages);
    };
    if ($@) {
       chomp($@);
@@ -178,6 +190,87 @@ sub close {
    }
 
    return 1;
+}
+
+sub create_topic {
+   my $self = shift;
+   my ($topic, $rf, $partitions) = @_;
+
+   $rf ||= 1;
+   $partitions ||= 1;
+   $self->brik_help_run_undef_arg('create_topic', $topic) or return;
+
+   my $basedir = $ENV{HOME}."/metabrik/server-kafka/kafka";
+   my $host = $self->host_zookeeper;
+
+   my $cmd = "$basedir/bin/kafka-topics.sh --create --zookeeper $host:2181 ".
+      "--replication-factor $rf --partitions $partitions --topic $topic";
+
+   $self->log->verbose("create_topics: cmd[$cmd]");
+
+   return $self->execute($cmd);
+}
+
+sub list_topics {
+   my $self = shift;
+
+   my $basedir = $ENV{HOME}."/metabrik/server-kafka/kafka";
+   my $host = $self->host_zookeeper;
+
+   my $cmd = "$basedir/bin/kafka-topics.sh --list --zookeeper $host:2181";
+
+   $self->log->verbose("list_topics: cmd[$cmd]");
+
+   return $self->execute($cmd);
+}
+
+sub describe_topic {
+   my $self = shift;
+   my ($topic) = @_;
+
+   $self->brik_help_run_undef_arg('describe_topic', $topic) or return;
+
+   my $basedir = $ENV{HOME}."/metabrik/server-kafka/kafka";
+   my $host = $self->host_zookeeper;
+
+   my $cmd = "$basedir/bin/kafka-topics.sh --describe --zookeeper $host:2181 --topic $topic";
+
+   $self->log->verbose("describe_topic: cmd[$cmd]");
+
+   return $self->execute($cmd);
+}
+
+sub run_console_producer {
+   my $self = shift;
+   my ($topic) = @_;
+
+   $self->brik_help_run_undef_arg('run_console_producer', $topic) or return;
+
+   my $basedir = $ENV{HOME}."/metabrik/server-kafka/kafka";
+   my $host = $self->host;
+
+   my $cmd = "$basedir/bin/kafka-console-producer.sh --broker-list $host:9092 --topic $topic";
+
+   $self->log->verbose("run_console_producer: cmd[$cmd]");
+
+   return $self->execute($cmd);
+}
+
+sub run_console_consumer {
+   my $self = shift;
+   my ($topic) = @_;
+
+   $self->brik_help_run_undef_arg('run_console_consumer', $topic) or return;
+
+   my $basedir = $ENV{HOME}."/metabrik/server-kafka/kafka";
+   my $host = $self->host;
+
+   my $cmd = "$basedir/bin/kafka-console-consumer.sh --bootstrap-server $host:9092 ".
+      "--topic $topic --from-beginning";
+
+   $self->log->verbose("run_console_consumer: cmd[$cmd]");
+
+   return $self->execute($cmd);
 }
 
 1;

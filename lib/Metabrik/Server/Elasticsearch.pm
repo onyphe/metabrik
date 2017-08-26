@@ -21,7 +21,7 @@ sub brik_properties {
          port => [ qw(port) ],
          conf_file => [ qw(file) ],
          pidfile => [ qw(file) ],
-         version => [ qw(2.4.1|5.0.0) ],
+         version => [ qw(2.4.1|5.0.0|5.5.2) ],
          no_output => [ qw(0|1) ],
          cluster_name => [ qw(name) ],
          node_name => [ qw(name) ],
@@ -32,7 +32,7 @@ sub brik_properties {
       attributes_default => {
          listen => '127.0.0.1',
          port => 9200,
-         version => '5.0.0',
+         version => '5.5.2',
          no_output => 1,
          cluster_name => 'metabrik',
          node_name => 'metabrik-1',
@@ -147,11 +147,14 @@ sub install {
    my $version = $self->version;
    my $she = $self->shell;
 
-   my $url = 'https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.0.0.tar.gz';
+   my $url = 'https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.5.2.tar.gz';
    if ($version eq '2.4.1') {
       $url = 'https://download.elastic.co/elasticsearch/release/org/'.
              'elasticsearch/distribution/tar/elasticsearch/2.4.1/'.
              'elasticsearch-2.4.1.tar.gz';
+   }
+   elsif ($version eq '5.0.0') {
+      $url = 'https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.0.0.tar.gz';
    }
 
    my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;

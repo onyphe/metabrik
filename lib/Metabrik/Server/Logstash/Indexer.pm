@@ -19,14 +19,14 @@ sub brik_properties {
          datadir => [ qw(datadir) ],
          conf_file => [ qw(file) ],
          log_file => [ qw(file) ],
-         version => [ qw(2.4.0|5.0.0) ],
+         version => [ qw(2.4.0|5.0.0|5.5.2) ],
          no_output => [ qw(0|1) ],
          redis_host => [ qw(host) ],
          es_nodes => [ qw(node_list) ],
          binary => [ qw(binary_path) ],
       },
       attributes_default => {
-         version => '5.0.0',
+         version => '5.5.2',
          no_output => 0,
          log_file => 'logstash.log',
          redis_host => '127.0.0.1',
@@ -41,6 +41,7 @@ sub brik_properties {
          stop => [ ],
          generate_conf => [ qw(conf_file|OPTIONAL redis_host|OPTIONAL) ],
          status => [ ],
+         restart => [ ],
       },
    };
 }
@@ -95,6 +96,16 @@ EOF
    $ft->write($conf, $conf_file) or return;
 
    return $conf_file;
+}
+
+sub restart {
+   my $self = shift;
+
+   $self->stop;
+
+   sleep(2);  # Wait for process to stop
+
+   return $self->start;
 }
 
 1;

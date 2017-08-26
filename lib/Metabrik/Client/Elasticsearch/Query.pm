@@ -30,7 +30,7 @@ sub brik_properties {
       commands => {
          create_client => [ ],
          reset_client => [ ],
-         query => [ qw(query index|OPTIONAL type|OPTIONAL) ],
+         query => [ qw(query index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
          get_query_result_total => [ qw($query_result|OPTIONAL) ],
          get_query_result_hits => [ qw($query_result|OPTIONAL) ],
          get_query_result_timed_out => [ qw($query_result|OPTIONAL) ],
@@ -152,7 +152,7 @@ sub get_query_result_took {
 
 sub query {
    my $self = shift;
-   my ($q, $index, $type) = @_;
+   my ($q, $index, $type, $hash) = @_;
 
    $index ||= '*';
    $type ||= '*';
@@ -160,7 +160,7 @@ sub query {
 
    my $ce = $self->create_client or return;
 
-   my $r = $self->SUPER::query($q, $index, $type) or return;
+   my $r = $self->SUPER::query($q, $index, $type, $hash) or return;
    if (defined($r)) {
       if (exists($r->{hits}{total})) {
          return $r;

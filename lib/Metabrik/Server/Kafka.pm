@@ -18,28 +18,36 @@ sub brik_properties {
       attributes => {
          datadir => [ qw(datadir) ],
          conf_file => [ qw(file) ],
+         conf_file_zookeeper => [ qw(file) ],
       },
       attributes_default => {
          conf_file => 'server.properties',
+         conf_file_zookeeper => 'zookeeper.properties',
       },
       commands => {
          install => [ ],
          generate_conf => [ ],
+         generate_conf_zookeeper => [ ],
          start => [ ],
+         status => [ ],
          stop => [ ],
+         start_zookeeper => [ ],
+         status_zookeeper => [ ],
+         stop_zookeeper => [ ],
       },
       require_modules => {
          'Metabrik::Devel::Git' => [ ],
          'Metabrik::File::Text' => [ ],
          'Metabrik::System::File' => [ ],
-         'Metabrik::System::Service' => [ ],
+         'Metabrik::System::Process' => [ ],
       },
       require_binaries => {
       },
       optional_binaries => {
       },
       need_packages => {
-         ubuntu => [ qw(zookeeper zookeeperd gradle openjdk-8-jdk) ],
+         ubuntu => [ qw(gradle openjdk-8-jdk) ],
+         freebsd => [ qw(gradle openjdk8) ],
       },
    };
 }
@@ -80,6 +88,8 @@ sub generate_conf {
    my $basedir = "$datadir/kafka";
    $conf_file = "$basedir/config/$conf_file";
 
+   # https://kafka.apache.org/documentation/#configuration
+
    my $conf =<<EOF
 # The id of the broker. This must be set to a unique integer for each broker.
 broker.id=1
@@ -93,6 +103,9 @@ listeners=PLAINTEXT://127.0.0.1:9092
 
 zookeeper.connect=localhost:2181
 #zookeeper.connect=192.168.1.101:2181,192.168.1.102:2181,192.168.1.103:2181
+
+# For single instance of Kakfa (no cluster), default RF on creation
+offsets.topic.replication.factor=1
 EOF
 ;
 
@@ -108,18 +121,147 @@ EOF
    return $conf_file;
 }
 
+sub generate_conf_zookeeper {
+   my $self = shift;
+   my ($conf_file) = @_;
+
+   $conf_file ||= $self->conf_file_zookeeper;
+   $self->brik_help_set_undef_arg('generate_conf_zookeeper', $conf_file) or return;
+
+   my $datadir = $self->datadir;
+   my $basedir = "$datadir/kafka";
+   $conf_file = "$basedir/config/$conf_file";
+
+   # https://kafka.apache.org/documentation/#configuration
+
+   my $conf =<<EOF
+# the directory where the snapshot is stored.
+dataDir=$datadir/zookeeper
+# the port at which the clients will connect
+clientPort=2181
+# disable the per-ip limit on the number of connections since this is a non-production config
+maxClientCnxns=0
+EOF
+;
+
+   my $ft = Metabrik::File::Text->new_from_brik_init($self) or return;
+   $ft->append(0);
+   $ft->overwrite(1);
+
+   $ft->write($conf, $conf_file) or return;
+
+   my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
+   $sf->mkdir("$datadir/zookeeper") or return;
+
+   return $conf_file;
+}
+
 sub start {
    my $self = shift;
 
    my $datadir = $self->datadir;
    my $basedir = "$datadir/kafka";
+   my $conf_file = $self->conf_file;
 
-   my $ss = Metabrik::System::Service->new_from_brik_init($self) or return;
-   $ss->start('zookeeper');
+   my $cmd = "$basedir/bin/kafka-server-start.sh $basedir/config/$conf_file";
 
-   my $cmd = "$basedir/bin/kafka-server-start.sh $basedir/config/server.properties";
+   return $self->system_in_background($cmd);
+}
 
-   return $self->execute($cmd);
+sub start_zookeeper {
+   my $self = shift;
+
+   my $datadir = $self->datadir;
+   my $basedir = "$datadir/kafka";
+   my $conf_file = $self->conf_file_zookeeper;
+
+   my $cmd = "$basedir/bin/zookeeper-server-start.sh $basedir/config/$conf_file";
+
+   return $self->system_in_background($cmd);
+}
+
+sub status {
+   my $self = shift;
+
+   my $conf_file = $self->conf_file;
+
+   my $datadir = $self->datadir;
+   my $basedir = "$datadir/kafka";
+   $conf_file = "$basedir/config/$conf_file";
+
+   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+
+   my $string = "kafka.Kafka $conf_file";
+   if ($sp->is_running_from_string($string)) {
+      $sp->verbose_process_is_running;
+      return 1;
+   }
+
+   $sp->verbose_process_is_not_running;
+   return 0;
+}
+
+sub status_zookeeper {
+   my $self = shift;
+
+   my $conf_file = $self->conf_file_zookeeper;
+
+   my $datadir = $self->datadir;
+   my $basedir = "$datadir/kafka";
+   $conf_file = "$basedir/config/$conf_file";
+
+   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+
+   my $string = "org.apache.zookeeper.server.quorum.QuorumPeerMain $conf_file";
+   if ($sp->is_running_from_string($string)) {
+      $sp->verbose_process_is_running;
+      return 1;
+   }
+
+   $sp->verbose_process_is_not_running;
+   return 0;
+}
+
+sub stop {
+   my $self = shift;
+
+   if (! $self->status) {
+      return $self->info_process_is_not_running;
+   }
+
+   my $conf_file = $self->conf_file;
+
+   my $datadir = $self->datadir;
+   my $basedir = "$datadir/kafka";
+   $conf_file = "$basedir/config/$conf_file";
+
+   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+
+   my $string = "kafka.Kafka $conf_file";
+   my $pid = $sp->get_pid_from_string($string) or return;
+
+   return $sp->kill($pid);
+}
+
+sub stop_zookeeper {
+   my $self = shift;
+
+   if (! $self->status) {
+      return $self->info_process_is_not_running;
+   }
+
+   my $conf_file = $self->conf_file_zookeeper;
+
+   my $datadir = $self->datadir;
+   my $basedir = "$datadir/kafka";
+   $conf_file = "$basedir/config/$conf_file";
+
+   my $sp = Metabrik::System::Process->new_from_brik_init($self) or return;
+
+   my $string = "org.apache.zookeeper.server.quorum.QuorumPeerMain $conf_file";
+   my $pid = $sp->get_pid_from_string($string) or return;
+
+   return $sp->kill($pid);
 }
 
 1;

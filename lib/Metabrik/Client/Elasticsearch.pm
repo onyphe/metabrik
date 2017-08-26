@@ -64,7 +64,7 @@ sub brik_properties {
          index_document => [ qw(document index|OPTIONAL type|OPTIONAL id|OPTIONAL) ],
          index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL id|OPTIONAL) ],
          bulk_flush => [ ],
-         query => [ qw($query_hash index|OPTIONAL type|OPTIONAL) ],
+         query => [ qw($query_hash index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
          get_from_id => [ qw(id index|OPTIONAL type|OPTIONAL) ],
          www_search => [ qw(query index|OPTIONAL type|OPTIONAL) ],
@@ -595,7 +595,7 @@ sub count {
 #
 sub query {
    my $self = shift;
-   my ($query, $index, $type) = @_;
+   my ($query, $index, $type, $hash) = @_;
 
    $index ||= $self->index;
    $type ||= $self->type;
@@ -612,6 +612,10 @@ sub query {
       index => $index,
       body => $query,
    );
+
+   if (defined($hash)) {
+      %args = ( %args, %$hash );
+   }
 
    if ($type ne '*') {
       $args{type} = $type;
