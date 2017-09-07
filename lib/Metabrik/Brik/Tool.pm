@@ -308,6 +308,7 @@ sub get_brik_hierarchy_recursive {
    # Then we search for complete hierarchy recursively
    for my $this (keys %$hierarchy) {
       next if $this eq $brik;  # Skip the provided one.
+      next if exists $hierarchy->{$this}; # Skip already analyzed ones.
       my $new = $self->get_brik_hierarchy_recursive($this) or return;
       for (@$new) {
          $hierarchy->{$_}++;

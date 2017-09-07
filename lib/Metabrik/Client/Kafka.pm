@@ -33,6 +33,8 @@ sub brik_properties {
          loop_consumer_fetch => [ qw(topic partition|OPTIONAL) ],
          close => [ ],
          create_topic => [ qw(topic replication_factor|OPTIONAL partitions|OPTIONAL) ],
+         alter_topic => [ qw(topic replication_factor|OPTIONAL partitions|OPTIONAL) ],
+         delete_topic => [ qw(topic) ],
          list_topics => [ ],
          describe_topic => [ qw(topic) ],
          run_console_producer => [ qw(topic) ],
@@ -206,7 +208,42 @@ sub create_topic {
    my $cmd = "$basedir/bin/kafka-topics.sh --create --zookeeper $host:2181 ".
       "--replication-factor $rf --partitions $partitions --topic $topic";
 
-   $self->log->verbose("create_topics: cmd[$cmd]");
+   $self->log->verbose("create_topic: cmd[$cmd]");
+
+   return $self->execute($cmd);
+}
+
+sub alter_topic {
+   my $self = shift;
+   my ($topic, $partitions) = @_;
+
+   $partitions ||= 1;
+   $self->brik_help_run_undef_arg('alter_topic', $topic) or return;
+
+   my $basedir = $ENV{HOME}."/metabrik/server-kafka/kafka";
+   my $host = $self->host_zookeeper;
+
+   my $cmd = "$basedir/bin/kafka-topics.sh --alter --zookeeper $host:2181 ".
+      "--partitions $partitions --topic $topic";
+
+   $self->log->verbose("alter_topic: cmd[$cmd]");
+
+   return $self->execute($cmd);
+}
+
+sub delete_topic {
+   my $self = shift;
+   my ($topic) = @_;
+
+   $self->brik_help_run_undef_arg('delete_topic', $topic) or return;
+
+   my $basedir = $ENV{HOME}."/metabrik/server-kafka/kafka";
+   my $host = $self->host_zookeeper;
+
+   my $cmd = "$basedir/bin/kafka-topics.sh --delete --if-exists --zookeeper $host:2181 ".
+      "--topic $topic";
+
+   $self->log->verbose("delete_topic: cmd[$cmd]");
 
    return $self->execute($cmd);
 }
@@ -239,6 +276,12 @@ sub describe_topic {
 
    return $self->execute($cmd);
 }
+
+# https://stackoverflow.com/questions/16284399/purge-kafka-queue
+# kafka-topics.sh --zookeeper localhost:13003 --alter --topic MyTopic --config retention.ms=1000
+# Wait, then restore previous retention.ms
+#sub purge_topic {
+#}
 
 sub run_console_producer {
    my $self = shift;
