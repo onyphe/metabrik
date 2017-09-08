@@ -62,15 +62,37 @@ sub create_connection {
    $host ||= $self->host;
    $self->brik_help_run_undef_arg('create_connection', $host) or return;
    $self->brik_help_run_invalid_arg('create_connection', $host, 'ARRAY') or return;
+   $self->brik_help_run_empty_array_arg('create_connection', $host) or return;
+
+   # Patch fonction to disable utf8 stuff, it fails strangely.
+   *Kafka::Connection::_is_like_server = sub {
+      my ($self, $server) = @_;
+
+      unless(
+            defined($server)
+            && defined(Kafka::Connection::_STRING($server))
+            #&& !utf8::is_utf8($server)  # this sucks.
+        ) {
+         return;
+      }
+
+      my ($host, $port) = Kafka::Connection::_split_host_port($server);
+
+      unless ((Kafka::Connection::is_hostname($host) || Kafka::Connection::is_ipv4($host) || Kafka::Connection::is_ipv6($host)) && $port) {
+         return;
+      }
+
+      return $server;
+   };
 
    my $kc;
    eval {
-      #$kc = Kafka::Connection->new(host => $host);
       $kc = Kafka::Connection->new(broker_list => $host);
    };
    if ($@) {
       chomp($@);
-      return $self->log->error("create_connection: failed [$@]");
+      my $str_list = join(',', @$host);
+      return $self->log->error("create_connection: failed to list [$str_list]: [$@]");
    }
 
    return $self->_kc($kc);
