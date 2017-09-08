@@ -313,9 +313,9 @@ sub write {
             # Encode only if it has been asked and the value is not empty.
             if ($object_fields && exists($object_fields->{$k}) && length($v)) {
                # Encode ARRAYs and HASHes only if they are not empty.
+               # Do not encode simple strings.
                if (ref($v) eq 'ARRAY' && @$v > 0
-               ||  ref($v) eq 'HASH' && keys %$v > 0
-               ||  ref($v) eq '') {
+               ||  ref($v) eq 'HASH' && keys %$v > 0) {
                   $v = Data::Dump::dump($v); $v =~ s{\n}{}g;
                   $v = 'OBJECT:'.$sb->encode($v);
                   if (! defined($v)) {
@@ -323,7 +323,10 @@ sub write {
                      next;
                   }
                }
-               # If empty objects, we set them to empty string.
+               # If this is a simple string, we do not encode at all.
+               elsif (ref($v) eq '' && length($v)) {
+               }
+               # And for empty objects, we set them to empty string.
                else {
                   $v = "";
                }
