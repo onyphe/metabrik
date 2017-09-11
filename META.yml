@@ -57,6 +57,8 @@ provides:
     file: lib/Metabrik/Client/Elasticsearch/Query.pm
   Metabrik::Client::Imap:
     file: lib/Metabrik/Client/Imap.pm
+  Metabrik::Client::Kafka:
+    file: lib/Metabrik/Client/Kafka.pm
   Metabrik::Client::Mongodb:
     file: lib/Metabrik/Client/Mongodb.pm
   Metabrik::Client::Mysql:
@@ -336,6 +338,8 @@ provides:
     file: lib/Metabrik/Server/Elasticsearch.pm
   Metabrik::Server::Http:
     file: lib/Metabrik/Server/Http.pm
+  Metabrik::Server::Kafka:
+    file: lib/Metabrik/Server/Kafka.pm
   Metabrik::Server::Kibana:
     file: lib/Metabrik/Server/Kibana.pm
   Metabrik::Server::Logstash:

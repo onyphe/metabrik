@@ -99,6 +99,9 @@
       "Metabrik::Client::Imap" : {
          "file" : "lib/Metabrik/Client/Imap.pm"
       },
+      "Metabrik::Client::Kafka" : {
+         "file" : "lib/Metabrik/Client/Kafka.pm"
+      },
       "Metabrik::Client::Mongodb" : {
          "file" : "lib/Metabrik/Client/Mongodb.pm"
       },
@@ -516,6 +519,9 @@
       },
       "Metabrik::Server::Http" : {
          "file" : "lib/Metabrik/Server/Http.pm"
+      },
+      "Metabrik::Server::Kafka" : {
+         "file" : "lib/Metabrik/Server/Kafka.pm"
       },
       "Metabrik::Server::Kibana" : {
          "file" : "lib/Metabrik/Server/Kibana.pm"

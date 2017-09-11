@@ -25,6 +25,7 @@ lib/Metabrik/Client/Dns.pm
 lib/Metabrik/Client/Elasticsearch.pm
 lib/Metabrik/Client/Elasticsearch/Query.pm
 lib/Metabrik/Client/Imap.pm
+lib/Metabrik/Client/Kafka.pm
 lib/Metabrik/Client/Mongodb.pm
 lib/Metabrik/Client/Mysql.pm
 lib/Metabrik/Client/Openssh.pm
@@ -164,6 +165,7 @@ lib/Metabrik/Repository.pm
 lib/Metabrik/Server/Dns.pm
 lib/Metabrik/Server/Elasticsearch.pm
 lib/Metabrik/Server/Http.pm
+lib/Metabrik/Server/Kafka.pm
 lib/Metabrik/Server/Kibana.pm
 lib/Metabrik/Server/Logstash/Indexer.pm
 lib/Metabrik/Server/Logstash/Oneshot.pm
