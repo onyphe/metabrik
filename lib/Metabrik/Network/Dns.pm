@@ -131,8 +131,15 @@ sub lookup {
 
    $self->debug && $self->log->debug("lookup: host [$host] for type [$type]");
 
-   my $packet = $resolver->send($host, $type);
-   if (! defined($packet)) {
+   my $packet;
+   eval {
+      $packet = $resolver->send($host, $type);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("lookup: send exception [$@]");
+   }
+   elsif (! defined($packet)) {
       return $self->log->error("lookup: query failed [".$resolver->errorstring."]");
    }
 
@@ -197,11 +204,19 @@ sub background_lookup {
       $resolver = $self->resolver;
    }
 
-   $self->debug && $self->log->debug("background_lookup: host [$host] for type [$type]");
+   $self->log->debug("background_lookup: host [$host] for type [$type]");
 
-   my $handle = $resolver->bgsend($host, $type);
-   if (! defined($handle)) {
-      return $self->log->error("background_lookup: query failed [".$resolver->errorstring."]");
+   my $handle;
+   eval {
+      $handle = $resolver->bgsend($host, $type);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("background_lookup: bgsend exception [$@]");
+   }
+   elsif (! defined($handle)) {
+      return $self->log->error("background_lookup: query failed [".
+         $resolver->errorstring."]");
    }
 
    return $handle;
@@ -212,17 +227,25 @@ sub background_read {
    my ($handle) = @_;
 
    my $resolver = $self->resolver;
-   $self->brik_help_run_undef_arg('background_lookup', $resolver) or return;
+   $self->brik_help_set_undef_arg('resolver', $resolver) or return;
    $self->brik_help_run_undef_arg('background_read', $handle) or return;
-   $self->brik_help_run_invalid_arg('background_read', $handle, 'IO::Socket::IP') or return;
+   $self->brik_help_run_invalid_arg('background_read', $handle, 'IO::Socket::IP')
+      or return;
 
    # Answer not ready
    if (! $resolver->bgisready($handle)) {
       return 0;
    }
 
-   my $packet = $resolver->bgread($handle);
-   if (! defined($packet)) {
+   my $packet;
+   eval {
+      $packet = $resolver->bgread($handle);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("background_read: bgread exception [$@]");
+   }
+   elsif (! defined($packet)) {
       return [];  # No error checking possible, undef means no response or timeout.
    }
 

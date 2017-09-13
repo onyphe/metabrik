@@ -4,7 +4,7 @@
       "GomoR <gomor_at_metabrik.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4218",
+   "generated_by" : "Module::Build version 0.4224",
    "license" : [
       "bsd"
    ],
@@ -780,5 +780,5 @@
       ]
    },
    "version" : "1.26",
-   "x_serialization_backend" : "JSON::PP version 2.27300"
+   "x_serialization_backend" : "JSON::PP version 2.27300_01"
 }

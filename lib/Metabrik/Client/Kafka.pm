@@ -18,12 +18,14 @@ sub brik_properties {
       attributes => {
          host => [ qw(host_list) ],
          host_zookeeper => [ qw(host) ],
+         max_fetch_size => [ qw(size) ],
          _kc => [ qw(INTERNAL) ],
          _kcli => [ qw(INTERNAL) ],
       },
       attributes_default => {
          host => [ qw(localhost:9092) ],
          host_zookeeper => 'localhost',
+         max_fetch_size => 20000000,
       },
       commands => {
          create_connection => [ qw(host|OPTIONAL) ],
@@ -178,13 +180,12 @@ sub loop_consumer_fetch {
    for (@$offsets) {
       print "Received offset: $_\n";
    }
- 
-   # Consuming messages
+
    my $messages = $kcli->fetch(
        $topic,
        $partition,
-       0,                         # offset
-       $Kafka::DEFAULT_MAX_BYTES, # Maximum size of MESSAGE(s) to receive
+       0,                       # offset
+       $self->max_fetch_size,   # Maximum size of MESSAGE(s) to receive
    );
    for my $message (@$messages) {
       if ($message->valid) {
