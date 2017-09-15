@@ -29,6 +29,7 @@ sub brik_properties {
          do_javascript => [ qw(0|1) ],
          do_redirects => [ qw(0|1) ],
          src_ip => [ qw(ip_address) ],
+         max_redirects => [ qw(count) ],
          _client => [ qw(object|INTERNAL) ],
          _last => [ qw(object|INTERNAL) ],
       },
@@ -40,6 +41,7 @@ sub brik_properties {
          add_headers => {},
          do_javascript => 0,
          do_redirects => 1,
+         max_redirects => 10,
       },
       commands => {
          install => [ ], # Inherited
@@ -157,7 +159,10 @@ sub create_user_agent {
       $self->log->warning("create_user_agent: module [WWW::Mechanize::PhantomJS] does ".
          "not support do_redirects, won't use it.");
    }
-   else {
+   elsif ($self->do_redirects) {
+      $args{max_redirect} = $self->max_redirects;
+   }
+   else {  # Follow redirects not wanted
       $args{max_redirect} = 0;
    }
 
