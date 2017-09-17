@@ -19,6 +19,9 @@ sub brik_properties {
          host => [ qw(host_list) ],
          host_zookeeper => [ qw(host) ],
          max_fetch_size => [ qw(size) ],
+         rtimeout => [ qw(seconds_float) ],
+         retry => [ qw(count) ],
+         retry_backoff => [ qw(milliseconds) ],
          _kc => [ qw(INTERNAL) ],
          _kcli => [ qw(INTERNAL) ],
       },
@@ -26,6 +29,9 @@ sub brik_properties {
          host => [ qw(localhost:9092) ],
          host_zookeeper => 'localhost',
          max_fetch_size => 20000000,
+         rtimeout => 3,
+         retry => 5,
+         retry_backoff => 1000,
       },
       commands => {
          create_connection => [ qw(host|OPTIONAL) ],
@@ -87,9 +93,18 @@ sub create_connection {
       return $server;
    };
 
+   my $rtimeout = $self->rtimeout;
+   my $send_max_attempts = $self->retry;
+   my $retry_backoff = $self->retry_backoff;
+
    my $kc;
    eval {
-      $kc = Kafka::Connection->new(broker_list => $host);
+      $kc = Kafka::Connection->new(
+         broker_list => $host,
+         timeout => $rtimeout,
+         SEND_MAX_ATTEMPTS => $send_max_attempts,
+         RETRY_BACKOFF => $retry_backoff,
+      );
    };
    if ($@) {
       chomp($@);
@@ -154,7 +169,50 @@ sub send {
    };
    if ($@) {
       chomp($@);
-      return $self->log->error("send: fail [$@]");
+
+      # Response $r looks like the following. We should use ErrorCode instead of regexes.
+      # {
+      #    CorrelationId => -1608629279,
+      #    Throttle_Time_Ms => 0,
+      #    topics => [ {
+      #       partitions => [
+      #          { ErrorCode => 0, Log_Append_Time => -1, Offset => 0, Partition => 0 },
+      #       ],
+      #       TopicName  => "test",
+      #    } ],
+      # }
+
+      my $no_ack_for_request = 'No acknowledgement for sent request';
+      my $cant_connect = 'Cannot connect to broker';
+      my $cant_get_metadata = 'Cannot get metadata';
+      my $unable_to_write = 'Unable to write due to ongoing Kafka leader selection';
+      my $no_known_broker = 'There are no known brokers';
+      my $too_big = 'Message is too big';
+      my $invalid_arg_messages = 'Invalid argument: messages';
+      my $err = $@;
+      if ($@ =~ m{^$no_ack_for_request}i) {
+         $err = $no_ack_for_request;
+      }
+      elsif ($@ =~ m{^$cant_connect}i) {
+         $err = $cant_connect;
+      }
+      elsif ($@ =~ m{^$cant_get_metadata}i) {
+         $err = $cant_get_metadata;
+      }
+      elsif ($@ =~ m{^$unable_to_write}i) {
+         $err = $unable_to_write;
+      }
+      elsif ($@ =~ m{^$no_known_broker}i) {
+         $err = $no_known_broker;
+      }
+      elsif ($@ =~ m{^$too_big}i) {
+         $err = $too_big;
+      }
+      elsif ($@ =~ m{^$invalid_arg_messages}i) {
+         $err = $invalid_arg_messages;
+      }
+
+      return $self->log->error("send: fail [$err]");
    }
 
    return $r;
