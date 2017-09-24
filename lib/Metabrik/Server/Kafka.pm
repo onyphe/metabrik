@@ -98,14 +98,19 @@ broker.id=1
 message.max.bytes=20000000
 replica.fetch.max.bytes=30000000
 
+# Retention time
+log.retention.hours=24
+
 log.dirs=$datadir/log
 listeners=PLAINTEXT://127.0.0.1:9092
 
 zookeeper.connect=localhost:2181
-#zookeeper.connect=192.168.1.101:2181,192.168.1.102:2181,192.168.1.103:2181
 
 # For single instance of Kakfa (no cluster), default RF on creation
 offsets.topic.replication.factor=1
+
+# So we can actually delete topics
+delete.topic.enable=true
 EOF
 ;
 
@@ -141,6 +146,10 @@ dataDir=$datadir/zookeeper
 clientPort=2181
 # disable the per-ip limit on the number of connections since this is a non-production config
 maxClientCnxns=0
+maxClientCnxns=0
+server.1=localhost:2888:3888
+initLimit=5
+syncLimit=2
 EOF
 ;
 

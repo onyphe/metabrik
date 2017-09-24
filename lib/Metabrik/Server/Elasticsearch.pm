@@ -120,11 +120,20 @@ sub generate_conf {
    $sf->mkdir($db_dir) or return;
    $sf->mkdir($log_dir) or return;
 
+   (my $path_conf = $conf_file) =~ s{/elasticsearch.yml$}{};
+
    my $conf =<<EOF
+#bootstrap.memory_lock: true
+node.master: true
+node.data: true
+node.ingest: true
 cluster.name: $cluster_name
 node.name: $node_name
+path.conf: $path_conf
 path.data: $db_dir
 path.logs: $log_dir
+discovery.zen.minimum_master_nodes: 1
+discovery.zen.ping.unicast.hosts: ["$listen"]
 network.bind_host: ["$listen"]
 network.publish_host: $listen
 http.port: $port

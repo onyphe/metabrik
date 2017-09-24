@@ -1803,7 +1803,8 @@ sub parse_error_string {
    }
 
    # Sanity check
-   if ($node =~ m{^http} && $code =~ m{^\d+$} && defined($dump) && ref($dump) eq 'HASH') {
+   if (defined($node) && $node =~ m{^http} && $code =~ m{^\d+$}
+   &&  defined($dump) && ref($dump) eq 'HASH') {
       return {
          class => $class,
          node => $node,

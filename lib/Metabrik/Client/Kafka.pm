@@ -73,24 +73,28 @@ sub create_connection {
    $self->brik_help_run_empty_array_arg('create_connection', $host) or return;
 
    # Patch fonction to disable utf8 stuff, it fails strangely.
-   *Kafka::Connection::_is_like_server = sub {
-      my ($self, $server) = @_;
+   {
+      no warnings 'redefine';
 
-      unless(
-            defined($server)
-            && defined(Kafka::Connection::_STRING($server))
-            #&& !utf8::is_utf8($server)  # this sucks.
-        ) {
-         return;
-      }
+      *Kafka::Connection::_is_like_server = sub {
+         my ($self, $server) = @_;
 
-      my ($host, $port) = Kafka::Connection::_split_host_port($server);
+         unless(
+               defined($server)
+               && defined(Kafka::Connection::_STRING($server))
+               #&& !utf8::is_utf8($server)  # this sucks.
+           ) {
+            return;
+         }
 
-      unless ((Kafka::Connection::is_hostname($host) || Kafka::Connection::is_ipv4($host) || Kafka::Connection::is_ipv6($host)) && $port) {
-         return;
-      }
+         my ($host, $port) = Kafka::Connection::_split_host_port($server);
 
-      return $server;
+         unless ((Kafka::Connection::is_hostname($host) || Kafka::Connection::is_ipv4($host) || Kafka::Connection::is_ipv6($host)) && $port) {
+            return;
+         }
+
+         return $server;
+      };
    };
 
    my $rtimeout = $self->rtimeout;
