@@ -49,6 +49,7 @@ sub brik_properties {
          run_console_consumer => [ qw(topic) ],
       },
       require_modules => {
+         'List::Util' => [ qw(shuffle) ],
          'Kafka' => [ ],
          'Kafka::Connection' => [ ],
          'Kafka::Producer' => [ ],
@@ -101,10 +102,14 @@ sub create_connection {
    my $send_max_attempts = $self->retry;
    my $retry_backoff = $self->retry_backoff;
 
+   # Cause Kafka will connect to the first working broker.
+   # By randomizing, different processes will use different brokers.
+   my @list = List::Util::shuffle(@$host);
+
    my $kc;
    eval {
       $kc = Kafka::Connection->new(
-         broker_list => $host,
+         broker_list => \@list,
          timeout => $rtimeout,
          SEND_MAX_ATTEMPTS => $send_max_attempts,
          RETRY_BACKOFF => $retry_backoff,
@@ -112,8 +117,8 @@ sub create_connection {
    };
    if ($@) {
       chomp($@);
-      my $str_list = join(',', @$host);
-      return $self->log->error("create_connection: failed to list [$str_list]: [$@]");
+      my $str_list = join(',', @list);
+      return $self->log->error("create_connection: failed with list [$str_list]: [$@]");
    }
 
    return $self->_kc($kc);

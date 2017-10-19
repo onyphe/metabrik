@@ -266,6 +266,8 @@ sub to_timestamp {
    my $self = shift;
    my ($string) = @_;
 
+   $self->brik_help_run_undef_arg('to_timestamp', $string) or return;
+
    my %month = (
       Jan => 0,
       Feb => 1,
@@ -321,6 +323,20 @@ sub to_timestamp {
    }
    # 2016-04-12T17:25:50.713Z
    elsif ($string =~ m{^(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$}) {
+      my $mon = $2 - 1;
+      my $mday = $3;
+      my $hour = $4;
+      my $min = $5;
+      my $sec = $6;
+      my $year = $1;
+      my $msec = $7;
+      $timestamp = Time::Local::timelocal($sec, $min, $hour, $mday, $mon, $year);
+      if ($self->use_hires) {
+         $timestamp .= sprintf(".%03d", $msec);
+      }
+   }
+   # 2017-10-11 07:40:55.612514
+   elsif ($string =~ m{^(\d{4})\-(\d{2})\-(\d{2}) (\d{2}):(\d{2}):(\d{2})\.(\d{6})$}) {
       my $mon = $2 - 1;
       my $mday = $3;
       my $hour = $4;
