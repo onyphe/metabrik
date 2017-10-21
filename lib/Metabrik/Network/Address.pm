@@ -19,7 +19,7 @@ sub brik_properties {
          subnet => [ qw(subnet) ],
       },
       commands => {
-         match => [ qw(ipv4_address subnet|OPTIONAL) ],
+         match => [ qw(ip_address subnet|OPTIONAL) ],
          network_address => [ qw(subnet|OPTIONAL) ],
          broadcast_address => [ qw(subnet|OPTIONAL) ],
          netmask_address => [ qw(subnet|OPTIONAL) ],
@@ -32,7 +32,9 @@ sub brik_properties {
          ipv4_list => [ qw(subnet|OPTIONAL) ],
          ipv6_list => [ qw(subnet|OPTIONAL) ],
          count_ipv4 => [ qw(subnet|OPTIONAL) ],
+         count_ipv6 => [ qw(subnet|OPTIONAL) ],
          get_ipv4_cidr => [ qw(subnet|OPTIONAL) ],
+         get_ipv6_cidr => [ qw(subnet|OPTIONAL) ],
          is_ipv4_subnet => [ qw(subnet|OPTIONAL) ],
          merge_cidr => [ qw($cidr_list) ],
          ipv4_to_integer => [ qw(ipv4_address) ],
@@ -44,10 +46,13 @@ sub brik_properties {
          is_ipv6_reserved => [ qw(ipv6_address) ],
          is_ip_reserved => [ qw(ip_address) ],
          ipv6_to_string_preferred => [ qw(ipv6_address) ],
+         ipv4_first_address => [ qw(ipv4_address) ],
+         ipv4_last_address => [ qw(ipv4_address) ],
          ipv6_first_address => [ qw(ipv6_address) ],
          ipv6_last_address => [ qw(ipv6_address) ],
       },
       require_modules => {
+         'Bit::Vector' => [ ],
          'Net::Netmask' => [ ],
          'Net::IPv4Addr' => [ ],
          'Net::IPv6Addr' => [ ],
@@ -323,6 +328,25 @@ sub get_ipv4_cidr {
    return $cidr;
 }
 
+sub get_ipv6_cidr {
+   my $self = shift;
+   my ($subnet) = @_;
+
+   $subnet ||= $self->subnet;
+   $self->brik_help_run_undef_arg('get_ipv6_cidr', $subnet) or return;
+
+   my ($cidr) = $subnet =~ m{/(\d+)$};
+   if (! defined($cidr)) {
+      return $self->log->error("get_ipv6_cidr: no CIDR mask found");
+   }
+
+   if ($cidr < 0 || $cidr > 128) {
+      return $self->log->error("get_ipv6_cidr: invalid CIDR mask [$cidr]");
+   }
+
+   return $cidr;
+}
+
 sub count_ipv4 {
    my $self = shift;
    my ($subnet) = @_;
@@ -337,6 +361,22 @@ sub count_ipv4 {
    my $cidr = $self->get_ipv4_cidr($subnet) or return;
 
    return 2 ** (32 - $cidr);
+}
+
+sub count_ipv6 {
+   my $self = shift;
+   my ($subnet) = @_;
+
+   $subnet ||= $self->subnet;
+   $self->brik_help_run_undef_arg('count_ipv6', $subnet) or return;
+
+   if (! $self->is_ipv6($subnet)) {
+      return $self->log->error("count_ipv6: invalid format [$subnet], not IPv6");
+   }
+
+   my $cidr = $self->get_ipv6_cidr($subnet) or return;
+
+   return 2 ** (128 - $cidr);
 }
 
 sub is_ipv4_subnet {
@@ -399,8 +439,10 @@ sub ipv6_to_integer {
 
    ($ipv6_address) =~ s/\/\d+$//;  # Remove /CIDR if any
 
-   my $ni = Net::IPv6Addr->new($ipv6_address);
-   return $ni->to_bigint->numify();
+   my $f = IPv6::Address->new("$ipv6_address/128")->get_bitstr;
+
+   my ($b) = CORE::unpack('B128', $f);
+   return Bit::Vector->new_Bin(128, $b)->to_Dec;
 }
 
 sub integer_to_ipv4 { 
@@ -553,6 +595,20 @@ sub ipv6_to_string_preferred {
    return $pref;
 }
 
+sub ipv4_first_address {
+   my $self = shift;
+   my ($ip) = @_;
+
+   return $self->network_address($ip);
+}
+
+sub ipv4_last_address {
+   my $self = shift;
+   my ($ip) = @_;
+
+   return $self->broadcast_address($ip);
+}
+
 sub ipv6_first_address {
    my $self = shift;
    my ($ip) = @_;
@@ -564,7 +620,10 @@ sub ipv6_first_address {
    }
 
    my $ipv6 = IPv6::Address->new($ip);
-   return $ipv6->first_address->to_string;
+   my $string = $ipv6->first_address->to_string;
+   $string =~ s{/\d+$}{};
+
+   return $string;
 }
 
 sub ipv6_last_address {
@@ -578,7 +637,10 @@ sub ipv6_last_address {
    }
 
    my $ipv6 = IPv6::Address->new($ip);
-   return $ipv6->last_address->to_string;
+   my $string = $ipv6->last_address->to_string;
+   $string =~ s{/\d+$}{};
+
+   return $string;
 }
 
 1;
