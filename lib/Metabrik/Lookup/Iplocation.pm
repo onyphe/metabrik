@@ -175,12 +175,6 @@ sub from_ipv6 {
 
    $self->brik_help_run_undef_arg('from_ipv6', $ipv6) or return;
 
-   # my $gi = Geo::IP->open( "/usr/local/share/GeoIP/GeoIPASNumv6.dat", GEOIP_STANDARD );
-   # print $gi->name_by_addr_v6('::ffff:24.24.24.24') || '';
-   # my $gi = Geo::IP->open($self->datadir.'/GeoIPv6.dat')
-      # or return $self->log->error("from_ipv6: unable to open GeoIPv6.dat");
-   # my $record = $gi->country_code_by_addr_v6($ipv6);
-
    my $na = $self->_na;
 
    my $gi = Geo::IP->open($self->datadir.'/GeoLiteCityv6.dat', Geo::IP::GEOIP_STANDARD())
