@@ -44,6 +44,7 @@ sub update {
 
    my @urls = qw(
       ftp://ftp.apnic.net/apnic/whois/apnic.db.inetnum.gz
+      ftp://ftp.apnic.net/apnic/whois/apnic.db.inet6num.gz
       ftp://ftp.ripe.net/ripe/dbase/ripe.db.gz
       ftp://ftp.afrinic.net/dbase/afrinic.db.gz
       http://ftp.apnic.net/apnic/dbase/data/jpnic.db.gz
@@ -143,7 +144,7 @@ sub next_record {
 
       push @{$record{raw}}, $line;
 
-      $self->debug && $self->log->debug("next_record: key [$key] val[$val]");
+      $self->log->debug("next_record: key [$key] val[$val]");
 
       if (! exists($record{$key})) {
          $record{$key} = $val;
