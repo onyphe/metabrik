@@ -112,7 +112,7 @@ sub brik_properties {
          parse_error_string => [ qw(string) ],
          refresh_index => [ qw(index) ],
          export_as_csv => [ qw(index size|OPTIONAL) ],
-         import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL size|OPTIONAL) ],
+         import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
          get_stats_process => [ ],
          get_process => [ ],
          get_cluster_state => [ ],
@@ -2051,7 +2051,7 @@ sub export_as_csv {
 #
 sub import_from_csv {
    my $self = shift;
-   my ($input_csv, $index, $type) = @_;
+   my ($input_csv, $index, $type, $hash) = @_;
 
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
@@ -2142,7 +2142,7 @@ sub import_from_csv {
          }
       }
 
-      my $r = $self->index_bulk($h, $index, $type, $id);
+      my $r = $self->index_bulk($h, $index, $type, $hash, $id);
       if (! defined($r)) {
          $self->log->error("import_from_csv: bulk processing failed for index [$index] ".
             "at read [$read], skipping chunk");
