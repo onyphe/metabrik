@@ -61,8 +61,9 @@ sub brik_properties {
          close_scroll => [ ],
          total_scroll => [ ],
          next_scroll => [ ],
-         index_document => [ qw(document index|OPTIONAL type|OPTIONAL id|OPTIONAL) ],
-         index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL id|OPTIONAL) ],
+         index_document => [ qw(document index|OPTIONAL type|OPTIONAL hash|OPTIONAL id|OPTIONAL) ],
+         update_document => [ qw(document id index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
+         index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL hash|OPTIONAL id|OPTIONAL) ],
          bulk_flush => [ ],
          query => [ qw($query_hash index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
@@ -407,9 +408,12 @@ sub next_scroll {
    return $next;
 }
 
+#
+# Search::Elasticsearch::Client::5_0::Direct
+#
 sub index_document {
    my $self = shift;
-   my ($doc, $index, $type, $id) = @_;
+   my ($doc, $index, $type, $hash, $id) = @_;
 
    $index ||= $self->index;
    $type ||= $self->type;
@@ -429,6 +433,10 @@ sub index_document {
       $args{id} = $id;
    }
 
+   if (defined($hash)) {
+      %args = ( %args, %$hash );
+   }
+
    my $r;
    eval {
       $r = $es->index(%args);
@@ -442,11 +450,51 @@ sub index_document {
 }
 
 #
+# Search::Elasticsearch::Client::5_0::Direct
+#
+sub update_document {
+   my $self = shift;
+   my ($doc, $id, $index, $type, $hash) = @_;
+
+   $index ||= $self->index;
+   $type ||= $self->type;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('update_document', $doc) or return;
+   $self->brik_help_run_invalid_arg('update_document', $doc, 'HASH') or return;
+   $self->brik_help_run_undef_arg('update_document', $id) or return;
+   $self->brik_help_set_undef_arg('index', $index) or return;
+   $self->brik_help_set_undef_arg('type', $type) or return;
+
+   my %args = (
+      id => $id,
+      index => $index,
+      type => $type,
+      body => { doc => $doc },
+   );
+
+   if (defined($hash)) {
+      %args = ( %args, %$hash );
+   }
+
+   my $r;
+   eval {
+      $r = $es->update(%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("update_document: index failed for index [$index]: [$@]");
+   }
+
+   return $r;
+}
+
+#
 # Search::Elasticsearch::Client::5_0::Bulk
 #
 sub index_bulk {
    my $self = shift;
-   my ($doc, $index, $type, $id) = @_;
+   my ($doc, $index, $type, $hash, $id) = @_;
 
    my $bulk = $self->_bulk;
    $index ||= $self->index;
@@ -463,9 +511,12 @@ sub index_bulk {
       $args{id} = $id;
    }
 
+   if (defined($hash)) {
+      %args = ( %args, %$hash );
+   }
+
    my $r;
    eval {
-      #$r = $bulk->index(\%args);
       $r = $bulk->add_action(index => \%args);
    };
    if ($@) {
@@ -501,8 +552,8 @@ RETRY:
       $r = $bulk->flush;
    };
    if ($@) {
+      chomp($@);
       if (--$try == 0) {
-         chomp($@);
          my $p = $self->parse_error_string($@);
          if (defined($p) && exists($p->{class})) {
             my $class = $p->{class};
@@ -515,7 +566,9 @@ RETRY:
             return $self->log->error("bulk_flush: failed after [$try]: [$@]");
          }
       }
-      sleep 60;
+      $self->log->warning("bulk_flush: sleeping 10 seconds before retry cause error ".
+               "[$@]");
+      sleep 10;
       goto RETRY;
    }
 
@@ -732,7 +785,7 @@ sub delete_index {
 #
 sub delete_document {
    my $self = shift;
-   my ($index, $type, $id) = @_;
+   my ($index, $type, $id, $hash) = @_;
 
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
@@ -745,6 +798,10 @@ sub delete_document {
       type => $type,
       id => $id,
    );
+
+   if (defined($hash)) {
+      %args = ( %args, %$hash );
+   }
 
    my $r;
    eval {

@@ -57,6 +57,8 @@ sub brik_properties {
          options => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
          code => [ ],
          content => [ ],
+         get_content => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         post_content => [ qw(content_hash uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
          save_content => [ qw(output) ],
          headers => [ ],
          get_response_headers => [ ],
@@ -395,6 +397,22 @@ sub content {
    }
 
    return $last->decoded_content;
+}
+
+sub get_content {
+   my $self = shift;
+   my @args = @_;
+
+   $self->get(@args) or return;
+   return $self->content;
+}
+
+sub post_content {
+   my $self = shift;
+   my @args = @_;
+
+   $self->post(@args) or return;
+   return $self->content;
 }
 
 sub save_content {
