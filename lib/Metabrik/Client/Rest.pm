@@ -36,6 +36,8 @@ sub brik_properties {
          options => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
          code => [ ],
          content => [ qw(output_mode|OPTIONAL) ],
+         get_content => [ qw(uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
+         post_content => [ qw(content_hash uri|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
       },
       require_modules => {
          'Metabrik::String::Xml' => [ ],

@@ -215,6 +215,8 @@ sub glob {
    my $self = shift;
    my ($pattern) = @_;
 
+   $self->brik_help_run_undef_arg('glob', $pattern) or return;
+
    my @list = CORE::glob("$pattern");
 
    return \@list;
