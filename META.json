@@ -509,7 +509,7 @@
       },
       "Metabrik::Repository" : {
          "file" : "lib/Metabrik/Repository.pm",
-         "version" : "1.26"
+         "version" : "1.27"
       },
       "Metabrik::Server::Dns" : {
          "file" : "lib/Metabrik/Server/Dns.pm"
@@ -779,6 +779,6 @@
          "http://opensource.org/licenses/BSD-3-Clause"
       ]
    },
-   "version" : "1.26",
+   "version" : "1.27",
    "x_serialization_backend" : "JSON::PP version 2.27300_01"
 }
