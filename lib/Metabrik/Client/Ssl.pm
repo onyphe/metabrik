@@ -92,7 +92,7 @@ sub getcertificate {
       #ssl_opts => { verify_hostname => 0 }, # will do manual check
       ssl_opts => { SSL_verify_mode => 'SSL_VERIFY_NONE'},
    );
-   $ua->timeout($self->global->rtimeout);
+   $ua->timeout(defined($self->global) && $self->global->rtimeout || 3);
    $ua->max_redirect(0);
    $ua->env_proxy;
 

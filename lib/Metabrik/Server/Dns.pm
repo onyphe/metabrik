@@ -105,7 +105,7 @@ sub start {
       SERVER => {
          address => $hostname,
          port => $port,
-         verbose => $self->debug,
+         verbose => $self->log->level > 2 ? 1 : 0,
          truncate => 1,           # truncate too big 
          timeout => 5,            # seconds
       },

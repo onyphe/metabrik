@@ -46,7 +46,6 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         debug => $self->log->debug,
          level => $self->log->level,
          output => $datadir.'/output.log',
       },
@@ -141,24 +140,9 @@ sub debug {
    my $self = shift;
    my ($msg, $caller) = @_;
 
-   # We have a conflict between the method and the accessor,
-   # we have to identify which one is accessed.
+   return 1 unless $self->level > 2;
 
-   # If no message defined, we want to access the Attribute
-   if (! defined($msg)) {
-      return $self->{debug};
-   }
-   else {
-      # If $msg is either 1 or 0, we want to set the Attribute
-      if ($msg =~ /^(?:1|0)$/) {
-         return $self->{debug} = $msg;
-      }
-      else {
-         return 1 unless $self->level > 2;
-
-         $self->_print($msg, 'DEBUG', '[D]', ($caller) ||= caller());
-      }
-   }
+   $self->_print($msg, 'DEBUG', '[D]', ($caller) ||= caller());
 
    return 1;
 }

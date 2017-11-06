@@ -81,6 +81,10 @@ sub get_query_result_total {
    my $self = shift;
    my ($query_result) = @_;
 
+   if (! defined($self->context)) {
+      return $self->log->error("get_query_result_total: no core::context Brik");
+   }
+
    my $run = $self->context->do('$RUN');
    $query_result ||= $run;
    $self->brik_help_run_undef_arg('get_query_result_total', $query_result) or return;
@@ -99,6 +103,10 @@ sub get_query_result_total {
 sub get_query_result_hits {
    my $self = shift;
    my ($query_result) = @_;
+
+   if (! defined($self->context)) {
+      return $self->log->error("get_query_result_hits: no core::context Brik");
+   }
 
    my $run = $self->context->do('$RUN');
    $query_result ||= $run;
@@ -119,6 +127,10 @@ sub get_query_result_timed_out {
    my $self = shift;
    my ($query_result) = @_;
 
+   if (! defined($self->context)) {
+      return $self->log->error("get_query_result_timed_out: no core::context Brik");
+   }
+
    my $run = $self->context->do('$RUN');
    $query_result ||= $run;
    $self->brik_help_run_undef_arg('get_query_result_timed_out', $query_result) or return;
@@ -136,6 +148,10 @@ sub get_query_result_timed_out {
 sub get_query_result_took {
    my $self = shift;
    my ($query_result) = @_;
+
+   if (! defined($self->context)) {
+      return $self->log->error("get_query_result_took: no core::context Brik");
+   }
 
    my $run = $self->context->do('$RUN');
    $query_result ||= $run;
@@ -191,7 +207,7 @@ sub term {
    }
    my ($key, $value) = split('=', $kv);
 
-   $self->debug && $self->log->debug("term: key[$key] value[$value]");
+   $self->log->debug("term: key[$key] value[$value]");
 
    # Optimized version on ES 5.0.0
    my $q = {
@@ -228,7 +244,7 @@ sub unique_term {
    }
    my ($key, $value) = split('=', $kv);
 
-   $self->debug && $self->log->debug("unique_term: key[$key] value[$value]");
+   $self->log->debug("unique_term: key[$key] value[$value]");
 
    # Optimized version on ES 5.0.0
    my $q = {
@@ -414,7 +430,7 @@ sub match_phrase {
    }
    my ($key, $value) = split('=', $kv);
 
-   $self->debug && $self->log->debug("match_phrase: key[$key] value[$value]");
+   $self->log->debug("match_phrase: key[$key] value[$value]");
 
    my $q = {
       size => $self->size,
@@ -443,7 +459,7 @@ sub match {
    }
    my ($key, $value) = split('=', $kv);
 
-   $self->debug && $self->log->debug("match: key[$key] value[$value]");
+   $self->log->debug("match: key[$key] value[$value]");
 
    my $q = {
       size => $self->size,

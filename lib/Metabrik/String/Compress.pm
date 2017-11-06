@@ -47,16 +47,16 @@ sub gunzip {
       return $self->log->error("gunzip: empty data, nothing to decompress");
    }
 
-   $self->debug && $self->log->debug("gunzip: length[".length($data)."]");
+   $self->log->debug("gunzip: length[".length($data)."]");
 
-   $self->debug && $self->log->debug("gunzip: starting");
+   $self->log->debug("gunzip: starting");
 
    my $plain = Gzip::Faster::gunzip($data)
       or return $self->log->error("gunzip: error");
 
-   $self->debug && $self->log->debug("gunzip: finished");
+   $self->log->debug("gunzip: finished");
 
-   $self->debug && $self->log->debug("gunzip: length[".length($plain)."]");
+   $self->log->debug("gunzip: length[".length($plain)."]");
 
    return \$plain;
 }

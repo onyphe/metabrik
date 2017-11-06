@@ -41,7 +41,7 @@ sub start {
       $self->pid($pid);
 
       $SIG{INT} = sub {
-         $self->debug && $self->log->debug("SIGINT: caught, son [$pid] QUITs now");
+         $self->log->debug("SIGINT: caught, son [$pid] QUITs now");
          $self->stop;
          $SIG{INT} = $restore;
          return 1;
@@ -71,7 +71,7 @@ sub is_son_alive {
    if (defined($pid)) {
       waitpid($pid, POSIX::WNOHANG());  # Cleanup zombie state in case it is dead
       my $r = kill('ZERO', $pid);
-      $self->debug && $self->log->debug("is_son_alive: kill returned [$r] for pid [$pid]");
+      $self->log->debug("is_son_alive: kill returned [$r] for pid [$pid]");
       if ($r) { # Son still alive
          return 1;
       }

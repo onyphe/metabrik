@@ -56,7 +56,7 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         device => $self->global->device,
+         device => defined($self->global) && $self->global->device || 'eth0',
       },
    };
 }
@@ -77,8 +77,8 @@ sub open {
 
    my $dump;
    if ($layer == 2) {
-      $self->debug && $self->log->debug("open: timeoutOnNext: ".$self->rtimeout);
-      $self->debug && $self->log->debug("open: filter: ".$filter);
+      $self->log->debug("open: timeoutOnNext: ".$self->rtimeout);
+      $self->log->debug("open: filter: ".$filter);
 
       $dump = Net::Frame::Dump::Online2->new(
          dev => $device,
@@ -131,7 +131,7 @@ sub read_next {
       if (defined($next)) {
          $read_count++;
          push @next, $next;
-         $self->debug && $self->log->debug("read_next: read $read_count packet(s)");
+         $self->log->debug("read_next: read $read_count packet(s)");
          last if $read_count >= $count;
       }
    }
@@ -151,7 +151,7 @@ sub read_until_timeout {
    my $prev = $dump->timeoutOnNext;
    $dump->timeoutOnNext($rtimeout);
 
-   $self->debug && $self->log->debug("next_until_timeout: will read until [$rtimeout] ".
+   $self->log->debug("next_until_timeout: will read until [$rtimeout] ".
       "seconds or [$count] packet(s) have been read");
 
    my $read_count = 0;
@@ -167,7 +167,7 @@ sub read_until_timeout {
       }
    }
 
-   if ($self->debug) {
+   if ($self->log->level > 2) {
       if ($dump->timeout) {
          $self->log->debug("next_until_timeout: timeout reached after [$rtimeout]");
       }
@@ -199,12 +199,12 @@ sub has_timeout {
    my $dump = $self->_dump;
    # We do not check for openness, simply returns 0 is ok to say we don't have a timeout now.
    if (! defined($dump)) {
-      $self->debug && $self->log->debug("has_timeout: here: has_timeout [0]");
+      $self->log->debug("has_timeout: here: has_timeout [0]");
       return 0;
    }
 
    my $has_timeout = $dump->timeout;
-   $self->debug && $self->log->debug("has_timeout: has_timeout [$has_timeout]");
+   $self->log->debug("has_timeout: has_timeout [$has_timeout]");
 
    return $has_timeout;
 }

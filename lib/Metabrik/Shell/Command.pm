@@ -134,23 +134,24 @@ sub system {
 
    my $r = CORE::system($command);
 
-   $self->debug && $self->log->debug("system: command returned code [$r] with status [$?]");
+   $self->log->debug("system: command returned code [$r] with status [$?]");
 
    if (! $self->ignore_error && $? != 0) {
       $self->log->verbose("system: exit code[$?]");
       # Failure, we return the program exit code
-      $self->debug && $self->log->debug("system: program exit code [$?]");
+      $self->log->debug("system: program exit code [$?]");
       return $?;
    }
 
-   $self->debug && $self->log->debug("system: program exit with success");
+   $self->log->debug("system: program exit with success");
 
    # Program succeeded, we only return full path to output file, 
    # maybe the caller will have some optimization to not process ths full 
    # file content afterwards.
    if ($self->capture_system) {
-      my $pwd = $self->shell->full_pwd;
-      my $homedir = $self->global->homedir;
+      my $pwd = defined($self->shell) && $self->shell->full_pwd || '/tmp';
+      my $homedir = defined($self->global) && $self->global->homedir
+         || defined($ENV{HOME}) && $ENV{HOME} || '/tmp';
       $pwd =~ s{^~}{$homedir};
       return $pwd.'/'.$output_file;
    }

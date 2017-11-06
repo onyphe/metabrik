@@ -50,8 +50,10 @@ sub brik_properties {
 sub brik_use_properties {
    my $self = shift;
 
-   my $global = $self->global;
-   my $repo = $global->datadir."/devel-git/cve-search";
+   my $global_datadir = defined($self->global) && $self->global->datadir
+      || defined($ENV{HOME}) && $ENV{HOME}."/metabrik"
+      || '/tmp/metabrik';
+   my $repo = $global_datadir."/devel-git/cve-search";
 
    return {
       attributes_default => {
@@ -69,9 +71,8 @@ sub install {
 
    my $dg = Metabrik::Devel::Git->new_from_brik_init($self) or return;
 
-   my $repo = '';
-   my $datadir = $self->global->datadir;
-   if (-d "$datadir/devel-git/cve-search") {
+   my $repo = $self->repo;
+   if (-d $repo) {
       $repo = $dg->update($url) or return;
    }
    else {

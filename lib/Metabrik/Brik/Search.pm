@@ -31,6 +31,10 @@ sub brik_properties {
 sub all {
    my $self = shift;
 
+   if (! defined($self->context)) {
+      return $self->log->error("all: no core::context Brik");
+   }
+
    my $context = $self->context;
    my $status = $context->status;
 
@@ -62,6 +66,10 @@ sub string {
    my $self = shift;
    my ($string) = @_;
 
+   if (! defined($self->context)) {
+      return $self->log->error("string: no core::context Brik");
+   }
+
    $self->brik_help_run_undef_arg('string', $string) or return;
 
    my $context = $self->context;
@@ -90,6 +98,10 @@ sub string {
 sub tag {
    my $self = shift;
    my ($tag) = @_;
+
+   if (! defined($self->context)) {
+      return $self->log->error("tag: no core::context Brik");
+   }
 
    $self->brik_help_run_undef_arg('tag', $tag) or return;
 
@@ -128,6 +140,10 @@ sub tag {
 sub not_tag {
    my $self = shift;
    my ($tag) = @_;
+
+   if (! defined($self->context)) {
+      return $self->log->error("not_tag: no core::context Brik");
+   }
 
    $self->brik_help_run_undef_arg('not_tag', $tag) or return;
 
@@ -177,6 +193,10 @@ sub not_used {
 sub show_require_modules {
    my $self = shift;
 
+   if (! defined($self->context)) {
+      return $self->log->error("show_require_modules: no core::context Brik");
+   }
+
    my $context = $self->context;
    my $available = $context->available;
 
@@ -206,6 +226,10 @@ sub show_require_modules {
 sub command {
    my $self = shift;
    my ($command) = @_;
+
+   if (! defined($self->context)) {
+      return $self->log->error("command: no core::context Brik");
+   }
 
    $self->brik_help_run_undef_arg('command', $command) or return;
 
@@ -248,6 +272,10 @@ sub category {
    my $self = shift;
    my ($category) = @_;
 
+   if (! defined($self->context)) {
+      return $self->log->error("category: no core::context Brik");
+   }
+
    $self->brik_help_run_undef_arg('category', $category) or return;
 
    my $context = $self->context;
@@ -279,6 +307,10 @@ sub category {
 
 sub list_categories {
    my $self = shift;
+
+   if (! defined($self->context)) {
+      return $self->log->error("list_categories: no core::context Brik");
+   }
 
    my $con = $self->context;
    my $available = $con->find_available;

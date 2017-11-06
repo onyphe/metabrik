@@ -105,7 +105,7 @@ sub gunzip {
    my $no_error = 1;
    my $buffer = '';
    while ($gz->gzread($buffer) > 0) {
-      $self->debug && $self->log->debug("gunzip: gzread ".length($buffer));
+      $self->log->debug("gunzip: gzread ".length($buffer));
       my $r = $fw->write($buffer);
       $buffer = '';
       if (! defined($r)) {

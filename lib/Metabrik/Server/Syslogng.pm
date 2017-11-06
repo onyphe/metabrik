@@ -79,8 +79,8 @@ sub generate_conf {
    $conf_file ||= $self->conf_file;
 
    my $datadir = $self->datadir;
-   my $user = $self->global->username;
-   my $hostname = $self->global->hostname;
+   my $user = defined($self->global) && $self->global->username || 'username';
+   my $hostname = defined($self->global) && $self->global->hostname || 'hostname';
    my $group = $user;
    my $listen = $self->listen;
    my $port = $self->port;

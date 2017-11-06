@@ -107,7 +107,7 @@ sub next_record {
 
       chomp($line);
 
-      $self->debug && $self->log->debug("next_record: line[$line]");
+      $self->log->debug("next_record: line[$line]");
 
       my @t = split(/\|/, $line);
 

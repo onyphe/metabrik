@@ -54,7 +54,7 @@ sub check_cve_2015_1427_rce {
 
    my $url = $uri.'/_search/?pretty';
 
-   $self->debug && $self->log->debug("check_cve_2015_1427_rce: POSTing to ".
+   $self->log->debug("check_cve_2015_1427_rce: POSTing to ".
       "url [$url] with data [$check]");
 
    my $reply = $self->post($check, $url) or return;
@@ -109,7 +109,7 @@ sub exploit_cve_2015_1427_rce {
 
    my $url = $uri.'/_search/?pretty';
 
-   $self->debug && $self->log->debug("exploit_cve_2015_1427_rce: POSTing to ".
+   $self->log->debug("exploit_cve_2015_1427_rce: POSTing to ".
       "url [$url] with data [$check]");
 
    my $reply = $self->post($check, $url) or return;

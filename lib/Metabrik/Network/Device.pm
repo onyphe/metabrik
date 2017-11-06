@@ -52,7 +52,7 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         device => $self->global->device,
+         device => defined($self->global) && $self->global->device || 'eth0',
       },
    };
 }
@@ -176,7 +176,7 @@ sub show {
    $devices ||= $self->list or return;
 
    for my $this (@$devices) {
-      $self->debug && $self->log->debug("show: found device [$this]");
+      $self->log->debug("show: found device [$this]");
       my $device = $self->get($this);
       if (! defined($device) || ! exists($device->{device})) {
          $self->enable_warnings

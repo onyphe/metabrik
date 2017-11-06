@@ -49,7 +49,7 @@ sub brik_use_properties {
    # encoding: see `perldoc Encode::Supported' for other types
    return {
       attributes_default => {
-         encoding => $self->global->encoding || 'utf8',
+         encoding => defined($self->global) && $self->global->encoding || 'utf8',
       },
    };
 }
@@ -91,7 +91,7 @@ sub open {
       select($previous_default);          
    }
 
-   $self->debug && $self->log->debug("open: fd [$out]");
+   $self->log->debug("open: fd [$out]");
 
    return $self->fd($out);
 }
@@ -154,7 +154,7 @@ sub write {
       $self->lock or return;
    }
 
-   $self->debug && $self->log->debug("write: data[$data]");
+   $self->log->debug("write: data[$data]");
 
    if (ref($data) eq 'ARRAY') {
       for my $this (@$data) {

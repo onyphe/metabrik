@@ -48,9 +48,9 @@ sub brik_use_properties {
    return {
       attributes_default => {
          layer => 2,
-         device => $self->global->device,
-         family => $self->global->family,
-         protocol => $self->global->protocol,
+         device => defined($self->global) && $self->global->device || 'eth0',
+         family => defined($self->global) && $self->global->family || 'ipv4',
+         protocol => defined($self->global) && $self->global->protocol || 'tcp',
       },
    };
 }

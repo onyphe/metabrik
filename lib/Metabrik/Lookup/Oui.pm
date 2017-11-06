@@ -123,7 +123,7 @@ sub from_string {
    for my $this (@$data) {
       $this =~ s/\r*$//;
       if ($this =~ /^\s*([0-9A-F]{2}\-[0-9A-F]{2}\-[0-9A-F]{2})\s+\(hex\)\s+(.*)$/i) {
-         $self->debug && $self->log->debug("from_string: this[$this]");
+         $self->log->debug("from_string: this[$this]");
          my $oui = $1;
          my $company = $2;
          if ($company =~ /$string/i) {
@@ -149,7 +149,7 @@ sub all {
    for my $this (@$data) {
       $this =~ s/\r*$//;
       if ($this =~ /^\s*([0-9A-F]{6})\s+\(base 16\)\s+(.*)$/i) {
-         $self->debug && $self->log->debug("from_hex: this[$this]");
+         $self->log->debug("from_hex: this[$this]");
          my $oui = lc($1);
          my $company = $2;
          $result{$oui} = $company;

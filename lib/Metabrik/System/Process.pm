@@ -344,11 +344,11 @@ sub is_running_from_pidfile {
    }
 
    if (my $pid = Daemon::Daemonize->check_pidfile($pidfile)) {
-      $self->debug && $self->log->debug("is_running_from_pidfile: yes");
+      $self->log->debug("is_running_from_pidfile: yes");
       return 1;
    }
 
-   $self->debug && $self->log->debug("is_running_from_pidfile: no");
+   $self->log->debug("is_running_from_pidfile: no");
 
    return 0;
 }

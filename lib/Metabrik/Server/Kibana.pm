@@ -126,7 +126,6 @@ sub install {
 
    my $datadir = $self->datadir;
    my $version = $self->version;
-   my $she = $self->shell;
 
    my $url = 'https://artifacts.elastic.co/downloads/kibana/kibana-5.5.2-linux-x86_64.tar.gz';
    if ($version eq '4.6.2') {
@@ -139,14 +138,24 @@ sub install {
    my $cw = Metabrik::Client::Www->new_from_brik_init($self) or return;
    $cw->mirror($url, "$datadir/kibana.tar.gz") or return;
 
-   my $cwd = $she->pwd;
+   my $cwd = defined($self->shell) && $self->shell->pwd || '/tmp';
 
-   $she->run_cd($datadir) or return;
+   if (defined($self->shell)) {
+      $self->shell->run_cd($datadir) or return;
+   }
+   else {
+      chdir($datadir) or return $self->log->error("install: chdir: $!");
+   }
 
    my $cmd = "tar zxvf kibana.tar.gz";
    my $r = $self->execute($cmd) or return;
 
-   $she->run_cd($cwd) or return;
+   if (defined($self->shell)) {
+      $self->shell->run_cd($cwd) or return;
+   }
+   else {
+      chdir($cwd) or return $self->log->error("install: chdir: $!");
+   }
 
    return 1;
 }

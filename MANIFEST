@@ -11,6 +11,7 @@ lib/Metabrik/Api/Cvesearch.pm
 lib/Metabrik/Api/Shodan.pm
 lib/Metabrik/Api/Splunk.pm
 lib/Metabrik/Api/Virustotal.pm
+lib/Metabrik/Audio/Soundconverter.pm
 lib/Metabrik/Audit/Dns.pm
 lib/Metabrik/Audit/Drupal.pm
 lib/Metabrik/Audit/Elasticsearch.pm

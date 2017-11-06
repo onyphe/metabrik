@@ -49,8 +49,6 @@ sub connect {
    $self->brik_help_run_undef_arg('connect', $host) or return;
    $self->brik_help_run_undef_arg('connect', $port) or return;
 
-   my $context = $self->context;
-
    my $mod = $self->use_ipv6 ? 'IO::Socket::INET6' : 'IO::Socket::INET';
 
    my %args = (

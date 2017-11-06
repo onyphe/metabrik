@@ -74,7 +74,6 @@ sub install {
    $self->SUPER::install() or return;
 
    my $datadir = $self->datadir;
-   my $shell = $self->shell;
 
    my $version = '1.3.14';
 
@@ -94,8 +93,14 @@ sub install {
    # make proto bin/wmic
    # make proto bin/winexe
 
-   my $cwd = $shell->pwd;
-   $shell->run_cd("$datadir/wmi-$version/Samba/source") or return;
+   my $cwd = defined($self->shell) && $self->shell->pwd || '/tmp';
+   if (defined($self->shell)) {
+      $self->shell->run_cd("$datadir/wmi-$version/Samba/source") or return;
+   }
+   else {
+      chdir("$datadir/wmi-$version/Samba/source")
+         or return $self->log->error("install: chdir: $!");
+   }
 
    $self->system('./autogen.sh') or return;
    $self->system('./configure') or return;
@@ -103,7 +108,12 @@ sub install {
    $self->system('make proto bin/wmic') or return;
    $self->system('make proto bin/winexe') or return;
 
-   $shell->run_cd($cwd);
+   if (defined($self->shell)) {
+      $self->shell->run_cd($cwd);
+   }
+   else {
+      chdir($cwd) or return $self->log->error("install: chdir: $!");
+   }
 
    my $sf = Metabrik::System::File->new_from_brik_init($self) or return;
    $sf->copy("$datadir/wmi-$version/Samba/source/bin/wmic", '/usr/local/bin/') or return;

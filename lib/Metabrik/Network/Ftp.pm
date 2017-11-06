@@ -61,7 +61,7 @@ sub open {
    my $ftp = Net::FTP->new(
       $hostname,
       Port => $port,
-      Debug => $self->debug,
+      Debug => $self->log->level > 2 ? 1 : 0,
    ) or return $self->log->error("open: Net::FTP failed with [$@]");
 
    $ftp->login($username, $password)

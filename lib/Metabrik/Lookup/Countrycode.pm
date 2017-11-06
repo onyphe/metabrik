@@ -126,7 +126,7 @@ sub update {
 
       $this =~ s/\n//g;
 
-      $self->debug && $self->log->debug("update: this[$this]");
+      $self->log->debug("update: this[$this]");
 
       # <tr>
       #  <td>

@@ -102,11 +102,11 @@ sub search {
       my @merged = ();
       my $this = {};
       for (@$r) {
-         $self->debug && $self->log->debug("url: [".$_->{url}."]");
-         $self->debug && $self->log->debug("title: [".$_->{title}."]");
+         $self->log->debug("url: [".$_->{url}."]");
+         $self->log->debug("title: [".$_->{title}."]");
 
          if ($_->{title} =~ m/^@{[$cache->{$language}]}/i) {
-            $self->debug && $self->log->debug("cache: [".$_->{url}."]");
+            $self->log->debug("cache: [".$_->{url}."]");
             $merged[-1]->{cache_url} = $_->{url};
          }
          else {

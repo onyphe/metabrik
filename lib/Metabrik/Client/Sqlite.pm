@@ -76,7 +76,7 @@ sub execute {
    $self->brik_help_run_undef_arg('open', $dbh) or return;
    $self->brik_help_run_undef_arg('execute', $sql) or return;
 
-   $self->debug && $self->log->debug("execute: sql[$sql]");
+   $self->log->debug("execute: sql[$sql]");
 
    my $sth = $dbh->prepare($sql);
 

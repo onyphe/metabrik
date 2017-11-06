@@ -208,7 +208,7 @@ sub create_user {
 
    my $cmd = "mysql -h $mysql_host --port=$mysql_port -u $mysql_username --password=$mysql_password --execute=\"create user $username\@'$ip' identified by '$password'\" mysql";
 
-   $self->debug && $self->log->debug("create_user: cmd [$cmd]");
+   $self->log->debug("create_user: cmd [$cmd]");
 
    return $sc->system($cmd);
 }
@@ -232,7 +232,7 @@ sub grant_all_privileges {
 
    my $cmd = "mysql -h $mysql_host --port=$mysql_port -u $mysql_username --password=$mysql_password --execute=\"grant all privileges on $db.* to $username\@'$ip' identified by '$password'\" mysql";
 
-   $self->debug && $self->log->debug("grant_all_privileges: cmd [$cmd]");
+   $self->log->debug("grant_all_privileges: cmd [$cmd]");
 
    return $sc->system($cmd);
 }
@@ -251,7 +251,7 @@ sub enter_shell {
 
    my $cmd = "mysql -h $mysql_host --port=$mysql_port -u $mysql_username --password=$mysql_password mysql";
 
-   $self->debug && $self->log->debug("shell: cmd [$cmd]");
+   $self->log->debug("shell: cmd [$cmd]");
 
    return $sc->system($cmd);
 }

@@ -42,7 +42,7 @@ sub info {
    my $info = {};
    for my $this (@$out) {
       my ($key, $val) = $this =~ /^(.*?)\s+:\s+(.*)$/;
-      $self->debug && $self->log->debug("info: key [$key] val [$val]");
+      $self->log->debug("info: key [$key] val [$val]");
       $key = lc($key);
       $key =~ s/\s+/_/g;
       $info->{$key} = $val;

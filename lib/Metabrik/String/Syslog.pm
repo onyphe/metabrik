@@ -41,7 +41,7 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         hostname => $self->global->hostname,
+         hostname => defined($self->global) && $self->global->hostname || 'hostname',
       },
    };
 }

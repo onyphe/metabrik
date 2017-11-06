@@ -34,7 +34,8 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         input => $self->global->homedir.'/.metabrik_rc',
+         input => defined($self->global) && $self->global->homedir.'/.metabrik_rc'
+            || defined($ENV{HOME}) && $ENV{HOME}.'/.metabrik_rc' || '/tmp/.metabrik_rc',
       },
    };
 }
@@ -66,7 +67,7 @@ sub load {
    }
    close($in);
 
-   $self->debug && $self->log->debug("load: success");
+   $self->log->debug("load: success");
 
    return \@lines;
 }
@@ -74,6 +75,10 @@ sub load {
 sub execute {
    my $self = shift;
    my ($lines) = @_;
+
+   if (! defined($self->shell)) {
+      return $self->log->error("execute: no core::shell Brik");
+   }
 
    $self->brik_help_run_undef_arg('execute', $lines) or return;
    $self->brik_help_run_invalid_arg('execute', $lines, 'ARRAY') or return;

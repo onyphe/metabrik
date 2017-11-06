@@ -63,7 +63,7 @@ sub start {
 
    # Son
    if (! $pid) {
-      $self->debug && $self->log->debug("start: son process started: $$");
+      $self->log->debug("start: son process started: $$");
 
       while (1) {
          my $trap = $proc->get_trap;
@@ -87,7 +87,7 @@ sub start {
          }
       }
 
-      $self->debug && $self->log->debug("start: son process exited: $$");
+      $self->log->debug("start: son process exited: $$");
 
       exit(0);
    }

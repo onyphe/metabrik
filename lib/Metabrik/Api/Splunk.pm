@@ -97,7 +97,7 @@ sub search_jobs {
    my $code = $self->code;
 
    $self->log->verbose("search_jobs: returned code [$code]");
-   $self->debug && $self->log->debug("search_jobs: content [".$resp->{content}."]");
+   $self->log->debug("search_jobs: content [".$resp->{content}."]");
 
    if ($code == 201) {  # Job created
       return $self->content('xml');
@@ -119,7 +119,7 @@ sub search_jobs_sid {
    my $code = $self->code;
 
    $self->log->verbose("search_jobs_sid: returned code [$code]");
-   $self->debug && $self->log->debug("search_jobs_sid: content [".$resp->{content}."]");
+   $self->log->debug("search_jobs_sid: content [".$resp->{content}."]");
 
    if ($code == 404) {
       return 0;
@@ -153,7 +153,7 @@ sub search_jobs_sid_results {
    my $code = $self->code;
 
    $self->log->verbose("search_jobs_sid_results: returned code [$code]");
-   $self->debug && $self->log->debug("search_jobs_sid_results: content [".$resp->{content}."]");
+   $self->log->debug("search_jobs_sid_results: content [".$resp->{content}."]");
 
    if ($code == 200) {  # Job finished
       return $self->content($output_mode);
@@ -201,7 +201,7 @@ sub data_lookup_table_files_acl {
    my $code = $self->code;
 
    $self->log->verbose("data_lookup_table_files_acl: returned code [$code]");
-   $self->debug && $self->log->debug("data_lookup_table_files_acl: content [".$resp->{content}."]");
+   $self->log->debug("data_lookup_table_files_acl: content [".$resp->{content}."]");
 
    return $self->content('xml');
 }

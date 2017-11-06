@@ -43,18 +43,27 @@ sub generate_lite_app {
    my $self = shift;
    my ($pl) = @_;
 
-   my $she = $self->shell;
    my $datadir = $self->datadir;
    $self->brik_help_run_undef_arg('generate_lite_app', $pl) or return;
 
-   my $cwd = $she->pwd;
+   my $cwd = defined($self->shell) && $self->shell->pwd || '/tmp';
 
-   $she->run_cd($datadir) or return;
+   if (defined($self->shell)) {
+      $self->shell->run_cd($datadir) or return;
+   }
+   else {
+      chdir($datadir) or return $self->log->error("generate_lite_app: chdir: $!");
+   }
 
    my $cmd = "mojo generate lite_app \"$pl\"";
    my $r = $self->execute($cmd);
 
-   $she->run_cd($cwd) or return;
+   if (defined($self->shell)) {
+      $self->shell->run_cd($cwd) or return;
+   }
+   else {
+      chdir($cwd) or return $self->log->error("generate_lite_app: chdir: $!");
+   }
 
    return $r;
 }
@@ -63,18 +72,27 @@ sub generate_app {
    my $self = shift;
    my ($module) = @_;
 
-   my $she = $self->shell;
    my $datadir = $self->datadir;
    $self->brik_help_run_undef_arg('generate_app', $module) or return;
 
-   my $cwd = $she->pwd;
+   my $cwd = defined($self->shell) && $self->shell->pwd || '/tmp';
 
-   $she->run_cd($datadir) or return;
+   if (defined($self->shell)) {
+      $self->shell->run_cd($datadir) or return;
+   }
+   else {
+      chdir($datadir) or return $self->log->error("generate_app: chdir: $!");
+   }
 
    my $cmd = "mojo generate app \"$module\"";
    my $r = $self->execute($cmd);
 
-   $she->run_cd($cwd) or return;
+   if (defined($self->shell)) {
+      $self->shell->run_cd($cwd) or return;
+   }
+   else {
+      chdir($cwd) or return $self->log->error("generate_app: chdir: $!");
+   }
 
    return $r;
 }
@@ -95,19 +113,28 @@ sub inflate {
    my $self = shift;
    my ($pl) = @_;
 
-   my $she = $self->shell;
    my $datadir = $self->datadir;
    $self->brik_help_run_undef_arg('inflate', $pl) or return;
    $self->brik_help_run_file_not_found('inflate', $pl) or return;
 
-   my $cwd = $she->pwd;
+   my $cwd = defined($self->shell) && $self->shell->pwd || '/tmp';
 
-   $she->run_cd($datadir) or return;
+   if (defined($self->shell)) {
+      $self->shell->run_cd($datadir) or return;
+   }
+   else {
+      chdir($datadir) or return $self->log->error("inflate: chdir: $!");
+   }
 
    my $cmd = "perl \"$pl\" inflate";
    my $r = $self->execute($cmd);
 
-   $she->run_cd($cwd) or return;
+   if (defined($self->shell)) {
+      $self->shell->run_cd($cwd) or return;
+   }
+   else {
+      chdir($cwd) or return $self->log->error("inflate: chdir: $!");
+   }
 
    return $r;
 }

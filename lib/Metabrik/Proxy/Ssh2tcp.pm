@@ -49,7 +49,7 @@ sub _handle_sigint {
    my $restore = $SIG{INT};
 
    $SIG{INT} = sub {
-      $self->debug && $self->log->debug("brik_init: INT caught");
+      $self->log->debug("brik_init: INT caught");
       $SIG{INT} = $restore;
       $self->stop;
       return 1;

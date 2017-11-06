@@ -69,9 +69,9 @@ sub connect {
    my $redis = Redis->new(
       server => $self->server.':'.$self->port,
       name => 'redis_connection',
-      cnx_timeout => $self->global->ctimeout,
-      read_timeout => $self->global->rtimeout,
-      write_timeout => $self->global->rtimeout,
+      cnx_timeout => defined($self->global) && $self->global->ctimeout || 3,
+      read_timeout => defined($self->global) && $self->global->rtimeout || 3,
+      write_timeout => defined($self->global) && $self->global->rtimeout || 3,
    ) or return $self->log->error("connect: redis connection error");
 
    return $self->_redis($redis);

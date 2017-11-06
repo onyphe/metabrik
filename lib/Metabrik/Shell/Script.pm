@@ -51,6 +51,10 @@ sub execute {
    my $self = shift;
    my ($lines) = @_;
 
+   if (! defined($self->shell)) {
+      return $self->log->error("execute: no core::shell Brik");
+   }
+
    $self->brik_help_run_undef_arg('execute', $lines) or return;
    $self->brik_help_run_invalid_arg('execute', $lines, 'ARRAY') or return;
 

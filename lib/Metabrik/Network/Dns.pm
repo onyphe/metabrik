@@ -69,7 +69,7 @@ sub create_resolver {
    my %args = (
       recurse => $self->use_recursion,
       searchlist => [],
-      debug => $self->debug ? 1 : 0,
+      debug => $self->log->level > 2 ? 1 : 0,
       tcp_timeout => $timeout,
       udp_timeout => $timeout,
       port => $port,
@@ -129,7 +129,7 @@ sub lookup {
       $resolver = $self->resolver;
    }
 
-   $self->debug && $self->log->debug("lookup: host [$host] for type [$type]");
+   $self->log->debug("lookup: host [$host] for type [$type]");
 
    my $packet;
    eval {
@@ -143,12 +143,12 @@ sub lookup {
       return $self->log->error("lookup: query failed [".$resolver->errorstring."]");
    }
 
-   $self->debug && $self->log->debug("lookup: ".$packet->string);
+   $self->log->debug("lookup: ".$packet->string);
 
    my @res = ();
    my @answers = $packet->answer;
    for my $rr (@answers) {
-      $self->debug && $self->log->debug("lookup: ".$rr->string);
+      $self->log->debug("lookup: ".$rr->string);
 
       my $h = {
          type => $rr->type,
@@ -249,12 +249,12 @@ sub background_read {
       return [];  # No error checking possible, undef means no response or timeout.
    }
 
-   $self->debug && $self->log->debug("background_read: ".$packet->string);
+   $self->log->debug("background_read: ".$packet->string);
 
    my @res = ();
    my @answers = $packet->answer;
    for my $rr (@answers) {
-      $self->debug && $self->log->debug("background_read: ".$rr->string);
+      $self->log->debug("background_read: ".$rr->string);
 
       my $h = {
          type => $rr->type,
@@ -311,7 +311,7 @@ sub version_bind {
       tcp_timeout => $timeout,
       udp_timeout => $timeout,
       port => $port,
-      debug => $self->debug ? 1 : 0,
+      debug => $self->log->level > 2 ? 1 : 0,
    ); 
    if (! defined($resolver)) {
       return $self->log->error("version_bind: Net::DNS::Resolver new failed");

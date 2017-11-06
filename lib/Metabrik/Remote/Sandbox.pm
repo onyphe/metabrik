@@ -386,7 +386,7 @@ sub loop_and_download_created_files {
 
    $self->brik_help_run_undef_arg('create_client', $self->_client) or return;
 
-   $output_dir ||= $self->shell->full_pwd;
+   $output_dir ||= defined($self->shell) && $self->shell->full_pwd || '/tmp';
 
    if (defined($processes)) {
       $self->brik_help_run_undef_arg('loop_and_download_created_files', $processes)

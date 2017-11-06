@@ -63,7 +63,7 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         user => $self->global->username,
+         user => defined($self->global) && $self->global->username || 'username',
       },
    };
 }

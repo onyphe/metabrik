@@ -41,7 +41,7 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         encoding => $self->global->encoding || 'utf8',
+         encoding => defined($self->global) && $self->global->encoding || 'utf8',
       },
    };
 }

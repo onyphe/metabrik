@@ -55,8 +55,6 @@ sub encode {
       return $self->log->error("encode: csv structure does not contain HASHes");
    }
 
-   my $context = $self->context;
-
    my $output = '';
    my $fd = IO::Scalar->new(\$output);
 

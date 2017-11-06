@@ -148,7 +148,7 @@ sub execute {
    $self->brik_help_run_undef_arg('connect', $ssh2) or return;
    $self->brik_help_run_undef_arg('execute', $cmd) or return;
 
-   $self->debug && $self->log->debug("execute: cmd [$cmd]");
+   $self->log->debug("execute: cmd [$cmd]");
 
    my $channel = $self->create_channel or return;
 
@@ -203,7 +203,7 @@ sub execute_in_background {
    }
    $cmd .= " &";
 
-   $self->debug && $self->log->debug("execute_in_background: cmd [$cmd]");
+   $self->log->debug("execute_in_background: cmd [$cmd]");
 
    $channel->process('exec', $cmd)
       or return $self->log->error("execute_in_background: process failed: [$!]");
@@ -334,7 +334,7 @@ sub capture {
 
    my $channel = $self->create_channel or return;
 
-   $self->debug && $self->log->debug("capture: cmd [$cmd]");
+   $self->log->debug("capture: cmd [$cmd]");
 
    $channel->process('exec', $cmd)
       or return $self->log->error("capture: process failed: [$!]");

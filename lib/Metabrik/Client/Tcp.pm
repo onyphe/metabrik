@@ -59,7 +59,7 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         rtimeout => $self->global->rtimeout,
+         rtimeout => defined($self->global) && $self->global->rtimeout || 3,
       },
    };
 }
@@ -72,8 +72,6 @@ sub connect {
    $port ||= $self->port;
    $self->brik_help_run_undef_arg('connect', $host) or return;
    $self->brik_help_run_undef_arg('connect', $port) or return;
-
-   my $context = $self->context;
 
    my $mod = $self->use_ipv6 ? 'IO::Socket::INET6' : 'IO::Socket::INET';
 
@@ -276,7 +274,7 @@ sub read {
          return $self->log->error("read: sysread failed with error [$!]");
       }
       elsif ($ret == 0) { # EOF
-         $self->debug && $self->log->debug("read: eof");
+         $self->log->debug("read: eof");
          $self->eof(1);
          $eof++;
          last;
@@ -284,9 +282,9 @@ sub read {
       elsif ($ret > 0) { # Read stuff
          $read++;
          $data .= $buf;
-         $self->debug && $self->log->debug("read: stuff len[$ret]");
+         $self->log->debug("read: stuff len[$ret]");
          if ($ret == $chunk) {
-            $self->debug && $self->log->debug("read: AGAIN");
+            $self->log->debug("read: AGAIN");
             goto AGAIN;
          }
          last;

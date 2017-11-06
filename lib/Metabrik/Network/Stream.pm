@@ -46,7 +46,7 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         device => $self->global->device,
+         device => defined($self->global) && $self->global->device || 'eth0',
       },
    };
 }

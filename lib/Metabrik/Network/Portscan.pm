@@ -155,8 +155,8 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         device => $self->global->device,
-         listen_device => $self->global->device,
+         device => defined($self->global) && $self->global->device || 'eth0',
+         listen_device => defined($self->global) && $self->global->device || 'eth0',
       },
    };
 }
@@ -421,9 +421,9 @@ sub tcp_syn_receive_until_sender_exit {
    while (! $nr->has_timeout) {
       # We blocking until X frames are read or a Y second timeout has occured
       # X is calcluted as a ratio of the pps rate.
-      $self->debug && $self->log->debug("tcp_syn_receive_until_sender_exit: waiting stuff");
+      $self->log->debug("tcp_syn_receive_until_sender_exit: waiting stuff");
       if (my $next = $nr->read_until_timeout($pps / 30, $wait)) {  
-         $self->debug && $self->log->debug("tcp_syn_receive_until_sender_exit: read_until_timeout has stuff");
+         $self->log->debug("tcp_syn_receive_until_sender_exit: read_until_timeout has stuff");
          for my $f (@$next) {
             my $s = Net::Frame::Simple->newFromDump($f);
             if ($s->ref->{TCP}) {
@@ -465,12 +465,12 @@ sub tcp_syn_receive_until_sender_exit {
             }
          }
          if ($nr->has_timeout) {
-            $self->debug && $self->log->debug("tcp_syn_receive_until_sender_exit: has_timeout");
+            $self->log->debug("tcp_syn_receive_until_sender_exit: has_timeout");
             if (! $sp->is_running($pid)) {
                $self->log->verbose("tcp_syn_receive_until_sender_exit: no more sender, stopping loop");
                last;
             }
-            $self->debug && $self->log->debug("tcp_syn_receive_until_sender_exit: reset_timeout");
+            $self->log->debug("tcp_syn_receive_until_sender_exit: reset_timeout");
             $nr->reset_timeout;
          }
       }
@@ -525,18 +525,18 @@ sub tcp_syn_scan {
    defined(my $pid = $wf->start) or return $self->log->error("tcp_syn_scan: start failed");
 
    if (! $pid) { # Son
-      $self->debug && $self->log->debug("tcp_syn_scan: son starts its task...");
+      $self->log->debug("tcp_syn_scan: son starts its task...");
       $self->tcp_syn_sender($ip_list, $port_list, $pps, $try);
-      $self->debug && $self->log->debug("tcp_syn_scan: son finished its task, exiting");
+      $self->log->debug("tcp_syn_scan: son finished its task, exiting");
       exit(0);
    }
 
    my $use_ipv6 = $self->is_ipv6($ip_list->[0]) ? 1 : 0;
 
    # Father: analyse received frames
-   $self->debug && $self->log->debug("tcp_syn_scan: father starts");
+   $self->log->debug("tcp_syn_scan: father starts");
    my $r = $self->tcp_syn_receive_until_sender_exit($pid, $pps, $wait, $use_ipv6);
-   $self->debug && $self->log->debug("tcp_syn_scan: father finished");
+   $self->log->debug("tcp_syn_scan: father finished");
    
    $self->tcp_syn_stop_receiver($nr);
 

@@ -66,13 +66,17 @@ sub push {
    my $self = shift;
    my ($directory) = @_;
 
-   my $she = $self->shell;
-   my $cwd = $she->pwd;
+   my $cwd = defined($self->shell) && $self->shell->pwd || '/tmp';
 
    $directory ||= '';
    if (length($directory)) {
       $self->brik_help_run_directory_not_found('push', $directory) or return;
-      $she->run_cd($directory) or return;
+      if (defined($self->shell)) {
+         $self->shell->run_cd($directory) or return;
+      }
+      else {
+         chdir($directory) or return $self->log->error("push: chdir: $!");
+      }
    }
 
    my $prev = $self->use_pager;
@@ -84,7 +88,12 @@ sub push {
    $self->use_pager($prev);
 
    if (length($directory)) {
-      $she->run_cd($cwd) or return;
+      if (defined($self->shell)) {
+         $self->shell->run_cd($cwd) or return;
+      }
+      else {
+         chdir($cwd) or return $self->log->error("push: chdir: $!");
+      }
    }
 
    return $r;
@@ -94,20 +103,29 @@ sub incoming {
    my $self = shift;
    my ($directory) = @_;
 
-   my $she = $self->shell;
-   my $cwd = $she->pwd;
+   my $cwd = defined($self->shell) && $self->shell->pwd || '/tmp';
 
    $directory ||= '';
    if (length($directory)) {
       $self->brik_help_run_directory_not_found('incoming', $directory) or return;
-      $she->run_cd($directory) or return;
+      if (defined($self->shell)) {
+         $self->shell->run_cd($directory) or return;
+      }
+      else {
+         chdir($directory) or return $self->log->error("incoming: chdir: $!");
+      }
    }
 
    my $cmd = "hg incoming";
    my $r = $self->execute($cmd);
 
    if (length($directory)) {
-      $she->run_cd($cwd) or return;
+      if (defined($self->shell)) {
+         $self->shell->run_cd($cwd) or return;
+      }
+      else {
+         chdir($cwd) or return $self->log->error("incoming: chdir: $!");
+      }
    }
 
    return $r;

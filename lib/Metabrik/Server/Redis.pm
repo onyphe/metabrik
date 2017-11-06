@@ -184,7 +184,7 @@ sub start {
    if ($listen) {
       $cmd .= " --bind $listen";
    }
-   if ($self->debug) {
+   if ($self->log->level > 2) {
       $cmd .= " --loglevel debug";
    }
 

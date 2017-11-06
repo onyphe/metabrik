@@ -90,7 +90,7 @@ sub write {
    $self->brik_help_run_undef_arg('write', $data) or return;
    $self->brik_help_run_undef_arg('write', $output) or return;
 
-   $self->debug && $self->log->debug("write: data[$data]");
+   $self->log->debug("write: data[$data]");
 
    $self->open($output) or return;
 

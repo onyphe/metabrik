@@ -212,8 +212,6 @@ sub write {
       return $self->log->error("write: csv structure does not contain HASHes");
    }
 
-   my $context = $self->context;
-
    my $fw = Metabrik::File::Write->new_from_brik_init($self) or return;
    $fw->output($output);
    $fw->encoding($self->encoding);
@@ -421,7 +419,7 @@ sub read_next {
    my $csv = $self->_csv;
    my $fd = $self->_fd;
    if (! defined($csv)) {
-      $self->debug && $self->log->debug('read_next: first call, create _csv');
+      $self->log->debug('read_next: first call, create _csv');
       $csv = Text::CSV_XS->new({
          binary => 1,
          sep_char => $self->separator,
@@ -516,7 +514,7 @@ sub read_next {
    }
 
    if ($csv->eof) {
-      $self->debug && $self->log->debug('read_next: eof reached');
+      $self->log->debug('read_next: eof reached');
       $self->_fd(undef);
       $self->_csv(undef);
       return 0;

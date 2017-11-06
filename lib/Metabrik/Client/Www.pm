@@ -200,7 +200,7 @@ sub create_user_agent {
       $mech->credentials($username, $password);
    }
 
-   if ($self->debug) {
+   if ($self->log->level > 2) {
       $mech->add_handler("request_send",  sub { shift->dump; return });
       $mech->add_handler("response_done", sub { shift->dump; return });
    }
@@ -533,7 +533,7 @@ sub forms {
 
    my $client = $self->_client;
 
-   if ($self->debug) {
+   if ($self->log->level > 2) {
       print Data::Dumper::Dumper($last->headers)."\n";
    }
 
@@ -720,7 +720,7 @@ sub info {
       Via
    );
 
-   if ($self->debug) {
+   if ($self->log->level > 2) {
       print Data::Dumper::Dumper($headers)."\n";
    }
 
@@ -775,7 +775,7 @@ sub mirror {
          }
       }
 
-      $self->debug && $self->log->debug("mirror: url[$url] output[$output]");
+      $self->log->debug("mirror: url[$url] output[$output]");
 
       my $mech = $self->create_user_agent or return;
       LWP::UserAgent::ProgressAny::__add_handlers($mech);

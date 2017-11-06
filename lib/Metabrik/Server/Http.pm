@@ -45,7 +45,7 @@ sub start {
    my $http = HTTP::Server::Brick->new(
       port => $port,
       host => $hostname,
-      timeout => $self->global->rtimeout,
+      timeout => defined($self->global) && $self->global->rtimeout || 3,
    );
 
    $http->mount('/' => { path => $root });

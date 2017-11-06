@@ -44,7 +44,7 @@ sub brik_use_properties {
 
    return {
       attributes_default => {
-         hostname => $self->global->hostname,
+         hostname => defined($self->global) && $self->global->hostname || 'hostname',
       },
    };
 }
@@ -60,7 +60,7 @@ sub connect {
    $self->brik_help_run_undef_arg('connect', $port) or return;
    $self->brik_help_run_undef_arg('connect', $domainname) or return;
 
-   my $timeout = $self->global->ctimeout;
+   my $timeout = defined($self->global) && $self->global->ctimeout || 3;
 
    my $smtp = Net::SMTP->new(
       $hostname,

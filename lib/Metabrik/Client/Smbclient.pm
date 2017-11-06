@@ -111,7 +111,7 @@ sub download {
    my $self = shift;
    my ($files, $output_dir, $share) = @_;
 
-   $output_dir ||= $self->shell->full_pwd;
+   $output_dir ||= defined($self->shell) && $self->shell->full_pwd || '/tmp';
    $share ||= $self->share;
    $self->brik_help_run_undef_arg('download', $files) or return;
    my $ref = $self->brik_help_run_invalid_arg('download', $files, 'ARRAY', 'SCALAR')
@@ -167,7 +167,7 @@ sub download_in_background {
    my $self = shift;
    my ($files, $output_dir, $share) = @_;
 
-   $output_dir = $self->shell->full_pwd;
+   $output_dir ||= defined($self->shell) && $self->shell->full_pwd || '/tmp';
    $share ||= $self->share;
    $self->brik_help_run_undef_arg('download_in_background', $files) or return;
    my $ref = $self->brik_help_run_invalid_arg('download_in_background', $files,

@@ -65,7 +65,7 @@ sub decrypt {
 
    #my $decrypted = $cipher->decrypt_hex($data);
 
-   $self->debug && $self->log->debug("echo \"$data\" | openssl enc -d -a -aes-128-cbc");
+   $self->log->debug("echo \"$data\" | openssl enc -d -a -aes-128-cbc");
 
    # Will only return hex decoded data
    my $decrypted = `echo "$data" | openssl enc -d -a -aes-128-cbc`;

@@ -58,7 +58,7 @@ sub version {
          nameservers => [ $nameserver ],
          recurse => 0,
          searchlist => [],
-         debug => $self->debug,
+         debug => $self->log->level > 2 ? 1 : 0,
          udp_timeout => $self->rtimeout,
          tcp_timeout => $self->rtimeout,
       ) or return $self->log->error("version: Net::DNS::Resolver::new failed");
@@ -99,7 +99,7 @@ sub recursion {
          nameservers => [ $nameserver ],
          recurse => 1,
          searchlist => [],
-         debug => $self->debug,
+         debug => $self->log->level > 2 ? 1 : 0,
          udp_timeout => $self->rtimeout,
          tcp_timeout => $self->rtimeout,
       ) or return $self->log->error("recursion: Net::DNS::Resolver::new failed");
@@ -139,7 +139,7 @@ sub axfr {
          nameservers => [ $nameserver ],
          recurse => 0,
          searchlist => ref($domainname) eq 'ARRAY' ? $domainname : [ $domainname ],
-         debug => $self->debug,
+         debug => $self->log->level > 2 ? 1 : 0,
          udp_timeout => $self->rtimeout,
          tcp_timeout => $self->rtimeout,
       ) or return $self->log->error("axfr: Net::DNS::Resolver::new failed");

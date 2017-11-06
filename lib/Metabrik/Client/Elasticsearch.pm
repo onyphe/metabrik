@@ -2584,6 +2584,10 @@ sub list_datatypes {
 sub get_hits_total {
    my $self = shift;
 
+   if (! defined($self->context)) {
+      return $self->log->error("get_hits_total: no core::context Brik");
+   }
+
    # Retrieve data stored in the $RUN Variable from Context
    my $run = $self->context->do('$RUN');
    if (ref($run) eq 'HASH') {
