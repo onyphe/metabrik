@@ -42,6 +42,7 @@ sub all {
    my $count = 0;
    $self->log->info("Used:");
    for my $brik (@{$status->{used}}) {
+      next unless $context->used->{$brik}->can('brik_tags');
       my $tags = $context->used->{$brik}->brik_tags;
       $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
       $count++;
@@ -52,6 +53,7 @@ sub all {
    $count = 0;
    $self->log->info("Not used:");
    for my $brik (@{$status->{not_used}}) {
+      next unless $context->not_used->{$brik}->can('brik_tags');
       my $tags = $context->not_used->{$brik}->brik_tags;
       $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
       $count++;
@@ -79,6 +81,7 @@ sub string {
    $self->log->info("Used:");
    for my $brik (@{$status->{used}}) {
       next unless $brik =~ /$string/;
+      next unless $context->used->{$brik}->can('brik_tags');
       my $tags = $context->used->{$brik}->brik_tags;
       $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
       $total++;
@@ -87,6 +90,7 @@ sub string {
    $self->log->info("Not used:");
    for my $brik (@{$status->{not_used}}) {
       next unless $brik =~ /$string/;
+      next unless $context->not_used->{$brik}->can('brik_tags');
       my $tags = $context->not_used->{$brik}->brik_tags;
       $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
       $total++;
@@ -111,6 +115,7 @@ sub tag {
    my $total = 0;
    $self->log->info("Used:");
    for my $brik (@{$status->{used}}) {
+      next unless $context->used->{$brik}->can('brik_tags');
       my $tags = $context->used->{$brik}->brik_tags;
       push @$tags, 'used';
       for my $this (@$tags) {
@@ -123,6 +128,7 @@ sub tag {
 
    $self->log->info("Not used:");
    for my $brik (@{$status->{not_used}}) {
+      next unless $context->not_used->{$brik}->can('brik_tags');
       my $tags = $context->not_used->{$brik}->brik_tags;
       push @$tags, 'not_used';
       for my $this (@$tags) {
@@ -153,6 +159,7 @@ sub not_tag {
    my $total = 0;
    $self->log->info("Used:");
    for my $brik (@{$status->{used}}) {
+      next unless $context->used->{$brik}->can('brik_tags');
       my $tags = $context->used->{$brik}->brik_tags;
       push @$tags, 'used';
       for my $this (@$tags) {
@@ -165,6 +172,7 @@ sub not_tag {
 
    $self->log->info("Not used:");
    for my $brik (@{$status->{not_used}}) {
+      next unless $context->not_used->{$brik}->can('brik_tags');
       my $tags = $context->not_used->{$brik}->brik_tags;
       push @$tags, 'not_used';
       for my $this (@$tags) {
@@ -240,6 +248,7 @@ sub command {
    $self->log->info("Used:");
    for my $brik (@{$status->{used}}) {
       if (exists($context->used->{$brik}->brik_properties->{commands})) {
+         next unless $context->used->{$brik}->can('brik_tags');
          my $tags = $context->used->{$brik}->brik_tags;
          push @$tags, 'used';
          for my $key (keys %{$context->used->{$brik}->brik_properties->{commands}}) {
@@ -254,6 +263,7 @@ sub command {
    $self->log->info("Not used:");
    for my $brik (@{$status->{not_used}}) {
       if (exists($context->not_used->{$brik}->brik_properties->{commands})) {
+         next unless $context->not_used->{$brik}->can('brik_tags');
          my $tags = $context->not_used->{$brik}->brik_tags;
          push @$tags, 'not_used';
          for my $key (keys %{$context->not_used->{$brik}->brik_properties->{commands}}) {
@@ -284,8 +294,11 @@ sub category {
    my $total = 0;
    $self->log->info("Used:");
    for my $brik (@{$status->{used}}) {
+      next unless defined($context->used->{$brik});
+      next unless $context->used->{$brik}->can('brik_category');
       my $brik_category = $context->used->{$brik}->brik_category;
       next unless $brik_category eq $category;
+      next unless $context->used->{$brik}->can('brik_tags');
       my $tags = $context->used->{$brik}->brik_tags;
       push @$tags, 'used';
       $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));
@@ -294,8 +307,11 @@ sub category {
 
    $self->log->info("Not used:");
    for my $brik (@{$status->{not_used}}) {
+      next unless defined($context->not_used->{$brik});
+      next unless $context->not_used->{$brik}->can('brik_category');
       my $brik_category = $context->not_used->{$brik}->brik_category;
       next unless $brik_category eq $category;
+      next unless $context->not_used->{$brik}->can('brik_tags');
       my $tags = $context->not_used->{$brik}->brik_tags;
       push @$tags, 'not_used';
       $self->log->info(sprintf("   %-20s [%s]", $brik, join(', ', @$tags)));

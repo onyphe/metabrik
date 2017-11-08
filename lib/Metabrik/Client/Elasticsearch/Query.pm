@@ -33,6 +33,7 @@ sub brik_properties {
          query => [ qw(query index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
          get_query_result_total => [ qw($query_result|OPTIONAL) ],
          get_query_result_hits => [ qw($query_result|OPTIONAL) ],
+         get_query_result_aggregations => [ qw($query_result|OPTIONAL) ],
          get_query_result_timed_out => [ qw($query_result|OPTIONAL) ],
          get_query_result_took => [ qw($query_result|OPTIONAL) ],
          term => [ qw(kv index|OPTIONAL type|OPTIONAL) ],
@@ -121,6 +122,28 @@ sub get_query_result_hits {
    }
 
    return $query_result->{hits}{hits};
+}
+
+sub get_query_result_aggregations {
+   my $self = shift;
+   my ($query_result) = @_;
+
+   if (! defined($self->context)) {
+      return $self->log->error("get_query_result_aggregations: no core::context Brik");
+   }
+
+   my $run = $self->context->do('$RUN');
+   $query_result ||= $run;
+   $self->brik_help_run_undef_arg('get_query_result_aggregations', $query_result) or return;
+   $self->brik_help_run_invalid_arg('get_query_result_aggregations', $query_result, 'HASH')
+      or return;
+
+   if (! exists($query_result->{aggregations})) {
+      return $self->log->error("get_query_result_aggregations: invalid query result, ".
+         "no aggregations found");
+   }
+
+   return $query_result->{aggregations};
 }
 
 sub get_query_result_timed_out {
