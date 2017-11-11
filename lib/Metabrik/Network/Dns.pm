@@ -80,18 +80,20 @@ sub create_resolver {
    );
 
    if (defined($src_ip_address)) {
+      $self->log->debug("create_resolver: using source IP [$src_ip_address]");
       $args{srcaddr} = $src_ip_address;
    }
    if (defined($src_port)) {
+      $self->log->debug("create_resolver: using source port [$src_port]");
       $args{srcport} = $src_port;
    }
 
    if ($ref eq 'ARRAY') {
-      $self->log->verbose("create_resolver: using nameserver [".join('|', @$nameserver)."]");
+      $self->log->debug("create_resolver: using nameserver [".join('|', @$nameserver)."]");
       $args{nameservers} = $nameserver;
    }
    else {
-      $self->log->verbose("create_resolver: using nameserver [$nameserver]");
+      $self->log->debug("create_resolver: using nameserver [$nameserver]");
       $args{nameservers} = [ $nameserver ];
    }
 

@@ -98,6 +98,7 @@ sub brik_properties {
          get_template => [ qw(name) ],
          put_template => [ qw(name template) ],
          put_template_from_json_file => [ qw(file) ],
+         update_template_from_json_file => [ qw(file) ],
          get_settings => [ qw(index|indices_list|OPTIONAL name|names_list|OPTIONAL) ],
          put_settings => [ qw(settings_hash index|indices_list|OPTIONAL) ],
          set_index_number_of_replicas => [ qw(index|indices_list number) ],
@@ -1556,6 +1557,29 @@ sub put_template_from_json_file {
    }
 
    my $name = $data->{template};
+
+   return $self->put_template($name, $data);
+}
+
+sub update_template_from_json_file {
+   my $self = shift;
+   my ($json_file) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('update_template_from_json_file', $json_file) or return;
+   $self->brik_help_run_file_not_found('update_template_from_json_file', $json_file) or return;
+
+   my $fj = Metabrik::File::Json->new_from_brik_init($self) or return;
+   my $data = $fj->read($json_file) or return;
+
+   if (! exists($data->{template})) {
+      return $self->log->error("put_template_from_json_file: no template name found");
+   }
+
+   my $name = $data->{template};
+
+   $self->delete_template($name);  # We ignore errors, template may not exist.
 
    return $self->put_template($name, $data);
 }
