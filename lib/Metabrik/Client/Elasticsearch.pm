@@ -435,6 +435,7 @@ sub index_document {
    }
 
    if (defined($hash)) {
+      $self->brik_help_run_invalid_arg('index_document', $hash, 'HASH') or return;
       %args = ( %args, %$hash );
    }
 
@@ -475,6 +476,7 @@ sub update_document {
    );
 
    if (defined($hash)) {
+      $self->brik_help_run_invalid_arg('update_document', $hash, 'HASH') or return;
       %args = ( %args, %$hash );
    }
 
@@ -513,6 +515,7 @@ sub index_bulk {
    }
 
    if (defined($hash)) {
+      $self->brik_help_run_invalid_arg('index_bulk', $hash, 'HASH') or return;
       %args = ( %args, %$hash );
    }
 
@@ -668,6 +671,7 @@ sub query {
    );
 
    if (defined($hash)) {
+      $self->brik_help_run_invalid_arg('query', $hash, 'HASH') or return;
       %args = ( %args, %$hash );
    }
 
@@ -801,6 +805,7 @@ sub delete_document {
    );
 
    if (defined($hash)) {
+      $self->brik_help_run_invalid_arg('delete_document', $hash, 'HASH') or return;
       %args = ( %args, %$hash );
    }
 
@@ -2607,13 +2612,10 @@ sub list_datatypes {
 #
 sub get_hits_total {
    my $self = shift;
+   my ($run) = @_;
 
-   if (! defined($self->context)) {
-      return $self->log->error("get_hits_total: no core::context Brik");
-   }
+   $self->brik_help_run_undef_arg('get_hits_total', $run) or return;
 
-   # Retrieve data stored in the $RUN Variable from Context
-   my $run = $self->context->do('$RUN');
    if (ref($run) eq 'HASH') {
       if (exists($run->{hits}) && exists($run->{hits}{total})) {
          return $run->{hits}{total};

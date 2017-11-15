@@ -80,113 +80,83 @@ sub reset_client {
 
 sub get_query_result_total {
    my $self = shift;
-   my ($query_result) = @_;
+   my ($run) = @_;
 
-   if (! defined($self->context)) {
-      return $self->log->error("get_query_result_total: no core::context Brik");
-   }
+   $self->brik_help_run_undef_arg('get_query_result_total', $run) or return;
+   $self->brik_help_run_invalid_arg('get_query_result_total', $run, 'HASH') or return;
 
-   my $run = $self->context->do('$RUN');
-   $query_result ||= $run;
-   $self->brik_help_run_undef_arg('get_query_result_total', $query_result) or return;
-   $self->brik_help_run_invalid_arg('get_query_result_total', $query_result, 'HASH') or return;
-
-   if (! exists($query_result->{hits})) {
+   if (! exists($run->{hits})) {
       return $self->log->error("get_query_result_total: invalid query result, no hits found");
    }
-   if (! exists($query_result->{hits}{total})) {
+   if (! exists($run->{hits}{total})) {
       return $self->log->error("get_query_result_total: invalid query result, no total found");
    }
 
-   return $query_result->{hits}{total};
+   return $run->{hits}{total};
 }
 
 sub get_query_result_hits {
    my $self = shift;
-   my ($query_result) = @_;
+   my ($run) = @_;
 
-   if (! defined($self->context)) {
-      return $self->log->error("get_query_result_hits: no core::context Brik");
-   }
+   $self->brik_help_run_undef_arg('get_query_result_hits', $run) or return;
+   $self->brik_help_run_invalid_arg('get_query_result_hits', $run, 'HASH') or return;
 
-   my $run = $self->context->do('$RUN');
-   $query_result ||= $run;
-   $self->brik_help_run_undef_arg('get_query_result_hits', $query_result) or return;
-   $self->brik_help_run_invalid_arg('get_query_result_hits', $query_result, 'HASH') or return;
-
-   if (! exists($query_result->{hits})) {
+   if (! exists($run->{hits})) {
       return $self->log->error("get_query_result_hits: invalid query result, no hits found");
    }
-   if (! exists($query_result->{hits}{hits})) {
+   if (! exists($run->{hits}{hits})) {
       return $self->log->error("get_query_result_hits: invalid query result, no hits in hits found");
    }
 
-   return $query_result->{hits}{hits};
+   return $run->{hits}{hits};
 }
 
 sub get_query_result_aggregations {
    my $self = shift;
-   my ($query_result) = @_;
+   my ($run) = @_;
 
-   if (! defined($self->context)) {
-      return $self->log->error("get_query_result_aggregations: no core::context Brik");
-   }
-
-   my $run = $self->context->do('$RUN');
-   $query_result ||= $run;
-   $self->brik_help_run_undef_arg('get_query_result_aggregations', $query_result) or return;
-   $self->brik_help_run_invalid_arg('get_query_result_aggregations', $query_result, 'HASH')
+   $self->brik_help_run_undef_arg('get_query_result_aggregations', $run) or return;
+   $self->brik_help_run_invalid_arg('get_query_result_aggregations', $run, 'HASH')
       or return;
 
-   if (! exists($query_result->{aggregations})) {
+   if (! exists($run->{aggregations})) {
       return $self->log->error("get_query_result_aggregations: invalid query result, ".
          "no aggregations found");
    }
 
-   return $query_result->{aggregations};
+   return $run->{aggregations};
 }
 
 sub get_query_result_timed_out {
    my $self = shift;
-   my ($query_result) = @_;
+   my ($run) = @_;
 
-   if (! defined($self->context)) {
-      return $self->log->error("get_query_result_timed_out: no core::context Brik");
-   }
-
-   my $run = $self->context->do('$RUN');
-   $query_result ||= $run;
-   $self->brik_help_run_undef_arg('get_query_result_timed_out', $query_result) or return;
-   $self->brik_help_run_invalid_arg('get_query_result_timed_out', $query_result, 'HASH')
+   $self->brik_help_run_undef_arg('get_query_result_timed_out', $run) or return;
+   $self->brik_help_run_invalid_arg('get_query_result_timed_out', $run, 'HASH')
       or return;
 
-   if (! exists($query_result->{timed_out})) {
+   if (! exists($run->{timed_out})) {
       return $self->log->error("get_query_result_timed_out: invalid query result, ".
          "no timed_out found");
    }
 
-   return $query_result->{timed_out} ? 1 : 0;
+   return $run->{timed_out} ? 1 : 0;
 }
 
 sub get_query_result_took {
    my $self = shift;
-   my ($query_result) = @_;
+   my ($run) = @_;
 
-   if (! defined($self->context)) {
-      return $self->log->error("get_query_result_took: no core::context Brik");
-   }
-
-   my $run = $self->context->do('$RUN');
-   $query_result ||= $run;
-   $self->brik_help_run_undef_arg('get_query_result_took', $query_result) or return;
-   $self->brik_help_run_invalid_arg('get_query_result_took', $query_result, 'HASH')
+   $self->brik_help_run_undef_arg('get_query_result_took', $run) or return;
+   $self->brik_help_run_invalid_arg('get_query_result_took', $run, 'HASH')
       or return;
 
-   if (! exists($query_result->{took})) {
+   if (! exists($run->{took})) {
       return $self->log->error("get_query_result_took: invalid query result, no took found");
    }
 
-   return $query_result->{took};
+   return $run->{took};
 }
 
 sub query {
