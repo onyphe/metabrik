@@ -48,6 +48,9 @@
       "Metabrik::Api::Cvesearch" : {
          "file" : "lib/Metabrik/Api/Cvesearch.pm"
       },
+      "Metabrik::Api::Onyphe" : {
+         "file" : "lib/Metabrik/Api/Onyphe.pm"
+      },
       "Metabrik::Api::Shodan" : {
          "file" : "lib/Metabrik/Api/Shodan.pm"
       },
