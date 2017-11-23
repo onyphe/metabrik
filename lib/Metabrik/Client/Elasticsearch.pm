@@ -2991,6 +2991,18 @@ sub restore_snapshot_for_indices {
    return $self->restore_snapshot($snapshot_name, $repository_name, $body);
 }
 
+# shard occupation
+#
+# curl -XGET "http://127.0.0.1:9200/_cat/shards?v
+# Or https://www.elastic.co/guide/en/elasticsearch/reference/1.6/cluster-nodes-stats.html
+#
+# disk occuption:
+# curl -XGET http://127.0.0.1:9200/_cat/nodes?h=ip,h,diskAvail,diskTotal
+# 
+#
+# Who is master: curl -XGET http://127.0.0.1:9200/_cat/master?v
+#
+
 1;
 
 __END__

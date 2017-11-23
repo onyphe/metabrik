@@ -7,7 +7,7 @@ package Metabrik::Network::Portscan;
 use strict;
 use warnings;
 
-use base qw(Metabrik::Network::Address Metabrik::Network::Device);
+use base qw(Metabrik::Network::Device);
 
 sub brik_properties {
    return {
@@ -143,6 +143,7 @@ sub brik_properties {
          'Net::Write::Fast' => [ ],
          'Net::Frame::Simple' => [ ],
          'POSIX' => [ qw(ceil) ],
+         'Metabrik::Network::Address' => [ ],
          'Metabrik::Network::Read' => [ ],
          'Metabrik::System::Process' => [ ],
          'Metabrik::Worker::Fork' => [ ],
@@ -254,6 +255,8 @@ sub tcp_syn_sender {
    my $device = $self->device;
    my $use_ipv6 = $self->use_ipv6;
 
+   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
+
    # Set source IP address.
    my $ip4;
    my $ip6;
@@ -272,14 +275,14 @@ sub tcp_syn_sender {
 
    my $ip = $ip_list->[0];
    if ($self->use_ipv6) {
-      if (! $self->is_ipv6($ip)) {
-         return $self->log->error("tcp_syn_sender: address is not IPv6 in ip_list");
+      if (! $na->is_ipv6($ip)) {
+         return $self->log->error("tcp_syn_sender: address [$ip] is not IPv6 in ip_list");
       }
       $self->log->verbose("tcp_syn_sender: using source IPv6 [$ip6]");
    }
    else {
-      if (! $self->is_ipv4($ip)) {
-         return $self->log->error("tcp_syn_sender: address is not IPv4 in ip_list");
+      if (! $na->is_ipv4($ip)) {
+         return $self->log->error("tcp_syn_sender: address [$ip] is not IPv4 in ip_list");
       }
       $self->log->verbose("tcp_syn_sender: using source IPv4 [$ip4]");
    }
@@ -503,6 +506,8 @@ sub tcp_syn_scan {
 
    my $wait = $self->wait;
 
+   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
+
    my $nr = $self->tcp_syn_start_receiver($port_list) or return;
 
    my $estimate = $self->estimate_runtime($ip_list, $port_list, $pps, $try);
@@ -531,7 +536,7 @@ sub tcp_syn_scan {
       exit(0);
    }
 
-   my $use_ipv6 = $self->is_ipv6($ip_list->[0]) ? 1 : 0;
+   my $use_ipv6 = $na->is_ipv6($ip_list->[0]) ? 1 : 0;
 
    # Father: analyse received frames
    $self->log->debug("tcp_syn_scan: father starts");

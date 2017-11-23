@@ -66,13 +66,15 @@ sub api {
    RETRY:
       my $res = $self->get($apiurl.'/'.$api.'/'.$ip.'?k='.$apikey);
       my $code = $self->code;
-      if ($code == 507) {
+      if ($code == 429) {
          $self->log->info("api: request limit reached, waiting before retry");
          sleep($wait);
          goto RETRY;
       }
       elsif ($code == 200) {
-         push @r, $self->content;
+         my $content = $self->content;
+         $content->{ip} = $ip;  # Add the IP, in case an ARRAY was requested.
+         push @r, $content;
       }
       else {
          $self->log->error("api: skipping from error");

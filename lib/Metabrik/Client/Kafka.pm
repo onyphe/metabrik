@@ -84,13 +84,8 @@ sub create_connection {
                defined($server)
                && defined(Kafka::Connection::_STRING($server))
                #&& !utf8::is_utf8($server)  # this sucks.
+               && $server =~ /^[^:]+:\d+$/
            ) {
-            return;
-         }
-
-         my ($host, $port) = Kafka::Connection::_split_host_port($server);
-
-         unless ((Kafka::Connection::is_hostname($host) || Kafka::Connection::is_ipv4($host) || Kafka::Connection::is_ipv6($host)) && $port) {
             return;
          }
 

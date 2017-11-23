@@ -248,6 +248,9 @@ sub to_hash {
    my $published_datetime = $h->{'vuln:published-datetime'};
    my $last_modified_datetime = $h->{'vuln:last-modified-datetime'};
    my $summary = $h->{'vuln:summary'};
+   my $cvss = $h->{'vuln:cvss'}{'cvss:base_metrics'}{'cvss:score'};
+   my $vector = $h->{'vuln:cvss'}{'cvss:base_metrics'}{'cvss:access-vector'};
+   my $authentication = $h->{'vuln:cvss'}{'cvss:base_metrics'}{'cvss:authentication'};
    my $cwe_id = $h->{'vuln:cwe'}->{id} || '(undef)';
    $cwe_id =~ s/^CWE-//;
 
@@ -265,6 +268,9 @@ sub to_hash {
 
    return {
       cve_id => $cve,
+      cvss => $cvss,
+      access_vector => $vector,
+      authentication => $authentication,
       url => 'http://web.nvd.nist.gov/view/vuln/detail?vulnId='.$cve,
       published_datetime => $published_datetime,
       last_modified_datetime => $last_modified_datetime,

@@ -175,6 +175,18 @@ sub remove {
 }
 
 sub rename {
+   my $self = shift;
+   my ($source, $destination) = @_;
+
+   $self->brik_help_run_undef_arg('rename', $source) or return;
+   $self->brik_help_run_undef_arg('rename', $destination) or return;
+
+   my $r = File::Copy::mv($source, $destination);
+   if (! $r) {
+      return $self->log->error("rename: failed rename [$source] to [$destination]: error [$!]");
+   }
+
+   return $destination;
 }
 
 sub cat {

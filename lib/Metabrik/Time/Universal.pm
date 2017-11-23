@@ -349,6 +349,20 @@ sub to_timestamp {
          $timestamp .= sprintf(".%03d", $msec);
       }
    }
+   # 2000-10-20T00:00:00.000-04:00
+   elsif ($string =~ m{^(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})}) {
+      my $mon = $2 - 1;
+      my $mday = $3;
+      my $hour = $4;
+      my $min = $5;
+      my $sec = $6;
+      my $year = $1;
+      my $msec = $7;
+      $timestamp = Time::Local::timelocal($sec, $min, $hour, $mday, $mon, $year);
+      if ($self->use_hires) {
+         $timestamp .= sprintf(".%03d", $msec);
+      }
+   }
    else {
       return $self->log->error("to_timestamp: string [$string] not a valid date format");
    }

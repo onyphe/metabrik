@@ -17,6 +17,8 @@ sub brik_properties {
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
          subnet => [ qw(subnet) ],
+         _ipv4_re => [ qw(INTERNAL) ],
+         _ipv6_re => [ qw(INTERNAL) ],
       },
       commands => {
          match => [ qw(ip_address subnet|OPTIONAL) ],
@@ -60,8 +62,24 @@ sub brik_properties {
          'NetAddr::IP' => [ ],
          'Net::CIDR' => [ ],
          'Socket' => [ ],
+         'Regexp::IPv4' => [ qw($IPv4_re) ],
+         'Regexp::IPv6' => [ qw($IPv6_re) ],
       },
    };
+}
+
+sub brik_init {
+   my $self = shift;
+
+   my $init = $self->SUPER::brik_init or return;
+
+   my $ipv4_re = qr/^${Regexp::IPv4::IPv4_re}$/;
+   my $ipv6_re = qr/^${Regexp::IPv6::IPv6_re}$/;
+
+   $self->_ipv4_re($ipv4_re);
+   $self->_ipv6_re($ipv6_re);
+
+   return $init;
 }
 
 sub match {
@@ -156,8 +174,6 @@ sub is_ip {
 
    $self->brik_help_run_undef_arg('is_ip', $ip) or return;
 
-   (my $local = $ip) =~ s/\/\d+$//;
-
    if ($self->is_ipv4($ip) || $self->is_ipv6($ip)) {
       return 1;
    }
@@ -198,7 +214,9 @@ sub is_ipv4 {
 
    (my $local = $ip) =~ s/\/\d+$//;
 
-   if ($local =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) {
+   my $ipv4_re = $self->_ipv4_re;
+
+   if ($local =~ $ipv4_re) {
       return 1;
    }
 
@@ -213,13 +231,10 @@ sub is_ipv6 {
 
    (my $local = $ip) =~ s/\/\d+$//;
 
-   if ($local =~ /^[0-9a-f:\/]+$/i) {
-      eval {
-         my $x = Net::IPv6Addr::ipv6_parse($local);
-      };
-      if (! $@) {
-         return 1;
-      }
+   my $ipv6_re = $self->_ipv6_re;
+
+   if ($local =~ $ipv6_re) {
+      return 1;
    }
 
    return 0;
