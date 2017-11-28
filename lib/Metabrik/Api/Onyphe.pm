@@ -34,18 +34,20 @@ sub brik_properties {
         datascan => [ qw(ip|string apikey|OPTIONAL) ],
         reverse => [ qw(ip apikey|OPTIONAL) ],
         forward => [ qw(ip apikey|OPTIONAL) ],
+        md5 => [ qw(sum apikey|OPTIONAL) ],
+        list_ports => [ qw(since apikey|OPTIONAL)],
       },
    };
 }
 
 sub api {
    my $self = shift;
-   my ($api, $ip, $apikey) = @_;
+   my ($api, $arg, $apikey) = @_;
 
    $apikey ||= $self->apikey;
    $self->brik_help_run_undef_arg('api', $api) or return;
-   $self->brik_help_run_undef_arg('api', $ip) or return;
-   my $ref = $self->brik_help_run_invalid_arg('api', $ip, 'SCALAR', 'ARRAY') or return;
+   $self->brik_help_run_undef_arg('api', $arg) or return;
+   my $ref = $self->brik_help_run_invalid_arg('api', $arg, 'SCALAR', 'ARRAY') or return;
    $self->brik_help_set_undef_arg('apikey', $apikey) or return;
 
    my $wait = $self->wait;
@@ -57,14 +59,14 @@ sub api {
 
    my @r = ();
    if ($ref eq 'ARRAY') {
-      for my $this (@$ip) {
+      for my $this (@$arg) {
          my $res = $self->api($api, $this, $apikey) or next;
          push @r, @$res;
       }
    }
    else {
    RETRY:
-      my $res = $self->get($apiurl.'/'.$api.'/'.$ip.'?k='.$apikey);
+      my $res = $self->get($apiurl.'/'.$api.'/'.$arg.'?k='.$apikey);
       my $code = $self->code;
       if ($code == 429) {
          $self->log->info("api: request limit reached, waiting before retry");
@@ -73,7 +75,8 @@ sub api {
       }
       elsif ($code == 200) {
          my $content = $self->content;
-         $content->{ip} = $ip;  # Add the IP, in case an ARRAY was requested.
+         $content->{arg} = $arg;  # Add the IP or other info,
+                                  # in case an ARRAY was requested.
          push @r, $content;
       }
       else {
@@ -138,6 +141,43 @@ sub forward {
    my ($ip, $apikey) = @_;
 
    return $self->api('forward', $ip, $apikey);
+}
+
+sub md5 {
+   my $self = shift;
+   my ($sum, $apikey) = @_;
+
+   return $self->api('md5', $sum, $apikey);
+}
+
+sub list_ports {
+   my $self = shift;
+   my ($apikey) = @_;
+
+   $apikey ||= $self->apikey;
+   $self->brik_help_run_undef_arg('list_ports', $apikey) or return;
+
+   my $wait = $self->wait;
+
+   my $apiurl = $self->apiurl;
+   $apiurl =~ s{/*$}{};
+
+   my @r = ();
+
+RETRY:
+   my $res = $self->get($apiurl.'/list/ports/?k='.$apikey);
+   my $code = $self->code;
+   if ($code == 429) {
+      $self->log->info("list_ports: request limit reached, waiting before retry");
+      sleep($wait);
+      goto RETRY;
+   }
+   elsif ($code == 200) {
+      my $content = $self->content;
+      push @r, $content;
+   }
+
+   return \@r;
 }
 
 1;
