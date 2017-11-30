@@ -57,10 +57,10 @@ sub brik_properties {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
          open_bulk_mode => [ qw(index|OPTIONAL type|OPTIONAL) ],
          open_scroll_scan_mode => [ qw(index|OPTIONAL size|OPTIONAL) ],
-         open_scroll => [ qw(index|OPTIONAL size|OPTIONAL) ],
+         open_scroll => [ qw(index|OPTIONAL size|OPTIONAL type|OPTIONAL query|OPTIONAL) ],
          close_scroll => [ ],
          total_scroll => [ ],
-         next_scroll => [ ],
+         next_scroll => [ qw(count|OPTIONAL) ],
          index_document => [ qw(document index|OPTIONAL type|OPTIONAL hash|OPTIONAL id|OPTIONAL) ],
          update_document => [ qw(document id index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
          index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL hash|OPTIONAL id|OPTIONAL) ],
@@ -88,6 +88,7 @@ sub brik_properties {
          get_aliases => [ qw(index) ],
          put_alias => [ qw(index alias) ],
          delete_alias => [ qw(index alias) ],
+         is_mapping_exists => [ qw(index mapping) ],
          get_mappings => [ qw(index type|OPTIONAL) ],
          create_index => [ qw(index) ],
          create_index_with_mappings => [ qw(index mappings) ],
@@ -315,7 +316,7 @@ sub open_scroll_scan_mode {
 #
 sub open_scroll {
    my $self = shift;
-   my ($index, $size) = @_;
+   my ($index, $size, $type, $query) = @_;
 
    my $version = $self->version or return;
    if ($version lt "5.0.0") {
@@ -323,7 +324,9 @@ sub open_scroll {
          "$version, try open_scroll_scan_mode Command instead");
    }
 
+   $query ||= { query => { match_all => {} } };
    $index ||= $self->index;
+   $type ||= $self->type;
    $size ||= $self->size;
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
@@ -332,19 +335,22 @@ sub open_scroll {
 
    my $timeout = $self->rtimeout;
 
-   #
-   # https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html
-   #
-   my $scroll = $es->scroll_helper(
+   my %args = (
       scroll => "${timeout}s",
       scroll_in_qs => 1,  # By default (0), pass scroll_id in request body. When 1, pass 
                           # it in query string.
       index => $index,
       size => $size,
-      body => {
-         sort => [ qw(_doc) ],
-      },
+      body => $query,
    );
+   if ($type ne '*') {
+      $args{type} = $type;
+   }
+
+   #
+   # https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html
+   #
+   my $scroll = $es->scroll_helper(%args);
    if (! defined($scroll)) {
       return $self->log->error("open_scroll: failed");
    }
@@ -393,13 +399,24 @@ sub total_scroll {
 
 sub next_scroll {
    my $self = shift;
+   my ($count) = @_;
+
+   $count ||= 1;
 
    my $scroll = $self->_scroll;
    $self->brik_help_run_undef_arg('open_scroll', $scroll) or return;
 
    my $next;
    eval {
-      $next = $scroll->next;
+      if ($count > 1) {
+         my @docs = $scroll->next($count);
+         if (@docs > 0) {
+            $next = \@docs;
+         }
+      }
+      else {
+         $next = $scroll->next;
+      }
    };
    if ($@) {
       chomp($@);
@@ -1124,11 +1141,14 @@ sub list_index_fields {
          return $self->log->error("list_index_fields: multiple indices found, ".
             "choose one");
       }
-      my $r2 = $self->get_mappings($index, '_default_') or return;
-      # Merge
-      for my $this_index (keys %$r2) {
-         my $default = $r2->{$this_index}{mappings}{'_default_'};
-         $r->{$this_index}{mappings}{_default_} = $default;
+      # _default_ mapping may not exists.
+      if ($self->is_mapping_exists($index, '_default_')) {
+         my $r2 = $self->get_mappings($index, '_default_');
+         # Merge
+         for my $this_index (keys %$r2) {
+            my $default = $r2->{$this_index}{mappings}{'_default_'};
+            $r->{$this_index}{mappings}{_default_} = $default;
+         }
       }
    }
    else {
@@ -1342,6 +1362,30 @@ sub update_alias {
    }
 
    return $self->put_alias($new_index, $alias);
+}
+
+sub is_mapping_exists {
+   my $self = shift;
+   my ($index, $mapping) = @_;
+
+   $self->brik_help_run_undef_arg('is_mapping_exists', $index) or return;
+   $self->brik_help_run_undef_arg('is_mapping_exists', $mapping) or return;
+
+   if (! $self->is_index_exists($index)) {
+      return 0;
+   }
+
+   my $all = $self->get_mappings($index) or return;
+   for my $this_index (keys %$all) {
+      my $mappings = $all->{$this_index}{mappings};
+      for my $this_mapping (keys %$mappings) {
+         if ($this_mapping eq $mapping) {
+            return 1;
+         }
+      }
+   }
+
+   return 0;
 }
 
 #
@@ -1997,55 +2041,70 @@ sub export_as_csv {
    my $start = time();
    my $done = 'output.exported';
    my $start_time = time();
-   while (my $this = $self->next_scroll) {
-      $read++;
-      my $id = $this->{_id};
-      my $doc = $this->{_source};
-      my $type = $this->{_type};
-      if (! exists($types{$type})) {
-         my $fields = $self->list_index_fields($index, $type) or return;
-         #$types{$type}{header} = [ '_id', sort { $a cmp $b } keys %$doc ];
-         $types{$type}{header} = [ '_id', @$fields ];
-         $types{$type}{output} = "$index:$type.csv";
-         $done = $types{$type}{output_exported} = "$index:$type.csv.exported";
+   my %chunk = ();
+   while (my $next = $self->next_scroll(10000)) {
+      for my $this (@$next) {
+         $read++;
+         my $id = $this->{_id};
+         my $doc = $this->{_source};
+         my $type = $this->{_type};
+         if (! exists($types{$type})) {
+            my $fields = $self->list_index_fields($index, $type) or return;
+            #$types{$type}{header} = [ '_id', sort { $a cmp $b } keys %$doc ];
+            $types{$type}{header} = [ '_id', @$fields ];
+            $types{$type}{output} = "$index:$type.csv";
+            $done = $types{$type}{output_exported} = "$index:$type.csv.exported";
 
-         # Verify it has not been exported yet
-         if (-f $types{$type}{output_exported}) {
-            return $self->log->error("export_as_csv: export already done for index ".
-               "[$index] with type [$type] and file [$index:$type.csv]");
+            # Verify it has not been exported yet
+            if (-f $types{$type}{output_exported}) {
+               return $self->log->error("export_as_csv: export already done for index ".
+                  "[$index] with type [$type] and file [$index:$type.csv]");
+            }
+
+            $self->log->info("export_as_csv: exporting to file [$index:$type.csv] ".
+               "for new type [$type], using chunk size of [$size]");
          }
 
-         $self->log->info("export_as_csv: exporting to file [$index:$type.csv] ".
-            "for new type [$type], using chunk size of [$size]");
+         $h->{_id} = $id;
+
+         for my $k (keys %$doc) {
+            $h->{$k} = $doc->{$k};
+         }
+
+         $fc->header($types{$type}{header});
+
+         push @{$chunk{$type}}, $h;
+         if (@{$chunk{$type}} > 999) {
+            my $r = $fc->write($chunk{$type}, $types{$type}{output});
+            if (!defined($r)) {
+               $self->log->warning("export_as_csv: unable to process entry, skipping");
+               $skipped++;
+               next;
+            }
+            $chunk{$type} = [];
+         }
+
+         # Log a status sometimes.
+         if (! (++$exported % 100_000)) {
+            my $now = time();
+            $self->log->info("export_as_csv: fetched [$exported/$total] elements in ".
+               ($now - $start)." second(s) from index [$index]");
+            $start = time();
+         }
+
+         # Limit export to specified maximum
+         if ($max > 0 && $exported >= $max) {
+            $self->log->info("export_as_csv: max export reached [$exported] for index ".
+               "[$index], stopping");
+            last;
+         }
       }
+   }
 
-      $h->{_id} = $id;
-
-      for my $k (keys %$doc) {
-         $h->{$k} = $doc->{$k};
-      }
-
-      $fc->header($types{$type}{header});
-      my $r = $fc->write([ $h ], $types{$type}{output});
-      if (!defined($r)) {
-         $self->log->warning("export_as_csv: unable to process entry, skipping");
-         $skipped++;
-         next;
-      }
-
-      # Log a status sometimes.
-      if (! (++$exported % 100_000)) {
-         my $now = time();
-         $self->log->info("export_as_csv: fetched [$exported/$total] elements in ".
-            ($now - $start)." second(s) from index [$index]");
-         $start = time();
-      }
-
-      # Limit export to specified maximum
-      if ($max > 0 && $exported >= $max) {
-         $self->log->info("export_as_csv: max export reached [$exported] for index ".
-            "[$index], stopping");
-         last;
+   # Process remaining data waiting to be written
+   for my $type (keys %types) {
+      if (@{$chunk{$type}} > 0) {
+         $fc->write($chunk{$type}, $types{$type}{output});
       }
    }
 
