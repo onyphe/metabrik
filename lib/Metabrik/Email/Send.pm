@@ -19,11 +19,15 @@ sub brik_properties {
          from => [ qw(from) ],
          to => [ qw(to) ],
          subject => [ qw(subject) ],
+         server => [ qw(server) ],
+         port => [ qw(port) ],
       },
       attributes_default => {
          from => 'from@example.com',
          to => 'to@example.com',
          subject => 'My subject',
+         server => 'localhost',
+         port => 25,
       },
       commands => {
          send => [ qw(email from|OPTIONAL to|OPTIONAL subject|OPTIONAL) ],

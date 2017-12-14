@@ -99,6 +99,7 @@ sub generate_conf {
 DataDirectory $datadir
 PidFile $datadir/$pidfile
 RunAsDaemon 1
+ClientOnly 1
 User $user
 
 ControlSocket $datadir/control
@@ -110,7 +111,6 @@ CookieAuthFile $datadir/control.authcookie
 
 Log notice file $datadir/tor.log
 
-ClientOnly 1
 TransPort $tor_port
 TransListenAddress $tor_listen
 DNSPort $dns_port
