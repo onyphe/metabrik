@@ -2033,7 +2033,6 @@ sub export_as_csv {
    my $total = $self->total_scroll;
    $self->log->info("export_as_csv: total [$total] for index [$index]");
 
-   my $h = {};
    my %types = ();
    my $read = 0;
    my $skipped = 0;
@@ -2065,7 +2064,7 @@ sub export_as_csv {
                "for new type [$type], using chunk size of [$size]");
          }
 
-         $h->{_id} = $id;
+         my $h = { _id => $id };
 
          for my $k (keys %$doc) {
             $h->{$k} = $doc->{$k};
