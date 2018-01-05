@@ -31,6 +31,7 @@ sub brik_properties {
          list_destination_ip_addresses => [ qw(stream) ],
          list_tcp_streams => [ qw($simple_frames_list) ],
          save_stream_payload => [ qw($simple_frames_list) ],
+         get_payloads_from_pcap => [ qw(file filter|OPTIONAL) ],
       },
       require_modules => {
          'Net::Frame::Layer::TCP' => [ ],
@@ -243,6 +244,38 @@ sub save_stream_payload {
    }
 
    return $data;
+}
+
+sub get_payloads_from_pcap {
+   my $self = shift;
+   my ($file, $filter) = @_;
+
+   $self->brik_help_run_undef_arg('get_payloads_from_pcap', $file) or return;
+   $self->brik_help_run_file_not_found('get_payloads_from_pcap', $file) or return;
+
+   $filter ||= $self->filter;
+
+   my $fp = Metabrik::File::Pcap->new_from_brik_init($self) or return;
+   $fp->open($file, 'read', $filter) or return;
+
+   my @payloads = ();
+   while (1) {
+      my $h = $fp->read_next(10); # We read 10 by 10
+      last if @$h == 0; # Eof
+      for my $this (@$h) {
+         my $simple = $fp->from_read($this) or next;
+         my $network = $simple->ref->{IPv4} || $simple->ref->{IPv6};
+         my $transport = $simple->ref->{TCP};
+
+         if (defined($network) && defined($transport)) {
+            if (defined($transport) && length($transport->payload)) {
+               push @payloads, CORE::unpack('H*', $transport->payload);
+            }
+         }
+      }
+   }
+
+   return \@payloads;
 }
 
 1;

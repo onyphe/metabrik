@@ -36,6 +36,7 @@ sub brik_properties {
         forward => [ qw(ip apikey|OPTIONAL) ],
         md5 => [ qw(sum apikey|OPTIONAL) ],
         list_ports => [ qw(since apikey|OPTIONAL)],
+        search => [ qw(query apikey|OPTIONAL) ],
       },
    };
 }
@@ -80,7 +81,8 @@ sub api {
          push @r, $content;
       }
       else {
-         $self->log->error("api: skipping from error");
+         my $content = $self->get_last->content;
+         $self->log->error("api: skipping from error [$content]");
       }
    }
 
@@ -178,6 +180,13 @@ RETRY:
    }
 
    return \@r;
+}
+
+sub search {
+   my $self = shift;
+   my ($query, $apikey) = @_;
+
+   return $self->api('search', $query, $apikey);
 }
 
 1;

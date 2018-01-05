@@ -2038,7 +2038,7 @@ sub export_as_csv {
    my $skipped = 0;
    my $exported = 0;
    my $start = time();
-   my $done = 'output.exported';
+   my $done = "$index.exported";
    my $start_time = time();
    my %chunk = ();
    while (my $next = $self->next_scroll(10000)) {
@@ -2046,22 +2046,26 @@ sub export_as_csv {
          $read++;
          my $id = $this->{_id};
          my $doc = $this->{_source};
-         my $type = $this->{_type};
+         my $type = $this->{_type} || 'doc';  # Prepare for when types will be removed from ES
          if (! exists($types{$type})) {
             my $fields = $self->list_index_fields($index, $type) or return;
             #$types{$type}{header} = [ '_id', sort { $a cmp $b } keys %$doc ];
             $types{$type}{header} = [ '_id', @$fields ];
-            $types{$type}{output} = "$index:$type.csv";
-            $done = $types{$type}{output_exported} = "$index:$type.csv.exported";
-
-            # Verify it has not been exported yet
-            if (-f $types{$type}{output_exported}) {
-               return $self->log->error("export_as_csv: export already done for index ".
-                  "[$index] with type [$type] and file [$index:$type.csv]");
+            if ($type ne 'doc') {
+               $types{$type}{output} = "$index:$type.csv";
+            }
+            else {
+               $types{$type}{output} = "$index.csv";
             }
 
-            $self->log->info("export_as_csv: exporting to file [$index:$type.csv] ".
-               "for new type [$type], using chunk size of [$size]");
+            # Verify it has not been exported yet
+            if (-f $done) {
+               return $self->log->error("export_as_csv: export already done for index ".
+                  "[$index]");
+            }
+
+            $self->log->info("export_as_csv: exporting to file [".$types{$type}{output}.
+               "] for type [$type], using chunk size of [$size]");
          }
 
          my $h = { _id => $id };
@@ -2086,8 +2090,9 @@ sub export_as_csv {
          # Log a status sometimes.
          if (! (++$exported % 100_000)) {
             my $now = time();
-            $self->log->info("export_as_csv: fetched [$exported/$total] elements in ".
-               ($now - $start)." second(s) from index [$index]");
+            my $perc = sprintf("%.02f", $exported / $total * 100);
+            $self->log->info("export_as_csv: fetched [$exported/$total] ($perc%) ".
+               "elements in ".($now - $start)." second(s) from index [$index]");
             $start = time();
          }
 
@@ -3060,6 +3065,19 @@ sub restore_snapshot_for_indices {
 #
 # Who is master: curl -XGET http://127.0.0.1:9200/_cat/master?v
 #
+
+# Check memory lock
+
+# curl -XGET 'localhost:9200/_nodes?filter_path=**.mlockall&pretty'
+# {
+#  "nodes" : {
+#    "3XXX" : {
+#      "process" : {
+#        "mlockall" : true
+#      }
+#    }
+#  }
+# }
 
 1;
 
