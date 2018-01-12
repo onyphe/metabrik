@@ -114,7 +114,7 @@ sub brik_properties {
          parse_error_string => [ qw(string) ],
          refresh_index => [ qw(index) ],
          export_as_csv => [ qw(index size|OPTIONAL) ],
-         import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
+         import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL hash|OPTIONAL cb|OPTIONAL) ],
          get_stats_process => [ ],
          get_process => [ ],
          get_cluster_state => [ ],
@@ -2143,7 +2143,7 @@ sub export_as_csv {
 #
 sub import_from_csv {
    my $self = shift;
-   my ($input_csv, $index, $type, $hash) = @_;
+   my ($input_csv, $index, $type, $hash, $cb) = @_;
 
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
@@ -2231,6 +2231,16 @@ sub import_from_csv {
          # No need to index data that is empty.
          if (defined($value) && length($value)) {
             $h->{$k} = $value;
+         }
+      }
+
+      if (defined($cb)) {
+         $h = $cb->($h);
+         if (! defined($h)) {
+            $self->log->error("import_from_csv: callback failed for index [$index] ".
+               "at read [$read], skipping single entry");
+            $skipped_chunks++;
+            next;
          }
       }
 
