@@ -46,7 +46,7 @@ sub brik_properties {
 sub get_system_package {
    my $self = shift;
 
-   my $os = $self->my_os;
+   my $os = $self->my_os or return;
    my $sudo_args = $self->sudo_args;
 
    my $sp;
@@ -235,7 +235,7 @@ Metabrik::System::Package - system::package Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2017, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2018, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

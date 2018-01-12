@@ -704,7 +704,7 @@ $package - $brik Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2017, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2018, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.
@@ -1002,7 +1002,7 @@ Metabrik::Brik::Tool - brik::tool Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2017, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2018, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.
