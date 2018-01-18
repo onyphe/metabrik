@@ -31,6 +31,7 @@ sub brik_properties {
          try => [ qw(count) ],
          use_bulk_autoflush => [ qw(0|1) ],
          use_indexing_optimizations => [ qw(0|1) ],
+         csv_header => [ qw(fields) ],
          csv_encoded_fields => [ qw(fields) ],
          csv_object_fields => [ qw(fields) ],
          _es => [ qw(INTERNAL) ],
@@ -77,7 +78,7 @@ sub brik_properties {
          show_nodes => [ ],
          show_health => [ ],
          show_recovery => [ ],
-         list_indices => [ ],
+         list_indices => [ qw(regex|OPTIONAL) ],
          get_indices => [ ],
          get_index => [ qw(index|indices_list) ],
          list_index_types => [ qw(index) ],
@@ -113,8 +114,8 @@ sub brik_properties {
          is_document_exists => [ qw(index type document) ],
          parse_error_string => [ qw(string) ],
          refresh_index => [ qw(index) ],
-         export_as_csv => [ qw(index size|OPTIONAL) ],
-         import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL hash|OPTIONAL cb|OPTIONAL) ],
+         export_as_csv => [ qw(index size|OPTIONAL callback|OPTIONAL) ],
+         import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL hash|OPTIONAL callback|OPTIONAL) ],
          get_stats_process => [ ],
          get_process => [ ],
          get_cluster_state => [ ],
@@ -998,12 +999,20 @@ sub show_recovery {
 
 sub list_indices {
    my $self = shift;
+   my ($regex) = @_;
 
    my $get = $self->get_indices or return;
 
    my @indices = ();
    for (@$get) {
-      push @indices, $_->{index};
+      if (defined($regex)) {
+         if ($_->{index} =~ m{$regex}) {
+            push @indices, $_->{index};
+         }
+      }
+      else {
+         push @indices, $_->{index};
+      }
    }
 
    return [ sort { $a cmp $b } @indices ];
@@ -1999,7 +2008,7 @@ RETRY:
 
 sub export_as_csv {
    my $self = shift;
-   my ($index, $size) = @_;
+   my ($index, $size, $cb) = @_;
 
    $size ||= 10_000;
    my $es = $self->_es;
@@ -2008,6 +2017,8 @@ sub export_as_csv {
    $self->brik_help_run_undef_arg('export_as_csv', $size) or return;
 
    my $max = $self->max;
+
+   $self->log->debug("export_as_csv: selecting scroll Command...");
 
    my $scroll;
    my $version = $self->version or return;
@@ -2018,6 +2029,8 @@ sub export_as_csv {
       $scroll = $self->open_scroll($index, $size) or return;
    }
 
+   $self->log->debug("export_as_csv: selecting scroll Command...OK.");
+
    my $fd = Metabrik::File::Dump->new_from_brik_init($self) or return;
 
    my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
@@ -2027,8 +2040,18 @@ sub export_as_csv {
    $fc->first_line_is_header(0);
    $fc->write_header(1);
    $fc->use_quoting(1);
-   $fc->encoded_fields($self->csv_encoded_fields);
-   $fc->object_fields($self->csv_object_fields);
+   if (defined($self->csv_header)) {
+      my $sorted = [ sort { $a cmp $b } @{$self->csv_header} ];
+      $fc->header($sorted);
+   }
+   if (defined($self->csv_encoded_fields)) {
+      $fc->encoded_fields($self->csv_encoded_fields);
+   }
+   if (defined($self->csv_object_fields)) {
+      $fc->object_fields($self->csv_object_fields);
+   }
+
+   my $csv_header = $fc->header;
 
    my $total = $self->total_scroll;
    $self->log->info("export_as_csv: total [$total] for index [$index]");
@@ -2044,19 +2067,32 @@ sub export_as_csv {
    while (my $next = $self->next_scroll(10000)) {
       for my $this (@$next) {
          $read++;
+
+         if (defined($cb)) {
+            $this = $cb->($this);
+            if (! defined($this)) {
+               $self->log->error("export_as_csv: callback failed for index [$index] ".
+                  "at read [$read], skipping single entry");
+               $skipped++;
+               next;
+            }
+         }
+
          my $id = $this->{_id};
          my $doc = $this->{_source};
          my $type = $this->{_type} || 'doc';  # Prepare for when types will be removed from ES
          if (! exists($types{$type})) {
-            my $fields = $self->list_index_fields($index, $type) or return;
-            #$types{$type}{header} = [ '_id', sort { $a cmp $b } keys %$doc ];
-            $types{$type}{header} = [ '_id', @$fields ];
-            if ($type ne 'doc') {
-               $types{$type}{output} = "$index:$type.csv";
+            # If not given, we guess the CSV fields to use.
+            if (! defined($csv_header)) {
+               my $fields = $self->list_index_fields($index, $type) or return;
+               #$types{$type}{header} = [ '_id', sort { $a cmp $b } keys %$doc ];
+               $types{$type}{header} = [ '_id', @$fields ];
             }
             else {
-               $types{$type}{output} = "$index.csv";
+               $types{$type}{header} = [ '_id', @$csv_header ];
             }
+
+            $types{$type}{output} = "$index:$type.csv";
 
             # Verify it has not been exported yet
             if (-f $done) {

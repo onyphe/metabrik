@@ -262,6 +262,8 @@ sub write {
       }
    }
 
+   my $header_count = @header;
+
    my $is_new_file = (! -f $output);
    my $fd = $fw->open or return;
 
@@ -342,12 +344,23 @@ sub write {
       }
 
       @fields = map { defined($_) ? $_ : '' } @fields;
+
+      # If this entry has less fields than the header, we add null entries.
+      my $field_count = @fields;
+      if ($field_count < $header_count) {
+         my $diff = $header_count - $field_count;
+         for (1..$diff) {
+            push @fields, '';
+         }
+      }
+
       if ($self->use_quoting) {
          for (@fields) {
             s/"/${escape}"/g;
             $_ = '"'.$_.'"';
          }
       }
+
       my $data = join($separator, @fields)."\n";
 
       my $r = $fw->write($data);
