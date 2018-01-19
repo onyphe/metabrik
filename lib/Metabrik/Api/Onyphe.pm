@@ -37,6 +37,7 @@ sub brik_properties {
         md5 => [ qw(sum apikey|OPTIONAL) ],
         list_ports => [ qw(since apikey|OPTIONAL)],
         search => [ qw(query apikey|OPTIONAL) ],
+        user => [ qw(apikey|OPTIONAL) ],
       },
    };
 }
@@ -187,6 +188,13 @@ sub search {
    my ($query, $apikey) = @_;
 
    return $self->api('search', $query, $apikey);
+}
+
+sub user {
+   my $self = shift;
+   my ($apikey) = @_;
+
+   return $self->api('user', '', $apikey);
 }
 
 1;

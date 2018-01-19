@@ -63,9 +63,10 @@ sub brik_properties {
          total_scroll => [ ],
          next_scroll => [ qw(count|OPTIONAL) ],
          index_document => [ qw(document index|OPTIONAL type|OPTIONAL hash|OPTIONAL id|OPTIONAL) ],
-         update_document => [ qw(document id index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
          index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL hash|OPTIONAL id|OPTIONAL) ],
-         bulk_flush => [ ],
+         update_document => [ qw(document id index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
+         update_document_bulk => [ qw(document index|OPTIONAL type|OPTIONAL hash|OPTIONAL id|OPTIONAL) ],
+         bulk_flush => [ qw(index|OPTIONAL) ],
          query => [ qw($query_hash index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
          count => [ qw(index|OPTIONAL type|OPTIONAL) ],
          get_from_id => [ qw(id index|OPTIONAL type|OPTIONAL) ],
@@ -219,6 +220,7 @@ sub open {
       dead_timeout => 120,  # seconds, detault 60
       max_dead_timeout => 3600,  # seconds, default 3600
       sniff_request_timeout => 15, # seconds, default 2
+      #trace_to => 'Stderr',  # For debug purposes
    );
    if (! defined($es)) {
       return $self->log->error("open: failed");
@@ -559,8 +561,62 @@ sub index_bulk {
    return $r;
 }
 
+sub update_document_bulk {
+   my $self = shift;
+   my ($doc, $index, $type, $hash, $id) = @_;
+
+   my $bulk = $self->_bulk;
+   $index ||= $self->index;
+   $type ||= $self->type;
+   $self->brik_help_run_undef_arg('open_bulk_mode', $bulk) or return;
+   $self->brik_help_run_undef_arg('update_document_bulk', $doc) or return;
+   $self->brik_help_set_undef_arg('index', $index) or return;
+   $self->brik_help_set_undef_arg('type', $type) or return;
+
+   my %args = (
+      index => $index,
+      type => $type,
+      doc => $doc,
+   );
+   if (defined($id)) {
+      $args{id} = $id;
+   }
+
+   if (defined($hash)) {
+      $self->brik_help_run_invalid_arg('update_document_bulk', $hash, 'HASH') or return;
+      %args = ( %args, %$hash );
+   }
+
+   my $r;
+   eval {
+      $r = $bulk->update(\%args);
+   };
+   if ($@) {
+      chomp($@);
+      my $p = $self->parse_error_string($@);
+      if (defined($p) && exists($p->{class})) {
+         my $class = $p->{class};
+         my $code = $p->{code};
+         my $node = $p->{node};
+         return $self->log->error("update_document_bulk: failed for index [$index] ".
+            "with error [$class] code [$code] for node [$node]");
+      }
+      else {
+         return $self->log->error("update_document_bulk: index failed for ".
+            "index [$index]: [$@]");
+      }
+   }
+
+   return $r;
+}
+
+#
+# We may have to call refresh_index after a bulk_flush, so we give an additional 
+# optional Argument for given index.
+#
 sub bulk_flush {
    my $self = shift;
+   my ($index) = @_;
 
    my $bulk = $self->_bulk;
    $self->brik_help_run_undef_arg('open_bulk_mode', $bulk) or return;
@@ -592,6 +648,10 @@ RETRY:
                "[$@]");
       sleep 10;
       goto RETRY;
+   }
+
+   if (defined($index)) {
+      $self->refresh_index($index);
    }
 
    return $r;
