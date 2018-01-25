@@ -272,7 +272,9 @@ sub tunnel_loop {
                   }
                   else {
                      $self->log->verbose("start: read from tunnel [".length($buf)."]");
+                     $self->log->debug("start: read from tunnel [$buf]");
                      $self->log->verbose("start: write to client [".length($buf)."]");
+                     $self->log->debug("start: write to client [$buf]");
                      $this_client->syswrite($buf);
                   }
                }
