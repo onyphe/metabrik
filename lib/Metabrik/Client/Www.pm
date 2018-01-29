@@ -497,8 +497,8 @@ sub set_request_header {
    my $self = shift;
    my ($header, $value) = @_;
 
-   $self->brik_help_run_undef_arg('set_header', $header) or return;
-   $self->brik_help_run_undef_arg('set_header', $value) or return;
+   $self->brik_help_run_undef_arg('set_request_header', $header) or return;
+   $self->brik_help_run_undef_arg('set_request_header', $value) or return;
 
    my $headers = $self->add_headers;
    $headers->{$header} = $value;
