@@ -69,6 +69,7 @@ sub read {
    my $fr = $self->_open($input) or return;
    my $data = $fr->read or return;
    $fr->close;
+   $self->_fr(undef);
 
    return $data;
 }
@@ -131,6 +132,7 @@ sub read_split_by_blank_line {
    }
 
    $fr->close;
+   $self->_fr(undef);
 
    return \@chunks;
 }
