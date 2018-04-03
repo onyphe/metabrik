@@ -16,6 +16,7 @@ sub brik_properties {
       author => 'GomoR <GomoR[at]metabrik.org>',
       license => 'http://opensource.org/licenses/BSD-3-Clause',
       attributes => {
+         datadir => [ qw(datadir) ],
          nodes => [ qw(node_list) ],
          cxn_pool => [ qw(Sniff|Static|Static::NoPing) ],
          date => [ qw(date) ],
@@ -2077,6 +2078,7 @@ sub export_as_csv {
    $self->brik_help_run_undef_arg('export_as_csv', $size) or return;
 
    my $max = $self->max;
+   my $datadir = $self->datadir;
 
    $self->log->debug("export_as_csv: selecting scroll Command...");
 
@@ -2121,7 +2123,7 @@ sub export_as_csv {
    my $skipped = 0;
    my $exported = 0;
    my $start = time();
-   my $done = "$index.exported";
+   my $done = $datadir."/$index.exported";
    my $start_time = time();
    my %chunk = ();
    while (my $next = $self->next_scroll(10000)) {
@@ -2152,7 +2154,7 @@ sub export_as_csv {
                $types{$type}{header} = [ '_id', @$csv_header ];
             }
 
-            $types{$type}{output} = "$index:$type.csv";
+            $types{$type}{output} = $datadir."/$index:$type.csv";
 
             # Verify it has not been exported yet
             if (-f $done) {
@@ -2229,6 +2231,8 @@ sub export_as_csv {
 
    # Say the file has been processed, and put resulting stats.
    $fd->write($result, $done) or return;
+
+   $self->log->info("export_as_csv: done.");
 
    return $result;
 }
