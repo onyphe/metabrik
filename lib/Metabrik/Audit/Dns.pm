@@ -61,14 +61,15 @@ sub version {
          debug => $self->log->level > 2 ? 1 : 0,
          udp_timeout => $self->rtimeout,
          tcp_timeout => $self->rtimeout,
+         #usevc => 1,  # Force TCP
       ) or return $self->log->error("version: Net::DNS::Resolver::new failed");
    
       my $version = 'undef';
       my $res = $dns->send('version.bind', 'TXT', 'CH');
       if (defined($res) && defined($res->{answer})) {
          my $rr = $res->{answer}->[0];
-         if (defined($rr) && defined($rr->{rdata})) {
-            $version = unpack("H*", $rr->{rdata});
+         if (defined($rr) && (defined($rr->{rdata}) || defined($rr->{txtdata}))) {
+            $version = unpack("H*", $rr->{rdata} || $rr->{txtdata}->[0]->value);
          }
       }
 

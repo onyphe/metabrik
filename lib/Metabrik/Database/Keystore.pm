@@ -55,6 +55,7 @@ sub decrypt {
 
    $db ||= $self->db;
    $self->brik_help_run_undef_arg('decrypt', $db) or return;
+   $self->brik_help_run_file_not_found('decrypt', $db) or return;
 
    my $read = $self->read($db) or return;
 

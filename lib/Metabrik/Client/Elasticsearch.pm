@@ -80,6 +80,7 @@ sub brik_properties {
          show_nodes => [ ],
          show_health => [ ],
          show_recovery => [ ],
+         show_allocation => [ ],
          list_indices => [ qw(regex|OPTIONAL) ],
          get_indices => [ ],
          get_index => [ qw(index|indices_list) ],
@@ -201,7 +202,7 @@ sub open {
    my $timeout = $self->rtimeout;
 
    my $nodes_str = join('|', @$nodes);
-   $self->log->verbose("open: using nodes [$nodes_str]");
+   $self->log->debug("open: using nodes [$nodes_str]");
 
    #
    # Timeout description here:
@@ -1053,6 +1054,33 @@ sub show_recovery {
 
    if (@lines == 0) {
       $self->log->warning("show_recovery: nothing returned, no index?");
+   }
+
+   return \@lines;
+}
+
+#
+# curl -s 'localhost:9200/_cat/allocation?v'
+#
+sub show_allocation {
+   my $self = shift;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+
+   my $r;
+   eval {
+      $r = $es->cat->allocation;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("show_allocation: failed: [$@]");
+   }
+
+   my @lines = split(/\n/, $r);
+
+   if (@lines == 0) {
+      $self->log->warning("show_allocation: nothing returned, no index?");
    }
 
    return \@lines;
