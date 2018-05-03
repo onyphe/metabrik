@@ -2231,10 +2231,12 @@ sub export_as_csv {
       }
    }
 
-   # Process remaining data waiting to be written
+   # Process remaining data waiting to be written and build output file list
+   my %files = ();
    for my $type (keys %types) {
       if (@{$chunk{$type}} > 0) {
          $fc->write($chunk{$type}, $types{$type}{output});
+         $files{$types{$type}{output}}++;
       }
    }
 
@@ -2255,6 +2257,7 @@ sub export_as_csv {
       complete => ($exported == $total) ? 1 : 0,
       duration => $duration,
       eps => $eps, 
+      files => [ sort { $a cmp $b } keys %files ],
    };
 
    # Say the file has been processed, and put resulting stats.
