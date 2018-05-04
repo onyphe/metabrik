@@ -302,13 +302,17 @@ sub open_scroll_scan_mode {
    $self->brik_help_run_undef_arg('open_scroll_scan_mode', $index) or return;
    $self->brik_help_run_undef_arg('open_scroll_scan_mode', $size) or return;
 
-   my $scroll = $es->scroll_helper(
-      index => $index,
-      search_type => 'scan',
-      size => $size,
-   );
-   if (! defined($scroll)) {
-      return $self->log->error("open_scroll_scan_mode: failed");
+   my $scroll;
+   eval {
+      $scroll = $es->scroll_helper(
+         index => $index,
+         search_type => 'scan',
+         size => $size,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("open_scroll_scan_mode: failed: $@");
    }
 
    $self->_scroll($scroll);
@@ -355,9 +359,13 @@ sub open_scroll {
    #
    # https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html
    #
-   my $scroll = $es->scroll_helper(%args);
-   if (! defined($scroll)) {
-      return $self->log->error("open_scroll: failed");
+   my $scroll;
+   eval {
+      $scroll = $es->scroll_helper(%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("open_scroll: failed: $@");
    }
 
    $self->_scroll($scroll);

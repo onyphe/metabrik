@@ -481,6 +481,7 @@ sub tcp_syn_receive_until_sender_exit {
 
    return { open => \%open, closed => \%closed };
 }
+
 sub tcp_syn_scan {
    my $self = shift;
    my ($ip_list, $port_list, $pps, $try) = @_;
