@@ -51,8 +51,10 @@ sub gunzip {
 
    $self->log->debug("gunzip: starting");
 
-   my $plain = Gzip::Faster::gunzip($data)
-      or return $self->log->error("gunzip: error");
+   my $plain = Gzip::Faster::gunzip($data);
+   if (! defined($plain)) {
+      return $self->log->error("gunzip: error");
+   }
 
    $self->log->debug("gunzip: finished");
 
@@ -71,8 +73,10 @@ sub gzip {
       return $self->log->error("gzip: empty data, nothing to compress");
    }
 
-   my $gzipped = Gzip::Faster::gzip($data)
-      or return $self->log->error("gzip: error");
+   my $gzipped = Gzip::Faster::gzip($data);
+   if (! defined($gzipped)) {
+      return $self->log->error("gzip: error");
+   }
 
    return \$gzipped;
 }
