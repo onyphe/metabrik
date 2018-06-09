@@ -47,6 +47,7 @@ sub brik_properties {
          is_started => [ qw(name) ],
          is_stopped => [ qw(name) ],
          get_current_snapshot_id => [ qw(name) ],
+         restart_vboxnet => [ qw(device) ],
       },
       require_modules => {
          'Data::Dumper' => [ ],
@@ -435,6 +436,18 @@ sub get_current_snapshot_id {
    }
 
    return 0;
+}
+
+sub reset_vboxnet {
+   my $self = shift;
+   my ($device) = @_;
+
+   $self->brik_help_run_undef_arg('reset_vboxnet', $device) or return;
+
+   my $lines1 = $self->command("hostonlyif remove $device") or return;
+   my $lines2 = $self->command("hostonlyif create") or return;
+
+   return [ $lines1, $lines2 ];
 }
 
 1;
