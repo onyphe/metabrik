@@ -398,8 +398,10 @@ sub tcp_syn_stop_receiver {
       return 1;
    }
 
+   $self->log->debug("tcp_syn_stop_receiver: closing nr...");
    $nr->close;
    $self->_nr(undef);
+   $self->log->debug("tcp_syn_stop_receiver: closing nr...done");
 
    return 1;
 }

@@ -229,8 +229,14 @@ sub close {
       return 1;
    }
 
+   # Free saved frames.
+   $self->log->info("close: flush frames");
+   $dump->flush;
+
+   $self->log->debug("close: closing dump...");
    $dump->stop;
    $self->_dump(undef);
+   $self->log->debug("close: closing dump...done");
 
    return 1;
 }
