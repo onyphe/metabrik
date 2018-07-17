@@ -36,7 +36,12 @@ sub brik_properties {
         forward => [ qw(ip apikey|OPTIONAL) ],
         md5 => [ qw(sum apikey|OPTIONAL) ],
         list_ports => [ qw(since apikey|OPTIONAL)],
-        search => [ qw(query apikey|OPTIONAL) ],
+        search_datascan => [ qw(query apikey|OPTIONAL) ],
+        search_inetnum => [ qw(query apikey|OPTIONAL) ],
+        search_pastries => [ qw(query apikey|OPTIONAL) ],
+        search_resolver => [ qw(query apikey|OPTIONAL) ],
+        search_synscan => [ qw(query apikey|OPTIONAL) ],
+        search_threatlist => [ qw(query apikey|OPTIONAL) ],
         user => [ qw(apikey|OPTIONAL) ],
       },
    };
@@ -44,15 +49,18 @@ sub brik_properties {
 
 sub api {
    my $self = shift;
-   my ($api, $arg, $apikey) = @_;
+   my ($api, $arg, $apikey, $page) = @_;
 
    $apikey ||= $self->apikey;
+   $page ||= 1;
    $self->brik_help_run_undef_arg('api', $api) or return;
    $self->brik_help_run_undef_arg('api', $arg) or return;
    my $ref = $self->brik_help_run_invalid_arg('api', $arg, 'SCALAR', 'ARRAY') or return;
    $self->brik_help_set_undef_arg('apikey', $apikey) or return;
 
    my $wait = $self->wait;
+
+   $api =~ s{_}{/}g;
 
    my $apiurl = $self->apiurl;
    $apiurl =~ s{/*$}{};
@@ -62,13 +70,13 @@ sub api {
    my @r = ();
    if ($ref eq 'ARRAY') {
       for my $this (@$arg) {
-         my $res = $self->api($api, $this, $apikey) or next;
+         my $res = $self->api($api, $this, $apikey, $page) or next;
          push @r, @$res;
       }
    }
    else {
    RETRY:
-      my $res = $self->get($apiurl.'/'.$api.'/'.$arg.'?k='.$apikey);
+      my $res = $self->get($apiurl.'/'.$api.'/'.$arg.'?k='.$apikey.'&page='.$page);
       my $code = $self->code;
       if ($code == 429) {
          $self->log->info("api: request limit reached, waiting before retry");
@@ -127,9 +135,9 @@ sub synscan {
 
 sub datascan {
    my $self = shift;
-   my ($ip_or_string, $apikey) = @_;
+   my ($ip_or_string, $apikey, $page) = @_;
 
-   return $self->api('datascan', $ip_or_string, $apikey);
+   return $self->api('datascan', $ip_or_string, $apikey, $page);
 }
 
 sub reverse {
@@ -183,11 +191,46 @@ RETRY:
    return \@r;
 }
 
-sub search {
+sub search_datascan {
    my $self = shift;
    my ($query, $apikey) = @_;
 
-   return $self->api('search', $query, $apikey);
+   return $self->api('search_datascan', $query, $apikey);
+}
+
+sub search_inetnum {
+   my $self = shift;
+   my ($query, $apikey) = @_;
+
+   return $self->api('search_inetnum', $query, $apikey);
+}
+
+sub search_pastries {
+   my $self = shift;
+   my ($query, $apikey) = @_;
+
+   return $self->api('search_pastries', $query, $apikey);
+}
+
+sub search_resolver {
+   my $self = shift;
+   my ($query, $apikey) = @_;
+
+   return $self->api('search_resolver', $query, $apikey);
+}
+
+sub search_synscan {
+   my $self = shift;
+   my ($query, $apikey) = @_;
+
+   return $self->api('search_synscan', $query, $apikey);
+}
+
+sub search_threatlist {
+   my $self = shift;
+   my ($query, $apikey) = @_;
+
+   return $self->api('search_threatlist', $query, $apikey);
 }
 
 sub user {

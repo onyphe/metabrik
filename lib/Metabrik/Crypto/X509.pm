@@ -322,6 +322,26 @@ sub parse_certificate_string {
       return $self->log->error("parse_certificate_string: empty string found");
    }
 
+   # Patch fonction to add a defined() check.
+   {
+      no warnings 'redefine';
+
+      *Crypt::X509::pubkey_components = sub {
+         my $self = shift;
+         my $pubkeyalg = $self->PubKeyAlg();
+         if (defined($pubkeyalg) && $pubkeyalg eq 'RSA') {
+            my $parser = Crypt::X509::_init('RSAPubKeyInfo');
+            my $values = $parser->decode(
+               $self->{tbsCertificate}{subjectPublicKeyInfo}{subjectPublicKey}[0]
+            );
+            return $values;
+         }
+         else {
+            return undef;
+         }
+      };
+   };
+
    my $decoded = Crypt::X509->new(cert => $string);
    if ($decoded->error) {
       return $self->log->error("parse_certificate_string: failed: ".$decoded->error);;

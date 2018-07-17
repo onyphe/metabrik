@@ -84,12 +84,10 @@ sub open {
       return $self->log->error($self->brik_help_set('overwrite'));
    }
 
-   if ($self->unbuffered) {
-      my $previous_default = select(STDOUT);
-      select($out);
-      $|++;
-      select($previous_default);          
-   }
+   my $previous_default = select(STDOUT);
+   select($out);
+   $| = $self->unbuffered ? 1 : 0;
+   select($previous_default);          
 
    $self->log->debug("open: fd [$out]");
 

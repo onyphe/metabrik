@@ -230,7 +230,7 @@ sub close {
    }
 
    # Free saved frames.
-   $self->log->info("close: flush frames");
+   $self->log->debug("close: flush frames");
    $dump->flush;
 
    $self->log->debug("close: closing dump...");

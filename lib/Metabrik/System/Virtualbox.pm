@@ -47,7 +47,7 @@ sub brik_properties {
          is_started => [ qw(name) ],
          is_stopped => [ qw(name) ],
          get_current_snapshot_id => [ qw(name) ],
-         restart_vboxnet => [ qw(device) ],
+         reset_vboxnet => [ qw(device) ],
       },
       require_modules => {
          'Data::Dumper' => [ ],

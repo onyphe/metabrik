@@ -250,6 +250,14 @@ sub open_bulk_mode {
    my %args = (
       index => $index,
       type => $type,
+      on_error => sub {
+         #my ($action, $response, $i) = @_;
+
+         #print Data::Dumper::Dumper($action)."\n";
+         #print Data::Dumper::Dumper($response)."\n";
+         #print Data::Dumper::Dumper($i)."\n";
+         print Data::Dumper::Dumper(\@_)."\n";
+      },
    );
 
    if ($self->use_bulk_autoflush) {
@@ -275,9 +283,13 @@ sub open_bulk_mode {
       $self->log->info("open_bulk_mode: opening without automatic flushing");
    }
 
-   my $bulk = $es->bulk_helper(%args);
-   if (! defined($bulk)) {
-      return $self->log->error("open_bulk_mode: failed");
+   my $bulk;
+   eval {
+      $bulk = $es->bulk_helper(%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("open_bulk_mode: failed: [$@]");
    }
 
    $self->_bulk($bulk);
@@ -370,7 +382,7 @@ sub open_scroll {
 
    $self->_scroll($scroll);
 
-   $self->log->info("open_scroll: opened with size [$size] and timeout [${timeout}s]");
+   $self->log->verbose("open_scroll: opened with size [$size] and timeout [${timeout}s]");
 
    return $self->nodes;
 }
@@ -950,6 +962,8 @@ sub delete_by_query {
 
 #
 # Search::Elasticsearch::Client::2_0::Direct::Cat
+#
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-indices.html
 #
 sub show_indices {
    my $self = shift;
@@ -2383,7 +2397,16 @@ sub import_from_csv {
          }
       }
 
-      my $r = $self->index_bulk($h, $index, $type, $hash, $id);
+      #$self->log->info(Data::Dumper::Dumper($h));
+
+      my $r;
+      eval {
+         $r = $self->index_bulk($h, $index, $type, $hash, $id);
+      };
+      if ($@) {
+         chomp($@);
+         $self->log->warning("import_from_csv: error [$@]");
+      }
       if (! defined($r)) {
          $self->log->error("import_from_csv: bulk processing failed for index [$index] ".
             "at read [$read], skipping chunk");
