@@ -27,11 +27,14 @@ sub brik_properties {
       commands => {
         api => [ qw(api ip apikey|OPTIONAL) ],
         ip => [ qw(ip apikey|OPTIONAL) ],
+        geoloc => [ qw(ip) ],
         pastries => [ qw(ip apikey|OPTIONAL) ],
         inetnum => [ qw(ip apikey|OPTIONAL) ],
         threatlist => [ qw(ip apikey|OPTIONAL) ],
         synscan => [ qw(ip apikey|OPTIONAL) ],
         datascan => [ qw(ip|string apikey|OPTIONAL) ],
+        onionscan => [ qw(ip|string apikey|OPTIONAL) ],
+        sniffer => [ qw(ip apikey|OPTIONAL) ],
         reverse => [ qw(ip apikey|OPTIONAL) ],
         forward => [ qw(ip apikey|OPTIONAL) ],
         md5 => [ qw(sum apikey|OPTIONAL) ],
@@ -42,6 +45,8 @@ sub brik_properties {
         search_resolver => [ qw(query apikey|OPTIONAL) ],
         search_synscan => [ qw(query apikey|OPTIONAL) ],
         search_threatlist => [ qw(query apikey|OPTIONAL) ],
+        search_onionscan => [ qw(query apikey|OPTIONAL) ],
+        search_sniffer => [ qw(query apikey|OPTIONAL) ],
         user => [ qw(apikey|OPTIONAL) ],
       },
    };
@@ -52,7 +57,6 @@ sub api {
    my ($api, $arg, $apikey, $page) = @_;
 
    $apikey ||= $self->apikey;
-   $page ||= 1;
    $self->brik_help_run_undef_arg('api', $api) or return;
    $self->brik_help_run_undef_arg('api', $arg) or return;
    my $ref = $self->brik_help_run_invalid_arg('api', $arg, 'SCALAR', 'ARRAY') or return;
@@ -76,7 +80,12 @@ sub api {
    }
    else {
    RETRY:
-      my $res = $self->get($apiurl.'/'.$api.'/'.$arg.'?k='.$apikey.'&page='.$page);
+      my $url = $apiurl.'/'.$api.'/'.$arg.'?k='.$apikey;
+      if (defined($page)) {
+         $url .= '&page='.$page;
+      }
+
+      my $res = $self->get($url);
       my $code = $self->code;
       if ($code == 429) {
          $self->log->info("api: request limit reached, waiting before retry");
@@ -96,6 +105,13 @@ sub api {
    }
 
    return \@r;
+}
+
+sub geoloc {
+   my $self = shift;
+   my ($ip) = @_;
+
+   return $self->api('geoloc', $ip);
 }
 
 sub ip {
@@ -138,6 +154,20 @@ sub datascan {
    my ($ip_or_string, $apikey, $page) = @_;
 
    return $self->api('datascan', $ip_or_string, $apikey, $page);
+}
+
+sub onionscan {
+   my $self = shift;
+   my ($onion, $apikey, $page) = @_;
+
+   return $self->api('onionscan', $onion, $apikey, $page);
+}
+
+sub sniffer {
+   my $self = shift;
+   my ($ip, $apikey, $page) = @_;
+
+   return $self->api('sniffer', $ip, $apikey, $page);
 }
 
 sub reverse {
@@ -231,6 +261,20 @@ sub search_threatlist {
    my ($query, $apikey) = @_;
 
    return $self->api('search_threatlist', $query, $apikey);
+}
+
+sub search_onionscan {
+   my $self = shift;
+   my ($query, $apikey) = @_;
+
+   return $self->api('search_onionscan', $query, $apikey);
+}
+
+sub search_sniffer {
+   my $self = shift;
+   my ($query, $apikey) = @_;
+
+   return $self->api('search_sniffer', $query, $apikey);
 }
 
 sub user {
