@@ -29,6 +29,7 @@ sub brik_properties {
          ssh_port => 22,
          ssh_args => '',
          args => '-azv',
+         capture_stderr => 1,
       },
       need_packages => {
          ubuntu => [ qw(rsync) ],
@@ -60,7 +61,7 @@ sub sync {
       $cmd .= " $args $source $destination";
    }
 
-   return $self->execute($cmd);
+   return $self->capture($cmd);
 }
 
 1;
