@@ -28,6 +28,7 @@ sub brik_properties {
          install => [ ], # Inherited
          command => [ qw(command) ],
          list => [ ],
+         register => [ qw(file_vbox) ],
          start => [ qw(name type|OPTIONAL) ],
          restore => [ qw(name type|OPTIONAL) ], # Alias for start
          stop => [ qw(name) ],
@@ -86,6 +87,20 @@ sub list {
    }
 
    return \%vms;
+}
+
+sub register {
+   my $self = shift;
+   my ($vbox) = @_;
+
+   $self->brik_help_run_undef_arg('register', $vbox) or return;
+   $self->brik_help_run_file_not_found('register', $vbox) or return;
+
+   if ($vbox !~ m{\.vbox$}) {
+      return $self->log->error("register: give a .vbox file as input");
+   }
+
+   return $self->command("registervm \"$vbox\"");
 }
 
 sub start {

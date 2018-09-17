@@ -114,7 +114,8 @@ sub brik_properties {
          get_settings => [ qw(index|indices_list|OPTIONAL name|names_list|OPTIONAL) ],
          put_settings => [ qw(settings_hash index|indices_list|OPTIONAL) ],
          set_index_readonly => [ qw(index|indices_list boolean|OPTIONAL) ],
-         reset_index_readonly => [ qw(index|indices_list) ],
+         reset_index_readonly => [ qw(index|indices_list|OPTIONAL) ],
+         list_index_readonly => [ ],
          set_index_number_of_replicas => [ qw(index|indices_list number) ],
          set_index_refresh_interval => [ qw(index|indices_list number) ],
          get_index_settings => [ qw(index|indices_list) ],
@@ -2111,21 +2112,71 @@ sub set_index_readonly {
 #  }
 #}
 #
+#
+# If it fails with the following error:
+#
+# [2018-09-12T13:38:40,012][INFO ][logstash.outputs.elasticsearch] retrying failed action with response code: 403 ({"type"=>"cluster_block_exception", "reason"=>"blocked by: [FORBIDDEN/12/index read-only / allow delete (api)];"})
+#
+# Use Kibana dev console and copy/paste both requests:
+#
+# PUT _settings
+# {
+#    "index": {
+#       "blocks": {
+#          "read_only_allow_delete": "false"
+#       }
+#    }
+# }
+#    
+# PUT your_index/_settings
+# {
+#    "index": {
+#       "blocks": {
+#          "read_only_allow_delete": "false"
+#       }
+#    }
+# }
+#
 sub reset_index_readonly {
    my $self = shift;
    my ($indices) = @_;
 
+   $indices ||= '*';
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
-   $self->brik_help_run_undef_arg('reset_index_readonly', $indices) or return;
    $self->brik_help_run_invalid_arg('reset_index_readonly', $indices, 'ARRAY', 'SCALAR')
       or return;
 
    my $settings = {
-      'blocks.read_only_allow_delete' => undef,
+      'blocks.read_only_allow_delete' => 'false',
    };
 
-   return $self->put_settings($settings, $indices);
+   my $r = $self->put_settings($settings);
+   $self->log->info(Data::Dumper::Dumper($r));
+
+   $r = $self->put_settings($settings, $indices);
+   $self->log->info(Data::Dumper::Dumper($r));
+
+   return 1;
+}
+
+sub list_index_readonly {
+   my $self = shift;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+
+   my $list = $self->list_indices or return;
+
+   my @indices = ();
+   for my $this (@$list) {
+      my $ro = $self->get_index_readonly($this) or next;
+      if (defined($ro->{index}{provided_name})) {
+         push @indices, $ro->{index}{provided_name};
+      }
+   }
+
+   return \@indices;
 }
 
 sub set_index_number_of_replicas {
