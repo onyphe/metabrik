@@ -99,6 +99,9 @@
       "Metabrik::Client::Elasticsearch" : {
          "file" : "lib/Metabrik/Client/Elasticsearch.pm"
       },
+      "Metabrik::Client::Elasticsearch::Cluster" : {
+         "file" : "lib/Metabrik/Client/Elasticsearch/Cluster.pm"
+      },
       "Metabrik::Client::Elasticsearch::Query" : {
          "file" : "lib/Metabrik/Client/Elasticsearch/Query.pm"
       },
