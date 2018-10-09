@@ -33,6 +33,7 @@ sub brik_properties {
          read => [ qw(input) ],
          read_line => [ qw(input count|OPTIONAL) ],
          read_split_by_blank_line => [ qw(input) ],
+         read_split_by_ini_block => [ qw(input) ],
          write => [ qw($data|$data_ref|$data_list output) ],
       },
       require_modules => {
@@ -127,6 +128,29 @@ sub read_split_by_blank_line {
 
    my @chunks = ();
    while (my $this = $fr->read_until_blank_line) {
+      push @chunks, $this;
+      last if $fr->eof;
+   }
+
+   $fr->close;
+   $self->_fr(undef);
+
+   return \@chunks;
+}
+
+sub read_split_by_ini_block {
+   my $self = shift;
+   my ($input) = @_;
+
+   $input ||= $self->input;
+   $self->brik_help_run_undef_arg('read_split_by_ini_block', $input) or return;
+
+   my $fr = $self->_open($input) or return;
+   $fr->skip_comment(1);
+   $fr->skip_blank_line(1);
+
+   my @chunks = ();
+   while (my $this = $fr->read_until_ini_block) {
       push @chunks, $this;
       last if $fr->eof;
    }

@@ -93,6 +93,16 @@ sub match {
       return $self->log->error("match: invalid format for ip [$ip] or subnet [$subnet]");
    }
 
+   if ($self->is_ipv4($ip) && ! $self->is_ipv4($subnet)) {
+      return $self->log->error("match: cannot match IPv4 [$ip] against IPv6 ".
+         "subnet [$subnet]");
+   }
+
+   if ($self->is_ipv6($ip) && ! $self->is_ipv6($subnet)) {
+      return $self->log->error("match: cannot match IPv6 [$ip] against IPv4 ".
+         "subnet [$subnet]");
+   }
+
    if (Net::CIDR::cidrlookup($ip, $subnet)) {
       $self->log->debug("match: $ip is in the same subnet as $subnet");
       return 1;

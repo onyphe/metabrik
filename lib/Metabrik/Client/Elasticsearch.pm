@@ -68,7 +68,7 @@ sub brik_properties {
          cancel_reindex_task => [ qw(id) ],
          get_taskid => [ qw(id) ],
          show_reindex_progress => [ ],
-         loop_show_reindex_progress => [ ],
+         loop_show_reindex_progress => [ qw(seconds|OPTIONAL) ],
          index_document => [ qw(document index|OPTIONAL type|OPTIONAL hash|OPTIONAL id|OPTIONAL) ],
          index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL hash|OPTIONAL id|OPTIONAL) ],
          index_bulk_from_list => [ qw(document_list index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
@@ -647,13 +647,15 @@ sub show_reindex_progress {
 
 sub loop_show_reindex_progress {
    my $self = shift;
+   my ($sec) = @_;
 
+   $sec ||= 60;
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
 
    while (1) {
       $self->show_reindex_progress or return;
-      sleep(60);
+      sleep($sec);
    }
 
    return 1;
@@ -2128,7 +2130,7 @@ sub set_index_readonly {
 #    }
 # }
 #    
-# PUT your_index/_settings
+# PUT _all/_settings
 # {
 #    "index": {
 #       "blocks": {
