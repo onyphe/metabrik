@@ -41,7 +41,7 @@ sub brik_properties {
 sub brik_init {
    my $self = shift;
 
-   my $limit = 16_384;
+   my $limit = 200_000;
    my $r = BSD::Resource::setrlimit(BSD::Resource::RLIMIT_OPEN_MAX(), $limit, $limit);
    if (! defined($r)) {
       return $self->log->error("brik_init: failed to set open file limit to [$limit]");

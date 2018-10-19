@@ -82,7 +82,7 @@ sub brik_properties {
          delete_index => [ qw(index|indices_list) ],
          update_alias => [ qw(new_index alias) ],
          delete_document => [ qw(index type id) ],
-         delete_by_query => [ qw($query_hash index type) ],
+         delete_by_query => [ qw($query_hash index type proceed|OPTIONAL) ],
          show_indices => [ qw(string_filter|OPTIONAL) ],
          show_nodes => [ ],
          show_health => [ ],
@@ -1170,7 +1170,7 @@ sub delete_document {
 #
 sub delete_by_query {
    my $self = shift;
-   my ($query, $index, $type) = @_;
+   my ($query, $index, $type, $proceed) = @_;
 
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
@@ -1186,6 +1186,10 @@ sub delete_by_query {
       type => $type,
       body => $query,
    );
+
+   if (defined($proceed) && $proceed) {
+      $args{conflicts} = 'proceed';
+   }
 
    my $r;
    eval {
