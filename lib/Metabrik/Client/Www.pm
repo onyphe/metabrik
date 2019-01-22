@@ -112,7 +112,7 @@ sub create_user_agent {
    my $self = shift;
    my ($uri, $username, $password) = @_;
 
-   $self->log->verbose("create_user_agent: creating agent");
+   $self->log->debug("create_user_agent: creating agent");
 
    $uri ||= $self->uri;
    if ($self->ssl_verify) {
@@ -198,7 +198,7 @@ sub create_user_agent {
    $username = defined($username) ? $username : $self->username;
    $password = defined($password) ? $password : $self->password;
    if (defined($username) && defined($password)) {
-      $self->log->verbose("create_user_agent: using Basic authentication");
+      $self->log->debug("create_user_agent: using Basic authentication");
       $mech->cookie_jar({});
       $mech->credentials($username, $password);
    }
