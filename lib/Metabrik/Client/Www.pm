@@ -32,6 +32,7 @@ sub brik_properties {
          max_redirects => [ qw(count) ],
          client => [ qw(object) ],
          _last => [ qw(object|INTERNAL) ],
+         _last_code => [ qw(code|INTERNAL) ],
       },
       attributes_default => {
          ssl_verify => 0,
@@ -74,6 +75,7 @@ sub brik_properties {
          mirror => [ qw(url|$url_list output|OPTIONAL datadir|OPTIONAL) ],
          parse => [ qw(html) ],
          get_last => [ ],
+         get_last_code => [ ],
       },
       require_modules => {
          'Progress::Any::Output' => [ ],
@@ -84,6 +86,7 @@ sub brik_properties {
          'LWP::UserAgent' => [ ],
          'LWP::UserAgent::ProgressAny' => [ ],
          'HTTP::Request' => [ ],
+         'HTTP::Request::Common' => [ ],
          'WWW::Mechanize' => [ ],
          'Mozilla::CA' => [ ],
          'HTML::Form' => [ ],
@@ -256,6 +259,11 @@ sub _method {
       }
       if ($method eq 'post' || $method eq 'put') {
          $response = $client->$method($uri, Content => $data);
+      }
+      elsif ($method eq 'patch') {
+         # https://stackoverflow.com/questions/23910962/how-to-send-a-http-patch-request-with-lwpuseragent
+         my $req = HTTP::Request::Common::PATCH($uri, [ %$data ]);
+         $response = $client->request($req);
       }
       elsif ($method eq 'options' || $method eq 'patch') {
          my $req = HTTP::Request->new($method, $uri, $add_headers);
@@ -790,12 +798,13 @@ sub mirror {
          return $self->log->error("mirror: mirroring URL [$url] to local file [$output] failed: $@");
       }
       my $code = $rc->code;
+      $self->_last_code($code);
       if ($code == 200) {
          push @files, $output;
-         $self->log->info("mirror: downloading URL [$url] to local file [$output] done");
+         $self->log->verbose("mirror: downloading URL [$url] to local file [$output] done");
       }
       elsif ($code == 304) { # Not modified
-         $self->log->info("mirror: file [$output] not modified since last check");
+         $self->log->verbose("mirror: file [$output] not modified since last check");
       }
       else {
          return $self->log->error("mirror: error while mirroring URL [$url] with code: [$code]");
@@ -818,6 +827,12 @@ sub get_last {
    my $self = shift;
 
    return $self->_last;
+}
+
+sub get_last_code {
+   my $self = shift;
+
+   return $self->_last_code;
 }
 
 1;
