@@ -195,8 +195,8 @@ sub create_user_agent {
       }
    }
 
-   $username ||= $self->username;
-   $password ||= $self->password;
+   $username = defined($username) ? $username : $self->username;
+   $password = defined($password) ? $password : $self->password;
    if (defined($username) && defined($password)) {
       $self->log->verbose("create_user_agent: using Basic authentication");
       $mech->cookie_jar({});
@@ -228,8 +228,8 @@ sub _method {
 
    $self->timeout(0);
 
-   $username ||= $self->username;
-   $password ||= $self->password;
+   $username = defined($username) ? $username : $self->username;
+   $password = defined($password) ? $password : $self->password;
    my $client = $self->client;
    if (! defined($self->client)) {
       $client = $self->create_user_agent($uri, $username, $password) or return;
