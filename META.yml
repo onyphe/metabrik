@@ -23,8 +23,6 @@ provides:
     file: lib/Metabrik/Api/Bluecoat.pm
   Metabrik::Api::Cvesearch:
     file: lib/Metabrik/Api/Cvesearch.pm
-  Metabrik::Api::Onyphe:
-    file: lib/Metabrik/Api/Onyphe.pm
   Metabrik::Api::Shodan:
     file: lib/Metabrik/Api/Shodan.pm
   Metabrik::Api::Splunk:
@@ -59,8 +57,12 @@ provides:
     file: lib/Metabrik/Client/Elasticsearch.pm
   Metabrik::Client::Elasticsearch::Cluster:
     file: lib/Metabrik/Client/Elasticsearch/Cluster.pm
+  Metabrik::Client::Elasticsearch::Indices:
+    file: lib/Metabrik/Client/Elasticsearch/Indices.pm
   Metabrik::Client::Elasticsearch::Query:
     file: lib/Metabrik/Client/Elasticsearch/Query.pm
+  Metabrik::Client::Elasticsearch::Tasks:
+    file: lib/Metabrik/Client/Elasticsearch/Tasks.pm
   Metabrik::Client::Imap:
     file: lib/Metabrik/Client/Imap.pm
   Metabrik::Client::Kafka:

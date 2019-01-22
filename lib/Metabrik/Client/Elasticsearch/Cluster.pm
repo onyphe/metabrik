@@ -34,6 +34,7 @@ sub brik_properties {
          put_settings => [ qw(settings) ],
          exclude => [ qw(node) ],
          include => [ qw(node) ],
+         reset_settings_transient_cluster_routing_allocation => [ ],
       },
    };
 }
@@ -151,6 +152,26 @@ sub include {
    return $self->put_settings($settings);
 }
 
+#
+# PUT _cluster/settings
+# {
+#   "transient": {
+#     "cluster.routing.allocation.*": null
+#   }
+# }
+#
+sub reset_settings_transient_cluster_routing_allocation {
+   my $self = shift;
+
+   my $settings = {
+      transient => {
+         'cluster.routing.allocation.*' => undef,
+      },
+   };
+
+   return $self->put_settings($settings);
+}
+
 1;
 
 __END__
@@ -161,7 +182,7 @@ Metabrik::Client::Elasticsearch::Cluster - client::elasticsearch::cluster Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2018, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2019, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

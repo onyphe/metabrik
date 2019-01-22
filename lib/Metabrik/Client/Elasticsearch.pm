@@ -72,6 +72,7 @@ sub brik_properties {
          index_document => [ qw(document index|OPTIONAL type|OPTIONAL hash|OPTIONAL id|OPTIONAL) ],
          index_bulk => [ qw(document index|OPTIONAL type|OPTIONAL hash|OPTIONAL id|OPTIONAL) ],
          index_bulk_from_list => [ qw(document_list index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
+         clean_deleted_from_index => [ qw(index) ],
          update_document => [ qw(document id index|OPTIONAL type|OPTIONAL hash|OPTIONAL) ],
          update_document_bulk => [ qw(document index|OPTIONAL type|OPTIONAL hash|OPTIONAL id|OPTIONAL) ],
          bulk_flush => [ qw(index|OPTIONAL) ],
@@ -89,8 +90,9 @@ sub brik_properties {
          show_recovery => [ ],
          show_allocation => [ ],
          list_indices => [ qw(regex|OPTIONAL) ],
-         get_indices => [ ],
+         get_indices => [ qw(string_filter|OPTIONAL) ],
          get_index => [ qw(index|indices_list) ],
+         get_index_stats => [ qw(index) ],
          list_index_types => [ qw(index) ],
          list_index_fields => [ qw(index) ],
          list_indices_version => [ qw(index|indices_list) ],
@@ -147,8 +149,8 @@ sub brik_properties {
          count_indices => [ ],
          list_indices_status => [ ],
          count_shards => [ ],
-         count_size => [ ],
-         count_total_size => [ ],
+         count_size => [ qw(string_filter|OPTIONAL) ],
+         count_total_size => [ qw(string_filter|OPTIONAL) ],
          count_count => [ ],
          list_datatypes => [ ],
          get_hits_total => [ ],
@@ -825,6 +827,46 @@ sub index_bulk_from_list {
    return $r;
 }
 
+#
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-forcemerge.html
+#
+sub clean_deleted_from_index {
+   my $self = shift;
+   my ($index) = @_;
+
+   $self->brik_help_run_undef_arg('clean_deleted_from_index', $index) or return;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+
+   my $indices = $self->_es->indices;
+
+   my $r;
+   eval {
+      $r = $indices->forcemerge(
+         index => $index,
+         only_expunge_deletes => 'true',
+      );
+   };
+   if ($@) {
+      chomp($@);
+      my $p = $self->parse_error_string($@);
+      if (defined($p) && exists($p->{class})) {
+         my $class = $p->{class};
+         my $code = $p->{code};
+         my $node = $p->{node};
+         return $self->log->error("clean_deleted_from_index: failed for index ".
+            "[$index] with error [$class] code [$code] for node [$node]");
+      }
+      else {
+         return $self->log->error("clean_deleted_from_index: index failed for ".
+            "index [$index]: [$@]");
+      }
+   }
+
+   return $r;
+}
+
 sub update_document_bulk {
    my $self = shift;
    my ($doc, $index, $type, $hash, $id) = @_;
@@ -1377,8 +1419,9 @@ sub list_indices {
 
 sub get_indices {
    my $self = shift;
+   my ($string) = @_;
 
-   my $lines = $self->show_indices or return;
+   my $lines = $self->show_indices($string) or return;
    if (@$lines == 0) {
       $self->log->warning("get_indices: no index found");
       return [];
@@ -1459,6 +1502,31 @@ sub get_index {
    }
 
    return $r;
+}
+
+sub get_index_stats {
+   my $self = shift;
+   my ($index) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('get_index', $index) or return;
+
+   my %args = (
+      index => $index,
+   );
+
+   my $r;
+   eval {
+      $r = $es->indices->stats(%args);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("get_index_stats: get failed for index [$index]: ".
+         "[$@]");
+   }
+
+   return $r->{indices}{$index};
 }
 
 sub list_index_types {
@@ -3364,8 +3432,9 @@ sub count_shards {
 
 sub count_size {
    my $self = shift;
+   my ($string) = @_;
 
-   my $indices = $self->get_indices or return;
+   my $indices = $self->get_indices($string) or return;
 
    my $fn = Metabrik::Format::Number->new_from_brik_init($self) or return;
    $fn->kibi_suffix("kb");
@@ -3385,8 +3454,9 @@ sub count_size {
 
 sub count_total_size {
    my $self = shift;
+   my ($string) = @_;
 
-   my $indices = $self->get_indices or return;
+   my $indices = $self->get_indices($string) or return;
 
    my $fn = Metabrik::Format::Number->new_from_brik_init($self) or return;
    $fn->kibi_suffix("kb");

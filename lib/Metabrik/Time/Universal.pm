@@ -292,6 +292,14 @@ sub to_timestamp {
          $timestamp .= sprintf(".%03d", $msec);
       }
    }
+   # 20190115
+   elsif ($string =~ m{^(\d{4})(\d{2})(\d{2})$}) {
+      $timestamp = Time::Local::timelocal(0, 0, 12, $3, $2-1, $1);
+      if ($self->use_hires) {
+         my $msec = 0;
+         $timestamp .= sprintf(".%03d", $msec);
+      }
+   }
    # Wed Nov  9 07:01:18 2016
    elsif ($string =~ m{^\S+\s+(\S+)\s+(\d+)\s+(\d+):(\d+):(\d+)\s+(\d+)$}) {
       my $mon = $1;
@@ -348,6 +356,25 @@ sub to_timestamp {
       if ($self->use_hires) {
          $timestamp .= sprintf(".%03d", $msec);
       }
+   }
+   # 2019-01-07 17:02
+   elsif ($string =~ m{^(\d{4})\-(\d{2})\-(\d{2}) (\d{2}):(\d{2})$}) {
+      my $mon = $2 - 1;
+      my $mday = $3;
+      my $hour = $4;
+      my $min = $5;
+      my $year = $1;
+      $timestamp = Time::Local::timelocal(0, $min, $hour, $mday, $mon, $year);
+   }
+   # 2019-01-07 11:40:24
+   elsif ($string =~ m{^(\d{4})\-(\d{2})\-(\d{2}) (\d{2}):(\d{2}):(\d{2})$}) {
+      my $mon = $2 - 1;
+      my $mday = $3;
+      my $hour = $4;
+      my $min = $5;
+      my $sec = $6;
+      my $year = $1;
+      $timestamp = Time::Local::timelocal($sec, $min, $hour, $mday, $mon, $year);
    }
    # 2000-10-20T00:00:00.000-04:00
    elsif ($string =~ m{^(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})}) {
