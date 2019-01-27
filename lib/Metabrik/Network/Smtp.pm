@@ -18,17 +18,29 @@ sub brik_properties {
       attributes => {
          server => [ qw(server) ],
          port => [ qw(port) ],
+         hello => [ qw(domain) ],
+         username => [ qw(username) ],
+         password => [ qw(password) ],
+         auth_mechanism => [ qw(none|GSSAPI) ],
          _smtp => [ qw(INTERNAL) ],
       },
       attributes_default => {
          server => 'localhost',
          port => 25,
+         auth_mechanism => 'none',
       },
       commands => {
-         open => [ qw(server|OPTIONAL port|OPTIONAL) ],
+         open => [ qw(server|OPTIONAL port|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
          close => [ ],
       },
+      need_packages => {
+         ubuntu => [ qw(libgssapi-perl) ],
+         debian => [ qw(libgssapi-perl) ],
+         freebsd => [ qw(p5-GSSAPI) ],
+      },
       require_modules => {
+         'Authen::SASL' => [ qw(Perl) ],
+         'Authen::SASL::Perl::GSSAPI' => [ ],
          'Net::SMTP' => [ ],
       },
    };
@@ -36,20 +48,58 @@ sub brik_properties {
 
 sub open {
    my $self = shift;
-   my ($server, $port) = @_;
+   my ($server, $port, $username, $password) = @_;
 
    $server ||= $self->server;
    $port ||= $self->port;
    $self->brik_help_run_undef_arg('open', $server) or return;
    $self->brik_help_run_undef_arg('open', $port) or return;
 
-   my $smtp = Net::SMTP->new(
+   $username ||= $self->username;
+   $password ||= $self->password;
+   if (!defined($username)) {
+      $username = '';
+   }
+   if (!defined($password)) {
+      $password = '';
+   }
+   my $auth_mechanism = $self->auth_mechanism;
+
+   my @args = (
       $server,
       Port => $port,
    );
-   if (! defined($smtp)) {
-      return $self->log->error("open: Net::SMTP new failed for server [$server] port [$port] with [$!]");
+
+   my $hello = $self->hello;
+   if (defined($hello)) {
+      push @args, ( Hello => $hello );
    }
+
+   my $smtp;
+   eval {
+      $smtp = Net::SMTP->new(@args);
+   };
+   if (! defined($smtp) || $@) {
+      chomp($@);
+      return $self->log->error("open: Net::SMTP new failed for server [$server] port [$port] with [$!]: [$@]");
+   }
+
+   if ($auth_mechanism ne 'none') {
+      my $sasl = Authen::SASL->new(
+          mechanism => $auth_mechanism,
+          callback => {
+            pass => $password,
+            user => $username,
+         }
+      );
+
+      $smtp->starttls();
+
+      my $r = $smtp->auth($sasl);
+      $self->log->info("open: auth: returned [$r]");
+   }
+
+   #$self->log->info(Data::Dumper::Dumper($smtp));
 
    return $self->_smtp($smtp);
 }

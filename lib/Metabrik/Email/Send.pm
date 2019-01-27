@@ -23,6 +23,10 @@ sub brik_properties {
          subject => [ qw(subject) ],
          server => [ qw(server) ],
          port => [ qw(port) ],
+         hello => [ qw(hello) ],
+         auth_mechanism => [ qw(none|GSSAPI) ],
+         username => [ qw(username) ],
+         password => [ qw(password) ],
       },
       attributes_default => {
          from => 'from@example.com',
