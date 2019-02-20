@@ -32,6 +32,7 @@ sub brik_properties {
          try => [ qw(count) ],
          use_bulk_autoflush => [ qw(0|1) ],
          use_indexing_optimizations => [ qw(0|1) ],
+         use_ignore_id => [ qw(0|1) ],
          csv_header => [ qw(fields) ],
          csv_encoded_fields => [ qw(fields) ],
          csv_object_fields => [ qw(fields) ],
@@ -54,6 +55,7 @@ sub brik_properties {
          max_flush_size => 1_000_000,
          use_bulk_autoflush => 1,
          use_indexing_optimizations => 0,
+         use_ignore_id => 0,
       },
       commands => {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
@@ -2193,15 +2195,6 @@ sub set_index_readonly {
 #
 # Use Kibana dev console and copy/paste both requests:
 #
-# PUT _settings
-# {
-#    "index": {
-#       "blocks": {
-#          "read_only_allow_delete": "false"
-#       }
-#    }
-# }
-#    
 # PUT _all/_settings
 # {
 #    "index": {
@@ -2218,18 +2211,18 @@ sub reset_index_readonly {
    $indices ||= '*';
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
-   $self->brik_help_run_invalid_arg('reset_index_readonly', $indices, 'ARRAY', 'SCALAR')
-      or return;
+   $self->brik_help_run_invalid_arg('reset_index_readonly', $indices,
+      'ARRAY', 'SCALAR') or return;
 
    my $settings = {
-      'blocks.read_only_allow_delete' => 'false',
+      blocks => {
+         read_only_allow_delete => 'false',
+      },
    };
 
-   my $r = $self->put_settings($settings);
-   $self->log->info(Data::Dumper::Dumper($r));
-
-   $r = $self->put_settings($settings, $indices);
-   $self->log->info(Data::Dumper::Dumper($r));
+   # Settings on '*' indices should be enough to reset for everyone.
+   my $r = $self->put_settings($settings, $indices);
+   #$self->log->info(Data::Dumper::Dumper($r));
 
    return 1;
 }
@@ -2839,7 +2832,7 @@ sub import_from_csv {
       $read++;
 
       my $h = {};
-      my $id = $this->{_id};
+      my $id = $self->use_ignore_id ? undef : $this->{_id};
       delete $this->{_id};
       for my $k (keys %$this) {
          my $value = $this->{$k};
