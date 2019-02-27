@@ -112,6 +112,9 @@ sub brik_properties {
          get_templates => [ ],
          list_templates => [ ],
          get_template => [ qw(name) ],
+         put_mapping => [ qw(index type mapping) ],
+         put_mapping_from_json_file => [ qw(index type file) ],
+         update_mapping_from_json_file => [ qw(file index type) ],
          put_template => [ qw(name template) ],
          put_template_from_json_file => [ qw(file) ],
          update_template_from_json_file => [ qw(file) ],
@@ -1999,6 +2002,35 @@ sub get_template {
    return $r;
 }
 
+sub put_mapping {
+   my $self = shift;
+   my ($index, $type, $mapping) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('put_mapping', $index) or return;
+   $self->brik_help_run_undef_arg('put_mapping', $type) or return;
+   $self->brik_help_run_undef_arg('put_mapping', $mapping) or return;
+   $self->brik_help_run_invalid_arg('put_mapping', $mapping, 'HASH')
+      or return;
+
+   my $r;
+   eval {
+      $r = $es->indices->put_mapping(
+         index => $index,
+         type => $type,
+         body => $mapping,
+      );
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("put_mapping: mapping failed ".
+         "for index [$index]: [$@]");
+   }
+
+   return $r;
+}
+
 #
 # http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html
 #
@@ -2010,7 +2042,8 @@ sub put_template {
    $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('put_template', $name) or return;
    $self->brik_help_run_undef_arg('put_template', $template) or return;
-   $self->brik_help_run_invalid_arg('put_template', $template, 'HASH') or return;
+   $self->brik_help_run_invalid_arg('put_template', $template, 'HASH')
+      or return;
 
    my $r;
    eval {
@@ -2021,10 +2054,65 @@ sub put_template {
    };
    if ($@) {
       chomp($@);
-      return $self->log->error("put_template: template failed for name [$name]: [$@]");
+      return $self->log->error("put_template: template failed ".
+         "for name [$name]: [$@]");
    }
 
    return $r;
+}
+
+sub put_mapping_from_json_file {
+   my $self = shift;
+   my ($index, $type, $json_file) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('put_mapping_from_json_file', $index)
+      or return;
+   $self->brik_help_run_undef_arg('put_mapping_from_json_file', $type)
+      or return;
+   $self->brik_help_run_undef_arg('put_mapping_from_json_file', $json_file)
+      or return;
+   $self->brik_help_run_file_not_found('put_mapping_from_json_file',
+      $json_file) or return;
+
+   my $fj = Metabrik::File::Json->new_from_brik_init($self) or return;
+   my $data = $fj->read($json_file) or return;
+
+   if (! exists($data->{mappings})) {
+      return $self->log->error("put_mapping_from_json_file: no mapping ".
+         "data found");
+   }
+
+   return $self->put_mapping($index, $type, $data->{mappings});
+}
+
+sub update_mapping_from_json_file {
+   my $self = shift;
+   my ($json_file, $index, $type) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('update_mapping_from_json_file',
+      $json_file) or return;
+   $self->brik_help_run_file_not_found('update_mapping_from_json_file',
+      $json_file) or return;
+   $self->brik_help_run_undef_arg('update_mapping_from_json_file',
+      $type) or return;
+   $self->brik_help_run_undef_arg('update_mapping_from_json_file',
+      $index) or return;
+
+   my $fj = Metabrik::File::Json->new_from_brik_init($self) or return;
+   my $data = $fj->read($json_file) or return;
+
+   if (! exists($data->{mappings})) {
+      return $self->log->error("update_mapping_from_json_file: ".
+         "no data found");
+   }
+
+   my $mappings = $data->{mappings};
+
+   return $self->put_mapping($index, $type, $mappings);
 }
 
 sub put_template_from_json_file {
@@ -2055,20 +2143,23 @@ sub update_template_from_json_file {
 
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
-   $self->brik_help_run_undef_arg('update_template_from_json_file', $json_file) or return;
-   $self->brik_help_run_file_not_found('update_template_from_json_file', $json_file)
-      or return;
+   $self->brik_help_run_undef_arg('update_template_from_json_file',
+      $json_file) or return;
+   $self->brik_help_run_file_not_found('update_template_from_json_file',
+      $json_file) or return;
 
    my $fj = Metabrik::File::Json->new_from_brik_init($self) or return;
    my $data = $fj->read($json_file) or return;
 
    if (! exists($data->{template}) && ! exists($data->{index_patterns})) {
-      return $self->log->error("put_template_from_json_file: no template name found");
+      return $self->log->error("put_template_from_json_file: ".
+         "no template name found");
    }
 
    my $name = $data->{template} || $data->{index_patterns};
 
-   $self->delete_template($name);  # We ignore errors, template may not exist.
+   # We ignore errors, template may not exist.
+   $self->delete_template($name);
 
    return $self->put_template($name, $data);
 }
