@@ -105,7 +105,7 @@ sub brik_properties {
          delete_alias => [ qw(index alias) ],
          is_mapping_exists => [ qw(index mapping) ],
          get_mappings => [ qw(index type|OPTIONAL) ],
-         create_index => [ qw(index) ],
+         create_index => [ qw(index shards|OPTIONAL) ],
          create_index_with_mappings => [ qw(index mappings) ],
          info => [ qw(nodes_list|OPTIONAL) ],
          version => [ qw(nodes_list|OPTIONAL) ],
@@ -1862,21 +1862,28 @@ sub get_mappings {
 #
 sub create_index {
    my $self = shift;
-   my ($index, $shards_count) = @_;
+   my ($index, $shards) = @_;
 
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('create_index', $index) or return;
-         
+
+   my %args = (
+      index => $index,
+   );
+
+   if (defined($shards)) {
+      $args{body}{settings}{index}{number_of_shards} = $shards;
+   }
+
    my $r;
    eval {
-      $r = $es->indices->create(
-         index => $index,
-      );
+      $r = $es->indices->create(%args);
    };
    if ($@) {
       chomp($@);
-      return $self->log->error("create_index: create failed for index [$index]: [$@]");
+      return $self->log->error("create_index: create failed ".
+         "for index [$index]: [$@]");
    }
    
    return $r;

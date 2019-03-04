@@ -317,7 +317,9 @@ sub parse_certificate_string {
    my $self = shift;
    my ($string) = @_;
 
-   $self->brik_help_run_undef_arg('parse_certificate_string', $string) or return;
+   $self->brik_help_run_undef_arg('parse_certificate_string', $string)
+      or return;
+
    if (! length($string)) {
       return $self->log->error("parse_certificate_string: empty string found");
    }
@@ -344,7 +346,8 @@ sub parse_certificate_string {
 
    my $decoded = Crypt::X509->new(cert => $string);
    if ($decoded->error) {
-      return $self->log->error("parse_certificate_string: failed: ".$decoded->error);;
+      return $self->log->error("parse_certificate_string: failed: ".
+         $decoded->error);
    }
 
    return $decoded;
