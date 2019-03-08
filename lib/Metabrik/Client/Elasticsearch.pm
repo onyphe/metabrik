@@ -498,8 +498,13 @@ sub index_document {
    }
 
    if (defined($hash)) {
-      $self->brik_help_run_invalid_arg('index_document', $hash, 'HASH') or return;
-      %args = ( %args, %$hash );
+      $self->brik_help_run_invalid_arg('index_document', $hash, 'HASH')
+         or return;
+      my $this_hash = { %$hash };
+      if (defined($hash->{routing}) && defined($doc->{$hash->{routing}})) {
+         $this_hash->{routing} = $doc->{$hash->{routing}};
+      }
+      %args = ( %args, %$this_hash );
    }
 
    my $r;
@@ -508,7 +513,8 @@ sub index_document {
    };
    if ($@) {
       chomp($@);
-      return $self->log->error("index_document: index failed for index [$index]: [$@]");
+      return $self->log->error("index_document: index failed for ".
+         "index [$index]: [$@]");
    }
 
    return $r;
@@ -690,6 +696,10 @@ sub reindex_with_mapping_from_json_file {
 #
 # Search::Elasticsearch::Client::5_0::Direct
 #
+# To execute this Command using routing requires to use the correct field
+# value directly in $hash->{routing}. We cannot "guess" it from arguments,
+# this would be a little bit complicated to do in an efficient way.
+#
 sub update_document {
    my $self = shift;
    my ($doc, $id, $index, $type, $hash) = @_;
@@ -712,7 +722,8 @@ sub update_document {
    );
 
    if (defined($hash)) {
-      $self->brik_help_run_invalid_arg('update_document', $hash, 'HASH') or return;
+      $self->brik_help_run_invalid_arg('update_document', $hash, 'HASH')
+         or return;
       %args = ( %args, %$hash );
    }
 
@@ -752,7 +763,11 @@ sub index_bulk {
 
    if (defined($hash)) {
       $self->brik_help_run_invalid_arg('index_bulk', $hash, 'HASH') or return;
-      %args = ( %args, %$hash );
+      my $this_hash = { %$hash };
+      if (defined($hash->{routing}) && defined($doc->{$hash->{routing}})) {
+         $this_hash->{routing} = $doc->{$hash->{routing}};
+      }
+      %args = ( %args, %$this_hash );
    }
 
    my $r;
@@ -790,13 +805,16 @@ sub index_bulk_from_list {
    $type ||= $self->type;
    $self->brik_help_run_undef_arg('open_bulk_mode', $bulk) or return;
    $self->brik_help_run_undef_arg('index_bulk_from_list', $list) or return;
-   $self->brik_help_run_invalid_arg('index_bulk_from_list', $list, 'ARRAY') or return;
-   $self->brik_help_run_empty_array_arg('index_bulk_from_list', $list) or return;
+   $self->brik_help_run_invalid_arg('index_bulk_from_list', $list, 'ARRAY')
+      or return;
+   $self->brik_help_run_empty_array_arg('index_bulk_from_list', $list)
+      or return;
    $self->brik_help_set_undef_arg('index', $index) or return;
    $self->brik_help_set_undef_arg('type', $type) or return;
 
    if (defined($hash)) {
-      $self->brik_help_run_invalid_arg('index_bulk_from_list', $hash, 'HASH') or return;
+      $self->brik_help_run_invalid_arg('index_bulk_from_list', $hash, 'HASH')
+         or return;
    }
 
    my @args = ();
@@ -805,7 +823,11 @@ sub index_bulk_from_list {
          source => $doc,
       );
       if (defined($hash)) {
-         %args = ( %args, %$hash );
+         my $this_hash = { %$hash };
+         if (defined($hash->{routing}) && defined($doc->{$hash->{routing}})) {
+            $this_hash->{routing} = $doc->{$hash->{routing}};
+         }
+         %args = ( %args, %$this_hash );
       }
       push @args, \%args;
    }
@@ -872,6 +894,11 @@ sub clean_deleted_from_index {
    return $r;
 }
 
+#
+# To execute this Command using routing requires to use the correct field
+# value directly in $hash->{routing}. We cannot "guess" it from arguments,
+# this would be a little bit complicated to do in an efficient way.
+#
 sub update_document_bulk {
    my $self = shift;
    my ($doc, $index, $type, $hash, $id) = @_;
@@ -894,7 +921,8 @@ sub update_document_bulk {
    }
 
    if (defined($hash)) {
-      $self->brik_help_run_invalid_arg('update_document_bulk', $hash, 'HASH') or return;
+      $self->brik_help_run_invalid_arg('update_document_bulk', $hash, 'HASH')
+         or return;
       %args = ( %args, %$hash );
    }
 
@@ -1039,6 +1067,10 @@ sub count {
 #
 # Example: my $q = { query => { term => { ip => "192.168.57.19" } } }
 #
+# To perform a query using routing requires to use the correct field
+# value directly in $hash->{routing}. We cannot "guess" it from $q,
+# this would be a little bit complicated to do in an efficient way.
+#
 sub query {
    my $self = shift;
    my ($query, $index, $type, $hash) = @_;
@@ -1177,6 +1209,10 @@ sub delete_index {
 #
 # Search::Elasticsearch::Client::2_0::Direct::Indices
 #
+# To execute this Command using routing requires to use the correct field
+# value directly in $hash->{routing}. We cannot "guess" it from arguments,
+# this would be a little bit complicated to do in an efficient way.
+#
 sub delete_document {
    my $self = shift;
    my ($index, $type, $id, $hash) = @_;
@@ -1194,7 +1230,8 @@ sub delete_document {
    );
 
    if (defined($hash)) {
-      $self->brik_help_run_invalid_arg('delete_document', $hash, 'HASH') or return;
+      $self->brik_help_run_invalid_arg('delete_document', $hash, 'HASH')
+         or return;
       %args = ( %args, %$hash );
    }
 
@@ -2944,26 +2981,35 @@ sub import_from_csv {
       if (defined($cb)) {
          $h = $cb->($h);
          if (! defined($h)) {
-            $self->log->error("import_from_csv: callback failed for index [$index] ".
-               "at read [$read], skipping single entry");
+            $self->log->error("import_from_csv: callback failed for ".
+               "index [$index] at read [$read], skipping single entry");
             $skipped_chunks++;
             next;
          }
+      }
+
+      # Set routing based on the provided field name, if any.
+      my $this_hash;
+      if (defined($hash) && defined($hash->{routing})
+      &&  defined($h->{$hash->{routing}})) {
+         $this_hash = { %$hash };  # Make a copy to avoid overwriting
+                                   # user provided value.
+         $this_hash->{routing} = $h->{$hash->{routing}};
       }
 
       #$self->log->info(Data::Dumper::Dumper($h));
 
       my $r;
       eval {
-         $r = $self->index_bulk($h, $index, $type, $hash, $id);
+         $r = $self->index_bulk($h, $index, $type, $this_hash, $id);
       };
       if ($@) {
          chomp($@);
          $self->log->warning("import_from_csv: error [$@]");
       }
       if (! defined($r)) {
-         $self->log->error("import_from_csv: bulk processing failed for index [$index] ".
-            "at read [$read], skipping chunk");
+         $self->log->error("import_from_csv: bulk processing failed for ".
+            "index [$index] at read [$read], skipping chunk");
          $skipped_chunks++;
          next;
       }
@@ -3056,8 +3102,10 @@ sub import_from_csv_worker {
 
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
-   $self->brik_help_run_undef_arg('import_from_csv_worker', $input_csv) or return;
-   $self->brik_help_run_file_not_found('import_from_csv_worker', $input_csv) or return;
+   $self->brik_help_run_undef_arg('import_from_csv_worker', $input_csv)
+      or return;
+   $self->brik_help_run_file_not_found('import_from_csv_worker', $input_csv)
+      or return;
 
    # If index and/or types are not defined, we try to get them from input filename
    if (! defined($index) || ! defined($type)) {

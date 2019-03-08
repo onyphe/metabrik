@@ -27,6 +27,7 @@ sub brik_properties {
          create_manager => [ qw(pool_size|OPTIONAL) ],
          reset_manager => [ ],
          start => [ qw(sub) ],
+         stop => [ ],
       },
       require_modules => {
          'Parallel::ForkManager' => [ ],
