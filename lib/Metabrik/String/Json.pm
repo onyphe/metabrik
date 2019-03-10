@@ -31,13 +31,17 @@ sub encode {
    my ($data) = @_;
 
    $self->brik_help_run_undef_arg('encode', $data) or return;
-   $self->brik_help_run_invalid_arg('encode', $data, 'ARRAY', 'HASH') or return;
+   $self->brik_help_run_invalid_arg('encode', $data, 'ARRAY', 'HASH')
+      or return;
 
    $self->log->debug("encode: data[$data]");
 
    my $encoded = '';
    eval {
-      $encoded = JSON::XS::encode_json($data);
+      my $j = JSON::XS->new;
+      $j->relaxed(1);
+      $j->utf8(1);
+      $encoded = $j->encode($data);
    };
    if ($@) {
       chomp($@);
@@ -59,6 +63,7 @@ sub decode {
    eval {
       my $j = JSON::XS->new;
       $j->relaxed(1);
+      $j->utf8(1);
       $decoded = $j->decode($data);
    };
    if ($@) {

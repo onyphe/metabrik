@@ -136,8 +136,12 @@ sub brik_properties {
          is_document_exists => [ qw(index type document) ],
          parse_error_string => [ qw(string) ],
          refresh_index => [ qw(index) ],
+         export_as => [ qw(format index size|OPTIONAL callback|OPTIONAL) ],
          export_as_csv => [ qw(index size|OPTIONAL callback|OPTIONAL) ],
-         import_from_csv => [ qw(input_csv index|OPTIONAL type|OPTIONAL hash|OPTIONAL callback|OPTIONAL) ],
+         export_as_json => [ qw(index size|OPTIONAL callback|OPTIONAL) ],
+         import_from => [ qw(format input index|OPTIONAL type|OPTIONAL hash|OPTIONAL callback|OPTIONAL) ],
+         import_from_csv => [ qw(input index|OPTIONAL type|OPTIONAL hash|OPTIONAL callback|OPTIONAL) ],
+         import_from_json => [ qw(input index|OPTIONAL type|OPTIONAL hash|OPTIONAL callback|OPTIONAL) ],
          import_from_csv_worker => [ qw(input_csv index|OPTIONAL type|OPTIONAL hash|OPTIONAL callback|OPTIONAL) ],
          get_stats_process => [ ],
          get_process => [ ],
@@ -2708,20 +2712,26 @@ RETRY:
    return $r;
 }
 
-sub export_as_csv {
+sub export_as {
    my $self = shift;
-   my ($index, $size, $cb) = @_;
+   my ($format, $index, $size, $cb) = @_;
 
    $size ||= 10_000;
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
-   $self->brik_help_run_undef_arg('export_as_csv', $index) or return;
-   $self->brik_help_run_undef_arg('export_as_csv', $size) or return;
+   $self->brik_help_run_undef_arg('export_as', $format) or return;
+   $self->brik_help_run_undef_arg('export_as', $index) or return;
+   $self->brik_help_run_undef_arg('export_as', $size) or return;
+
+   if ($format ne 'csv' && $format ne 'json') {
+      return $self->log->error("export_as: unsupported export format ".
+         "[$format]");
+   }
 
    my $max = $self->max;
    my $datadir = $self->datadir;
 
-   $self->log->debug("export_as_csv: selecting scroll Command...");
+   $self->log->debug("export_as: selecting scroll Command...");
 
    my $scroll;
    my $version = $self->version or return;
@@ -2732,32 +2742,41 @@ sub export_as_csv {
       $scroll = $self->open_scroll($index, $size) or return;
    }
 
-   $self->log->debug("export_as_csv: selecting scroll Command...OK.");
+   $self->log->debug("export_as: selecting scroll Command...OK.");
 
    my $fd = Metabrik::File::Dump->new_from_brik_init($self) or return;
 
-   my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
-   $fc->separator(',');
-   $fc->escape('\\');
-   $fc->append(1);
-   $fc->first_line_is_header(0);
-   $fc->write_header(1);
-   $fc->use_quoting(1);
-   if (defined($self->csv_header)) {
-      my $sorted = [ sort { $a cmp $b } @{$self->csv_header} ];
-      $fc->header($sorted);
-   }
-   if (defined($self->csv_encoded_fields)) {
-      $fc->encoded_fields($self->csv_encoded_fields);
-   }
-   if (defined($self->csv_object_fields)) {
-      $fc->object_fields($self->csv_object_fields);
-   }
+   my $out;
+   my $csv_header;
+   if ($format eq 'csv') {
+      $out = Metabrik::File::Csv->new_from_brik_init($self) or return;
+      $out->encoding('utf8');
+      $out->separator(',');
+      $out->escape('\\');
+      $out->append(1);
+      $out->first_line_is_header(0);
+      $out->write_header(1);
+      $out->use_quoting(1);
+      if (defined($self->csv_header)) {
+         my $sorted = [ sort { $a cmp $b } @{$self->csv_header} ];
+         $out->header($sorted);
+      }
+      if (defined($self->csv_encoded_fields)) {
+         $out->encoded_fields($self->csv_encoded_fields);
+      }
+      if (defined($self->csv_object_fields)) {
+         $out->object_fields($self->csv_object_fields);
+      }
 
-   my $csv_header = $fc->header;
+      $csv_header = $out->header;
+   }
+   elsif ($format eq 'json') {
+      $out = Metabrik::File::Json->new_from_brik_init($self) or return;
+      $out->encoding('utf8');
+   }
 
    my $total = $self->total_scroll;
-   $self->log->info("export_as_csv: total [$total] for index [$index]");
+   $self->log->info("export_as: total [$total] for index [$index]");
 
    my %types = ();
    my $read = 0;
@@ -2774,8 +2793,8 @@ sub export_as_csv {
          if (defined($cb)) {
             $this = $cb->($this);
             if (! defined($this)) {
-               $self->log->error("export_as_csv: callback failed for index [$index] ".
-                  "at read [$read], skipping single entry");
+               $self->log->error("export_as: callback failed for index ".
+                  "[$index] at read [$read], skipping single entry");
                $skipped++;
                next;
             }
@@ -2783,28 +2802,35 @@ sub export_as_csv {
 
          my $id = $this->{_id};
          my $doc = $this->{_source};
-         my $type = $this->{_type} || 'doc';  # Prepare for when types will be removed from ES
+         # Prepare for when types will be removed from ES
+         my $type = $this->{_type} || 'doc';
          if (! exists($types{$type})) {
-            # If not given, we guess the CSV fields to use.
-            if (! defined($csv_header)) {
-               my $fields = $self->list_index_fields($index, $type) or return;
-               #$types{$type}{header} = [ '_id', sort { $a cmp $b } keys %$doc ];
-               $types{$type}{header} = [ '_id', @$fields ];
-            }
-            else {
-               $types{$type}{header} = [ '_id', @$csv_header ];
-            }
+            if ($format eq 'csv') {
+               # If not given, we guess the CSV fields to use.
+               if (! defined($csv_header)) {
+                  my $fields = $self->list_index_fields($index, $type)
+                     or return;
+                  $types{$type}{header} = [ '_id', @$fields ];
+               }
+               else {
+                  $types{$type}{header} = [ '_id', @$csv_header ];
+               }
 
-            $types{$type}{output} = $datadir."/$index:$type.csv";
+               $types{$type}{output} = $datadir."/$index:$type.csv";
+            }
+            elsif ($format eq 'json') {
+               $types{$type}{output} = $datadir."/$index:$type.json";
+            }
 
             # Verify it has not been exported yet
             if (-f $done) {
-               return $self->log->error("export_as_csv: export already done for index ".
-                  "[$index]");
+               return $self->log->error("export_as: export already done ".
+                  "for index [$index]");
             }
 
-            $self->log->info("export_as_csv: exporting to file [".$types{$type}{output}.
-               "] for type [$type], using chunk size of [$size]");
+            $self->log->info("export_as: exporting to file [".
+               $types{$type}{output}."] for type [$type], using ".
+               "chunk size of [$size]");
          }
 
          my $h = { _id => $id };
@@ -2813,13 +2839,16 @@ sub export_as_csv {
             $h->{$k} = $doc->{$k};
          }
 
-         $fc->header($types{$type}{header});
+         if ($format eq 'csv') {
+            $out->header($types{$type}{header});
+         }
 
          push @{$chunk{$type}}, $h;
          if (@{$chunk{$type}} > 999) {
-            my $r = $fc->write($chunk{$type}, $types{$type}{output});
+            my $r = $out->write($chunk{$type}, $types{$type}{output});
             if (!defined($r)) {
-               $self->log->warning("export_as_csv: unable to process entry, skipping");
+               $self->log->warning("export_as: unable to process entry, ".
+                  "skipping");
                $skipped++;
                next;
             }
@@ -2830,15 +2859,16 @@ sub export_as_csv {
          if (! (++$exported % 100_000)) {
             my $now = time();
             my $perc = sprintf("%.02f", $exported / $total * 100);
-            $self->log->info("export_as_csv: fetched [$exported/$total] ($perc%) ".
-               "elements in ".($now - $start)." second(s) from index [$index]");
+            $self->log->info("export_as: fetched [$exported/$total] ".
+               "($perc%) elements in ".($now - $start)." second(s) ".
+               "from index [$index]");
             $start = time();
          }
 
          # Limit export to specified maximum
          if ($max > 0 && $exported >= $max) {
-            $self->log->info("export_as_csv: max export reached [$exported] for index ".
-               "[$index], stopping");
+            $self->log->info("export_as: max export reached [$exported] ".
+               "for index [$index], stopping");
             last;
          }
       }
@@ -2848,7 +2878,7 @@ sub export_as_csv {
    my %files = ();
    for my $type (keys %types) {
       if (@{$chunk{$type}} > 0) {
-         $fc->write($chunk{$type}, $types{$type}{output});
+         $out->write($chunk{$type}, $types{$type}{output});
          $files{$types{$type}{output}}++;
       }
    }
@@ -2876,38 +2906,73 @@ sub export_as_csv {
    # Say the file has been processed, and put resulting stats.
    $fd->write($result, $done) or return;
 
-   $self->log->info("export_as_csv: done.");
+   $self->log->info("export_as: done.");
 
    return $result;
+}
+
+sub export_as_csv {
+   my $self = shift;
+   my ($index, $size, $cb) = @_;
+
+   $size ||= 10_000;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('export_as_csv', $index) or return;
+   $self->brik_help_run_undef_arg('export_as_csv', $size) or return;
+
+   return $self->export_as('csv', $index, $size, $cb);
+}
+
+sub export_as_json {
+   my $self = shift;
+   my ($index, $size, $cb) = @_;
+
+   $size ||= 10_000;
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('export_as_json', $index) or return;
+   $self->brik_help_run_undef_arg('export_as_json', $size) or return;
+
+   return $self->export_as('json', $index, $size, $cb);
 }
 
 #
 # Optimization instructions:
 # https://www.elastic.co/guide/en/elasticsearch/reference/master/tune-for-indexing-speed.html
 #
-sub import_from_csv {
+sub import_from {
    my $self = shift;
-   my ($input_csv, $index, $type, $hash, $cb) = @_;
+   my ($format, $input, $index, $type, $hash, $cb) = @_;
 
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
-   $self->brik_help_run_undef_arg('import_from_csv', $input_csv) or return;
-   $self->brik_help_run_file_not_found('import_from_csv', $input_csv) or return;
+   $self->brik_help_run_undef_arg('import_from', $format) or return;
+   $self->brik_help_run_undef_arg('import_from', $input) or return;
+   $self->brik_help_run_file_not_found('import_from', $input) or return;
 
-   # If index and/or types are not defined, we try to get them from input filename
+   if ($format ne 'csv' && $format ne 'json') {
+      return $self->log->error("import_from: unsupported export format ".
+         "[$format]");
+   }
+
+   # If index and/or types are not defined, we try to get them from
+   # input filename
    if (! defined($index) || ! defined($type)) {
       # Example: index-DATE:type.csv
-      if ($input_csv =~ m{^(.+):(.+)\.csv(?:.*)?$}) {
-         my ($this_index, $this_type) = $input_csv =~ m{^(.+):(.+)\.csv(?:.*)?$};
+      if ($input =~ m{^(.+):(.+)\.(?:csv|json)(?:.*)?$}) {
+         my ($this_index, $this_type) = $input =~
+            m{^(.+):(.+)\.(?:csv|json)(?:.*)?$};
          $index ||= $this_index;
          $type ||= $this_type;
       }
    }
 
    # Verify it has not been indexed yet
-   my $done = "$input_csv.imported";
+   my $done = "$input.imported";
    if (-f $done) {
-      $self->log->info("import_from_csv: import already done for file [$input_csv]");
+      $self->log->info("import_from: import already done for file ".
+         "[$input]");
       return 0;
    }
 
@@ -2918,13 +2983,15 @@ sub import_from_csv {
    $self->brik_help_set_undef_arg('type', $type) or return;
 
    if ($index eq '*') {
-      return $self->log->error("import_from_csv: cannot import to invalid index [$index]");
+      return $self->log->error("import_from: cannot import to invalid ".
+         "index [$index]");
    }
    if ($type eq '*') {
-      return $self->log->error("import_from_csv: cannot import to invalid type [$type]");
+      return $self->log->error("import_from: cannot import to invalid ".
+         "type [$type]");
    }
 
-   $self->log->debug("input [$input_csv]");
+   $self->log->debug("input [$input]");
    $self->log->debug("index [$index]");
    $self->log->debug("type [$type]");
 
@@ -2934,7 +3001,7 @@ sub import_from_csv {
       if (! defined($count_before)) {
          return;
       }
-      $self->log->info("import_from_csv: current index [$index] count is ".
+      $self->log->info("import_from: current index [$index] count is ".
          "[$count_before]");
    }
 
@@ -2942,17 +3009,25 @@ sub import_from_csv {
 
    $self->open_bulk_mode($index, $type) or return;
 
-   $self->log->info("import_from_csv: importing file [$input_csv] to index [$index] ".
-      "with type [$type]");
+   $self->log->info("import_from: importing file [$input] to index ".
+      "[$index] with type [$type]");
 
    my $fd = Metabrik::File::Dump->new_from_brik_init($self) or return;
 
-   my $fc = Metabrik::File::Csv->new_from_brik_init($self) or return;
-   $fc->separator(',');
-   $fc->escape('\\');
-   $fc->first_line_is_header(1);
-   $fc->encoded_fields($self->csv_encoded_fields);
-   $fc->object_fields($self->csv_object_fields);
+   my $out;
+   if ($format eq 'csv') {
+      $out = Metabrik::File::Csv->new_from_brik_init($self) or return;
+      $out->encoding('utf8');
+      $out->separator(',');
+      $out->escape('\\');
+      $out->first_line_is_header(1);
+      $out->encoded_fields($self->csv_encoded_fields);
+      $out->object_fields($self->csv_object_fields);
+   }
+   elsif ($format eq 'json') {
+      $out = Metabrik::File::Json->new_from_brik_init($self) or return;
+      $out->encoding('utf8');
+   }
 
    my $refresh_interval;
    my $number_of_replicas;
@@ -2963,7 +3038,7 @@ sub import_from_csv {
    my $read = 0;
    my $skipped_chunks = 0;
    my $start_time = time();
-   while (my $this = $fc->read_next($input_csv)) {
+   while (my $this = $out->read_next($input)) {
       $read++;
 
       my $h = {};
@@ -2981,7 +3056,7 @@ sub import_from_csv {
       if (defined($cb)) {
          $h = $cb->($h);
          if (! defined($h)) {
-            $self->log->error("import_from_csv: callback failed for ".
+            $self->log->error("import_from: callback failed for ".
                "index [$index] at read [$read], skipping single entry");
             $skipped_chunks++;
             next;
@@ -3005,10 +3080,10 @@ sub import_from_csv {
       };
       if ($@) {
          chomp($@);
-         $self->log->warning("import_from_csv: error [$@]");
+         $self->log->warning("import_from: error [$@]");
       }
       if (! defined($r)) {
-         $self->log->error("import_from_csv: bulk processing failed for ".
+         $self->log->error("import_from: bulk processing failed for ".
             "index [$index] at read [$read], skipping chunk");
          $skipped_chunks++;
          next;
@@ -3034,14 +3109,14 @@ sub import_from_csv {
       # Log a status sometimes.
       if (! (++$imported % 100_000)) {
          my $now = time();
-         $self->log->info("import_from_csv: imported [$imported] entries in ".
+         $self->log->info("import_from: imported [$imported] entries in ".
             ($now - $start)." second(s) to index [$index]");
          $start = time();
       }
 
       # Limit import to specified maximum
       if ($max > 0 && $imported >= $max) {
-         $self->log->info("import_from_csv: max import reached [$imported] for ".
+         $self->log->info("import_from: max import reached [$imported] for ".
             "index [$index], stopping");
          last;
       }
@@ -3056,7 +3131,7 @@ sub import_from_csv {
    $self->refresh_index($index);
 
    my $count_current = $self->count($index, $type) or return;
-   $self->log->info("import_from_csv: after index [$index] count is [$count_current] ".
+   $self->log->info("import_from: after index [$index] count is [$count_current] ".
       "at EPS [$eps]");
 
    my $skipped = 0;
@@ -3091,6 +3166,32 @@ sub import_from_csv {
    }
 
    return $result;
+}
+
+sub import_from_csv {
+   my $self = shift;
+   my ($input, $index, $type, $hash, $cb) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('import_from_csv', $input) or return;
+   $self->brik_help_run_file_not_found('import_from_csv', $input)
+      or return;
+
+   return $self->import_from('csv', $input, $index, $type, $hash, $cb);
+}
+
+sub import_from_json {
+   my $self = shift;
+   my ($input, $index, $type, $hash, $cb) = @_;
+
+   my $es = $self->_es;
+   $self->brik_help_run_undef_arg('open', $es) or return;
+   $self->brik_help_run_undef_arg('import_from_json', $input) or return;
+   $self->brik_help_run_file_not_found('import_from_json', $input)
+      or return;
+
+   return $self->import_from('json', $input, $index, $type, $hash, $cb);
 }
 
 #
