@@ -36,6 +36,7 @@ sub brik_properties {
          csv_header => [ qw(fields) ],
          csv_encoded_fields => [ qw(fields) ],
          csv_object_fields => [ qw(fields) ],
+         encoding => [ qw(utf8|ascii) ],
          _es => [ qw(INTERNAL) ],
          _bulk => [ qw(INTERNAL) ],
          _scroll => [ qw(INTERNAL) ],
@@ -56,6 +57,7 @@ sub brik_properties {
          use_bulk_autoflush => 1,
          use_indexing_optimizations => 0,
          use_ignore_id => 0,
+         encoding => 'utf8',
       },
       commands => {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
@@ -2750,7 +2752,7 @@ sub export_as {
    my $csv_header;
    if ($format eq 'csv') {
       $out = Metabrik::File::Csv->new_from_brik_init($self) or return;
-      $out->encoding('utf8');
+      $out->encoding($self->encoding);
       $out->separator(',');
       $out->escape('\\');
       $out->append(1);
@@ -2772,7 +2774,7 @@ sub export_as {
    }
    elsif ($format eq 'json') {
       $out = Metabrik::File::Json->new_from_brik_init($self) or return;
-      $out->encoding('utf8');
+      $out->encoding($self->encoding);
    }
 
    my $total = $self->total_scroll;
@@ -3017,7 +3019,7 @@ sub import_from {
    my $out;
    if ($format eq 'csv') {
       $out = Metabrik::File::Csv->new_from_brik_init($self) or return;
-      $out->encoding('utf8');
+      $out->encoding($self->encoding);
       $out->separator(',');
       $out->escape('\\');
       $out->first_line_is_header(1);
@@ -3026,7 +3028,7 @@ sub import_from {
    }
    elsif ($format eq 'json') {
       $out = Metabrik::File::Json->new_from_brik_init($self) or return;
-      $out->encoding('utf8');
+      $out->encoding($self->encoding);
    }
 
    my $refresh_interval;
