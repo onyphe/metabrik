@@ -104,6 +104,8 @@ sub brik_properties {
       need_packages => {
          ubuntu => [ qw(libssl-dev phantomjs) ],
          debian => [ qw(libssl-dev phantomjs) ],
+         centos => [ qw(openssl-devel) ],
+         redhat => [ qw(openssl-devel) ],
       },
    };
 }

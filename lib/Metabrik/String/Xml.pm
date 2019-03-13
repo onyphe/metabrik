@@ -27,6 +27,8 @@ sub brik_properties {
          ubuntu => [ qw(libexpat1-dev libxml2-dev) ],
          debian => [ qw(libexpat1-dev libxml2-dev) ],
          freebsd => [ qw(expat libxml2) ],
+         centos => [ qw(expat-devel libxml2-devel) ],
+         redhat => [ qw(expat-devel libxml2-devel) ],
       },
    };
 }
