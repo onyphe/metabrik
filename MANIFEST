@@ -23,9 +23,9 @@ lib/Metabrik/Binjitsu/Pattern.pm
 lib/Metabrik/Brik/Search.pm
 lib/Metabrik/Brik/Tool.pm
 lib/Metabrik/Client/Dns.pm
-lib/Metabrik/Client/Elasticsearch.pm
 lib/Metabrik/Client/Elasticsearch/Cluster.pm
 lib/Metabrik/Client/Elasticsearch/Indices.pm
+lib/Metabrik/Client/Elasticsearch.pm
 lib/Metabrik/Client/Elasticsearch/Query.pm
 lib/Metabrik/Client/Elasticsearch/Tasks.pm
 lib/Metabrik/Client/Imap.pm
@@ -226,6 +226,9 @@ lib/Metabrik/System/Freebsd/Top.pm
 lib/Metabrik/System/Freebsd/Who.pm
 lib/Metabrik/System/Fsck.pm
 lib/Metabrik/System/Gphotofs.pm
+lib/Metabrik/System/Kali/Package.pm
+lib/Metabrik/System/Kali/Service.pm
+lib/Metabrik/System/Kali/User.pm
 lib/Metabrik/System/Libvirt.pm
 lib/Metabrik/System/Linux/Cpuinfo.pm
 lib/Metabrik/System/Linux/Pps.pm

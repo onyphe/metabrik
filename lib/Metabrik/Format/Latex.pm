@@ -41,6 +41,7 @@ sub brik_properties {
       need_packages => {
          ubuntu => [ qw(texlive texlive-latex-extra texlive-lang-french) ],  # Sorry, the author is French
          debian => [ qw(texlive texlive-latex-extra texlive-lang-french) ],  # Sorry, the author is French
+         kali => [ qw(texlive texlive-latex-extra texlive-lang-french) ],  # Sorry, the author is French
       },
    };
 }
@@ -127,7 +128,7 @@ Metabrik::Format::Latex - format::latex Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2018, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2019, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

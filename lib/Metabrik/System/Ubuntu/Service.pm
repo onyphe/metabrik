@@ -29,6 +29,7 @@ sub brik_properties {
       #need_packages => {
          #ubuntu => [ qw() ],
          #debian => [ qw() ],
+         #kali => [ qw() ],
       #},
    };
 }
@@ -65,7 +66,7 @@ Metabrik::System::Ubuntu::Service - system::ubuntu::service Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2018, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2019, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

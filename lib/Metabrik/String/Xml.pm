@@ -26,6 +26,7 @@ sub brik_properties {
       need_packages => {
          ubuntu => [ qw(libexpat1-dev libxml2-dev) ],
          debian => [ qw(libexpat1-dev libxml2-dev) ],
+         kali => [ qw(libexpat1-dev libxml2-dev) ],
          freebsd => [ qw(expat libxml2) ],
          centos => [ qw(expat-devel libxml2-devel) ],
          redhat => [ qw(expat-devel libxml2-devel) ],
@@ -70,7 +71,7 @@ Metabrik::String::Xml - string::xml Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2018, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2019, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

@@ -42,6 +42,7 @@ sub brik_properties {
       need_packages => {
          ubuntu => [ qw(libpcap-dev libnet-libdnet-perl) ],
          debian => [ qw(libpcap-dev libnet-libdnet-perl) ],
+         kali => [ qw(libpcap-dev libnet-libdnet-perl) ],
          freebsd => [ qw(p5-Net-Pcap libdnet) ],
       },
    };
@@ -256,7 +257,7 @@ Metabrik::Network::Device - network::device Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2018, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2019, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

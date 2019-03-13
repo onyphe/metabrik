@@ -28,6 +28,7 @@ sub brik_properties {
          is => [ qw(os) ],
          is_ubuntu => [ ],
          is_debian => [ ],
+         is_kali => [ ],
          is_linux => [ ],
          is_freebsd => [ ],
          is_centos => [ ],
@@ -257,6 +258,12 @@ sub is_debian {
    return $self->is('debian');
 }
 
+sub is_kali {
+   my $self = shift;
+
+   return $self->is('kali');
+}
+
 sub is_linux {
    my $self = shift;
 
@@ -302,7 +309,7 @@ Metabrik::System::os - system::os Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2018, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2019, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

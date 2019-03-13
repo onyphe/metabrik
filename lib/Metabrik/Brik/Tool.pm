@@ -54,6 +54,7 @@ sub brik_properties {
       #need_packages => {
          #ubuntu => [ qw(mercurial) ],
          #debian => [ qw(mercurial) ],
+         #kali => [ qw(mercurial) ],
          #freebsd => [ qw(mercurial) ],
       #},
       #require_binaries => {
@@ -704,7 +705,7 @@ $package - $brik Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2018, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2019, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.
@@ -1002,7 +1003,7 @@ Metabrik::Brik::Tool - brik::tool Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2018, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2019, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

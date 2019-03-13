@@ -29,6 +29,7 @@ sub brik_properties {
       need_packages => {
          ubuntu => [ qw(libmagic-dev) ],
          debian => [ qw(libmagic-dev) ],
+         kali => [ qw(libmagic-dev) ],
       },
    };
 }
@@ -176,7 +177,7 @@ Metabrik::File::Type - file::type Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2018, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2019, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

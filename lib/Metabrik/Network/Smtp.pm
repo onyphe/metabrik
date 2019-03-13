@@ -36,6 +36,7 @@ sub brik_properties {
       need_packages => {
          ubuntu => [ qw(libgssapi-perl) ],
          debian => [ qw(libgssapi-perl) ],
+         kali => [ qw(libgssapi-perl) ],
          freebsd => [ qw(p5-GSSAPI) ],
       },
       require_modules => {
@@ -126,7 +127,7 @@ Metabrik::Network::Smtp - network::smtp Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2018, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2019, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.
