@@ -39,6 +39,7 @@ sub brik_properties {
          install_required_modules => [ qw(Brik) ],
          install_required_briks => [ qw(Brik) ],
          install => [ qw(Brik) ],
+         get_dependencies => [ qw(Brik) ],
          create_tool => [ qw(filename.pl Repository|OPTIONAL) ],
          create_brik => [ qw(Brik Repository|OPTIONAL) ],
          update_core => [ ],
@@ -526,6 +527,64 @@ sub install {
    }
 
    return 1;
+}
+
+sub get_dependencies {
+   my $self = shift;
+   my ($brik_list) = @_;
+
+   $self->brik_help_run_undef_arg('get_dependencies', $brik_list) or return;
+   my $ref = $self->brik_help_run_invalid_arg('get_dependencies', $brik_list,
+      'ARRAY', 'SCALAR') or return;
+
+   if ($ref eq 'SCALAR') {
+      $brik_list = [ $brik_list ];
+   }
+
+   my $briks = [];
+   my $packages = [];
+   my $modules = [];
+   for my $brik (@$brik_list) {
+      my $this_packages = $self->get_need_packages_recursive($brik) or return;
+      my $this_modules = $self->get_require_modules_recursive($brik) or return;
+      my $this_briks = $self->get_require_briks_recursive($brik) or return;
+      my $this_hierarchy = $self->get_brik_hierarchy($brik) or return;
+      push @$packages, @$this_packages;
+      push @$modules, @$this_modules;
+      push @$briks, @$this_briks;
+      push @$briks, @$this_hierarchy;
+
+      for my $this_brik (@$this_briks) {
+         my $this_sub_packages = $self->get_need_packages_recursive(
+            $this_brik) or next;
+         my $this_sub_modules = $self->get_require_modules_recursive(
+            $this_brik) or next;
+         my $this_sub_briks = $self->get_require_briks_recursive(
+            $this_brik) or next;
+         my $this_sub_hierarchy = $self->get_brik_hierarchy(
+            $this_brik) or next;
+         push @$packages, @$this_sub_packages;
+         push @$modules, @$this_sub_modules;
+         push @$briks, @$this_sub_briks;
+         push @$briks, @$this_sub_hierarchy;
+      }
+   }
+
+   my $uniq_packages = {};
+   my $uniq_modules = {};
+   my $uniq_briks = {};
+   for (@$packages) { $uniq_packages->{$_}++; }
+   for (@$modules) { $uniq_modules->{$_}++; }
+   for (@$briks) { $uniq_briks->{$_}++; }
+   $packages = [ sort { $a cmp $b } keys %$uniq_packages ];
+   $modules = [ sort { $a cmp $b } keys %$uniq_modules ];
+   $briks = [ sort { $a cmp $b } keys %$uniq_briks ];
+
+   return {
+      packages => $packages,
+      modules => $modules,
+      briks => $briks,
+   };
 }
 
 sub create_tool {
