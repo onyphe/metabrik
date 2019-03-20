@@ -32,6 +32,7 @@ sub brik_properties {
          today => [ qw(separator|OPTIONAL) ],
          yesterday => [ qw(separator|OPTIONAL) ],
          day => [ qw(timestamp|OPTIONAL) ],
+         year => [ qw(timestamp|OPTIONAL) ],
          date => [ qw(timestamp|OPTIONAL) ],
          gmdate => [ qw(timestamp|OPTIONAL) ],
          month => [ qw(timezone|OPTIONAL) ],
@@ -150,6 +151,17 @@ sub day {
    my $day = $t[3];
 
    return sprintf("%04d-%02d-%02d", $year, $month, $day);
+}
+
+sub year {
+   my $self = shift;
+   my ($timestamp) = @_;
+
+   my $day = $self->day($timestamp) or return;
+
+   my ($year) = $day =~ m{^(\d{4})};
+
+   return $year;
 }
 
 sub date {
