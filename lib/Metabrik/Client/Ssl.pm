@@ -7,7 +7,7 @@ package Metabrik::Client::Ssl;
 use strict;
 use warnings;
 
-use base qw(Metabrik::System::Package);
+use base qw(Metabrik);
 
 sub brik_properties {
    return {
