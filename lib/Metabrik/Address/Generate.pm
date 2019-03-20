@@ -29,11 +29,15 @@ sub brik_properties {
          ipv4_private_ranges => [ ],
          ipv4_public_ranges => [ ],
          ipv4_generate_space => [ qw(count|OPTIONAL file_count|OPTIONAL) ],
+         ipv4_generate_space_from_subnet => [ qw(
+            subnet count|OPTIONAL file_count|OPTIONAL
+         ) ],
          random_ipv4_addresses => [ qw(count|OPTIONAL) ],
       },
       require_modules => {
          'BSD::Resource' => [ qw(getrlimit setrlimit) ],
          'List::Util' => [ qw(shuffle) ],
+         'Metabrik::Network::Address' => [ ],
       },
    };
 }
@@ -42,9 +46,11 @@ sub brik_init {
    my $self = shift;
 
    my $limit = 200_000;
-   my $r = BSD::Resource::setrlimit(BSD::Resource::RLIMIT_OPEN_MAX(), $limit, $limit);
+   my $r = BSD::Resource::setrlimit(
+      BSD::Resource::RLIMIT_OPEN_MAX(), $limit, $limit);
    if (! defined($r)) {
-      return $self->log->error("brik_init: failed to set open file limit to [$limit]");
+      return $self->log->error("brik_init: failed to set open file ".
+         "limit to [$limit]");
    }
 
    return $self->SUPER::brik_init(@_);
@@ -196,6 +202,86 @@ sub ipv4_generate_space {
    $self->log->info("ipv4_generate_space: generated $current IP addresses");
 
    return 1;
+}
+
+sub ipv4_generate_space_from_subnet {
+   my $self = shift;
+   my ($subnet, $count, $file_count) = @_;
+
+   $self->brik_help_run_undef_arg('ipv4_generate_space_from_subnet',
+      $subnet) or return;
+
+   $count ||= $self->count;
+   $file_count ||= $self->file_count;
+   if ($file_count <= 0) {
+      return $self->log->error("ipv4_generate_space_from_subnet: cannot ".
+         "generate [$file_count] file");
+   }
+
+   my $datadir = $self->datadir;
+   my $n = $file_count - 1;
+
+   my $na = Metabrik::Network::Address->new_from_brik_init($self) or return;
+
+   # Open all file descriptors where we will write ip addresses.
+   my @chunks = ();
+   if ($n > 0) {
+      my $size = length($n);
+      for (0..$n) {
+         my $file = sprintf("ip4-space-%0${size}d.txt", $_);
+         open(my $fd, '>', "$datadir/$file")
+            or return $self->log->error("ipv4_generate_space_from_subnet: ".
+               "open: file [$datadir/$file]: $!");
+         push @chunks, $fd;
+      }
+   }
+   else {
+      my $file = "ip4-space.txt";
+      open(my $fd, '>', "$datadir/$file")
+         or return $self->log->error("ipv4_generate_space_from_subnet: ".
+            "open: file [$datadir/$file]: $!");
+      push @chunks, $fd;
+   }
+
+   # Generate ip addresses from given subnet and write to open files
+   # in a random order.
+   my $first = $na->ipv4_first_address($subnet) or return;
+   my $last = $na->ipv4_last_address($subnet) or return;
+
+   my @bytes_first = split(/\./, $first);
+   my @bytes_last = split(/\./, $last);
+
+   my $current = 0;
+   # Note: this algorithm is best suited to generate the full IPv4
+   # address space
+   for my $b4 (List::Util::shuffle($bytes_first[3]..$bytes_last[3])) {
+      for my $b3 (List::Util::shuffle($bytes_first[2]..$bytes_last[2])) {
+         for my $b2 (List::Util::shuffle($bytes_first[1]..$bytes_last[1])) {
+            for my $b1 (List::Util::shuffle($bytes_first[0]..$bytes_last[0])) {
+               # Write randomly to one of the previously open files
+               my $i;
+               ($n > 0) ? ($i = int(rand($n + 1))) : ($i = 0);
+
+               my $out = $chunks[$i];
+               print $out "$b1.$b2.$b3.$b4\n";
+               $current++;
+
+               # Stop if we have the number we wanted
+               if ($count && $current == $count) {
+                  $self->log->info("ipv4_generate_space_from_subnet: ".
+                     "generated $current IP addresses");
+                  return 1;
+               }
+            }
+         }
+      }
+   }
+
+   $self->log->info("ipv4_generate_space_from_subnet: generated ".
+      "$current IP addresses");
+
+   return 1;
+
 }
 
 sub random_ipv4_addresses {
