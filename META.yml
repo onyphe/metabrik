@@ -55,6 +55,8 @@ provides:
     file: lib/Metabrik/Client/Dns.pm
   Metabrik::Client::Elasticsearch:
     file: lib/Metabrik/Client/Elasticsearch.pm
+  Metabrik::Client::Elasticsearch::Cat:
+    file: lib/Metabrik/Client/Elasticsearch/Cat.pm
   Metabrik::Client::Elasticsearch::Cluster:
     file: lib/Metabrik/Client/Elasticsearch/Cluster.pm
   Metabrik::Client::Elasticsearch::Indices:

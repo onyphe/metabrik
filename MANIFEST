@@ -23,6 +23,7 @@ lib/Metabrik/Binjitsu/Pattern.pm
 lib/Metabrik/Brik/Search.pm
 lib/Metabrik/Brik/Tool.pm
 lib/Metabrik/Client/Dns.pm
+lib/Metabrik/Client/Elasticsearch/Cat.pm
 lib/Metabrik/Client/Elasticsearch/Cluster.pm
 lib/Metabrik/Client/Elasticsearch/Indices.pm
 lib/Metabrik/Client/Elasticsearch.pm

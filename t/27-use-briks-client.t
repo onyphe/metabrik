@@ -1,9 +1,10 @@
 use Test;
-BEGIN { plan(tests => 26) }
+BEGIN { plan(tests => 27) }
 
 ok(sub { eval("use Metabrik::Client::Dns"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Client::Elasticsearch"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Client::Elasticsearch::Cluster"); $@ ? 0 : 1 }, 1, $@);
+ok(sub { eval("use Metabrik::Client::Elasticsearch::Cat"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Client::Elasticsearch::Indices"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Client::Elasticsearch::Tasks"); $@ ? 0 : 1 }, 1, $@);
 ok(sub { eval("use Metabrik::Client::Elasticsearch::Query"); $@ ? 0 : 1 }, 1, $@);
