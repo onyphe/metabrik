@@ -28,11 +28,15 @@ sub brik_properties {
          list => [ qw(indices|OPTIONAL) ],
          get_settings => [ qw(indices|OPTIONAL) ],
          put_settings => [ qw(settings indices|OPTIONAL) ],
+         set_indices_readonly => [ qw(indices) ],
+         clear_indices_readonly => [ qw(indices) ],
+         move_indices_to_node => [ qw(indices node) ],
          move_indices_to_rack => [ qw(indices rack) ],
          reset_indices_rack => [ qw(indices) ],
          remove_indices_replicas => [ qw(indices) ],
          forcemerge_indices => [ qw(indices) ],
          check_forcemerge_indices => [ qw(indices) ],
+         shrink_index => [ qw(index size rack|OPTIONAL) ],
       },
    };
 }
@@ -79,6 +83,62 @@ sub put_settings {
    $self->brik_help_run_invalid_arg('put', $settings, 'HASH') or return;
 
    return $self->_es->indices->put_settings(body => $settings);
+}
+
+sub set_indices_readonly {
+   my $self = shift;
+   my ($indices) = @_;
+
+   $self->brik_help_run_undef_arg('set_indices_readonly', $indices) or return;
+
+   my $settings = {
+      'index.blocks.write' => 'true',
+   };
+
+   my %args = (
+      index => $indices,
+      body => $settings,
+   );
+
+   return $self->_es->indices->put_settings(%args);
+}
+
+sub clear_indices_readonly {
+   my $self = shift;
+   my ($indices) = @_;
+
+   $self->brik_help_run_undef_arg('clear_indices_readonly', $indices)
+      or return;
+
+   my $settings = {
+      'index.blocks.write' => undef,
+   };
+
+   my %args = (
+      index => $indices,
+      body => $settings,
+   );
+
+   return $self->_es->indices->put_settings(%args);
+}
+
+sub move_indices_to_node {
+   my $self = shift;
+   my ($indices, $node) = @_;
+
+   $self->brik_help_run_undef_arg('move_indices_to_node', $indices) or return;
+   $self->brik_help_run_undef_arg('move_indices_to_node', $node) or return;
+
+   my $settings = {
+      'index.routing.allocation.require._name' => $node,
+   };
+
+   my %args = (
+      index => $indices,
+      body => $settings,
+   );
+
+   return $self->_es->indices->put_settings(%args);
 }
 
 #
@@ -193,6 +253,44 @@ sub check_forcemerge_indices {
 # 2. forcemerge to one segment
 # 3. Put back replicas settings
 #
+
+sub shrink_index {
+   my $self = shift;
+   my ($index, $size, $rack) = @_;
+
+   $self->brik_help_run_undef_arg('shrink_index', $index) or return;
+   $self->brik_help_run_undef_arg('shrink_index', $size) or return;
+
+   my $target = "$index.shrink";
+
+   my $body = {
+      settings => {
+         'index.number_of_shards' => $size,
+      },
+      #aliases => {
+      #},
+   };
+
+   if (defined($rack)) {
+      $body->{settings}{'index.routing.allocation.require.rack'} = $rack;
+   }
+
+   my %args = (
+      index => $index,
+      target => $target,
+      body => $body,
+      #copy_settings => 'true',  # Does not work yet.
+   );
+
+   my $r = $self->_es->indices->shrink(%args);
+
+   #if (defined($rack)) {
+      #sleep(5);  # Wait for Shrink to start, then move to rack if given
+      #$self->move_indices_to_rack($target, $rack);
+   #}
+
+   return $r;
+}
 
 1;
 
