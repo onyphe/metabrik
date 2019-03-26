@@ -41,6 +41,8 @@ sub brik_properties {
          close => [ ],
       },
       require_modules => {
+         'URI::imap' => [ ],
+         'URI::imaps' => [ ],
          'Metabrik::Email::Message' => [ ],
          'Net::IMAP::Simple' => [ ],
       },
@@ -111,20 +113,20 @@ sub read_next {
 
    my $current = $self->_id;
 
-   my $lines = $imap->get($current--);
+   my @lines = $imap->get($current--);
 
    $self->_id($current);
 
    if ($self->as_array) {
       if ($self->strip_crlf) {
-         for (@$lines) {
+         for (@lines) {
             s{[\r\n]*$}{};
          }
       }
-      return [ @$lines ];  # unbless it
+      return [ @lines ];
    }
 
-   return join('', @$lines);
+   return join("\n", @lines);
 }
 
 sub read_next_with_subject {
