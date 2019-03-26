@@ -35,6 +35,7 @@ sub brik_properties {
          read_split_by_blank_line => [ qw(input) ],
          read_split_by_ini_block => [ qw(input) ],
          write => [ qw($data|$data_ref|$data_list output) ],
+         is_eof => [ qw(ret) ],
       },
       require_modules => {
          'Metabrik::File::Read' => [ ],
@@ -77,6 +78,7 @@ sub read {
 
 #
 # Just return next available line
+# Returns 0 on EOF.
 #
 sub read_line {
    my $self = shift;
@@ -178,6 +180,17 @@ sub write {
    $self->close;
 
    return 1;
+}
+
+sub is_eof {
+   my $self = shift;
+   my ($r) = @_;
+
+   if (defined($r) && $r == 0 && !defined($self->_fr)) {
+      return 1;
+   }
+
+   return 0;
 }
 
 1;
