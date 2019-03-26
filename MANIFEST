@@ -31,6 +31,7 @@ lib/Metabrik/Client/Elasticsearch/Query.pm
 lib/Metabrik/Client/Elasticsearch/Tasks.pm
 lib/Metabrik/Client/Imap.pm
 lib/Metabrik/Client/Kafka.pm
+lib/Metabrik/Client/Memcached.pm
 lib/Metabrik/Client/Mongodb.pm
 lib/Metabrik/Client/Mysql.pm
 lib/Metabrik/Client/Openssh.pm

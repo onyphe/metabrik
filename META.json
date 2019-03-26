@@ -117,6 +117,9 @@
       "Metabrik::Client::Kafka" : {
          "file" : "lib/Metabrik/Client/Kafka.pm"
       },
+      "Metabrik::Client::Memcached" : {
+         "file" : "lib/Metabrik/Client/Memcached.pm"
+      },
       "Metabrik::Client::Mongodb" : {
          "file" : "lib/Metabrik/Client/Mongodb.pm"
       },
