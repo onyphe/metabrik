@@ -20,6 +20,8 @@ sub brik_properties {
          input => [ qw(imap_uri) ],
          as_array => [ qw(0|1) ],
          strip_crlf => [ qw(0|1) ],
+         username => [ qw(username) ],
+         password => [ qw(password) ],
          _imap => [ qw(INTERNAL) ],
          _id => [ qw(INTERNAL) ],
          _count => [ qw(INTERNAL) ],
@@ -59,8 +61,8 @@ sub open {
    my $parsed = $self->SUPER::parse($input) or return;
    my $host = $parsed->{host};
    my $port = $parsed->{port};
-   my $user = $parsed->{user};
-   my $password = $parsed->{password};
+   my $user = $parsed->{user} || $self->username;
+   my $password = $parsed->{password} || $self->password;
    my $path = $parsed->{path} || 'INBOX';
    $path =~ s{^/*}{};
 
