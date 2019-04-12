@@ -28,6 +28,10 @@ sub brik_properties {
          show_tasks => [ ],
          show_shards => [ qw(indices|OPTIONAL) ],
          show_recovery => [ qw(indices|OPTIONAL) ],
+         show_allocation => [ ],
+         loop_show_allocation => [ qw(interval|OPTIONAL) ],
+         show_health => [ ],
+         loop_show_health => [ qw(interval|OPTIONAL) ],
          pending_tasks => [ ],
       },
    };
@@ -83,6 +87,65 @@ sub show_recovery {
    my $r = $self->_es->cat->recovery(%args);
 
    return [ split(/\n/, $r) ];
+}
+
+sub show_allocation {
+   my $self = shift;
+
+   my %args = ();
+
+   my $r = $self->_es->cat->allocation(%args);
+
+   return [ split(/\n/, $r) ];
+}
+
+sub loop_show_allocation {
+   my $self = shift;
+   my ($interval) = @_;
+
+   $interval ||= 60;
+
+   while (1) {
+      my %lines = ();
+      for my $line (@{$self->show_allocation}) {
+         my @t = split(/\s+/, $line);
+         $lines{$t[-1]} = $line;
+      }
+      for (sort { $a cmp $b } keys %lines) {
+         print $lines{$_}."\n";
+      }
+      print "--\n";
+      sleep($interval);
+   }
+
+   return 1;
+}
+
+sub show_health {
+   my $self = shift;
+
+   my %args = ();
+
+   my $r = $self->_es->cat->health(%args);
+
+   return [ split(/\n/, $r) ];
+}
+
+sub loop_show_health {
+   my $self = shift;
+   my ($interval) = @_;
+
+   $interval ||= 60;
+
+   while (1) {
+      my $lines = $self->show_health;
+      for my $line (@$lines) {
+         print "$line\n";
+      }
+      sleep($interval);
+   }
+
+   return 1;
 }
 
 sub pending_tasks {

@@ -31,6 +31,7 @@ sub brik_properties {
          set_indices_readonly => [ qw(indices) ],
          clear_indices_readonly => [ qw(indices) ],
          move_indices_to_node => [ qw(indices node) ],
+         reset_indices_node => [ qw(indices node) ],
          move_indices_to_rack => [ qw(indices rack) ],
          reset_indices_rack => [ qw(indices) ],
          remove_indices_replicas => [ qw(indices) ],
@@ -131,6 +132,24 @@ sub move_indices_to_node {
 
    my $settings = {
       'index.routing.allocation.require._name' => $node,
+   };
+
+   my %args = (
+      index => $indices,
+      body => $settings,
+   );
+
+   return $self->_es->indices->put_settings(%args);
+}
+
+sub reset_indices_node {
+   my $self = shift;
+   my ($indices) = @_;
+
+   $self->brik_help_run_undef_arg('reset_indices_node', $indices) or return;
+
+   my $settings = {
+      'index.routing.allocation.require._name' => undef,
    };
 
    my %args = (

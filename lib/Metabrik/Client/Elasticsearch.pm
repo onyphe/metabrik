@@ -164,7 +164,7 @@ sub brik_properties {
          count_total_size => [ qw(string_filter|OPTIONAL) ],
          count_count => [ ],
          list_datatypes => [ ],
-         get_hits_total => [ ],
+         get_hits_total => [ qw(results) ],
          disable_shard_allocation => [ ],
          enable_shard_allocation => [ ],
          flush_synced => [ ],

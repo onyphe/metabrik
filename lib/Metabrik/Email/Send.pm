@@ -25,6 +25,7 @@ sub brik_properties {
          port => [ qw(port) ],
          hello => [ qw(hello) ],
          auth_mechanism => [ qw(none|GSSAPI) ],
+         use_starttls => [ qw(0|1) ],
          username => [ qw(username) ],
          password => [ qw(password) ],
       },
@@ -34,6 +35,7 @@ sub brik_properties {
          subject => 'My subject',
          server => 'localhost',
          port => 25,
+         use_starttls => 0,
       },
       commands => {
          send => [ qw(email from|OPTIONAL to|OPTIONAL subject|OPTIONAL) ],

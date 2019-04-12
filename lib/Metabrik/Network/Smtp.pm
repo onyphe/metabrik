@@ -22,12 +22,14 @@ sub brik_properties {
          username => [ qw(username) ],
          password => [ qw(password) ],
          auth_mechanism => [ qw(none|GSSAPI) ],
+         use_starttls => [ qw(0|1) ],
          _smtp => [ qw(INTERNAL) ],
       },
       attributes_default => {
          server => 'localhost',
          port => 25,
          auth_mechanism => 'none',
+         use_starttls => 0,
       },
       commands => {
          open => [ qw(server|OPTIONAL port|OPTIONAL username|OPTIONAL password|OPTIONAL) ],
@@ -98,6 +100,9 @@ sub open {
 
       my $r = $smtp->auth($sasl);
       $self->log->info("open: auth: returned [$r]");
+   }
+   elsif ($self->use_starttls) {
+      $smtp->starttls() or return $self->log->error("open: can't STARTTLS");
    }
 
    #$self->log->info(Data::Dumper::Dumper($smtp));
