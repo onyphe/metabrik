@@ -1885,6 +1885,7 @@ sub get_mappings {
    my %args = (
       index => $index,
       type => $type,
+      #include_type_name => 'false',
    );
 
    my $r;

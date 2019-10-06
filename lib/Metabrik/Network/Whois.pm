@@ -19,6 +19,7 @@ sub brik_properties {
          datadir => [ qw(datadir) ],
          rtimeout => [ qw(timeout) ],
          last_server => [ qw(server) ],
+         src_ip => [ qw(ip_list) ],
       },
       attributes_default => {
          rtimeout => 2,

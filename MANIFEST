@@ -81,6 +81,7 @@ lib/Metabrik/File/Javascript.pm
 lib/Metabrik/File/Json.pm
 lib/Metabrik/File/Ole.pm
 lib/Metabrik/File/Pcap.pm
+lib/Metabrik/File/Pdf.pm
 lib/Metabrik/File/Psv.pm
 lib/Metabrik/File/Raw.pm
 lib/Metabrik/File/Readelf.pm

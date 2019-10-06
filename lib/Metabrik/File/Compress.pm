@@ -160,7 +160,7 @@ sub gzip {
    $self->brik_help_run_undef_arg('gzip', $input) or return;
    $self->brik_help_run_file_not_found('gzip', $input) or return;
 
-   my $cmd = "gzip \"$input\"";
+   my $cmd = "gzip -f \"$input\"";
 
    $self->execute($cmd) or return;
 

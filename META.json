@@ -267,6 +267,9 @@
       "Metabrik::File::Pcap" : {
          "file" : "lib/Metabrik/File/Pcap.pm"
       },
+      "Metabrik::File::Pdf" : {
+         "file" : "lib/Metabrik/File/Pdf.pm"
+      },
       "Metabrik::File::Psv" : {
          "file" : "lib/Metabrik/File/Psv.pm"
       },

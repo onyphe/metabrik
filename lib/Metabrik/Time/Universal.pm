@@ -29,6 +29,7 @@ sub brik_properties {
          list_timezones => [ ],
          search_timezone => [ qw(string) ],
          localtime => [ qw(timezone|OPTIONAL) ],
+         hour => [ ],
          today => [ qw(separator|OPTIONAL) ],
          yesterday => [ qw(separator|OPTIONAL) ],
          day => [ qw(timestamp|OPTIONAL) ],
@@ -108,6 +109,15 @@ sub localtime {
    }
 
    return $time;
+}
+
+sub hour {
+   my $self = shift;
+
+   my @a = CORE::localtime();
+   my $h = $a[2];
+
+   return sprintf("%02d", $h);
 }
 
 sub today {
