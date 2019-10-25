@@ -235,7 +235,7 @@ sub background_read {
       or return;
 
    # Answer not ready
-   if (! $resolver->bgisready($handle)) {
+   if ($resolver->bgbusy($handle)) {
       return 0;
    }
 
