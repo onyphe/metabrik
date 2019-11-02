@@ -61,6 +61,7 @@ sub brik_properties {
       optional_binaries => {
       },
       need_packages => {
+         freebsd => [ qw(p5-Tree-Trie) ],
       },
    };
 }
