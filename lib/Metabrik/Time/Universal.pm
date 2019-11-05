@@ -412,6 +412,16 @@ sub to_timestamp {
       my $year = $1;
       $timestamp = Time::Local::timelocal($sec, $min, $hour, $mday, $mon, $year);
    }
+   # 11/04/19 11:40:00
+   elsif ($string =~ m{^(\d{2})/(\d{2})/(\d{2}) (\d{2}):(\d{2}):(\d{2})$}) {
+      my $mon = $1 - 1;
+      my $mday = $2;
+      my $hour = $4;
+      my $min = $5;
+      my $sec = $6;
+      my $year = $3 + 2000;  # Y2100 bug.
+      $timestamp = Time::Local::timelocal($sec, $min, $hour, $mday, $mon, $year);
+   }
    # 2000-10-20T00:00:00.000-04:00
    elsif ($string =~ m{^(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})}) {
       my $mon = $2 - 1;
