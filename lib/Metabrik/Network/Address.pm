@@ -103,7 +103,17 @@ sub match {
          "subnet [$subnet]");
    }
 
-   if (Net::CIDR::cidrlookup($ip, $subnet)) {
+   my $r;
+   eval {
+      $r = Net::CIDR::cidrlookup($ip, $subnet);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("match: cidrlookup failed with ".
+         "ip [$ip] subnet [$subnet] with error [$@]");
+   }
+
+   if ($r) {
       $self->log->debug("match: $ip is in the same subnet as $subnet");
       return 1;
    }
@@ -170,7 +180,15 @@ sub range_to_cidr {
 
    if ($self->is_ip($first) && $self->is_ip($last)) {
       # IPv4 and IPv6 compliant
-      my @list = Net::CIDR::range2cidr("$first-$last");
+      my @list;
+      eval {
+         @list = Net::CIDR::range2cidr("$first-$last");
+      };
+      if ($@) {
+         chomp($@);
+         return $self->log->error("range_to_cidr: range2cidr failed with ".
+            "first [$first] last [$last] with error [$@]");
+      }
 
       return \@list;
    }
@@ -257,7 +275,15 @@ sub netmask_to_cidr {
    $self->brik_help_run_undef_arg('netmask_to_cidr', $netmask) or return;
 
    # We use a fake address, cause we are only interested in netmask
-   my $cidr = Net::CIDR::addrandmask2cidr("127.0.0.0", $netmask);
+   my $cidr;
+   eval {
+      $cidr = Net::CIDR::addrandmask2cidr("127.0.0.0", $netmask);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("netmask_to_cidr: addrandmask2cidr failed ".
+         "with netmask [$netmask] with error [$@]");
+   }
 
    my ($size) = $cidr =~ m{/(\d+)$};
 
@@ -432,7 +458,14 @@ sub merge_cidr {
    $self->brik_help_run_undef_arg('merge_cidr', $list) or return;
    $self->brik_help_run_invalid_arg('merge_cidr', $list, 'ARRAY') or return;
 
-   my @list = Net::CIDR::cidradd(@$list) or return;
+   my @list;
+   eval {
+      @list = Net::CIDR::cidradd(@$list) or return;
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("merge_cidr: cidradd failed with error [$@]");
+   }
 
    return \@list;
 }
