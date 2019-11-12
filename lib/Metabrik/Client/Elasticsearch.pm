@@ -2180,7 +2180,9 @@ sub put_template_from_json_file {
    my $fj = Metabrik::File::Json->new_from_brik_init($self) or return;
    my $data = $fj->read($json_file) or return;
 
-   $name ||= $data->{index_patterns};
+   if (!defined($name)) {
+      ($name) = $json_file =~ m{([^/]+)\.json$};
+   }
 
    if (! defined($name)) {
       return $self->log->error("put_template_from_json_file: no template ".
@@ -2204,7 +2206,9 @@ sub update_template_from_json_file {
    my $fj = Metabrik::File::Json->new_from_brik_init($self) or return;
    my $data = $fj->read($json_file) or return;
 
-   $name ||= $data->{index_patterns};
+   if (!defined($name)) {
+      ($name) = $json_file =~ m{([^/]+)\.json$};
+   }
 
    if (! defined($name)) {
       return $self->log->error("put_template_from_json_file: no template ".
@@ -2808,7 +2812,7 @@ sub export_as {
          my $id = $this->{_id};
          my $doc = $this->{_source};
          # Prepare for when types will be removed from ES
-         my $type = $this->{_type} || 'doc';
+         my $type = $this->{_type} || '_doc';
          if (! exists($types{$type})) {
             if ($format eq 'csv') {
                # If not given, we guess the CSV fields to use.
