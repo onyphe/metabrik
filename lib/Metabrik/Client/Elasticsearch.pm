@@ -33,6 +33,7 @@ sub brik_properties {
          use_bulk_autoflush => [ qw(0|1) ],
          use_indexing_optimizations => [ qw(0|1) ],
          use_ignore_id => [ qw(0|1) ],
+         use_type => [ qw(0|1) ],
          csv_header => [ qw(fields) ],
          csv_encoded_fields => [ qw(fields) ],
          csv_object_fields => [ qw(fields) ],
@@ -57,6 +58,7 @@ sub brik_properties {
          use_bulk_autoflush => 1,
          use_indexing_optimizations => 0,
          use_ignore_id => 0,
+         use_type => 1,
          encoding => 'utf8',
       },
       commands => {
@@ -276,7 +278,6 @@ sub open_bulk_mode {
 
    my %args = (
       index => $index,
-      type => $type,
       on_error => sub {
          #my ($action, $response, $i) = @_;
 
@@ -286,6 +287,10 @@ sub open_bulk_mode {
          print Data::Dumper::Dumper(\@_)."\n";
       },
    );
+
+   if ($self->use_type) {
+      $args{type} = $type;
+   }
 
    if ($self->use_bulk_autoflush) {
       my $max_count = $self->max_flush_count || 1_000;
@@ -391,8 +396,10 @@ sub open_scroll {
       size => $size,
       body => $query,
    );
-   if ($type ne '*') {
-      $args{type} = $type;
+   if ($self->use_type) {
+      if ($type ne '*') {
+         $args{type} = $type;
+      }
    }
 
    #
@@ -496,11 +503,14 @@ sub index_document {
 
    my %args = (
       index => $index,
-      type => $type,
       body => $doc,
    );
    if (defined($id)) {
       $args{id} = $id;
+   }
+
+   if ($self->use_type) {
+      $args{type} = $type;
    }
 
    if (defined($hash)) {
@@ -548,8 +558,10 @@ sub reindex {
    );
 
    # Change the type for destination doc
-   if (defined($type)) {
-      $args{body}{dest}{type} = $type;
+   if ($self->use_type) {
+      if (defined($type)) {
+         $args{body}{dest}{type} = $type;
+      }
    }
 
    my $r;
@@ -723,9 +735,12 @@ sub update_document {
    my %args = (
       id => $id,
       index => $index,
-      type => $type,
       body => { doc => $doc },
    );
+
+   if ($self->use_type) {
+      $args{type} = $type;
+   }
 
    if (defined($hash)) {
       $self->brik_help_run_invalid_arg('update_document', $hash, 'HASH')
@@ -919,9 +934,13 @@ sub update_document_bulk {
 
    my %args = (
       index => $index,
-      type => $type,
       doc => $doc,
    );
+
+   if ($self->use_type) {
+      $args{type} = $type;
+   }
+
    if (defined($id)) {
       $args{id} = $id;
    }
@@ -1019,8 +1038,10 @@ sub count {
    if (defined($index) && $index ne '*') {
       $args{index} = $index;
    }
-   if (defined($type) && $type ne '*') {
-      $args{type} = $type;
+   if ($self->use_type) {
+      if (defined($type) && $type ne '*') {
+         $args{type} = $type;
+      }
    }
 
    #$args{body} = {
@@ -1038,9 +1059,8 @@ sub count {
    }
    else {
       eval {
-         $r = $es->search(
+         my %this_args = (
             index => $index,
-            type => $type,
             search_type => 'count',
             body => {
                query => {
@@ -1048,6 +1068,10 @@ sub count {
                },
             },
          );
+         if ($self->use_type) {
+            $this_args{type} = $type;
+         }
+         $r = $es->search(%args);
       };
    }
    if ($@) {
@@ -1102,8 +1126,10 @@ sub query {
       %args = ( %args, %$hash );
    }
 
-   if ($type ne '*') {
-      $args{type} = $type;
+   if ($self->use_type) {
+      if ($type ne '*') {
+         $args{type} = $type;
+      }
    }
 
    my $r;
@@ -1132,11 +1158,14 @@ sub get_from_id {
 
    my $r;
    eval {
-      $r = $es->get(
+      my %this_args = (
          index => $index,
-         type => $type,
          id => $id,
       );
+      if ($self->use_type) {
+         $this_args{type} = $type;
+      }
+      $r = $es->get(%this_args);
    };
    if ($@) {
       chomp($@);
@@ -1168,8 +1197,10 @@ sub www_search {
    for my $node (@$nodes) {
       # http://localhost:9200/INDEX/TYPE/_search/?size=SIZE&q=QUERY
       my $url = "$node/$index";
-      if ($type ne '*') {
-         $url .= "/$type";
+      if ($self->use_type) {
+         if ($type ne '*') {
+            $url .= "/$type";
+         }
       }
       $url .= "/_search/?from=$from&size=$size&q=".$query;
 
@@ -1231,9 +1262,12 @@ sub delete_document {
 
    my %args = (
       index => $index,
-      type => $type,
       id => $id,
    );
+
+   if ($self->use_type) {
+      $args{type} = $type;
+   }
 
    if (defined($hash)) {
       $self->brik_help_run_invalid_arg('delete_document', $hash, 'HASH')
@@ -1273,9 +1307,12 @@ sub delete_by_query {
 
    my %args = (
       index => $index,
-      type => $type,
       body => $query,
    );
+
+   if ($self->use_type) {
+      $args{type} = $type;
+   }
 
    if (defined($proceed) && $proceed) {
       $args{conflicts} = 'proceed';
@@ -1737,8 +1774,17 @@ sub get_aliases {
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
 
+   #
+   # [DEPRECATION] [types removal] The parameter include_type_name should be
+   # explicitly specified in get indices requests to prepare for 7.0. In 7.0
+   # include_type_name will default to 'false', which means responses will
+   # omit the type name in mapping definitions. - In request: {body => undef,
+   # ignore => [],method => "GET",path => "/*",qs => {},serialize => "std"}
+   #
+
    my %args = (
       index => $index,
+      params => { include_type_name => 'false' },
    );
 
    my $r;
@@ -1884,9 +1930,12 @@ sub get_mappings {
 
    my %args = (
       index => $index,
-      type => $type,
-      #include_type_name => 'false',
+      params => { include_type_name => 'false' },
    );
+
+   if ($self->use_type) {
+      $args{type} = $type;
+   }
 
    my $r;
    eval {
@@ -2067,11 +2116,14 @@ sub put_mapping {
 
    my $r;
    eval {
-      $r = $es->indices->put_mapping(
+      my %this_args = (
          index => $index,
-         type => $type,
          body => $mapping,
       );
+      if ($self->use_type) {
+         $this_args{type} = $type;
+      }
+      $r = $es->indices->put_mapping(%this_args);
    };
    if ($@) {
       chomp($@);
@@ -2595,10 +2647,13 @@ sub is_type_exists {
 
    my $r;
    eval {
-      $r = $es->indices->exists_type(
+      my %this_args = (
          index => $index,
-         type => $type,
       );
+      if ($self->use_type) {
+         $this_args{type} = $type;
+      }
+      $r = $es->indices->exists_type(%this_args);
    };
    if ($@) {
       chomp($@);
@@ -2625,11 +2680,14 @@ sub is_document_exists {
 
    my $r;
    eval {
-      $r = $es->exists(
+      my %this_args = (
          index => $index,
-         type => $type,
          %$document,
       );
+      if ($self->use_type) {
+         $this_args{type} = $type;
+      }
+      $r = $es->exists(%this_args);
    };
    if ($@) {
       chomp($@);
@@ -2995,9 +3053,11 @@ sub import_from {
       return $self->log->error("import_from: cannot import to invalid ".
          "index [$index]");
    }
-   if ($type eq '*') {
-      return $self->log->error("import_from: cannot import to invalid ".
-         "type [$type]");
+   if ($self->use_type) {
+      if ($type eq '*') {
+         return $self->log->error("import_from: cannot import to invalid ".
+            "type [$type]");
+      }
    }
 
    $self->log->debug("input [$input]");
@@ -3245,9 +3305,11 @@ sub import_from_csv_worker {
       return $self->log->error("import_from_csv_worker: cannot import to invalid ".
          "index [$index]");
    }
-   if ($type eq '*') {
-      return $self->log->error("import_from_csv_worker: cannot import to invalid ".
-         "type [$type]");
+   if ($self->use_type) {
+      if ($type eq '*') {
+         return $self->log->error("import_from_csv_worker: cannot import to ".
+            "invalid type [$type]");
+      }
    }
 
    $self->log->debug("input [$input_csv]");
@@ -3910,7 +3972,7 @@ sub create_shared_fs_snapshot_repository {
    }
 
    my $body = {
-      type => 'fs',
+      #type => 'fs',
       settings => {
          compress => 'true',
          location => $location,
@@ -4228,7 +4290,7 @@ Template to write a new Metabrik Brik.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2019, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2020, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.
