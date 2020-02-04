@@ -214,11 +214,17 @@ sub background_lookup {
    };
    if ($@) {
       chomp($@);
-      return $self->log->error("background_lookup: bgsend exception [$@]");
+      my $ns = ref($nameserver) eq 'ARRAY' ? join('|', @$nameserver)
+         : $nameserver;
+      return $self->log->error("background_lookup: bgsend exception [$@], ".
+         "with nameservers [$ns] and port [$port]");
    }
    elsif (! defined($handle)) {
+      my $ns = ref($nameserver) eq 'ARRAY' ? join('|', @$nameserver)
+         : $nameserver;
       return $self->log->error("background_lookup: query failed [".
-         $resolver->errorstring."]");
+         $resolver->errorstring."], with nameservers [$ns] and ".
+         "port [$port]");
    }
 
    return $handle;
