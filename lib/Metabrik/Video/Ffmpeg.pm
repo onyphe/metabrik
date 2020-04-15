@@ -25,7 +25,7 @@ sub brik_properties {
       },
       commands => {
          install => [ ],  # Inherited
-         record_desktop => [ qw(output.mkv) ],
+         record_desktop => [ qw(output.mkv resolution|OPTIONAL) ],
          convert_to_youtube => [ qw(input.mkv output.mp4) ],
       },
       require_binaries => {
