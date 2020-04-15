@@ -33,6 +33,7 @@ sub brik_properties {
          today => [ qw(separator|OPTIONAL) ],
          yesterday => [ qw(separator|OPTIONAL) ],
          day => [ qw(timestamp|OPTIONAL) ],
+         week => [ qw(timestamp|OPTIONAL) ],
          year => [ qw(timestamp|OPTIONAL) ],
          date => [ qw(timestamp|OPTIONAL) ],
          gmdate => [ qw(timestamp|OPTIONAL) ],
@@ -50,6 +51,7 @@ sub brik_properties {
          'POSIX' => [ qw(strftime) ],
          'Time::Local' => [ qw(timelocal) ],
          'Time::HiRes' => [ qw(time) ],
+         'Date::Calc' => [ qw(Today Day_of_Week) ],
       },
    };
 }
@@ -161,6 +163,18 @@ sub day {
    my $day = $t[3];
 
    return sprintf("%04d-%02d-%02d", $year, $month, $day);
+}
+
+sub week {
+   my $self = shift;
+   my ($timestamp) = @_;
+
+   $timestamp ||= $self->timestamp;
+
+   my ($year, $month, $day) = Date::Calc::Localtime($timestamp);
+   my $week = Date::Calc::Week_of_Year($year, $month, $day);
+
+   return sprintf("%02d", $week);
 }
 
 sub year {
