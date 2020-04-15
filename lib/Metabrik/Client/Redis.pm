@@ -48,6 +48,7 @@ sub brik_properties {
          client_getname => [ ],
          list_databases => [ qw(database) ],
          list_keys => [ qw(database keys|OPTIONAL) ],
+         flushall => [ ],
       },
       require_modules => {
          'Redis' => [ ],
@@ -274,6 +275,12 @@ sub list_keys {
    my @r = $self->command_as_list('keys', $keys) or return;
 
    return \@r;
+}
+
+sub flushall {
+   my $self = shift;
+
+   return $self->command('flushall');
 }
 
 1;
