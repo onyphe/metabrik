@@ -130,9 +130,17 @@ sub create_producer {
 
    my $kc = $self->create_connection or return;
 
+   # Doc:
+   # https://kafka.apache.org/documentation/#acks
+
    my $kp;
    eval {
-      $kp = Kafka::Producer->new(Connection => $kc);
+      $kp = Kafka::Producer->new(
+         Connection => $kc,
+         #RequiredAcks => $Kafka::WAIT_WRITTEN_TO_LOCAL_LOG,  # 1, default
+         RequiredAcks => $Kafka::BLOCK_UNTIL_IS_COMMITTED,  # -1, best
+         #RequiredAcks => $Kafka::NOT_SEND_ANY_RESPONSE,  # 0
+      );
    };
    if ($@) {
       chomp($@);
