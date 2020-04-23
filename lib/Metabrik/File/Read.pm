@@ -311,7 +311,7 @@ sub read_line {
    if ($self->as_array) {
       my @out = ();
       my $this = 1;
-      while (my $line =~ <$fd>) {
+      while (my $line = <$fd>) {
          if ($skip_comment) {
             next if $line =~ m{^\s*#};
          }
@@ -333,7 +333,7 @@ sub read_line {
    else {
       my $out = '';
       my $this = 1;
-      while (my $line =~ <$fd>) {
+      while (my $line = <$fd>) {
          if ($skip_comment) {
             next if $line =~ m{^\s*#};
          }
