@@ -28,6 +28,7 @@ sub brik_properties {
          wait => [ qw(seconds) ],
          use_ipv6 => [ qw(0|1) ],
          src_ip => [ qw(ip_address) ],
+         filter_code_optimizer => [ qw(0|1) ],
          _nr => [ qw(INTERNAL) ],
       },
       attributes_default => { 
@@ -128,6 +129,7 @@ sub brik_properties {
          try => 2,
          wait => 5, # Wait 5 seconds for last packet
          use_ipv6 => 0,
+         filter_code_optimizer => 0,
       },
       commands => {
          estimate_runtime => [ qw($ip_list $port_list|OPTIONAL pps|OPTIONAL try|OPTIONAL) ],
@@ -348,6 +350,7 @@ sub tcp_syn_start_receiver {
    $listen_device ||= $self->listen_device;
 
    my $nr = Metabrik::Network::Read->new_from_brik_init($self) or return;
+   $nr->filter_code_optimizer($self->filter_code_optimizer);
 
    my $ip = '';
    if ($self->use_ipv6) {
@@ -380,10 +383,11 @@ sub tcp_syn_start_receiver {
       }
    }
 
-   $self->log->verbose("tcp_syn_start_receiver: using filter [$filter]");
-
    $nr->filter($filter);
    $nr->device($listen_device);
+
+   $self->log->verbose("tcp_syn_start_receiver: using filter [$filter] and ".
+      "device [$listen_device]");
 
    $nr->open or return;
  
