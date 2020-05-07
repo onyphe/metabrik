@@ -349,7 +349,7 @@ Metabrik::Network::Dns - network::dns Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2019, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2020, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

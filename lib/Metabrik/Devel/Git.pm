@@ -91,7 +91,7 @@ sub update_or_clone {
 
    $self->brik_help_run_undef_arg('update_or_clone', $repository) or return;
 
-   if (-d $directory) {
+   if (defined($directory) && -d $directory) {
       return $self->update($repository, $directory);
    }
 
@@ -108,7 +108,7 @@ Metabrik::Devel::Git - devel::git Brik
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2019, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2020, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.

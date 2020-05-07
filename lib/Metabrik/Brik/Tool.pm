@@ -62,7 +62,7 @@ sub brik_properties {
          #hg => [ ],
       #},
       require_modules => {
-         'Metabrik::Devel::Mercurial' => [ ],
+         'Metabrik::Devel::Git' => [ ],
          'Metabrik::File::Find' => [ ],
          'Metabrik::File::Text' => [ ],
          'Metabrik::Perl::Module' => [ ],
@@ -787,18 +787,18 @@ sub update_core {
 
    my $datadir = $self->datadir;
 
-   my $url = 'https://www.metabrik.org/hg/core';
+   my $url = 'https://github.com/onyphe/metabrik-core';
 
-   my $dm = Metabrik::Devel::Mercurial->new_from_brik_init($self) or return;
-   $dm->use_pager(0);
+   my $dg = Metabrik::Devel::Git->new_from_brik_init($self) or return;
+   $dg->use_pager(0);
    my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;
    $pm->use_pager(0);
 
    if (! -d $datadir.'/core') {
-      $dm->clone($url, $datadir.'/core') or return;
+      $dg->clone($url, $datadir.'/core') or return;
    }
    else {
-      $dm->update($datadir.'/core') or return;
+      $dg->update($datadir.'/core') or return;
    }
 
    $pm->build($datadir.'/core') or return;
@@ -818,18 +818,18 @@ sub update_repository {
    my $datadir = $self->datadir;
    my $repository = $datadir.'/repository';
 
-   my $url = 'https://www.metabrik.org/hg/repository';
+   my $url = 'https://github.com/onyphe/metabrik-repository';
 
-   my $dm = Metabrik::Devel::Mercurial->new_from_brik_init($self) or return;
-   $dm->use_pager(0);
+   my $dg = Metabrik::Devel::Git->new_from_brik_init($self) or return;
+   $dg->use_pager(0);
    my $pm = Metabrik::Perl::Module->new_from_brik_init($self) or return;
    $pm->use_pager(0);
 
    if (! -d $repository) {
-      $dm->clone($url, $repository) or return;
+      $dg->clone($url, $repository) or return;
    }
    else {
-      $dm->update($repository) or return;
+      $dg->update($repository) or return;
    }
 
    $pm->build($repository) or return;
