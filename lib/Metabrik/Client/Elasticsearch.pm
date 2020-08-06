@@ -38,6 +38,7 @@ sub brik_properties {
          csv_encoded_fields => [ qw(fields) ],
          csv_object_fields => [ qw(fields) ],
          encoding => [ qw(utf8|ascii) ],
+         disable_deprecation_logging => [ qw(0|1) ],
          _es => [ qw(INTERNAL) ],
          _bulk => [ qw(INTERNAL) ],
          _scroll => [ qw(INTERNAL) ],
@@ -60,6 +61,7 @@ sub brik_properties {
          use_ignore_id => 0,
          use_type => 1,
          encoding => 'utf8',
+         disable_deprecation_logging => 0,
       },
       commands => {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
@@ -239,7 +241,7 @@ sub open {
    # Search::Elasticsearch::Role::Cxn
    #
 
-   my $es = Search::Elasticsearch->new(
+   my %args = (
       nodes => $nodes,
       cxn_pool => $cxn_pool,
       timeout => $timeout,
@@ -253,6 +255,12 @@ sub open {
       sniff_request_timeout => 15, # seconds, default 2
       #trace_to => 'Stderr',  # For debug purposes
    );
+
+   if ($self->disable_deprecation_logging) {
+      $args{deprecate_to} = ['File', '/dev/null'];
+   }
+
+   my $es = Search::Elasticsearch->new(%args);
    if (! defined($es)) {
       return $self->log->error("open: failed");
    }
@@ -1059,18 +1067,6 @@ sub count {
    }
    else {
       eval {
-         my %this_args = (
-            index => $index,
-            search_type => 'count',
-            body => {
-               query => {
-                  match_all => {},
-               },
-            },
-         );
-         if ($self->use_type) {
-            $this_args{type} = $type;
-         }
          $r = $es->search(%args);
       };
    }
