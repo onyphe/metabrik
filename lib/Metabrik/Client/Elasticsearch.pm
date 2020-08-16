@@ -3868,6 +3868,11 @@ sub get_hits_total {
 
    if (ref($run) eq 'HASH') {
       if (exists($run->{hits}) && exists($run->{hits}{total})) {
+         # In ES 7.x, total is now a hash. We rewrite it to only keep the
+         # number:
+         if (ref($run->{hits}{total}) eq 'HASH') {
+            return $run->{hits}{total}{value};
+         }
          return $run->{hits}{total};
       }
    }
