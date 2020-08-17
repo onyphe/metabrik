@@ -39,6 +39,7 @@ sub brik_properties {
          csv_object_fields => [ qw(fields) ],
          encoding => [ qw(utf8|ascii) ],
          disable_deprecation_logging => [ qw(0|1) ],
+         es_version => [ qw(0|1) ],
          _es => [ qw(INTERNAL) ],
          _bulk => [ qw(INTERNAL) ],
          _scroll => [ qw(INTERNAL) ],
@@ -62,6 +63,7 @@ sub brik_properties {
          use_type => 1,
          encoding => 'utf8',
          disable_deprecation_logging => 0,
+         es_version => '7',
       },
       commands => {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
@@ -1111,11 +1113,16 @@ sub query {
    $self->brik_help_run_invalid_arg('query', $query, 'HASH') or return;
 
    my $timeout = $self->rtimeout;
+   my $es_version = $self->es_version;
 
    my %args = (
       index => $index,
       body => $query,
    );
+
+   if ($es_version == 7) {
+      $args{track_total_hits} = 'true';
+   }
 
    if (defined($hash)) {
       $self->brik_help_run_invalid_arg('query', $hash, 'HASH') or return;
