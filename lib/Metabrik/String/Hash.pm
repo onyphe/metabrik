@@ -39,7 +39,16 @@ sub _hash {
       return $self->log->error("$function: unable to load function: $@");
    }
 
-   return Crypt::Digest::digest_data_hex(uc($function), $data);
+   my $hash;
+   eval {
+      $hash = Crypt::Digest::digest_data_hex(uc($function), $data);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("$function: unable to compute hash: $@");
+   }
+
+   return $hash;
 }
 
 sub sha1 {

@@ -27,6 +27,8 @@ sub brik_properties {
          close => [ ],
          write => [ qw(key value) ],
          read => [ qw(key) ],
+         stats => [ ],
+         get_slabs_info => [ ],
       },
       require_modules => {
          'Cache::Memcached' => [ ],
@@ -96,6 +98,42 @@ sub read {
    $self->brik_help_run_undef_arg('read', $k) or return;
 
    return $c->get($k);
+}
+
+# stats
+# stats items
+sub stats {
+   my $self = shift;
+   my ($k) = @_;
+
+   my $c = $self->_c;
+   $self->brik_help_run_undef_arg('open', $c) or return;
+
+   return $c->stats($k);
+}
+
+#
+# High level functions:
+#
+sub get_slabs_info {
+   my $self = shift;
+
+   my $stats = $self->stats('items') or return;
+
+   my @keys = ();
+   for my $host (keys %{$stats->{hosts}}) {
+      my $items = $stats->{hosts}{$host}{items};
+      my @lines = split(/\r\n/, $items);
+
+      # Example: 'STAT items:3:number 628916'
+      for my $line (@lines) {
+         my ($slab, $count) = $line =~ m{^STAT\s+items:(\d+):number\s+(\d+)};
+         next unless (defined($slab) && defined($count));
+         push @keys, [ $slab, $count ];
+      }
+   }
+
+   return \@keys;
 }
 
 1;
