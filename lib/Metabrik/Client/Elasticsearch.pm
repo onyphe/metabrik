@@ -1260,7 +1260,6 @@ sub delete_document {
    my $es = $self->_es;
    $self->brik_help_run_undef_arg('open', $es) or return;
    $self->brik_help_run_undef_arg('delete_document', $index) or return;
-   $self->brik_help_run_undef_arg('delete_document', $type) or return;
    $self->brik_help_run_undef_arg('delete_document', $id) or return;
 
    my %args = (

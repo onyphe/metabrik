@@ -212,7 +212,7 @@ sub background_lookup {
    eval {
       $handle = $resolver->bgsend($host, $type);
    };
-   if ($@) {
+   if ($@ && $@ !~ m{long domain label}) {
       chomp($@);
       my $ns = ref($nameserver) eq 'ARRAY' ? join('|', @$nameserver)
          : $nameserver;
