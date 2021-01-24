@@ -509,8 +509,12 @@ sub install {
    $packages = [ sort { $a cmp $b } keys %$uniq_packages ];
    $modules = [ sort { $a cmp $b } keys %$uniq_modules ];
 
-   $self->install_packages($packages) or return;
-   $self->install_modules($modules) or return;
+   if (@$packages) {
+      $self->install_packages($packages) or return;
+   }
+   if (@$modules) {
+      $self->install_modules($modules) or return;
+   }
 
    # Execute special install Command if any.
    for my $brik (@$briks) {
