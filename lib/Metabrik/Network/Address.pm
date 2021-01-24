@@ -541,6 +541,7 @@ sub ipv6_reserved_subnets {
    my $self = shift;
 
    return [ qw(
+      0::/8
       100::/64
       2001:1::/32
       2001:2::/31
