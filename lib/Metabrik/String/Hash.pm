@@ -20,9 +20,11 @@ sub brik_properties {
          sha256 => [ qw(data) ],
          sha512 => [ qw(data) ],
          md5 => [ qw(data) ],
+         mmh3 => [ qw(data signed|OPTIONAL) ],
       },
       require_modules => {
          'Crypt::Digest' => [ ],
+         'Digest::MurmurHash3' => [ qw(murmur32) ],
       },
    };
 }
@@ -77,6 +79,24 @@ sub md5 {
    my ($data) = @_;
 
    return $self->_hash('md5', $data);
+}
+
+sub mmh3 {
+   my $self = shift;
+   my ($data, $signed) = @_;
+
+   $signed ||= 0;
+
+   my $hash;
+   eval {
+      $hash = Digest::MurmurHash3::murmur32($data, 0, $signed);
+   };
+   if ($@) {
+      chomp($@);
+      return $self->log->error("mmh3: unable to compute hash: $@");
+   }
+
+   return $hash;
 }
 
 1;
