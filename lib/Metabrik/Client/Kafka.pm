@@ -85,7 +85,7 @@ sub create_connection {
          unless(
                defined($server)
                && defined(Kafka::Connection::_STRING($server))
-               #&& !utf8::is_utf8($server)  # this sucks.
+               #&& !utf8::is_utf8($server)  # this sucks.
                && $server =~ /^[^:]+:\d+$/
            ) {
             return;

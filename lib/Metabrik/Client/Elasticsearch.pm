@@ -400,7 +400,8 @@ sub open_scroll {
 
    my %args = (
       scroll => "${timeout}s",
-      scroll_in_qs => 1,  # By default (0), pass scroll_id in request body. When 1, pass 
+      # Starting with Search::Elasticsearch 7.x, scroll_in_qs does not exist anymore
+      #scroll_in_qs => 1,  # By default (0), pass scroll_id in request body. When 1, pass
                           # it in query string.
       index => $index,
       size => $size,
