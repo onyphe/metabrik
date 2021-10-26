@@ -35,6 +35,12 @@ sub brik_properties {
    };
 }
 
+#
+# API doc:
+#
+# http://www.geonames.org/export/web-services.html
+#
+
 sub brik_init {
    my $self = shift;
 
@@ -66,7 +72,8 @@ sub find_nearby_place_name {
    }
 
    my $url = 'http://api.geonames.org/findNearbyPlaceNameJSON?'.
-      'formatted=true&lat='.$lat.'&lng='.$long.'&username='.$username;
+      #'radius=10&style=full&lang=en&formatted=true&lat='.$lat.'&lng='.$long.'&username='.$username;
+      'cities=cities1000&style=full&formatted=true&lat='.$lat.'&lng='.$long.'&username='.$username;
 
    my $get = $self->get($url) or return;
 
@@ -93,7 +100,7 @@ sub find_nearby {
    }
 
    my $url = 'http://api.geonames.org/findNearbyJSON?'.
-      'formatted=true&lat='.$lat.'&lng='.$long.'&username='.$username;
+      'style=full&formatted=true&lat='.$lat.'&lng='.$long.'&username='.$username;
 
    my $get = $self->get($url) or return;
 
