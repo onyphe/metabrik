@@ -34,15 +34,14 @@ sub brik_properties {
       },
       require_modules => {
          'Net::Libdnet::Intf' => [ ],
-         'Net::Pcap' => [ ],
          'Net::Routing' => [ ],
          'Net::IPv4Addr' => [ ],
          'Metabrik::Client::Www' => [ ],
       },
       need_packages => {
-         ubuntu => [ qw(libpcap-dev libnet-libdnet-perl) ],
-         debian => [ qw(libpcap-dev libnet-libdnet-perl) ],
-         kali => [ qw(libpcap-dev libnet-libdnet-perl) ],
+         ubuntu => [ qw(libpcap-dev libnet-libdnet-perl libnet-pcap-perl) ],
+         debian => [ qw(libpcap-dev libnet-libdnet-perl libnet-pcap-perl) ],
+         kali => [ qw(libpcap-dev libnet-libdnet-perl libnet-pcap-perl) ],
          freebsd => [ qw(p5-Net-Pcap libdnet) ],
       },
    };
