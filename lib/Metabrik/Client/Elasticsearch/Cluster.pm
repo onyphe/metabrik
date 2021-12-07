@@ -36,7 +36,7 @@ sub brik_properties {
          include => [ qw(node) ],
          reset_settings_transient_cluster_routing_allocation => [ ],
          allocation_explain => [ ],
-         reroute => [ ],
+         reroute => [ qw(args|OPTIONAL) ],
          reroute_retry_failed => [ ],
       },
    };
