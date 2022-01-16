@@ -94,6 +94,11 @@ sub brik_properties {
          'Metabrik::System::File' => [ ],
          'Metabrik::Network::Address' => [ ],
       },
+      need_packages => {
+         ubuntu => [ qw(liblwp-protocol-https-perl) ],
+         debian => [ qw(liblwp-protocol-https-perl) ],
+         kali => [ qw(liblwp-protocol-https-perl) ],
+      },
       optional_modules => {
          'WWW::Mechanize::PhantomJS' => [ ],
       },

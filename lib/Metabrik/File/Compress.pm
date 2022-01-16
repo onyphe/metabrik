@@ -65,7 +65,7 @@ sub unzip {
 
    my @files = ();
    for (@$lines) {
-      if (m{^\s*inflating:\s*([^\s]+)\s*$}) {
+      if (m{^\s*(?:inflating|extracting):\s*([^\s]+)\s*$}) {
          push @files, $1;
       }
    }
