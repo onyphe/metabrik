@@ -208,6 +208,7 @@ sub send {
       my $no_known_broker = 'There are no known brokers';
       my $too_big = 'Message is too big';
       my $invalid_arg_messages = 'Invalid argument: messages';
+      my $io_error = 'io_error';
       my $err = $@;
       if ($@ =~ m{^$no_ack_for_request}i) {
          $err = $no_ack_for_request;
@@ -229,6 +230,9 @@ sub send {
       }
       elsif ($@ =~ m{^$invalid_arg_messages}i) {
          $err = $invalid_arg_messages;
+      }
+      elsif ($@ =~ m{^$io_error}i) {
+         $err = $io_error;
       }
 
       my $broker = $self->_broker;
