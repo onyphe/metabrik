@@ -43,7 +43,7 @@ sub encode {
 
    my $xs = XML::Simple->new;
 
-   $self->log->debug("encode: data[$data]");
+   #$self->log->debug("encode: data[$data]");
 
    return $xs->XMLout($data);
 }
@@ -56,7 +56,7 @@ sub decode {
 
    my $xs = XML::Simple->new;
 
-   $self->log->debug("decode: data[$data]");
+   #$self->log->debug("decode: data[$data]");
 
    return $xs->XMLin($data);
 }

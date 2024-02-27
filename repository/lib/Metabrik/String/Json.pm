@@ -40,7 +40,7 @@ sub encode {
    $self->brik_help_run_invalid_arg('encode', $data, 'ARRAY', 'HASH')
       or return;
 
-   $self->log->debug("encode: data[$data]");
+   #$self->log->debug("encode: data[$data]");
 
    my $encoded = '';
    eval {
@@ -63,7 +63,7 @@ sub decode {
 
    $self->brik_help_run_undef_arg('decode', $data) or return;
 
-   $self->log->debug("decode: data[$data]");
+   #$self->log->debug("decode: data[$data]");
 
    my $decoded = '';
    eval {

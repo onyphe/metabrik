@@ -48,6 +48,7 @@ sub brik_properties {
          'File::Copy' => [ qw(mv copy) ],
          'File::Path' => [ qw(make_path) ],
          'File::Spec' => [ ],
+         'Metabrik::File::Write' => [ ],
       },
       need_packages => {
          ubuntu => [ qw(coreutils) ],
