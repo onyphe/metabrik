@@ -41,12 +41,15 @@ sub brik_properties {
          unzip => [ ],
          gzip => [ ],
          bunzip2 => [ ],
+         lbunzip2 => [ ],
          bzip2 => [ ],
+         lbzip2 => [ ],
       },
       need_packages => {
-         ubuntu => [ qw(unzip gzip bzip2) ],
-         debian => [ qw(unzip gzip bzip2) ],
-         kali => [ qw(unzip gzip bzip2) ],
+         ubuntu => [ qw(unzip gzip bzip2 lbzip2) ],
+         debian => [ qw(unzip gzip bzip2 lbzip2) ],
+         kali => [ qw(unzip gzip bzip2 lbzip2) ],
+         freebsd => [ qw(lbzip2) ],
       },
    };
 }
@@ -181,7 +184,7 @@ sub bzip2 {
       ($output = $input) =~ s/$/.bz2/;
    }
 
-   my $cmd = "bzip2 $input";
+   my $cmd = "lbzip2 $input";
 
    my $lines = $self->capture($cmd) or return;
 
@@ -202,7 +205,7 @@ sub bunzip2 {
       ($output = $input) =~ s/.bz2$//;
    }
 
-   my $cmd = "bunzip2 $input";
+   my $cmd = "lbunzip2 $input";
 
    my $lines = $self->capture($cmd) or return;
 

@@ -163,6 +163,7 @@ sub brik_properties {
          list_green_indices => [ ],
          list_yellow_indices => [ ],
          list_red_indices => [ ],
+         list_empty_indices => [ ],
          count_indices => [ ],
          list_indices_status => [ ],
          count_shards => [ ],
@@ -1529,12 +1530,14 @@ sub get_indices {
    # Format depends on ElasticSearch version. We try to detect the format.
    #
    # 5.0.0:
-   # "yellow open www-2016-08-14 BmNE9RaBRSCKqB5Oe8yZcw 5 1  146 0 251.8kb 251.8kb"
+   # yellow open www-2016-08-14 BmNE9RaBRSCKqB5Oe8yZcw 5 1  146 0 251.8kb 251.8kb
+   # 7.17.24:
+   # green open ctiscan-2025-w15-v1-7b 3K0g_gUuR1-MQxWoFWVvIg 120 1 428048503 25166635 4tb 2tb
    #
    my @indices = ();
    for (@$lines) {
       my @t = split(/\s+/);
-      if (@t == 10) {  # Version 5.0.0
+      if (@t == 10) {  # Version 5.0.0 + 7.17.24
          my $color = $t[0];
          my $state = $t[1];
          my $index = $t[2];
@@ -3856,6 +3859,21 @@ sub list_red_indices {
    my @indices = ();
    for (@$get) {
       if ($_->{color} eq 'red') {
+         push @indices, $_->{index};
+      }
+   }
+
+   return \@indices;
+}
+
+sub list_empty_indices {
+   my $self = shift;
+
+   my $get = $self->get_indices or return;
+
+   my @indices = ();
+   for (@$get) {
+      if ($_->{count} == 0) {
          push @indices, $_->{index};
       }
    }

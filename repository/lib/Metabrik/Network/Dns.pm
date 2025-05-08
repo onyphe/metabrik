@@ -175,7 +175,8 @@ sub lookup {
          $h->{ptrdname} = $rr->ptrdname;
       }
       if ($rr->can('rdatastr')) {
-         $h->{rdatastr} = $rr->rdatastr;
+         #$h->{rdatastr} = $rr->rdatastr;
+         $h->{rdatastr} = $rr->rdstring;
       }
       if ($rr->can('dummy')) {
          $h->{dummy} = $rr->dummy;
@@ -287,7 +288,8 @@ sub background_read {
          $h->{ptrdname} = $rr->ptrdname;
       }
       if ($rr->can('rdatastr')) {
-         $h->{rdatastr} = $rr->rdatastr;
+         #$h->{rdatastr} = $rr->rdatastr;
+         $h->{rdatastr} = $rr->rdstring;
       }
       if ($rr->can('dummy')) {
          $h->{dummy} = $rr->dummy;

@@ -34,6 +34,7 @@ sub brik_properties {
          yesterday => [ qw(separator|OPTIONAL) ],
          day => [ qw(timestamp|OPTIONAL) ],
          week => [ qw(timestamp|OPTIONAL) ],
+         last_week => [ qw(timestamp|OPTIONAL) ],
          year => [ qw(timestamp|OPTIONAL) ],
          date => [ qw(timestamp|OPTIONAL) ],
          gmdate => [ qw(timestamp|OPTIONAL) ],
@@ -170,6 +171,19 @@ sub week {
    my ($timestamp) = @_;
 
    $timestamp ||= $self->timestamp;
+
+   my ($year, $month, $day) = Date::Calc::Localtime($timestamp);
+   my $week = Date::Calc::Week_of_Year($year, $month, $day);
+
+   return sprintf("%02d", $week);
+}
+
+sub last_week {
+   my $self = shift;
+   my ($timestamp) = @_;
+
+   $timestamp ||= $self->timestamp;
+   $timestamp -= 604800;
 
    my ($year, $month, $day) = Date::Calc::Localtime($timestamp);
    my $week = Date::Calc::Week_of_Year($year, $month, $day);
