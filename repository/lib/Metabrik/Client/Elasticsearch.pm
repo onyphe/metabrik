@@ -1132,7 +1132,7 @@ sub query {
       body => $query,
    );
 
-   if ($es_version == 7) {
+   if ($es_version >= 7) {
       $args{track_total_hits} = 'true';
    }
 
@@ -4326,7 +4326,7 @@ Template to write a new Metabrik Brik.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2022, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2014-2025, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of The BSD 3-Clause License.
 See LICENSE file in the source distribution archive.
