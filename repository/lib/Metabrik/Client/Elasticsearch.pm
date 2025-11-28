@@ -39,7 +39,7 @@ sub brik_properties {
          csv_object_fields => [ qw(fields) ],
          encoding => [ qw(utf8|ascii) ],
          disable_deprecation_logging => [ qw(0|1) ],
-         es_version => [ qw(0|1) ],
+         es_version => [ qw(version) ],
          _es => [ qw(INTERNAL) ],
          _bulk => [ qw(INTERNAL) ],
          _scroll => [ qw(INTERNAL) ],
@@ -63,7 +63,7 @@ sub brik_properties {
          use_type => 1,
          encoding => 'utf8',
          disable_deprecation_logging => 0,
-         es_version => '7',
+         es_version => 7,
       },
       commands => {
          open => [ qw(nodes_list|OPTIONAL cxn_pool|OPTIONAL) ],
