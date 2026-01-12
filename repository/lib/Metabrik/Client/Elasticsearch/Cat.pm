@@ -109,7 +109,12 @@ sub loop_show_allocation {
       my %lines = ();
       for my $line (@{$self->show_allocation}) {
          my @t = split(/\s+/, $line);
-         $lines{$t[-1]} = $line;
+         if ($self->es_version >= 8) {
+            $lines{$t[-2]} = $line;
+         }
+         else {
+            $lines{$t[-1]} = $line;
+         }
       }
       for (sort { $a cmp $b } keys %lines) {
          print $lines{$_}."\n";
