@@ -229,7 +229,7 @@ sub remove_indices_replicas {
 #
 # WARNING: do that only on read-only indices.
 #
-# http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-forcemerge.html
+# https://www.elastic.co/docs/api/doc/elasticsearch/operation/operation-indices-forcemerge
 #
 sub forcemerge_indices {
    my $self = shift;
@@ -239,11 +239,15 @@ sub forcemerge_indices {
       or return;
 
    # Add optional argument: "index.codec": "best_compression"
+   # Seems need to close an index, set the new setting, and open it again
+   # before force merge will apply this best_compression on forcemerge.
 
    my %args = (
       index => $indices,
       max_num_segments => 1,
-      #wait_for_merge => 'false', # argument doesn't exist in ES.
+      wait_for_completion => 'false',
+      #only_expunge_deletes => 'true',
+      flush => 'true',
    );
 
    return $self->_es->indices->forcemerge(%args);
