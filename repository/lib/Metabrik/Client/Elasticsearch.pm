@@ -246,6 +246,12 @@ sub open {
 
    my %args = (
       nodes => $nodes,
+      #cxn => 'LWP',  # SSL verif is disabled by default
+      cxn => 'HTTPTiny',
+      # For use with HTTPTiny as SSL verif is enabled by default:
+      ssl_options => {
+         SSL_verify_mode => 0,
+      },
       cxn_pool => $cxn_pool,
       timeout => $timeout,
       max_retries => $self->try,
@@ -1141,7 +1147,7 @@ sub query {
       %args = ( %args, %$hash );
    }
 
-   if ($self->use_type) {
+   if ($self->use_type && $es_version < 8) {
       if ($type ne '*') {
          $args{type} = $type;
       }
@@ -1317,6 +1323,7 @@ sub delete_by_query {
    $self->brik_help_run_undef_arg('delete_by_query', $type) or return;
    $self->brik_help_run_invalid_arg('delete_by_query', $query, 'HASH') or return;
 
+   my $es_version = $self->es_version;
    my $timeout = $self->rtimeout;
 
    my %args = (
@@ -1324,7 +1331,7 @@ sub delete_by_query {
       body => $query,
    );
 
-   if ($self->use_type) {
+   if ($self->use_type && $es_version < 8) {
       $args{type} = $type;
    }
 
